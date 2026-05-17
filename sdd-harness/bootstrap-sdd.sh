@@ -44,8 +44,70 @@ fi
 echo -e "\n${CYAN}📍 Harness source:${NC} $HARNESS_DIR"
 echo -e "${CYAN}📍 Target project:${NC} $TARGET_DIR"
 
-# 3. Create project directory structure
-echo -e "\n${BLUE}[1/5] 📂 Creating project directory structure...${NC}"
+# 3. Git repository check and initialization
+echo -e "\n${BLUE}[0/6] 🔧 Checking git repository...${NC}"
+if [ -d "$TARGET_DIR/.git" ]; then
+    echo -e "${GREEN}✓ Git repository already exists — skipping init${NC}"
+else
+    echo -e "${CYAN}⚠ No git repository found. Initializing...${NC}"
+    # Create a generic .gitignore if one doesn't exist
+    if [ ! -f "$TARGET_DIR/.gitignore" ]; then
+        cat > "$TARGET_DIR/.gitignore" << 'GITIGNORE'
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+Thumbs.db
+
+# SDD artifacts (generated, not source)
+openspec/changes/archive/
+GITIGNORE
+        echo -e "${GREEN}✓ .gitignore created${NC}"
+    else
+        echo -e "${CYAN}✓ .gitignore already exists — keeping it${NC}"
+    fi
+    git -C "$TARGET_DIR" init
+    git -C "$TARGET_DIR" add .
+    git -C "$TARGET_DIR" commit -m "chore: initial commit — before SDD harness bootstrap"
+    echo -e "${GREEN}✓ Git repository initialized with initial commit${NC}"
+fi
+
+# 4. Create project directory structure
+echo -e "\n${BLUE}[1/6] 📂 Creating project directory structure...${NC}"
 mkdir -p "$TARGET_DIR/.opencode/agents"
 mkdir -p "$TARGET_DIR/.opencode/commands"
 mkdir -p "$TARGET_DIR/.opencode/skills"
@@ -54,13 +116,13 @@ mkdir -p "$TARGET_DIR/.agent/skills"
 mkdir -p "$TARGET_DIR/openspec/schemas/ssd-orchestrated"
 echo -e "${GREEN}✓ Directories created${NC}"
 
-# 4. Install agent prompts locally (project-scoped, not global)
-echo -e "\n${BLUE}[2/5] 🤖 Installing agent prompts into .opencode/agents/...${NC}"
+# 5. Install agent prompts locally (project-scoped, not global)
+echo -e "\n${BLUE}[2/6] 🤖 Installing agent prompts into .opencode/agents/...${NC}"
 cp -v "$HARNESS_DIR"/agents/*.md "$TARGET_DIR/.opencode/agents/"
 echo -e "${GREEN}✓ Agent prompts installed in $TARGET_DIR/.opencode/agents/${NC}"
 
-# 5. Generate project-local opencode.jsonc
-echo -e "\n${BLUE}[3/5] ⚙️  Generating project-local opencode.jsonc...${NC}"
+# 6. Generate project-local opencode.jsonc
+echo -e "\n${BLUE}[3/6] ⚙️  Generating project-local opencode.jsonc...${NC}"
 OPENCODE_CONFIG="$TARGET_DIR/opencode.jsonc"
 
 if [ -f "$OPENCODE_CONFIG" ]; then
@@ -106,6 +168,26 @@ if [ "${SKIP_CONFIG}" != "true" ]; then
       "mode": "subagent",
       "model": "opencode/deepseek-v4-flash-free",
       "variant": "medium"
+    },
+    "sdd-documenter": {
+      "mode": "subagent",
+      "model": "opencode/deepseek-v4-flash-free",
+      "variant": "medium"
+    },
+    "sdd-ui-designer": {
+      "mode": "subagent",
+      "model": "opencode/deepseek-v4-flash-free",
+      "variant": "medium"
+    },
+    "aux-oracle": {
+      "mode": "subagent",
+      "model": "opencode/deepseek-v4-flash-free",
+      "variant": "medium"
+    },
+    "aux-handyman": {
+      "mode": "subagent",
+      "model": "opencode/deepseek-v4-flash-free",
+      "variant": "medium"
     }
   }
 }
@@ -113,8 +195,8 @@ EOF
     echo -e "${GREEN}✓ opencode.jsonc generated${NC}"
 fi
 
-# 6. Copy skills, workflows, commands and OpenSpec schemas
-echo -e "\n${BLUE}[4/5] 🧩 Copying skills, workflows, commands and OpenSpec schemas...${NC}"
+# 7. Copy skills, workflows, commands and OpenSpec schemas
+echo -e "\n${BLUE}[4/6] 🧩 Copying skills, workflows, commands and OpenSpec schemas...${NC}"
 cp -rv "$HARNESS_DIR"/project-templates/dot-agent/workflows/* "$TARGET_DIR/.agent/workflows/"
 cp -rv "$HARNESS_DIR"/project-templates/dot-agent/skills/*    "$TARGET_DIR/.agent/skills/"
 cp -rv "$HARNESS_DIR"/project-templates/dot-opencode/commands/* "$TARGET_DIR/.opencode/commands/"
@@ -123,8 +205,15 @@ cp -rv "$HARNESS_DIR"/project-templates/openspec-schema/ssd-orchestrated/* \
         "$TARGET_DIR/openspec/schemas/ssd-orchestrated/"
 echo -e "${GREEN}✓ Skills, workflows, commands and schemas injected${NC}"
 
-# 7. Install AGENTS.md
-echo -e "\n${BLUE}[5/5] 📜 Installing AGENTS.md...${NC}"
+# 8. Git checkpoint: post-harness-install
+echo -e "\n${BLUE}[5/6] 📸 Creating post-install git checkpoint...${NC}"
+git -C "$TARGET_DIR" add .
+git -C "$TARGET_DIR" commit -m "chore(sdd): bootstrap harness installed" 2>/dev/null || \
+    echo -e "${CYAN}✓ No changes to commit (harness already tracked)${NC}"
+echo -e "${GREEN}✓ Git checkpoint created${NC}"
+
+# 9. Install AGENTS.md
+echo -e "\n${BLUE}[6/6] 📜 Installing AGENTS.md...${NC}"
 if [ -f "$TARGET_DIR/AGENTS.md" ]; then
     echo -e "${CYAN}⚠ AGENTS.md already exists in target project.${NC}"
     read -p "Overwrite with Zugzbot master rules? (y/n): " confirm
