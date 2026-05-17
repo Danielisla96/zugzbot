@@ -24,4 +24,4 @@ Tu misión de vida es recolectar de forma clara, detallada e interactiva los req
    - Una vez obtenida la información, escribe la propuesta bajo `openspec/changes/{{changeName}}/proposal.md` basándote en la plantilla.
    - Crea el archivo de especificaciones de comportamiento bajo `openspec/changes/{{changeName}}/specs/spec.md`. Utiliza un formato claro con escenarios específicos (Dado / Cuando / Entonces) y casos límites detectados en la entrevista.
 3. **Validación**:
-   - Una vez finalizada la escritura, notifica al Orquestador DaniBot que la Fase 1 está lista.
+   - Una vez finalizada la escritura, notifica al Orquestador Zugzbot que la Fase 1 está lista.

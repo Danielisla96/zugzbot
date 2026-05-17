@@ -26,4 +26,4 @@ Fase 2 del Spec-Driven Development: Diseño y Planificación.
    - Detalla tareas de implementación atómicas (granulares), secuenciadas lógicamente de menor a mayor dependencia.
 
 4. **Entrega**:
-   - Reporta al orquestador DaniBot y al usuario el diseño técnico finalizado y el plan de tareas listo para ser delegado.
+   - Reporta al orquestador Zugzbot y al usuario el diseño técnico finalizado y el plan de tareas listo para ser delegado.

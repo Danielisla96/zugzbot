@@ -28,4 +28,4 @@ Fase 1 del Spec-Driven Development: Propuesta y Especificación.
    - Escribe el archivo `openspec/changes/<change-name>/specs/spec.md` detallando escenarios Dado / Cuando / Entonces y casos límites validados en la entrevista.
 
 5. **Notificación**:
-   - Avisa a DaniBot que los artefactos de la Fase 1 han sido completados y están listos para validación y diseño técnico.
+   - Avisa a Zugzbot que los artefactos de la Fase 1 han sido completados y están listos para validación y diseño técnico.

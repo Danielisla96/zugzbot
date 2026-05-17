@@ -69,7 +69,7 @@ echo -e "${GREEN}✓ Workflows, comandos, skills y esquemas del ciclo de vida SD
 echo -e "\n${BLUE}[4/4] 📜 Instalando archivo de reglas maestras AGENTS.md...${NC}"
 if [ -f "$TARGET_DIR/AGENTS.md" ]; then
     echo -e "${CYAN}⚠ Advertencia: Ya existe un archivo AGENTS.md en el destino.${NC}"
-    read -p "¿Deseas sobreescribirlo con las reglas maestras de DaniBot? (s/n): " confirm
+    read -p "¿Deseas sobreescribirlo con las reglas maestras de Zugzbot? (s/n): " confirm
     if [[ "$confirm" =~ ^[sS]$ ]]; then
         cp -v "$HARNESS_DIR/project-templates/AGENTS.md" "$TARGET_DIR/AGENTS.md"
         echo -e "${GREEN}✓ AGENTS.md sobreescrito exitosamente${NC}"
@@ -87,5 +87,5 @@ echo -e "${GREEN}🎉 ¡INSTALACIÓN COMPLETADA DE FORMA IMPECABLE!${NC}"
 echo -e "${BLUE}======================================================================${NC}"
 echo -e "${CYAN}💡 Próximos Pasos:${NC}"
 echo -e "  1. Ejecuta 'opencode' en la raíz de tu nuevo proyecto."
-echo -e "  2. Dile a DaniBot el cambio que quieres realizar y él disparará el ciclo."
+echo -e "  2. Dile a Zugzbot el cambio que quieres realizar y él disparará el ciclo."
 echo -e "  3. ¡Disfruta del ciclo de desarrollo de software más seguro y premium de la galaxia! 🚀\n"

@@ -23,4 +23,4 @@ Tu misión de vida es traducir los requerimientos y escenarios de comportamiento
    - Estructura las tareas de forma secuencial y lógica (dependencies-first): primero bases y servicios del backend, luego interfaz visual, luego lógica de enlace.
    - Escribe el checklist maestro detallado en `openspec/changes/{{changeName}}/orchestrator_tasks.md` utilizando casillas markdown `- [ ]`.
 4. **Verificación**:
-   - Al concluir, notifica a DaniBot que la planificación de la arquitectura y tareas está lista para su delegación.
+   - Al concluir, notifica a Zugzbot que la planificación de la arquitectura y tareas está lista para su delegación.

@@ -29,5 +29,5 @@ Fase 3 del Spec-Driven Development: Implementación.
 
 4. **Iteración y Auto-Curación**:
    - Repite el proceso para cada tarea del checklist hasta completarlas todas.
-   - Si DaniBot te reactiva con un reporte de error de pruebas de la Fase 4, suspende el avance, analiza el reporte de fallas de `@sdd-verifier`, corrige el código en `src/`, actualiza el checklist y vuelve a entregar.
-   - Si surge un conflicto de diseño o una ambigüedad en los requerimientos, pausa e infórmale a DaniBot.
+   - Si Zugzbot te reactiva con un reporte de error de pruebas de la Fase 4, suspende el avance, analiza el reporte de fallas de `@sdd-verifier`, corrige el código en `src/`, actualiza el checklist y vuelve a entregar.
+   - Si surge un conflicto de diseño o una ambigüedad en los requerimientos, pausa e infórmale a Zugzbot.

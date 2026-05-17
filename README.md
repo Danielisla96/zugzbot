@@ -7,7 +7,7 @@
 
 ## 🚀 Key Concepts & Architecture
 
-This harness implements a strict **Spec-Driven Development (SDD)** lifecycle using a modular multi-agent system orchestrated by **DaniBot**.
+This harness implements a strict **Spec-Driven Development (SDD)** lifecycle using a modular multi-agent system orchestrated by **Zugzbot**.
 
 ```mermaid
 graph TD

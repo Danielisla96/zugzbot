@@ -24,7 +24,7 @@ Fase 4 del Spec-Driven Development: Verificación y Pruebas.
    - Ejecuta la suite de pruebas locales (ej. `pytest`).
 
 3. **Corrección Continua y Auto-Curación**:
-   - Si alguna prueba falla o se detectan problemas estáticos, **genera un archivo de logs de fallo detallado** en la carpeta del cambio y repórtaselo a DaniBot de forma clara para disparar la auto-curación de `@sdd-implementer`.
+   - Si alguna prueba falla o se detectan problemas estáticos, **genera un archivo de logs de fallo detallado** en la carpeta del cambio y repórtaselo a Zugzbot de forma clara para disparar la auto-curación de `@sdd-implementer`.
    - Vuelve a ejecutar las pruebas una vez devuelta la tarea corregida hasta lograr 100% de éxito.
 
 4. **Validación del Servidor y Reporte Curl (`verification_report.md`)**:
@@ -34,4 +34,4 @@ Fase 4 del Spec-Driven Development: Verificación y Pruebas.
    - Apaga el servidor limpiamente una vez concluido el reporte.
 
 5. **Aprobación**:
-   - Una vez comprobada la calidad impecable, la cobertura total de specs en el código y el reporte curl generado, notifica a DaniBot que el cambio está validado y listo para producción.
+   - Una vez comprobada la calidad impecable, la cobertura total de specs en el código y el reporte curl generado, notifica a Zugzbot que el cambio está validado y listo para producción.

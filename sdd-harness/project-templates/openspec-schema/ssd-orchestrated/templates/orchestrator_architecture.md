@@ -3,7 +3,7 @@
 Este documento detalla la distribución de responsabilidades y el flujo de agentes que guiará el desarrollo de este cambio.
 
 ## 1. Subagentes y Ámbito de Trabajo
-- **DaniBot (Orquestador Maestro)**: Coordina, delega tareas de forma secuencial y supervisa la calidad.
+- **Zugzbot (Orquestador Maestro)**: Coordina, delega tareas de forma secuencial y supervisa la calidad.
 - **Especialistas del Ciclo de Vida**:
   - `sdd-proposer` (Fase 1): Diseña la propuesta y especificaciones detalladas.
   - `sdd-planner` (Fase 2): Diseña la arquitectura y define el plan de tareas atómicas.

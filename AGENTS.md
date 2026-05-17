@@ -1,6 +1,6 @@
 # SDD Multi-Agent Orchestrated Project
 
-This project enforces a strict **Spec-Driven Development (SDD)** lifecycle using a modular multi-agent system orchestrated by **DaniBot**.
+This project enforces a strict **Spec-Driven Development (SDD)** lifecycle using a modular multi-agent system orchestrated by **Zugzbot**.
 
 ## 1. SDD Lifecycle (Mandatory Steps)
 
