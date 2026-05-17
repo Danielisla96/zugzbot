@@ -100,7 +100,7 @@ GITIGNORE
     else
         echo -e "${CYAN}✓ .gitignore already exists — keeping it${NC}"
     fi
-    git -C "$TARGET_DIR" init
+    git -C "$TARGET_DIR" init -b main
     git -C "$TARGET_DIR" add .
     git -C "$TARGET_DIR" commit -m "chore: initial commit — before SDD harness bootstrap"
     echo -e "${GREEN}✓ Git repository initialized with initial commit${NC}"
