@@ -1,0 +1,2 @@
+# zugzbot
+harnesses zugzbot - opencode
