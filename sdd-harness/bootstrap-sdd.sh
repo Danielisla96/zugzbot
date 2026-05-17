@@ -49,15 +49,21 @@ echo -e "${GREEN}✓ Prompts de agentes instalados correctamente en $GLOBAL_AGEN
 
 # 4. Crear estructura de carpetas en el proyecto de destino
 echo -e "\n${BLUE}[2/4] 📂 Creando estructura de directorios en el proyecto...${NC}"
+mkdir -p "$TARGET_DIR/.agent/workflows"
+mkdir -p "$TARGET_DIR/.agent/skills"
+mkdir -p "$TARGET_DIR/.opencode/commands"
 mkdir -p "$TARGET_DIR/.opencode/skills"
 mkdir -p "$TARGET_DIR/openspec/schemas/ssd-orchestrated"
 echo -e "${GREEN}✓ Directorios de proyecto creados con éxito${NC}"
 
-# 5. Inyectar skills y esquemas
-echo -e "\n${BLUE}[3/4] 🧩 Copiando skills, esquemas y plantillas de OpenSpec...${NC}"
+# 5. Inyectar skills, workflows, comandos y esquemas
+echo -e "\n${BLUE}[3/4] 🧩 Copiando skills, workflows, comandos y esquemas de OpenSpec...${NC}"
+cp -rv "$HARNESS_DIR"/project-templates/dot-agent/workflows/* "$TARGET_DIR/.agent/workflows/"
+cp -rv "$HARNESS_DIR"/project-templates/dot-agent/skills/* "$TARGET_DIR/.agent/skills/"
+cp -rv "$HARNESS_DIR"/project-templates/dot-opencode/commands/* "$TARGET_DIR/.opencode/commands/"
 cp -rv "$HARNESS_DIR"/project-templates/dot-opencode/skills/* "$TARGET_DIR/.opencode/skills/"
 cp -rv "$HARNESS_DIR"/project-templates/openspec-schema/ssd-orchestrated/* "$TARGET_DIR/openspec/schemas/ssd-orchestrated/"
-echo -e "${GREEN}✓ Skills y plantillas del ciclo de vida SDD inyectadas${NC}"
+echo -e "${GREEN}✓ Workflows, comandos, skills y esquemas del ciclo de vida SDD inyectados${NC}"
 
 # 6. Copiar archivo AGENTS.md
 echo -e "\n${BLUE}[4/4] 📜 Instalando archivo de reglas maestras AGENTS.md...${NC}"
