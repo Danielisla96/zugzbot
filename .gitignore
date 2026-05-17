@@ -1,0 +1,37 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+*.whl
+
+# --- Entornos virtuales ---
+venv/
+.venv/
+env/
+.env
+
+# --- IDE / Editor ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- Testing ---
+.pytest_cache/
+.htmlcov/
+*.coverage
+coverage/
+coverage.xml
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Proyecto ---
+# No ignorar .env.example, solo el .env real
+!.env.example
