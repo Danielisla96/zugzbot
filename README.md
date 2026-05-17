@@ -45,14 +45,31 @@ It is incredibly simple to bootstrap this SDD harness in any new or existing rep
 
 - You must have the [OpenCode](https://opencode.dev) agent toolchain installed on your local machine.
 
-### Installation Steps
+### Installation Methods
+
+#### Option A: One-Line Zero-Footprint Installation (Recommended 🚀)
+
+Since the `zugzbot` repository is public, you can bootstrap the SDD harness in **any local project** with a single command without keeping a permanent local clone of the harness repository.
+
+Simply navigate to the root of your target project and run:
+```bash
+git clone --depth 1 https://github.com/Danielisla96/zugzbot.git /tmp/zugzbot-harness && /tmp/zugzbot-harness/sdd-harness/bootstrap-sdd.sh && rm -rf /tmp/zugzbot-harness
+```
+
+*This command clones the harness to a temporary folder, runs the bootstrap script to inject all necessary agents, workflows, and templates into your project, and then automatically cleans up the temporary files.*
+
+---
+
+#### Option B: Local File Installation
+
+If you already have the `zugzbot` repository cloned locally:
 
 1. **Navigate to the root of your target project**:
    ```bash
    cd /path/to/your/new-project
    ```
 
-2. **Run the bootstrap script** directly from the centralized `zugzbot` folder:
+2. **Run the bootstrap script** from your local clone:
    ```bash
    /path/to/zugzbot/sdd-harness/bootstrap-sdd.sh
    ```
