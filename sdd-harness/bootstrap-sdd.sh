@@ -44,6 +44,11 @@ echo -e "${CYAN}📍 Proyecto de Destino:${NC} $TARGET_DIR"
 # 3. Copiar prompts globales de agentes
 echo -e "\n${BLUE}[1/4] 📦 Instalando agentes globales de OpenCode...${NC}"
 mkdir -p "$GLOBAL_AGENTS_DIR"
+# Proactivamente remover el antiguo perfil danibot.md si existe para evitar duplicación
+if [ -f "$GLOBAL_AGENTS_DIR/danibot.md" ]; then
+    rm -f "$GLOBAL_AGENTS_DIR/danibot.md"
+    echo -e "${CYAN}✓ Antiguo perfil 'danibot.md' removido de la configuración global${NC}"
+fi
 cp -v "$HARNESS_DIR"/agents/*.md "$GLOBAL_AGENTS_DIR/"
 echo -e "${GREEN}✓ Prompts de agentes instalados correctamente en $GLOBAL_AGENTS_DIR${NC}"
 
