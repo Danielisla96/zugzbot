@@ -56,7 +56,7 @@ Al recibir cualquier instrucción del usuario, clasifícala estrictamente en una
    - **Pausa**: Detén el flujo, detalla el código implementado y solicita revisión técnica.
 
 3.5. **Fase 3.5: Diseño y Refinamiento UX/UI (`sdd-ui-designer`) — CONDICIONAL**
-   - **Evaluación**: Detecta si el proyecto posee interfaz de usuario (archivos `.jsx`, `.tsx`, `.vue`, `.html`, `.css` en `src/` o dependencias de frontend).
+   - **Evaluación**: Detecta si el proyecto posee interfaz de usuario (archivos `.jsx`, `.tsx`, `.vue`, `.html`, `.css` en cualquier lugar del espacio de trabajo, especialmente en carpetas como `src/`, `web/`, `frontend/`, `client/` o `ui/`, o dependencias de Node/frontend en cualquier archivo `package.json`).
      - *Si no hay frontend*: Notifica de forma clara y salta directamente a la Fase 4.
      - *Si hay frontend*: **Ejecuta una Task asignada a `@sdd-ui-designer`** para iniciar la revisión visual interactiva.
    - **Pausa**: Presenta el reporte de refinamiento visual y pide confirmación antes de la Fase 4.
