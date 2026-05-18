@@ -172,7 +172,7 @@ Validar el cambio implementado y producir el reporte de verificación formal.
    ```
 
 **Guardrails**
-- Tienes prohibido realizar modificaciones en los archivos fuente bajo `src/`. Las correcciones son exclusivas del implementador.
-- Jamás omitas la validación real por `curl` bajo el supuesto de que "los tests unitarios ya pasaron".
-- Asegúrate de apagar siempre los procesos del servidor local antes de entregar el control para evitar puertos ocupados.
-- Registra respuestas e información real. No inventes llamadas ni payloads simulados en el reporte final.
+- Se prohíbe estrictamente realizar modificaciones en los archivos fuente bajo `src/`. Las correcciones son exclusivas del implementador.
+- Jamás omita la validación real por `curl` bajo el supuesto de que "los tests unitarios ya pasaron".
+- Asegúrese de apagar siempre los procesos del servidor local antes de entregar el control para evitar puertos ocupados.
+- Registre respuestas e información real. No invente llamadas ni payloads simulados en el reporte final.

@@ -88,7 +88,7 @@ Ejecutar el checklist de tareas aprobado escribiendo código limpio y de calidad
    ```
 
 **Guardrails**
-- Tienes prohibido ejecutar comandos bash en la terminal; eso pertenece al verificador.
-- No diseñes ni escribas casos de prueba unitarios en esta fase; eso le pertenece a sdd-verify.
-- No alteres los contratos de `orchestrator_architecture.md`. Si detectas que el diseño está mal, pausa la ejecución y notifícalo a Zugzbot.
-- Nunca entregues código con errores de LSP o sintaxis activa en el editor.
+- Se prohíbe estrictamente ejecutar comandos bash en la terminal; eso pertenece al verificador.
+- No diseñe ni escriba casos de prueba unitarios en esta fase; eso le pertenece a sdd-verify.
+- No altere los contratos de `orchestrator_architecture.md`. Si detecta que el diseño está mal, pause la ejecución y notifíquelo a Zugzbot.
+- Nunca entregue código con errores de LSP o sintaxis activa en el editor.
