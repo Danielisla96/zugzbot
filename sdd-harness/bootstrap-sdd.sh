@@ -240,11 +240,13 @@ if [ "$DRY_RUN" = false ]; then
     # Use cp -rn (no-overwrite) so re-running the bootstrap never clobbers customized skills
     cp -rn "$HARNESS_DIR"/project-templates/dot-agent/workflows/. "$TARGET_DIR/.agent/workflows/"
     cp -rn "$HARNESS_DIR"/project-templates/dot-agent/skills/.    "$TARGET_DIR/.agent/skills/"
+    cp -n "$HARNESS_DIR"/project-templates/dot-agent/mcp-config.json "$TARGET_DIR/.agent/mcp-config.json" 2>/dev/null || true
     cp -rn "$HARNESS_DIR"/project-templates/dot-opencode/commands/. "$TARGET_DIR/.opencode/commands/"
     cp -rn "$HARNESS_DIR"/project-templates/dot-opencode/skills/.  "$TARGET_DIR/.opencode/skills/"
+    cp -n "$HARNESS_DIR"/project-templates/dot-opencode/mcp-config.json "$TARGET_DIR/.opencode/mcp-config.json" 2>/dev/null || true
     cp -rn "$HARNESS_DIR"/project-templates/openspec-schema/ssd-orchestrated/. \
             "$TARGET_DIR/openspec/schemas/ssd-orchestrated/"
-    echo -e "${GREEN}✓ Skills, workflows, commands and schemas injected${NC}"
+    echo -e "${GREEN}✓ Skills, workflows, commands, MCP configs and schemas injected${NC}"
 else
     echo -e "${CYAN}[dry-run] Would copy: workflows, skills, commands, schemas${NC}"
 fi

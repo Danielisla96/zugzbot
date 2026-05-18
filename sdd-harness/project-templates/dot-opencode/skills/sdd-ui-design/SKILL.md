@@ -1,15 +1,15 @@
 ---
 name: sdd-ui-design
-description: Review and improve the frontend UI/UX of the implemented solution. Starts the dev server, takes screenshots, analyzes the interface against UX/UI best practices, applies targeted improvements, and generates a visual review report. Use after implementation is complete and a frontend is present.
+description: Revisar y mejorar el frontend (UI/UX) de la solución implementada. Levanta el dev server, toma capturas de pantalla mediante Puppeteer MCP, analiza la interfaz contra las mejores prácticas de UX/UI, aplica mejoras de diseño específicas y genera un reporte visual. Utilizar después del desarrollo si existe un frontend.
 license: MIT
-compatibility: Requires a frontend project with a runnable dev server. Requires browser tool access.
+compatibility: Requiere un proyecto frontend con un servidor de desarrollo ejecutable. Requiere acceso a herramientas de visualización o al servidor MCP de Puppeteer.
 metadata:
   author: zugzbot
-  version: "1.0"
+  version: "1.1"
   generatedBy: "zugzbot-harness"
 ---
 
-Revisar y mejorar el frontend (UI/UX) de la solución implementada utilizando percepción visual.
+Revisar y mejorar el frontend (UI/UX) de la solución implementada utilizando percepción visual por medio de Puppeteer MCP.
 
 **Entrada**: El nombre del cambio activo en kebab-case. Si se omite, infiéralo del contexto o solicítelo al usuario.
 
@@ -48,8 +48,8 @@ Revisar y mejorar el frontend (UI/UX) de la solución implementada utilizando pe
 
 3. **Capturar pantalla inicial ("Before")**
 
-   Navegue a `http://localhost:<puerto>` utilizando la herramienta de browser.
-   Tome una captura de pantalla del estado actual de la UI. Esta será su referencia **before** (antes).
+   Navegue a `http://localhost:<puerto>` utilizando las herramientas del servidor MCP `puppeteer` (ej: ejecutando la herramienta `puppeteer_navigate` con la URL local).
+   Tome una captura de pantalla del estado actual de la UI utilizando la herramienta MCP `puppeteer_screenshot`. Esta será su referencia **before** (antes). Guarde o registre esta imagen de manera referencial.
 
 4. **Analizar la UI contra los principios UX/UI de excelencia**
 
@@ -80,7 +80,7 @@ Revisar y mejorar el frontend (UI/UX) de la solución implementada utilizando pe
    - Ediciones estrictamente quirúrgicas — evite reescribir componentes completos.
    - Prefiera variables CSS / design tokens por sobre valores directos (hardcoded).
    - No altere en absoluto lógica de negocio, persistencia de datos o enrutamiento.
-   - Tras cada bloque de modificaciones estilísticas, capture una pantalla nueva para verificar las mejoras.
+   - Tras cada bloque de cambios de estilos, capture una pantalla nueva utilizando `puppeteer_screenshot` para verificar las mejoras de forma interactiva y comparar el delta visual.
 
    Efectúe al menos dos iteraciones completas. Detenga el refinamiento cuando la UI sea de calidad premium.
 
@@ -103,7 +103,7 @@ Revisar y mejorar el frontend (UI/UX) de la solución implementada utilizando pe
    <tecnología, comando de inicio dev, puerto>
 
    ## Comparativa Visual (Antes / Después)
-   <capturas de pantalla embebidas o descripción de la evolución visual>
+   <capturas de pantalla de Puppeteer o descripción de la evolución visual>
 
    ## Resumen de Ajustes Aplicados
 
@@ -138,7 +138,7 @@ Revisar y mejorar el frontend (UI/UX) de la solución implementada utilizando pe
 
 **Guardrails**
 - Prohibido modificar lógica de negocio, manejo de estados de la app o rutas de backend. Límite visual estricto.
-- Nunca omita las capturas de pantalla; la percepción visual interactiva es el valor central de esta fase.
+- Nunca omita las capturas de pantalla; la percepción visual interactiva mediante el servidor MCP de Puppeteer es el valor central de esta fase.
 - Si el puerto de desarrollo por defecto genera colisión, pruebe puertos libres alternos (3001, 5173, 8080).
 - Asegúrese de apagar el servidor local antes de notificar la finalización para liberar los recursos del sistema.
 - Si detecta un bug funcional durante el diseño de la UI, documéntelo y repórtelo como nota informativa para el implementador, sin arreglarlo usted mismo.
