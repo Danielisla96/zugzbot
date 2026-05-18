@@ -142,3 +142,32 @@ Revisar y mejorar el frontend (UI/UX) de la solución implementada utilizando pe
 - Si el puerto de desarrollo por defecto genera colisión, pruebe puertos libres alternos (3001, 5173, 8080).
 - Asegúrese de apagar el servidor local antes de notificar la finalización para liberar los recursos del sistema.
 - Si detecta un bug funcional durante el diseño de la UI, documéntelo y repórtelo como nota informativa para el implementador, sin arreglarlo usted mismo.
+
+**Alternativas de Ejecución y Fallbacks Locales (Si el servidor MCP no está activo o disponible)**
+Si por alguna razón de entorno el servidor MCP no está respondiendo o conectado, tienes estrictamente permitido utilizar las siguientes alternativas de consola nativas del sistema:
+
+1. **Capturas de pantalla estáticas rápidas**:
+   El sistema del usuario tiene instalado `puppeteer-cli` de forma global. Utilízalo directamente desde la consola para tomar fotos instantáneas:
+   ```bash
+   puppeteer screenshot http://localhost:5173 <ruta_salida.png> --viewport 1280x800
+   ```
+
+2. **Interacciones complejas dinámicas (Clicks, Scrolls, Esperas de llamados API)**:
+   Puedes inyectar la variable de entorno `NODE_PATH` para que Node.js localice y cargue el paquete global de Puppeteer del sistema de forma directa, sin necesidad de descargar nada ni inicializar carpetas temporales:
+   ```bash
+   NODE_PATH=$(npm root -g) node -e "
+   const puppeteer = require('puppeteer');
+   (async () => {
+     const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+     const page = await browser.newPage();
+     await page.setViewport({ width: 1280, height: 800 });
+     await page.goto('http://localhost:5173');
+     await page.waitForSelector('button');
+     await page.click('button'); // O el selector del elemento a clickear
+     await new Promise(r => setTimeout(r, 2000)); // Esperar respuesta de la API
+     await page.screenshot({ path: '<ruta_salida.png>' });
+     await browser.close();
+   })();
+   "
+   ```
+
