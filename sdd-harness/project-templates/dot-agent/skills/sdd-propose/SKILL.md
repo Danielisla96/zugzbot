@@ -1,140 +1,139 @@
 ---
 name: sdd-propose
-description: Conduct a structured requirements interview with the user and produce the two canonical proposal artifacts (proposal.md and specs/spec.md) for the named change. Use at the start of every SDD cycle, before any design or implementation work begins.
+description: Realizar una entrevista técnica estructurada de requerimientos con el usuario y producir los dos artefactos canónicos de especificación (proposal.md y specs/spec.md) para el cambio nombrado. Utilizar al inicio de cada ciclo SDD antes de cualquier diseño o desarrollo.
 license: MIT
-compatibility: No external tools required. Read/write access to openspec/ is sufficient.
+compatibility: No requiere herramientas externas. Acceso de lectura y escritura a openspec/ es suficiente.
 metadata:
   author: zugzbot
   version: "1.0"
   generatedBy: "zugzbot-harness"
 ---
 
-Gather requirements from the user and produce the canonical proposal artifacts for this change.
+Reunir los requerimientos del usuario y producir los artefactos canónicos de propuesta para este cambio.
 
-**Input**: The name of the change in kebab-case (e.g. `user-auth`, `payment-gateway`). If omitted, ask the user for it before proceeding.
+**Entrada**: El nombre del cambio en formato kebab-case (ej: `user-auth`, `payment-gateway`). Si se omite, solicítelo al usuario antes de continuar.
 
-**Steps**
+**Pasos**
 
-1. **Resolve the change name and prepare the workspace**
+1. **Resolver el nombre del cambio y preparar el entorno de trabajo**
 
-   - Confirm the change name with the user if it was not provided.
-   - Create the directory `openspec/changes/<name>/specs/` if it does not exist.
-   - Check whether `openspec/changes/<name>/proposal.md` already exists.
-     - If it does: read it, inform the user, and ask whether to overwrite or extend it before continuing.
+   - Confirme el nombre del cambio con el usuario si no fue proporcionado.
+   - Cree el directorio `openspec/changes/<nombre>/specs/` si no existe.
+   - Verifique si `openspec/changes/<nombre>/proposal.md` ya existe.
+     - Si existe: léalo, informe al usuario y pregunte si debe sobrescribirse o extenderse antes de continuar.
 
-2. **Conduct the requirements interview**
+2. **Realizar la entrevista de requerimientos**
 
-   Ask the following questions. Wait for answers before moving to the next group. Do NOT ask all questions at once.
+   Formule las siguientes preguntas agrupadas. Espere las respuestas antes de pasar al siguiente grupo. NO formule todas las preguntas de una sola vez.
 
-   **Group A — Context and purpose**
-   - What problem does this change solve? Who is the end user or beneficiary?
-   - What is the expected business or technical outcome once this is implemented?
+   **Grupo A — Contexto y Propósito**
+   - ¿Qué problema resuelve este cambio? ¿Quién es el usuario final o beneficiario?
+   - ¿Cuál es el resultado comercial o técnico esperado una vez implementado?
 
-   **Group B — Technical scope**
-   - What is the technology stack (language, framework, database, runtime)?
-   - Are there existing modules, services, or APIs this change must integrate with?
-   - What are the performance or scale expectations (if any)?
+   **Grupo B — Alcance Técnico**
+   - ¿Cuál es el stack tecnológico (lenguaje, framework, base de datos, entorno de ejecución)?
+   - ¿Existen módulos, servicios o APIs actuales con los que este cambio deba integrarse?
+   - ¿Cuáles son las expectativas de rendimiento o escala (si aplica)?
 
-   **Group C — Behavioral scenarios**
-   - Walk me through the main happy-path flow step by step.
-   - What are the most likely failure or edge cases we must handle?
-   - Are there any explicit exclusions — things this change must NOT do?
+   **Grupo C — Escenarios de Comportamiento**
+   - Descríbame paso a paso el flujo principal (camino feliz o happy-path).
+   - ¿Cuáles son los casos de error o escenarios límite más probables que debemos manejar?
+   - ¿Existen exclusiones explícitas (cosas que este cambio NO deba hacer)?
 
-   **Group D — Acceptance criteria**
-   - How will you know this is done and correct? What does success look like?
-   - Are there any regulatory, security, or accessibility requirements?
+   **Grupo D — Criterios de Aceptación**
+   - ¿Cómo sabrá que esto está terminado y correcto? ¿Qué define el éxito del cambio?
+   - ¿Existen requisitos de seguridad, regulatorios o de accesibilidad específicos?
 
-   Maintain a professional, consultative tone throughout. Do not proceed to Step 3 until all groups are answered.
+   Mantenga un tono sumamente consultivo, profesional y educado durante el diálogo. No proceda al Paso 3 hasta que todas las respuestas de los grupos estén consolidadas.
 
-3. **Write `proposal.md`**
+3. **Escribir `proposal.md`**
 
-   Write to `openspec/changes/<name>/proposal.md`:
+   Escriba en el archivo `openspec/changes/<nombre>/proposal.md`:
 
    ```markdown
-   # Proposal — <change-name>
+   # Propuesta — <nombre-del-cambio>
 
-   ## Summary
-   <One paragraph describing what is being built and why.>
+   ## Resumen
+   <Un párrafo descriptivo sobre qué se está construyendo y el motivo.>
 
-   ## Objectives
-   - <objective 1>
-   - <objective 2>
+   ## Objetivos
+   - <objetivo 1>
+   - <objetivo 2>
 
-   ## Technology Stack
-   | Layer | Technology |
+   ## Stack Tecnológico
+   | Capa | Tecnología |
    |---|---|
-   | Language | ... |
+   | Lenguaje | ... |
    | Framework | ... |
-   | Database | ... |
-   | Runtime | ... |
+   | Base de Datos | ... |
+   | Entorno | ... |
 
-   ## Scope
+   ## Alcance
 
-   ### In scope
+   ### Dentro del Alcance
    - <item>
 
-   ### Out of scope
+   ### Fuera del Alcance
    - <item>
 
-   ## Acceptance Criteria
-   - <criterion>
+   ## Criterios de Aceptación
+   - <criterio>
 
-   ## Open Questions
-   - <any unresolved item that may affect design>
+   ## Preguntas Abiertas
+   - <cualquier duda técnica no resuelta que afecte el diseño>
    ```
 
-4. **Write `specs/spec.md`**
+4. **Escribir `specs/spec.md`**
 
-   Write to `openspec/changes/<name>/specs/spec.md`:
+   Escriba en el archivo `openspec/changes/<nombre>/specs/spec.md`:
 
    ```markdown
-   # Behavioral Specification — <change-name>
+   # Especificación de Comportamiento — <nombre-del-cambio>
 
-   ## Overview
-   <Brief description of the system behavior being specified.>
+   ## Descripción General
+   <Breve resumen del comportamiento del sistema especificado.>
 
-   ## Scenarios
+   ## Escenarios
 
-   ### Scenario 1 — <Happy path title>
-   **Given** <precondition>
-   **When** <action>
-   **Then** <expected outcome>
+   ### Escenario 1 — <Título del happy path>
+   **Dado** <precondición>
+   **Cuando** <acción>
+   **Entonces** <resultado esperado>
 
-   ### Scenario 2 — <Edge case or failure title>
-   **Given** <precondition>
-   **When** <action>
-   **Then** <expected outcome>
+   ### Escenario 2 — <Título del caso límite o de error>
+   **Dado** <precondición>
+   **Cuando** <acción>
+   **Entonces** <resultado esperado>
 
-   <!-- Add as many scenarios as needed. Minimum: happy path + 2 edge cases. -->
+   <!-- Agregue tantos escenarios como sea necesario. Mínimo: happy path + 2 casos límites/error. -->
 
-   ## Constraints
-   - <constraint or non-functional requirement>
+   ## Restricciones
+   - <restricción o requerimiento no funcional>
    ```
 
-   Rules:
-   - Every scenario must be traceable to at least one acceptance criterion in `proposal.md`.
-   - Include at minimum: one happy-path scenario, one failure/error scenario, and one boundary/edge-case scenario.
-   - Scenarios must be concrete and testable — no vague language like "it should work correctly."
+   Reglas:
+   - Cada escenario debe ser completamente trazable a al menos un criterio de aceptación en `proposal.md`.
+   - Incluya al menos: un escenario de flujo feliz, un escenario de error o fallo y un escenario de caso límite o valores frontera.
+   - Los escenarios deben ser concretos y testeables — evite ambigüedades como "debe funcionar correctamente".
 
-5. **Report to Zugzbot**
+5. **Reportar a Zugzbot**
 
    ```
-   ## Proposal Phase Complete
+   ## Fase de Propuesta Completada
 
-   **Change:** <change-name>
-   **Artifacts written:**
-   - openspec/changes/<name>/proposal.md
-   - openspec/changes/<name>/specs/spec.md
+   **Cambio:** <nombre-del-cambio>
+   **Artefactos escritos:**
+   - openspec/changes/<nombre>/proposal.md
+   - openspec/changes/<nombre>/specs/spec.md
 
-   **Scenarios defined:** <n>
-   **Open questions:** <n — list them if any>
+   **Escenarios definidos:** <n>
+   **Preguntas abiertas:** <n — lístelas si existen>
 
-   Fase 1 completada. Propuesta y especificación listos para revisión del usuario.
+   Fase 1 completada. Propuesta y especificación listas para revisión de usuario.
    ```
 
 **Guardrails**
-- Never write code or design architecture — that belongs to sdd-planner and sdd-implementer
-- Never skip the interview — writing artifacts from assumptions produces incorrect specs
-- Never proceed to artifact writing until all four question groups are answered
-- If the user is vague or contradictory, ask ONE targeted clarifying question before moving on
-- The spec must be independently readable — do not assume the reader has the conversation context
+- Jamás escriba código fuente ni estructure diseños arquitectónicos; eso pertenece exclusivamente a las fases de planificación e implementación.
+- Nunca se salte la entrevista interactiva; asumir requerimientos genera especificaciones erróneas.
+- No proceda a escribir los artefactos hasta consolidar las respuestas de los cuatro grupos de preguntas.
+- Si el usuario es vago o contradictorio, formule UNA pregunta de aclaración enfocada antes de continuar.

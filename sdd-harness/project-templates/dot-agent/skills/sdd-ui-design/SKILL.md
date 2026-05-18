@@ -1,141 +1,144 @@
 ---
 name: sdd-ui-design
-description: Review and improve the frontend UI/UX of the implemented solution. Starts the dev server, takes screenshots, analyzes the interface against UX/UI best practices, applies targeted improvements, and generates a visual review report. Use after implementation is complete and a frontend is present.
+description: Revisar y mejorar el frontend (UI/UX) de la solución implementada. Levanta el dev server, toma capturas de pantalla, analiza la interfaz contra las mejores prácticas de UX/UI, aplica mejoras de diseño específicas y genera un reporte visual. Utilizar después del desarrollo si existe un frontend.
 license: MIT
-compatibility: Requires a frontend project with a runnable dev server. Requires browser tool access.
+compatibility: Requiere un proyecto frontend con un servidor de desarrollo ejecutable. Requiere acceso a herramientas de visualización/browser.
 metadata:
   author: zugzbot
   version: "1.0"
   generatedBy: "zugzbot-harness"
 ---
 
-Review and improve the frontend UI/UX of the implemented solution using visual perception.
+Revisar y mejorar el frontend (UI/UX) de la solución implementada utilizando percepción visual.
 
-**Input**: The name of the active change (kebab-case). If omitted, infer from context or prompt the user.
+**Entrada**: El nombre del cambio activo en kebab-case. Si se omite, infiéralo del contexto o solicítelo al usuario.
 
-**Steps**
+**Pasos**
 
-1. **Resolve the change name and read context**
+1. **Resolver el nombre del cambio y leer el contexto técnico**
 
-   Read the following before doing anything:
-   - `openspec/changes/<name>/proposal.md`
-   - `openspec/changes/<name>/orchestrator_architecture.md`
-   - `src/` directory tree to identify frontend files
+   Lea antes de realizar cualquier acción:
+   - `openspec/changes/<nombre>/proposal.md`
+   - `openspec/changes/<nombre>/orchestrator_architecture.md`
+   - Árbol de carpetas de `src/` para identificar archivos de frontend.
 
-   Identify frontend indicators:
-   - Framework files: `.jsx`, `.tsx`, `.vue`, `.svelte`, `.html`
-   - Style files: `.css`, `.scss`, `.less`
-   - `package.json` with frontend dependencies (react, vue, vite, next, etc.)
+   Identifique indicadores de interfaz:
+   - Archivos de componentes: `.jsx`, `.tsx`, `.vue`, `.svelte`, `.html`.
+   - Archivos de estilos: `.css`, `.scss`, `.less`.
+   - `package.json` con dependencias de UI (react, vue, svelte, vite, next, etc.).
 
-   **If no frontend is detected**: Stop and report to Zugzbot: "No frontend detected. Skipping Fase 3.5."
+   **Si no se detecta frontend**: Detenga la ejecución y notifique a Zugzbot: "No se detecta frontend en el proyecto. Omitiendo Fase 3.5."
 
-2. **Detect and start the dev server**
+2. **Detectar y arrancar el servidor de desarrollo local**
 
-   Check `package.json` scripts for `dev`, `start`, or `serve`. Fall back to framework conventions:
+   Busque en `package.json` scripts de inicio tipo `dev`, `start` o `serve`. En su defecto, aplique convenciones del ecosistema:
    - Vite: `npx vite`
    - Next.js: `npm run dev`
-   - Plain HTML: `python3 -m http.server 8080`
+   - HTML plano: `python3 -m http.server 8080`
+
+   Levante el servidor en segundo plano usando la terminal (`bash`):
 
    ```bash
-   <dev-command> &
+   <comando-dev> &
    sleep 4
    ```
 
-   Identify the local port from the command output or package.json config.
-   If server fails to start, report the error and abort the phase.
+   Identifique el puerto local de escucha del output del comando o de la configuración del proyecto.
+   Si el servidor falla al arrancar, registre el error y aborte la fase de diseño.
 
-3. **Capture initial screenshot**
+3. **Capturar pantalla inicial ("Before")**
 
-   Navigate to `http://localhost:<port>` using the browser tool.
-   Capture a screenshot of the current UI state. This is your **before** reference.
+   Navegue a `http://localhost:<puerto>` utilizando la herramienta de browser.
+   Tome una captura de pantalla del estado actual de la UI. Esta será su referencia **before** (antes).
 
-4. **Analyze the UI against UX/UI principles**
+4. **Analizar la UI contra los principios UX/UI de excelencia**
 
-   Evaluate each of the following. Mark as ✅ ok / ⚠️ needs improvement / ❌ critical:
+   Evalúe cada uno de los siguientes puntos, marcándolos como ✅ ok / ⚠️ requiere mejora / ❌ crítico:
 
-   | Principle | Check |
+   | Principio UX/UI | Criterio de Evaluación |
    |---|---|
-   | Visual hierarchy | Is there a clear primary focal point? |
-   | Typography scale | Consistent type sizes and weights? |
-   | Color harmony | Curated palette? WCAG AA contrast? |
-   | Spacing and rhythm | Consistent padding/margin? Room to breathe? |
-   | Micro-animations | Hover states, transitions, loading feedback? |
-   | Mobile-first layout | Works at narrow viewport? No overflow? |
-   | Empty/error/loading states | Handled visually? |
-   | Component consistency | Unified visual language across all elements? |
+   | Jerarquía Visual | ¿Existe un punto focal primario claro? |
+   | Escala Tipográfica | ¿Tamaños y pesos de texto consistentes y armónicos? |
+   | Armonía Cromática | ¿Paleta de colores premium? ¿Contraste WCAG AA? |
+   | Espaciado y Ritmo | ¿Paddings/margins consistentes? ¿Respira la UI? |
+   | Micro-interacciones | ¿Feedback visual en hovers, focos, transiciones? |
+   | Adaptabilidad (Responsive) | ¿Funciona a viewports estrechos sin scroll lateral? |
+   | Gestión de Estados vacíos/error | ¿Están diseñados visualmente los hilos de carga o error? |
+   | Consistencia Estilística | ¿Mismo lenguaje visual en todos los elementos del flujo? |
 
-5. **Generate prioritized issue list**
+5. **Generar la lista priorizada de Issues**
 
-   List up to 10 issues ordered by visual impact (critical → cosmetic).
-   For each issue:
-   - **Problem**: What's wrong and where
-   - **File**: The file to change
-   - **Fix**: Specific change to apply
+   Redacte una lista ordenada de hasta 10 problemas estéticos prioritarios (crítico → cosmético).
+   Para cada problema:
+   - **Problema**: Qué está mal y dónde ocurre.
+   - **Archivo**: Ruta exacta del archivo CSS o componente a modificar.
+   - **Solución**: Cambio específico a aplicar.
 
-6. **Apply improvements**
+6. **Aplicar mejoras visuales**
 
-   Fix issues directly in `src/`. Rules:
-   - Surgical edits only — do not rewrite entire components
-   - Prefer CSS custom properties / design tokens over hardcoded values
-   - Do not touch business logic, routing, or application state
-   - After each round of changes, take a new screenshot to verify improvement
+   Efectúe correcciones directamente en los archivos bajo `src/`. Reglas:
+   - Ediciones estrictamente quirúrgicas — evite reescribir componentes completos.
+   - Prefiera variables CSS / design tokens por sobre valores directos (hardcoded).
+   - No altere en absoluto lógica de negocio, persistencia de datos o enrutamiento.
+   - Tras cada bloque de cambios, capture una pantalla nueva para verificar las mejoras.
 
-   Iterate at least twice. Stop when the UI reaches premium quality.
+   Efectúe al menos dos iteraciones completas. Detenga el refinamiento cuando la UI sea de calidad premium.
 
-7. **Shut down the dev server cleanly**
+7. **Apagar limpiamente el servidor de desarrollo**
+
+   Corra el comando en la terminal (`bash`):
 
    ```bash
-   pkill -f "<dev-command-pattern>" 2>/dev/null || true
+   pkill -f "<patron-del-servidor>" 2>/dev/null || true
    ```
 
-8. **Write `ui_review_report.md`**
+8. **Escribir `ui_review_report.md`**
 
-   Write to `openspec/changes/<name>/ui_review_report.md`:
+   Escriba en el archivo `openspec/changes/<nombre>/ui_review_report.md`:
 
    ```markdown
-   # UI Review Report — <change-name>
+   # Reporte de Revisión Visual — <nombre-del-cambio>
 
-   ## Stack Detected
-   <framework, dev command, port>
+   ## Stack Frontend Detectado
+   <tecnología, comando de inicio dev, puerto>
 
-   ## Before / After
-   <screenshots or description of visual delta>
+   ## Comparativa Visual (Antes / Después)
+   <capturas de pantalla embebidas o descripción de la evolución visual>
 
-   ## Issues Found & Resolved
+   ## Resumen de Ajustes Aplicados
 
-   | # | Priority | Issue | File | Fix Applied |
+   | # | Prioridad | Problema Visual | Archivo | Corrección Aplicada |
    |---|---|---|---|---|
-   | 1 | Critical | ... | ... | ... |
+   | 1 | Crítico | ... | ... | ... |
 
-   ## UX/UI Principles Checklist
-   - ✅ Visual hierarchy
-   - ✅ Typography scale
-   - ⚠️ Color harmony (improved)
+   ## Checklist de Principios UX/UI Evaluados
+   - ✅ Jerarquía Visual
+   - ✅ Escala Tipográfica
+   - ⚠️ Armonía Cromática (mejorado)
    - ...
 
-   ## Files Modified
-   - `src/styles/main.css` — added CSS custom properties for color palette
-   - `src/components/Button.jsx` — added hover transition and focus ring
+   ## Catálogo de Archivos Modificados
+   - `src/styles/main.css` — Se agregaron custom properties para paleta cromática.
+   - `src/components/Button.jsx` — Se agregaron transiciones suaves de hover y foco.
    - ...
    ```
 
-9. **Report to Zugzbot**
+9. **Reportar a Zugzbot**
 
    ```
-   ## UI Design Phase Complete
+   ## Fase de Diseño UX/UI Completada
 
-   **Change:** <change-name>
-   **Issues found:** <n>  |  **Issues resolved:** <n>
-   **Files modified:** <list>
-   **Report:** openspec/changes/<name>/ui_review_report.md
+   **Cambio:** <nombre-del-cambio>
+   **Issues detectados:** <n>  |  **Issues resueltos:** <n>
+   **Archivos modificados:** <lista>
+   **Reporte guardado en:** openspec/changes/<nombre>/ui_review_report.md
 
-   Fase 3.5 completada. UI revisada y mejorada. Lista para verificación.
+   Fase 3.5 completada. Interfaz pulida y refinada visualmente. Lista para verificación.
    ```
 
 **Guardrails**
-- Never modify business logic, state management, or routing — visual layer only
-- Never skip the screenshot step — visual perception is the core value of this phase
-- If the dev server port conflicts, try the next common port (3000 → 3001 → 5173 → 8080)
-- Always shut down the dev server before reporting completion
-- If no frontend is detected, report immediately and do not proceed
-- Functional bugs found during visual review go to Zugzbot as a note — do NOT fix them here
+- Prohibido modificar lógica de negocio, manejo de estados de la app o rutas de backend. Límite visual estricto.
+- Nunca omita las capturas de pantalla; la percepción visual interactiva es el valor central de esta fase.
+- Si el puerto de desarrollo por defecto genera colisión, pruebe puertos libres alternos (3001, 5173, 8080).
+- Asegúrese de apagar el servidor local antes de notificar la finalización para liberar los recursos del sistema.
+- Si detecta un bug funcional durante el diseño de la UI, documéntelo y repórtelo como nota informativa para el implementador, sin arreglarlo usted mismo.

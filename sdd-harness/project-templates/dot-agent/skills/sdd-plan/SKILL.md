@@ -1,71 +1,71 @@
 ---
 name: sdd-plan
-description: Translate an approved proposal and behavioral specification into a clean architecture design and an atomic implementation checklist. Use after sdd-propose is approved and before any code is written.
+description: Traducir una propuesta y especificación de comportamiento aprobadas en un diseño técnico de arquitectura limpia y un checklist atómico de tareas de implementación. Utilizar después de aprobar sdd-propose y antes de escribir cualquier código.
 license: MIT
-compatibility: No external tools required. Read/write access to openspec/ is sufficient.
+compatibility: No requiere herramientas externas. Acceso de lectura y escritura a openspec/ es suficiente.
 metadata:
   author: zugzbot
   version: "1.0"
   generatedBy: "zugzbot-harness"
 ---
 
-Design the architecture and produce the implementation checklist for an approved change.
+Diseñar la arquitectura y producir el checklist de tareas para un cambio aprobado.
 
-**Input**: The name of the active change (kebab-case). If omitted, infer from context or prompt the user.
+**Entrada**: El nombre del cambio activo en kebab-case. Si se omite, infiéralo del contexto o solicítelo al usuario.
 
-**Steps**
+**Pasos**
 
-1. **Read all context before doing anything**
+1. **Leer todo el contexto antes de realizar cualquier acción**
 
-   Read in order:
-   - `openspec/changes/<name>/proposal.md`
-   - `openspec/changes/<name>/specs/spec.md`
-   - Current `src/` directory tree (to understand existing structure)
-   - `openspec/schemas/ssd-orchestrated/` (if present, to understand schema contracts)
+   Lea en orden estricto:
+   - `openspec/changes/<nombre>/proposal.md`
+   - `openspec/changes/<nombre>/specs/spec.md`
+   - El árbol actual del directorio `src/` (para entender la arquitectura existente)
+   - `openspec/schemas/ssd-orchestrated/` (si existe, para comprender contratos de esquema)
 
-   Do not begin writing until all four sources are read and understood.
+   No comience a escribir hasta haber consumido y comprendido estas cuatro fuentes.
 
-2. **Design the architecture**
+2. **Diseñar la arquitectura**
 
-   Apply the following principles to every design decision:
-   - **SOLID**: each module has a single, well-defined responsibility
-   - **Clean Architecture**: separate domain logic from infrastructure and delivery
-   - **DRY**: identify and extract shared logic into reusable modules
-   - **Dependency Inversion**: depend on abstractions, not concrete implementations
+   Aplique los siguientes principios a cada decisión de diseño:
+   - **SOLID**: Cada módulo/clase debe tener una única responsabilidad bien definida.
+   - **Arquitectura Limpia**: Separe rigurosamente la lógica de dominio de los detalles de entrega e infraestructura.
+   - **DRY (Don't Repeat Yourself)**: Identifique y extraiga lógica compartida en utilitarios o servicios comunes.
+   - **Inversión de Dependencias**: Dependa de abstracciones, no de implementaciones concretas.
 
-   Define:
-   - Directory and file layout under `src/` — include every new file and its responsibility
-   - Module boundaries and their contracts (what each module exposes and consumes)
-   - Data flow: how a request travels from entry point to persistence and back
-   - External dependencies needed and why each is justified
+   Defina con precisión:
+   - Layout de archivos y carpetas bajo `src/`, detallando la responsabilidad exacta de cada archivo nuevo.
+   - Límites y contratos de cada módulo (qué expone y qué consume cada parte).
+   - Flujo de datos: cómo viaja la petición desde el punto de entrada hasta la persistencia y viceversa.
+   - Dependencias externas añadidas y justificación técnica para cada una.
 
-3. **Write `orchestrator_architecture.md`**
+3. **Escribir `orchestrator_architecture.md`**
 
-   Write to `openspec/changes/<name>/orchestrator_architecture.md`:
+   Escriba en el archivo `openspec/changes/<nombre>/orchestrator_architecture.md`:
 
    ```markdown
-   # Architecture Design — <change-name>
+   # Diseño de Arquitectura — <nombre-del-cambio>
 
-   ## Design Principles Applied
-   <List the specific SOLID / Clean Architecture decisions made and why.>
+   ## Principios de Diseño Aplicados
+   <Lista y explicación de decisiones de arquitectura limpia / SOLID aplicadas.>
 
-   ## Directory Layout
+   ## Layout del Directorio
 
    ```
    src/
-   ├── <module>/
-   │   ├── <file>.py        # <responsibility>
+   ├── <modulo>/
+   │   ├── <archivo>.py     # <responsabilidad>
    │   └── ...
    └── ...
    ```
 
-   ## Module Descriptions
+   ## Descripción de Módulos
 
-   | Module | File(s) | Responsibility |
+   | Módulo | Archivo(s) | Responsabilidad / Contrato |
    |---|---|---|
    | ... | ... | ... |
 
-   ## Data Flow
+   ## Flujo de Datos
 
    ```mermaid
    sequenceDiagram
@@ -73,89 +73,88 @@ Design the architecture and produce the implementation checklist for an approved
        participant Router
        participant Service
        participant Repository
-       Client->>Router: request
-       Router->>Service: call
-       Service->>Repository: query
-       Repository-->>Service: result
-       Service-->>Router: response
-       Router-->>Client: HTTP response
+       Client->>Router: petición HTTP
+       Router->>Service: invoca lógica
+       Service->>Repository: consulta/guarda datos
+       Repository-->>Service: retorna entidad
+       Service-->>Router: retorna resultado/DTO
+       Router-->>Client: respuesta HTTP
    ```
 
-   ## External Dependencies
+   ## Dependencias Externas
 
-   | Package | Version | Purpose |
+   | Paquete | Versión | Propósito / Justificación |
    |---|---|---|
    | ... | ... | ... |
 
-   ## Design Decisions
-   - **<Decision>**: <Rationale>
+   ## Decisiones de Diseño Clave
+   - **<Decisión>**: <Justificación técnica senior>
 
-   ## Open Risks
-   - <Any technical uncertainty that could affect implementation>
+   ## Riesgos e Incertidumbres
+   - <cualquier riesgo de integración o limitación técnica detectada>
    ```
 
-4. **Write `orchestrator_tasks.md`**
+4. **Escribir `orchestrator_tasks.md`**
 
-   Write to `openspec/changes/<name>/orchestrator_tasks.md`:
+   Escriba en el archivo `openspec/changes/<nombre>/orchestrator_tasks.md`:
 
-   Rules for task decomposition:
-   - Each task must be independently completable (no implicit dependencies on unfinished tasks)
-   - Maximum granularity: a single task should touch at most 2–3 files
-   - Order: dependencies first (base models → services → routes → tests → UI components)
-   - Every task must reference the file it affects
+   Reglas para la descomposición de tareas:
+   - Cada tarea debe ser resoluble de forma independiente (sin dependencias cíclicas en tareas no iniciadas).
+   - Granularidad máxima: una única tarea debe modificar como máximo de 2 a 3 archivos.
+   - Secuencia lógica: dependencias primero (base/modelos → servicios → routers/endpoints → tests → UI frontend).
+   - Cada tarea debe indicar explícitamente el archivo que modifica o crea.
 
    ```markdown
-   # Implementation Checklist — <change-name>
+   # Checklist de Implementación — <nombre-del-cambio>
 
-   ## Phase A — Foundation
-   - [ ] A1. Create `src/<module>/<file>` — <what it implements and why>
+   ## Fase A — Cimientos e Infraestructura
+   - [ ] A1. Crear `src/<modulo>/<archivo>` — <comportamiento y responsabilidad básica>
    - [ ] A2. ...
 
-   ## Phase B — Core Logic
-   - [ ] B1. Implement `<function/class>` in `src/<file>` — <behavior>
+   ## Fase B — Lógica de Dominio y Servicios
+   - [ ] B1. Implementar `<función/clase>` en `src/<archivo>` — <comportamiento detallado>
    - [ ] B2. ...
 
-   ## Phase C — Delivery Layer
-   - [ ] C1. Wire `<route/endpoint>` in `src/<router-file>` — <contract>
+   ## Fase C — Capa de Entrega (Routers / Controladores)
+   - [ ] C1. Conectar `<ruta/endpoint>` en `src/<archivo>` — <firma de entrada/salida>
    - [ ] C2. ...
 
-   ## Phase D — Tests
-   - [ ] D1. Write `tests/<test-file>` covering Scenario 1 (happy path)
-   - [ ] D2. Write edge-case tests for <scenario from spec.md>
+   ## Fase D — Pruebas Automatizadas (QA)
+   - [ ] D1. Redactar `tests/<archivo>` para Scenario 1 (flujo feliz)
+   - [ ] D2. Redactar tests de caso límite para <comportamiento frontera de spec.md>
    - [ ] D3. ...
 
-   ## Phase E — Integration (if applicable)
+   ## Fase E — Integración y Frontend (si aplica)
    - [ ] E1. ...
    ```
 
-5. **Self-review checklist**
+5. **Auto-Revisión del Checklist**
 
-   Before reporting, verify:
-   - [ ] Every file in the layout has a clear, single responsibility
-   - [ ] The Mermaid diagram compiles (no syntax errors)
-   - [ ] Every scenario in `specs/spec.md` is covered by at least one task in Phase D
-   - [ ] No task is larger than "implement one unit of behavior in one or two files"
+   Antes de notificar la entrega, verifique:
+   - [ ] Que cada archivo del layout tenga una única responsabilidad clara.
+   - [ ] Que el diagrama Mermaid compile perfectamente sin fallos sintácticos.
+   - [ ] Que cada escenario definido en `specs/spec.md` esté cubierto por al menos una tarea en la Fase D.
+   - [ ] Que ninguna tarea sea excesivamente grande.
 
-6. **Report to Zugzbot**
+6. **Reportar a Zugzbot**
 
    ```
-   ## Planning Phase Complete
+   ## Fase de Planificación Completada
 
-   **Change:** <change-name>
-   **Artifacts written:**
-   - openspec/changes/<name>/orchestrator_architecture.md
-   - openspec/changes/<name>/orchestrator_tasks.md
+   **Cambio:** <nombre-del-cambio>
+   **Artefactos escritos:**
+   - openspec/changes/<nombre>/orchestrator_architecture.md
+   - openspec/changes/<nombre>/orchestrator_tasks.md
 
-   **Total tasks:** <n>
-   **New files to create:** <n>
-   **External dependencies added:** <list or "none">
+   **Total de tareas planificadas:** <n>
+   **Nuevos archivos a crear:** <n>
+   **Dependencias externas agregadas:** <lista o "ninguna">
 
-   Fase 2 completada. Arquitectura y checklist listos para revisión del usuario.
+   Fase 2 completada. Arquitectura y checklist de tareas listos para revisión de usuario.
    ```
 
 **Guardrails**
-- Never write source code — that belongs exclusively to sdd-implementer
-- Never skip the Mermaid data-flow diagram — it is required for the documenter phase
-- If the proposal has open questions, document them as risks in the architecture before proceeding
-- Tasks must be ordered such that sdd-implementer can execute them top-to-bottom without blockers
-- Do not invent dependencies — only include packages explicitly justified by the spec
+- Jamás escriba código de producción bajo `src/` o de testing bajo `tests/`; eso pertenece a las fases posteriores.
+- El diagrama Mermaid de flujo es estrictamente obligatorio para asegurar la correcta comunicación de la arquitectura.
+- Si existen preguntas sin responder en la propuesta, documéntelas explícitamente como riesgos técnicos en la arquitectura.
+- Ordene las tareas de modo que el implementador pueda resolverlas secuencialmente de arriba a abajo.

@@ -1,99 +1,94 @@
 ---
 name: sdd-implement
-description: Execute the implementation checklist produced by sdd-plan, writing clean production-quality source code that strictly respects the approved architecture. Use after the architecture and task checklist are approved by the user.
+description: Ejecutar el checklist de tareas de implementación producido en sdd-plan, escribiendo código fuente limpio de calidad de producción que respete estrictamente la arquitectura diseñada. Utilizar después de aprobar el checklist de planificación.
 license: MIT
-compatibility: Requires read/write access to src/ and openspec/. LSP diagnostics access is required for the static quality gate.
+compatibility: Requiere acceso de lectura y escritura a src/ y openspec/. Acceso a diagnósticos de LSP es necesario para la validación estática de calidad.
 metadata:
   author: zugzbot
   version: "1.0"
   generatedBy: "zugzbot-harness"
 ---
 
-Implement the approved checklist by writing clean, production-quality source code.
+Ejecutar el checklist de tareas aprobado escribiendo código limpio y de calidad de producción.
 
-**Input**: The name of the active change (kebab-case). If omitted, infer from context or prompt the user.
+**Entrada**: El nombre del cambio activo en kebab-case. Si se omite, infiéralo del contexto o solicítelo al usuario.
 
-**Steps**
+**Pasos**
 
-1. **Read all context before writing a single line of code**
+1. **Consumir todo el contexto antes de escribir código**
 
-   Read in order:
-   - `openspec/changes/<name>/proposal.md`
-   - `openspec/changes/<name>/specs/spec.md`
-   - `openspec/changes/<name>/orchestrator_architecture.md`
-   - `openspec/changes/<name>/orchestrator_tasks.md`
+   Lea en orden estricto:
+   - `openspec/changes/<nombre>/proposal.md`
+   - `openspec/changes/<nombre>/specs/spec.md`
+   - `openspec/changes/<nombre>/orchestrator_architecture.md`
+   - `openspec/changes/<nombre>/orchestrator_tasks.md`
 
-   Map every unchecked task (`- [ ]`) to its target file before starting.
+   Mapee mentalmente cada tarea sin marcar (`- [ ]`) a su archivo fuente de destino antes de comenzar a escribir.
 
-2. **Execute the checklist sequentially**
+2. **Ejecutar el checklist secuencialmente**
 
-   Rules:
-   - Complete tasks in the exact order defined in `orchestrator_tasks.md` (Phase A → B → C → D → E)
-   - After completing each task, mark it `- [x]` immediately in `orchestrator_tasks.md`
-   - One task at a time — do not batch unrelated changes across multiple files in a single edit
+   Reglas:
+   - Complete las tareas en el orden exacto establecido en `orchestrator_tasks.md` (Fase A → B → C → D → E).
+   - Inmediatamente después de completar una tarea en el código, márquela como `- [x]` en `orchestrator_tasks.md`.
+   - Realice una tarea a la vez — no mezcle ediciones no relacionadas de múltiples archivos en una sola llamada de edición.
 
-   For each task:
-   1. Re-read the relevant section of `orchestrator_architecture.md`
-   2. Re-read the relevant scenario in `specs/spec.md`
-   3. Write or modify the target file
-   4. Mark the task complete
-   5. Briefly note what was done before moving to the next task
+   Para cada tarea:
+   1. Relea el apartado correspondiente de `orchestrator_architecture.md`.
+   2. Relea el escenario de comportamiento mapeado en `specs/spec.md`.
+   3. Escriba o modifique el archivo de código fuente correspondiente.
+   4. Marque la tarea como completada.
+   5. Deje una breve nota explicativa de lo realizado antes de pasar a la siguiente.
 
-3. **Code quality standards (non-negotiable)**
+3. **Estándares de Excelencia de Código (No Negociables)**
 
-   Every piece of code produced must meet:
+   Cada bloque de código producido debe cumplir estrictamente con los siguientes estándares:
 
-   | Standard | Requirement |
+   | Criterio | Requisito de Calidad Senior |
    |---|---|
-   | Naming | Descriptive names for all identifiers — no abbreviations, no single-letter variables outside loops |
-   | Functions | Single responsibility — one function does one thing |
-   | Error handling | All failure paths handled explicitly — no silent catches |
-   | Comments | Explain WHY, not what — only where non-obvious |
-   | Coupling | Depend on abstractions (interfaces/protocols) not concrete classes |
-   | Duplication | Zero duplication — extract shared logic immediately |
-   | File length | No file over 300 lines — split if exceeded |
+   | Nombres | Identificadores auto-descriptivos. Sin abreviaciones confusas ni variables de una letra fuera de bucles. |
+   | Funciones | Única responsabilidad (SOLID). Cada función debe realizar una sola acción lógica. |
+   | Control de Errores | Manejo explícito de excepciones en todos los flujos. Prohibidos los bloques catch silenciosos. |
+   | Comentarios | Explicar el PORQUÉ del código, no el QUÉ, y únicamente cuando la lógica no sea evidente por sí misma. |
+   | Acoplamiento | Depender de abstracciones (interfaces, protocolos) y evitar clases concretas rígidas. |
+   | Duplicidad | Cero tolerancia a la duplicidad de lógica. Extraer funciones compartidas inmediatamente. |
+   | Longitud | Ningún archivo debe exceder las 300 líneas de código. Divida el archivo si se supera este límite. |
 
-4. **Static quality gate (LSP)**
+4. **Puerta de Calidad Estática (LSP)**
 
-   After all tasks are marked `- [x]`, before reporting to Zugzbot:
-   - Review every file modified during this session for LSP diagnostics (errors, type mismatches, undefined symbols)
-   - Fix ALL errors before proceeding — zero tolerance
-   - Warnings may be noted but do not block delivery
+   Una vez que todas las tareas estén marcadas como `- [x]`, y antes de entregar el control a Zugzbot:
+   - Revise cada archivo modificado para asegurar que no posea ningún diagnóstico de LSP activo (errores de compilación, imports rotos, tipos incorrectos).
+   - Corrija absolutamente todos los errores sintácticos o de tipado. No se acepta código con warnings o errores LSP.
 
-5. **Auto-healing mode (if reactivated by Zugzbot)**
+5. **Modo de Auto-Curación (Si es reactivado por Zugzbot)**
 
-   If Zugzbot reactivates this skill after test failures reported by sdd-verifier:
-   - Read the failure log provided in the task context
-   - Locate the exact failing code using the stack trace
-   - Apply a surgical fix — do not refactor unrelated code
-   - Update `orchestrator_tasks.md` with a note on what was corrected
-   - Return control to Zugzbot for re-verification
+   Si Zugzbot reactiva esta skill tras fallos reportados en la fase de verificación:
+   - Lea con detenimiento el log de errores e incidencias provisto.
+   - Localice quirúrgicamente el error en `src/` apoyándose en el stack trace.
+   - Aplique la corrección específica — no realice refactorizaciones de lógica no relacionadas.
+   - Deje una nota descriptiva de la corrección en `orchestrator_tasks.md`.
+   - Entregue el control para una nueva ronda de verificación.
 
-   Do NOT assume the fix is correct until sdd-verifier confirms it.
-
-6. **Report to Zugzbot**
+6. **Reportar a Zugzbot**
 
    ```
-   ## Implementation Phase Complete
+   ## Fase de Implementación Completada
 
-   **Change:** <change-name>
-   **Tasks completed:** <n>/<n>
-   **Files created:** <list>
-   **Files modified:** <list>
-   **LSP errors at delivery:** 0
+   **Cambio:** <nombre-del-cambio>
+   **Tareas completadas:** <n>/<n>
+   **Archivos creados:** <lista>
+   **Archivos modificados:** <lista>
+   **Errores de LSP al entregar:** 0
 
-   Summary of changes:
-   - <task A1>: <what was implemented>
-   - <task B1>: <what was implemented>
+   Resumen de implementaciones:
+   - <tarea A1>: <breve detalle de lo construido>
+   - <tarea B1>: <breve detalle de lo construido>
    - ...
 
-   Fase 3 completada. Código listo para revisión del usuario.
+   Fase 3 completada. Código fuente listo para revisión del usuario.
    ```
 
 **Guardrails**
-- Never execute bash commands — you have no terminal access; that belongs to sdd-verifier
-- Never write tests here — test creation belongs to sdd-verifier's phase
-- Never modify `orchestrator_architecture.md` — if the architecture needs to change, report it to Zugzbot instead
-- Never deliver with LSP errors — a file with diagnostics is not considered complete
-- If a task is ambiguous, re-read `specs/spec.md` before asking — most answers are in the spec
-- If you discover the architecture is wrong or incomplete, STOP and report to Zugzbot before continuing
+- Tienes prohibido ejecutar comandos bash en la terminal; eso pertenece al verificador.
+- No diseñes ni escribas casos de prueba unitarios en esta fase; eso le pertenece a sdd-verify.
+- No alteres los contratos de `orchestrator_architecture.md`. Si detectas que el diseño está mal, pausa la ejecución y notifícalo a Zugzbot.
+- Nunca entregues código con errores de LSP o sintaxis activa en el editor.

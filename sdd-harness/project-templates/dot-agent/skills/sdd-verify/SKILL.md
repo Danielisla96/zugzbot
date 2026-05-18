@@ -1,99 +1,101 @@
 ---
 name: sdd-verify
-description: Validate the implemented change through static analysis, automated tests, and live integration verification. Produces a formal verification_report.md. Use after sdd-implement (or sdd-ui-design if a frontend is present) is approved.
+description: Validar el cambio implementado mediante análisis estático de código, ejecución de pruebas unitarias/funcionales y verificación real de integración con curl. Produce un reporte formal verification_report.md. Utilizar después de completar la fase de desarrollo (y diseño visual si aplica).
 license: MIT
-compatibility: Requires bash access to run linters, test suites, and a local server. Read/write access to openspec/ and tests/ is required.
+compatibility: Requiere acceso a terminal bash para ejecutar herramientas de calidad, suites de test y levantar el servidor local. Acceso de lectura y escritura a openspec/ y tests/ es requerido.
 metadata:
   author: zugzbot
   version: "1.0"
   generatedBy: "zugzbot-harness"
 ---
 
-Validate the implemented change and produce a formal verification report.
+Validar el cambio implementado y producir el reporte de verificación formal.
 
-**Input**: The name of the active change (kebab-case). If omitted, infer from context or prompt the user.
+**Entrada**: El nombre del cambio activo en kebab-case. Si se omite, infiéralo del contexto o solicítelo al usuario.
 
-**Steps**
+**Pasos**
 
-1. **Read all context before running anything**
+1. **Leer el contexto completo antes de correr comandos**
 
-   Read in order:
-   - `openspec/changes/<name>/proposal.md`
-   - `openspec/changes/<name>/specs/spec.md`
-   - `openspec/changes/<name>/orchestrator_tasks.md` (to confirm all tasks are `- [x]`)
-   - `src/` directory tree (to understand what was actually implemented)
+   Consuma en orden:
+   - `openspec/changes/<nombre>/proposal.md`
+   - `openspec/changes/<nombre>/specs/spec.md`
+   - `openspec/changes/<nombre>/orchestrator_tasks.md` (para confirmar que todas las tareas están `- [x]`)
+   - El árbol actual de `src/` (para entender qué fue realmente implementado)
 
-   If any task in `orchestrator_tasks.md` is still `- [ ]`, STOP and report to Zugzbot before continuing.
+   Si alguna tarea bajo `orchestrator_tasks.md` permanece abierta (`- [ ]`), DETENGA su ejecución y repórtelo a Zugzbot.
 
-2. **Static quality gate**
+2. **Puerta de Calidad Estática (Linters / Compilador)**
 
-   Run linters and syntax checks appropriate to the project stack:
+   Corra los chequeos estáticos adecuados para el stack técnico del proyecto utilizando la terminal (`bash`):
 
    ```bash
-   # Python
+   # Stack Python
    python -m py_compile src/**/*.py
    ruff check src/ || flake8 src/
 
-   # JavaScript / TypeScript
+   # Stack JavaScript / TypeScript
    npx eslint src/ --ext .js,.ts,.jsx,.tsx
 
-   # Other stacks: adapt to project conventions
+   # Otros lenguajes: Adapte los comandos a las herramientas declaradas en la propuesta.
    ```
 
-   If any static error is found:
-   - Document each error with file path, line number, and message
-   - Report to Zugzbot immediately with the error list
-   - Do NOT proceed to test execution
+   Si se detecta cualquier error estático o de compilación:
+   - Registre exhaustivamente cada error indicando archivo, línea y descripción.
+   - Detenga el flujo inmediatamente y notifique a Zugzbot compartiendo la lista de incidencias.
+   - No prosiga con la ejecución de la suite de pruebas.
 
-3. **Write the test suite**
+3. **Escribir la Suite de Pruebas**
 
-   Create or update files under `tests/` with a BDD-aligned structure:
+   Cree o modifique archivos de test bajo `tests/` con una estructura alineada al modelo BDD (Given/When/Then):
 
-   Rules:
-   - One test function per scenario defined in `specs/spec.md` — strict 1:1 mapping
-   - Each test function must have a comment referencing the exact scenario it covers
-   - Include at minimum: happy path, one error/failure case, and two boundary/edge cases
-   - Test names must be descriptive: `test_<scenario>_<condition>_<expected_result>`
+   Reglas:
+   - Mapeo BDD 1:1 estricto: escriba exactamente una función de prueba por cada escenario de comportamiento detallado en `specs/spec.md`.
+   - Cada función de test debe poseer un docstring/comentario referenciando explícitamente el escenario del spec que valida.
+   - Incluya como mínimo: un escenario de camino feliz, un caso de error/fallo y dos casos de límites de datos o valores de frontera.
+   - Convención de nombres clara: `test_<escenario>_<condicion>_<resultado_esperado>`.
 
    ```python
-   # Example structure (Python/pytest)
-   def test_create_user_valid_payload_returns_201():
-       """Scenario 1 — Happy path: valid user creation"""
+   # Ejemplo en Pytest (Python)
+   def test_crear_usuario_payload_valido_retorna_201():
+       """Escenario 1 — Camino feliz: creación exitosa de usuario"""
        ...
 
-   def test_create_user_missing_email_returns_422():
-       """Scenario 2 — Missing required field"""
+   def test_crear_usuario_email_faltante_retorna_422():
+       """Escenario 2 — Error: falta campo requerido email"""
        ...
    ```
 
-4. **Run the test suite**
+4. **Ejecutar la Suite de Pruebas**
+
+   Corra la suite de tests desde la terminal (`bash`):
 
    ```bash
    pytest tests/ -v --tb=short
    ```
 
-   - If all tests pass: proceed to Step 5
-   - If any test fails:
-     1. Capture the full failure output
-     2. Write it to `openspec/changes/<name>/failure_log.md`
-     3. Report to Zugzbot with the structured failure log so sdd-implementer is reactivated
-     4. Do NOT proceed to integration verification
+   - Si todos los tests pasan exitosamente: prosiga al Paso 5.
+   - Si alguna prueba falla:
+     1. Capture detalladamente el error y el stack trace.
+     2. Escriba el log de fallo en `openspec/changes/<nombre>/failure_log.md`.
+     3. Reporte el fallo a Zugzbot de inmediato para reactivar el bucle de auto-curación del implementador.
+     4. Detenga el flujo y no prosiga a la verificación de integración.
 
-5. **Integration verification (live server)**
+5. **Verificación de Integración Real (Servidor Local)**
 
-   Start the local server in background:
+   Levante el servidor de desarrollo local en segundo plano desde la terminal (`bash`):
 
    ```bash
-   # Python
+   # Stack Python (Uvicorn / FastAPI)
    uvicorn src.app.main:app --reload --port 8000 &
    sleep 3
 
-   # Node.js
+   # Stack Node.js (Vite / Express)
    npm run dev &
    sleep 4
    ```
 
-   For each endpoint or function defined in `specs/spec.md`, run a real HTTP call:
+   Para cada endpoint o flujo de servicio definido en `specs/spec.md`, realice un llamado real mediante la herramienta `curl`:
 
    ```bash
    curl -s -X POST http://localhost:8000/<endpoint> \
@@ -101,77 +103,76 @@ Validate the implemented change and produce a formal verification report.
      -d '{"key": "value"}' | python3 -m json.tool
    ```
 
-   Capture:
-   - The exact curl command used
-   - The full HTTP response (status code + body)
-   - Whether the response matches the expected outcome in `specs/spec.md`
+   Capture con precisión milimétrica:
+   - El comando `curl` exacto utilizado.
+   - El código de estado HTTP y el cuerpo JSON de respuesta obtenido.
+   - Una validación lógica que confirme si el resultado obtenido coincide con lo especificado en `specs/spec.md`.
 
-   Shut down the server cleanly after all calls:
+   Apague limpiamente el servidor local tras realizar las pruebas:
 
    ```bash
    pkill -f "uvicorn\|npm run dev" 2>/dev/null || true
    ```
 
-6. **Write `verification_report.md`**
+6. **Escribir `verification_report.md`**
 
-   Write to `openspec/changes/<name>/verification_report.md`:
+   Escriba en el archivo `openspec/changes/<nombre>/verification_report.md`:
 
    ```markdown
-   # Verification Report — <change-name>
+   # Reporte de Verificación — <nombre-del-cambio>
 
-   ## Summary
-   | Gate | Result |
+   ## Resumen de Calidad
+   | Control | Resultado |
    |---|---|
-   | Static analysis | ✅ Pass / ❌ Fail |
-   | Test suite | ✅ Pass (<n> tests) / ❌ Fail (<n> failures) |
-   | Integration (live) | ✅ Pass / ❌ Fail |
+   | Análisis Estático | ✅ Aprobado / ❌ Fallido |
+   | Suite de Pruebas | ✅ Aprobado (<n> tests) / ❌ Fallido (<n> fallos) |
+   | Integración Real | ✅ Aprobado / ❌ Fallido |
 
-   ## Static Analysis
-   <Output of linter run or "No issues found.">
+   ## Análisis Estático / Linter
+   <Logs o comandos del linter, o mensaje "Cero incidencias encontradas.">
 
-   ## Test Suite Results
+   ## Suite de Pruebas Automatizadas
    ```
-   <Full pytest -v output>
+   <Inserte la salida literal de la suite de pruebas (ej: pytest -v)>
    ```
 
-   ## Integration Verification
+   ## Verificación de Integración (Llamados Reales)
 
-   ### Endpoint: <METHOD> /<path>
-   **Request:**
+   ### Endpoint: <METODO> /<ruta>
+   **Llamado de Prueba:**
    ```bash
-   curl -s -X <METHOD> http://localhost:<port>/<path> \
+   curl -s -X <METODO> http://localhost:<puerto>/<ruta> \
      -H "Content-Type: application/json" \
      -d '<payload>'
    ```
-   **Response (HTTP <status>):**
+   **Respuesta (HTTP <codigo_estado>):**
    ```json
-   <response body>
+   <respuesta json literal>
    ```
-   **Result:** ✅ Matches spec / ❌ Deviation: <description>
+   **Resultado:** ✅ Coincide con la especificación / ❌ Desviación detectada: <detalle>
 
-   <!-- Repeat for each endpoint -->
+   <!-- Repita para cada flujo/endpoint verificado -->
 
-   ## Conclusion
-   <"All verification gates passed. Ready for documentation phase." OR "Failures found — see failure_log.md.">
+   ## Conclusión del Reporte
+   <"Todos los controles en verde. Listo para fase de documentación técnica." o "Se detectaron fallas lógicas. Regresando a fase de desarrollo.">
    ```
 
-7. **Report to Zugzbot**
+7. **Reportar a Zugzbot**
 
    ```
-   ## Verification Phase Complete
+   ## Fase de Verificación Completada
 
-   **Change:** <change-name>
-   **Static analysis:** ✅ / ❌
-   **Tests:** <n> passed / <n> failed
-   **Integration:** ✅ / ❌
-   **Report:** openspec/changes/<name>/verification_report.md
+   **Cambio:** <nombre-del-cambio>
+   **Análisis Estático (Linter):** ✅ / ❌
+   **Pruebas Automatizadas:** <n> exitosas / <n> fallidas
+   **Integración Real:** ✅ / ❌
+   **Reporte de Verificación escrito en:** openspec/changes/<nombre>/verification_report.md
 
-   Fase 4 completada. Suite de pruebas y verificación en verde. Lista para documentación.
+   Fase 4 completada. Todo en verde. Lista para documentación.
    ```
 
 **Guardrails**
-- Never modify source code in `src/` — fixes belong exclusively to sdd-implementer
-- Never skip the live integration step — a passing test suite does not substitute for a real HTTP call
-- Never proceed to documentation if any gate fails — report to Zugzbot and wait for sdd-implementer to heal the code
-- Always shut down the local server before reporting — leaving it running blocks subsequent runs
-- The `verification_report.md` must contain real output, not fabricated — if a call fails, report the actual error
+- Tienes prohibido realizar modificaciones en los archivos fuente bajo `src/`. Las correcciones son exclusivas del implementador.
+- Jamás omitas la validación real por `curl` bajo el supuesto de que "los tests unitarios ya pasaron".
+- Asegúrate de apagar siempre los procesos del servidor local antes de entregar el control para evitar puertos ocupados.
+- Registra respuestas e información real. No inventes llamadas ni payloads simulados en el reporte final.
