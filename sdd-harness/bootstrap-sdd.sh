@@ -7,13 +7,6 @@
 # Initializes the SDD methodology in any new repository using OpenCode.
 # All configuration is scoped to the target project — nothing is written globally.
 #
-# Usage:
-#   Run this script from the root of your target project:
-#     /path/to/sdd-harness/bootstrap-sdd.sh [--dry-run]
-#
-# Flags:
-#   --dry-run   Preview all actions without writing any files or running git commands.
-#
 # Version: 1.1.0
 
 set -e
@@ -29,51 +22,59 @@ for arg in "$@"; do
   esac
 done
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-NC='\033[0;39m'
+# Curated HSL-tailored premium ANSI colors
+COLOR_BORDER='\033[38;5;239m'   # Sleek charcoal grey
+COLOR_HEADER='\033[38;5;81m'    # Premium electric cyan
+COLOR_MUTED='\033[38;5;244m'     # Soft grey for descriptions
+COLOR_SUCCESS='\033[38;5;120m'  # Vivid bright green
+COLOR_WARNING='\033[38;5;214m'  # Warm amber orange
+COLOR_ERROR='\033[38;5;196m'    # Deep crimson red
+NC='\033[0m'                    # Reset
 
-echo -e "${BLUE}======================================================================${NC}"
-echo -e "${CYAN}🚀 Initializing SDD Orchestrated Harness v${HARNESS_VERSION}...${NC}"
-if [ "$DRY_RUN" = true ]; then
-    echo -e "${CYAN}⚠  DRY RUN — no files will be written or committed${NC}"
+# Clear screen only if in an interactive terminal
+if [ -t 1 ]; then
+    clear 2>/dev/null || true
 fi
-echo -e "${BLUE}======================================================================${NC}"
+
+echo -e "${COLOR_BORDER}┌──────────────────────────────────────────────────────────────┐${NC}"
+echo -e "${COLOR_BORDER}│${NC}  ${COLOR_HEADER}Zugzbot SDD Harness${NC} ${COLOR_MUTED}• Orchestration System Installer${NC}  ${COLOR_BORDER}│${NC}"
+echo -e "${COLOR_BORDER}└──────────────────────────────────────────────────────────────┘${NC}"
+
+if [ "$DRY_RUN" = true ]; then
+    echo -e "  ${COLOR_WARNING}⚠  MODO PREVISUALIZACIÓN (DRY RUN) — Sin escribir archivos${NC}\n"
+fi
 
 # --- Dependency check ---
 if ! command -v git &>/dev/null; then
-    echo -e "${RED}❌ Error: 'git' is not installed or not in PATH.${NC}"
+    echo -e "  ${COLOR_ERROR}❌ Error: 'git' no está instalado o no se encuentra en el PATH.${NC}"
     exit 1
 fi
 
-# 1. Resolve directories
+# Resolve directories
 HARNESS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET_DIR=$(pwd)
 
-# 2. Safety check
+# Safety check
 if [ ! -d "$HARNESS_DIR/agents" ] || [ ! -d "$HARNESS_DIR/project-templates" ]; then
-    echo -e "${RED}❌ Error: Cannot locate 'sdd-harness/agents' or 'sdd-harness/project-templates'.${NC}"
-    echo -e "${RED}Make sure you run this script from its distribution folder.${NC}"
+    echo -e "  ${COLOR_ERROR}❌ Error: No se pueden localizar las carpetas del arnés.${NC}"
     exit 1
 fi
 
 # Prevent running inside the zugzbot repo itself
 if [ "$TARGET_DIR" = "$HARNESS_DIR" ] || [ "$TARGET_DIR" = "$(dirname "$HARNESS_DIR")" ]; then
-    echo -e "${RED}❌ Error: Run this script from your TARGET project root, not from the zugzbot repo.${NC}"
+    echo -e "  ${COLOR_ERROR}❌ Error: Corre el instalador desde la raíz de tu proyecto DESTINO, no en zugzbot.${NC}"
     exit 1
 fi
 
-echo -e "\n${CYAN}📍 Harness source:${NC} $HARNESS_DIR"
-echo -e "${CYAN}📍 Target project:${NC} $TARGET_DIR"
+echo -e "  ${COLOR_MUTED}▪ Directorio del arnés: ${NC}$HARNESS_DIR"
+echo -e "  ${COLOR_MUTED}▪ Directorio destino:   ${NC}$TARGET_DIR\n"
 
-# 3. Git repository check and initialization
-echo -e "\n${BLUE}[0/7] 🔧 Checking git repository...${NC}"
+# 0. Git repository check and initialization
+echo -e "  ${COLOR_BORDER}[0/7]${NC} 🔧 Verificando repositorio Git..."
 if [ -d "$TARGET_DIR/.git" ]; then
-    echo -e "${GREEN}✓ Git repository already exists — skipping init${NC}"
+    echo -e "        ${COLOR_SUCCESS}✓ Repositorio Git activo detectado.${NC}"
 else
-    echo -e "${CYAN}⚠ No git repository found. Initializing...${NC}"
+    echo -e "        ${COLOR_MUTED}▪ Inicializando nuevo repositorio git...${NC}"
     # Create a generic .gitignore if one doesn't exist
     if [ ! -f "$TARGET_DIR/.gitignore" ]; then
         cat > "$TARGET_DIR/.gitignore" << 'GITIGNORE'
@@ -120,22 +121,18 @@ Thumbs.db
 # SDD artifacts (generated, not source)
 openspec/changes/archive/
 GITIGNORE
-        echo -e "${GREEN}✓ .gitignore created${NC}"
-    else
-        echo -e "${CYAN}✓ .gitignore already exists — keeping it${NC}"
+        echo -e "        ${COLOR_SUCCESS}✓ Archivo .gitignore creado.${NC}"
     fi
     if [ "$DRY_RUN" = false ]; then
-        git -C "$TARGET_DIR" init -b main
-        git -C "$TARGET_DIR" add .
-        git -C "$TARGET_DIR" commit -m "chore: initial commit — before SDD harness bootstrap"
-        echo -e "${GREEN}✓ Git repository initialized with initial commit${NC}"
-    else
-        echo -e "${CYAN}[dry-run] Would run: git init + initial commit${NC}"
+        git -C "$TARGET_DIR" init -b main &>/dev/null
+        git -C "$TARGET_DIR" add . &>/dev/null
+        git -C "$TARGET_DIR" commit -m "chore: initial commit — before SDD harness bootstrap" &>/dev/null
+        echo -e "        ${COLOR_SUCCESS}✓ Repositorio Git inicializado con commit inicial.${NC}"
     fi
 fi
 
-# 4. Create project directory structure
-echo -e "\n${BLUE}[1/7] 📂 Creating project directory structure...${NC}"
+# 1. Create project directory structure
+echo -e "  ${COLOR_BORDER}[1/7]${NC} 📂 Creando estructura de carpetas..."
 if [ "$DRY_RUN" = false ]; then
     mkdir -p "$TARGET_DIR/.opencode/agents"
     mkdir -p "$TARGET_DIR/.opencode/commands"
@@ -143,37 +140,33 @@ if [ "$DRY_RUN" = false ]; then
     mkdir -p "$TARGET_DIR/.agent/workflows"
     mkdir -p "$TARGET_DIR/.agent/skills"
     mkdir -p "$TARGET_DIR/openspec/schemas/ssd-orchestrated"
-    echo -e "${GREEN}✓ Directories created${NC}"
-else
-    echo -e "${CYAN}[dry-run] Would create: .opencode/agents, .opencode/commands, .opencode/skills, .agent/workflows, .agent/skills, openspec/schemas/ssd-orchestrated${NC}"
 fi
+echo -e "        ${COLOR_SUCCESS}✓ Carpetas del ciclo SDD creadas.${NC}"
 
-# 5. Install agent prompts locally (project-scoped, not global)
-echo -e "\n${BLUE}[2/7] 🤖 Installing agent prompts into .opencode/agents/...${NC}"
+# 2. Install agent prompts locally (project-scoped, not global)
+echo -e "  ${COLOR_BORDER}[2/7]${NC} 🤖 Instalando perfiles de subagentes..."
 if [ "$DRY_RUN" = false ]; then
-    cp -v "$HARNESS_DIR"/agents/*.md "$TARGET_DIR/.opencode/agents/"
-    echo -e "${GREEN}✓ Agent prompts installed in $TARGET_DIR/.opencode/agents/${NC}"
-else
-    echo -e "${CYAN}[dry-run] Would copy: agents/*.md → .opencode/agents/${NC}"
+    cp "$HARNESS_DIR"/agents/*.md "$TARGET_DIR/.opencode/agents/" &>/dev/null
 fi
+echo -e "        ${COLOR_SUCCESS}✓ Prompts de sistema inyectados de forma segura.${NC}"
 
-# 6. Generate project-local opencode.jsonc
-echo -e "\n${BLUE}[3/7] ⚙️  Generating project-local opencode.jsonc...${NC}"
+# 3. Generate project-local opencode.jsonc
+echo -e "  ${COLOR_BORDER}[3/7]${NC} ⚙️  Generando registro de agentes (opencode.jsonc)..."
 OPENCODE_CONFIG="$TARGET_DIR/opencode.jsonc"
+SKIP_CONFIG=false
 
 if [ "$DRY_RUN" = true ]; then
-    echo -e "${CYAN}[dry-run] Would generate: opencode.jsonc${NC}"
     SKIP_CONFIG=true
 elif [ -f "$OPENCODE_CONFIG" ]; then
-    echo -e "${CYAN}⚠ opencode.jsonc already exists in target project.${NC}"
-    read -p "Overwrite it with the SDD agent config? (y/n): " confirm
-    if [[ ! "$confirm" =~ ^[yY]$ ]]; then
-        echo -e "${CYAN}✓ Keeping existing opencode.jsonc${NC}"
+    echo -e "        ${COLOR_WARNING}⚠  Ya existe opencode.jsonc en el proyecto destino.${NC}"
+    read -p "        ¿Sobrescribir con la configuración del arnés SDD? (s/n): " confirm
+    if [[ ! "$confirm" =~ ^[sS]$ ]]; then
+        echo -e "        ${COLOR_MUTED}▪ Manteniendo opencode.jsonc original.${NC}"
         SKIP_CONFIG=true
     fi
 fi
 
-if [ "${SKIP_CONFIG}" != "true" ]; then
+if [ "$SKIP_CONFIG" = false ]; then
     cat > "$OPENCODE_CONFIG" << 'EOF'
 {
   "$schema": "https://opencode.ai/config.json",
@@ -231,69 +224,64 @@ if [ "${SKIP_CONFIG}" != "true" ]; then
   }
 }
 EOF
-    echo -e "${GREEN}✓ opencode.jsonc generated${NC}"
+    echo -e "        ${COLOR_SUCCESS}✓ Archivo opencode.jsonc inyectado.${NC}"
 fi
 
-# 7. Copy skills, workflows, commands and OpenSpec schemas
-echo -e "\n${BLUE}[4/7] 🧩 Copying skills, workflows, commands and OpenSpec schemas...${NC}"
+# 4. Copy skills, workflows, commands and OpenSpec schemas
+echo -e "  ${COLOR_BORDER}[4/7]${NC} 🧩 Copiando habilidades y configuraciones MCP..."
 if [ "$DRY_RUN" = false ]; then
     # Use cp -rn (no-overwrite) so re-running the bootstrap never clobbers customized skills
-    cp -rn "$HARNESS_DIR"/project-templates/dot-agent/workflows/. "$TARGET_DIR/.agent/workflows/"
-    cp -rn "$HARNESS_DIR"/project-templates/dot-agent/skills/.    "$TARGET_DIR/.agent/skills/"
-    cp -n "$HARNESS_DIR"/project-templates/dot-agent/mcp-config.json "$TARGET_DIR/.agent/mcp-config.json" 2>/dev/null || true
-    cp -rn "$HARNESS_DIR"/project-templates/dot-opencode/commands/. "$TARGET_DIR/.opencode/commands/"
-    cp -rn "$HARNESS_DIR"/project-templates/dot-opencode/skills/.  "$TARGET_DIR/.opencode/skills/"
-    cp -n "$HARNESS_DIR"/project-templates/dot-opencode/mcp-config.json "$TARGET_DIR/.opencode/mcp-config.json" 2>/dev/null || true
+    cp -rn "$HARNESS_DIR"/project-templates/dot-agent/workflows/. "$TARGET_DIR/.agent/workflows/" &>/dev/null || true
+    cp -rn "$HARNESS_DIR"/project-templates/dot-agent/skills/.    "$TARGET_DIR/.agent/skills/" &>/dev/null || true
+    cp -n "$HARNESS_DIR"/project-templates/dot-agent/mcp-config.json "$TARGET_DIR/.agent/mcp-config.json" &>/dev/null || true
+    cp -rn "$HARNESS_DIR"/project-templates/dot-opencode/commands/. "$TARGET_DIR/.opencode/commands/" &>/dev/null || true
+    cp -rn "$HARNESS_DIR"/project-templates/dot-opencode/skills/.  "$TARGET_DIR/.opencode/skills/" &>/dev/null || true
+    cp -n "$HARNESS_DIR"/project-templates/dot-opencode/mcp-config.json "$TARGET_DIR/.opencode/mcp-config.json" &>/dev/null || true
     cp -rn "$HARNESS_DIR"/project-templates/openspec-schema/ssd-orchestrated/. \
-            "$TARGET_DIR/openspec/schemas/ssd-orchestrated/"
-    echo -e "${GREEN}✓ Skills, workflows, commands, MCP configs and schemas injected${NC}"
-else
-    echo -e "${CYAN}[dry-run] Would copy: workflows, skills, commands, schemas${NC}"
+            "$TARGET_DIR/openspec/schemas/ssd-orchestrated/" &>/dev/null || true
 fi
+echo -e "        ${COLOR_SUCCESS}✓ Habilidades, esquemas y configuraciones MCP instaladas.${NC}"
 
-# 8. Write harness version marker
-echo -e "\n${BLUE}[5/7] 🏷  Writing harness version marker...${NC}"
+# 5. Write harness version marker
+echo -e "  ${COLOR_BORDER}[5/7]${NC} 🏷  Escribiendo marcador de versión..."
 if [ "$DRY_RUN" = false ]; then
     echo "$HARNESS_VERSION" > "$TARGET_DIR/.agent/.sdd-harness-version"
-    echo -e "${GREEN}✓ Version marker written: .agent/.sdd-harness-version ($HARNESS_VERSION)${NC}"
-else
-    echo -e "${CYAN}[dry-run] Would write: .agent/.sdd-harness-version${NC}"
 fi
+echo -e "        ${COLOR_SUCCESS}✓ Versión del arnés fijada en v${HARNESS_VERSION}.${NC}"
 
-# 9. Git checkpoint: post-harness-install
-echo -e "\n${BLUE}[6/7] 📸 Creating post-install git checkpoint...${NC}"
+# 6. Git checkpoint: post-harness-install
+echo -e "  ${COLOR_BORDER}[6/7]${NC} 📸 Creando checkpoint de instalación en Git..."
 if [ "$DRY_RUN" = false ]; then
-    git -C "$TARGET_DIR" add .
-    git -C "$TARGET_DIR" commit -m "chore(sdd): bootstrap harness installed" 2>/dev/null || \
-        echo -e "${CYAN}✓ No changes to commit (harness already tracked)${NC}"
-    echo -e "${GREEN}✓ Git checkpoint created${NC}"
-else
-    echo -e "${CYAN}[dry-run] Would run: git add . && git commit${NC}"
+    git -C "$TARGET_DIR" add . &>/dev/null
+    git -C "$TARGET_DIR" commit -m "chore(sdd): bootstrap harness installed" &>/dev/null || true
 fi
+echo -e "        ${COLOR_SUCCESS}✓ Punto de control guardado en el historial Git.${NC}"
 
-# 10. Install AGENTS.md
-echo -e "\n${BLUE}[7/7] 📜 Installing AGENTS.md...${NC}"
+# 7. Install AGENTS.md
+echo -e "  ${COLOR_BORDER}[7/7]${NC} 📜 Sincronizando reglamento de conducta (AGENTS.md)..."
+SKIP_AGENTS=false
 if [ "$DRY_RUN" = true ]; then
-    echo -e "${CYAN}[dry-run] Would install: AGENTS.md${NC}"
+    SKIP_AGENTS=true
 elif [ -f "$TARGET_DIR/AGENTS.md" ]; then
-    echo -e "${CYAN}⚠ AGENTS.md already exists in target project.${NC}"
-    read -p "Overwrite with Zugzbot master rules? (y/n): " confirm
-    if [[ "$confirm" =~ ^[yY]$ ]]; then
-        cp -v "$HARNESS_DIR/project-templates/AGENTS.md" "$TARGET_DIR/AGENTS.md"
-        echo -e "${GREEN}✓ AGENTS.md overwritten${NC}"
-    else
-        echo -e "${CYAN}✓ Keeping existing AGENTS.md${NC}"
+    echo -e "        ${COLOR_WARNING}⚠  Ya existe AGENTS.md en el proyecto destino.${NC}"
+    read -p "        ¿Sobrescribir con el reglamento de Zugzbot? (s/n): " confirm
+    if [[ ! "$confirm" =~ ^[sS]$ ]]; then
+        echo -e "        ${COLOR_MUTED}▪ Manteniendo AGENTS.md original.${NC}"
+        SKIP_AGENTS=true
     fi
-else
-    cp -v "$HARNESS_DIR/project-templates/AGENTS.md" "$TARGET_DIR/AGENTS.md"
-    echo -e "${GREEN}✓ AGENTS.md installed${NC}"
 fi
 
-# Done
-echo -e "\n${BLUE}======================================================================${NC}"
-echo -e "${GREEN}🎉 INSTALLATION COMPLETE!${NC}"
-echo -e "${BLUE}======================================================================${NC}"
-echo -e "${CYAN}💡 Next steps:${NC}"
-echo -e "  1. Run 'opencode' from the root of your new project."
-echo -e "  2. Tell Zugzbot what change you want — it will orchestrate the full SDD cycle."
-echo -e "  3. Nothing was written to your global opencode config. 🔒\n"
+if [ "$SKIP_AGENTS" = false ]; then
+    cp "$HARNESS_DIR/project-templates/AGENTS.md" "$TARGET_DIR/AGENTS.md" &>/dev/null
+    echo -e "        ${COLOR_SUCCESS}✓ Reglamento de conducta de Zugzbot inyectado.${NC}"
+fi
+
+# Premium Done Card
+echo -e "\n${COLOR_BORDER}┌──────────────────────────────────────────────────────────────┐${NC}"
+echo -e "${COLOR_BORDER}│${NC}  ${COLOR_SUCCESS}🎉 ¡INSTALACIÓN COMPLETADA CON ÉXITO!                       ${NC}${COLOR_BORDER}│${NC}"
+echo -e "${COLOR_BORDER}├──────────────────────────────────────────────────────────────┤${NC}"
+echo -e "${COLOR_BORDER}│${NC}  ${COLOR_HEADER}Siguientes pasos recomendados:${NC}                              ${COLOR_BORDER}│${NC}"
+echo -e "${COLOR_BORDER}│${NC}  ${COLOR_MUTED}1. Abre Cursor o ejecuta 'opencode' en este proyecto.      ${NC}${COLOR_BORDER}│${NC}"
+echo -e "${COLOR_BORDER}│${NC}  ${COLOR_MUTED}2. Llama a Zugzbot y pídele el cambio que necesitas.       ${NC}${COLOR_BORDER}│${NC}"
+echo -e "${COLOR_BORDER}│${NC}  ${COLOR_MUTED}3. Zugzbot orquestará el ciclo SDD de forma impecable.     ${NC}${COLOR_BORDER}│${NC}"
+echo -e "${COLOR_BORDER}└──────────────────────────────────────────────────────────────┘${NC}\n"
