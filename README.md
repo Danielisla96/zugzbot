@@ -3,98 +3,88 @@
 > [!IMPORTANT]
 > **Zugzbot** es un entorno de orquestación de desarrollo guiado por especificaciones (Spec-Driven Development - SDD) multi-agente y reutilizable para [OpenCode](https://opencode.ai) y [Cursor](https://cursor.sh). Instala un ciclo de vida de desarrollo de IA de grado de producción completo en cualquier proyecto con un solo comando — totalmente acotado al proyecto, sin escribir nada en tu configuración global.
 
----
-
 ## 🚀 Conceptos Clave y Arquitectura
 
-Este arnés implementa un ciclo de vida estricto de **Desarrollo Guiado por Especificaciones (SDD)** orquestado por **Zugzbot**, un agente primario que delega cada fase a un subagente especializado. Ningún agente escribe código sin una especificación aprobada, un plan de arquitectura y un checklist de tareas atómicas.
+Este arnés implementa un ciclo de vida estricto de **Desarrollo Guiado por Especificaciones (SDD)** orquestado por **Zugzbot**, un agente primario que delega cada fase a subagentes consolidados. Ningún agente escribe código sin una especificación aprobada, un plan de arquitectura y un checklist de tareas atómicas.
+
+El flujo de trabajo se organiza en **3 Hitos de Decisión (Fricción Cero)** y **9 Fases SDD**:
 
 ```mermaid
 graph TD
-    A0["Fase 0: Diagnóstico\n(sdd-inspector)"] --> A["Fase 1: Especificación\n(sdd-proposer)"]
-    A --> B["Fase 2: Planificación y Arquitectura\n(sdd-planner)"]
-    B --> C["Fase 3: Implementación\n(sdd-implementer)"]
-    C --> D{"¿Se detecta\nFrontend?"}
-    D -- Sí --> E["Fase 4: Diseño Visual y UX\n(sdd-ui-designer + Puppeteer MCP)"]
-    D -- No --> HIL{"¿Modo Auto?"}
-    E --> HIL
-    HIL -- No --> I["Fase 5: Servidor Interactivo\n(sdd-launcher)"]
-    HIL -- Sí --> F["Fase 6: Calidad y Pruebas QA\n(sdd-verifier)"]
-    I --> F
-    F --> G["Fase 7: Documentación Canónica\n(sdd-documenter)"]
-    G --> H["Fase 8: Archivación y Cierre\n(sdd-archiver)"]
+    subgraph Hito_A ["Hito A: Planificación y Diseño (Fases 0-2)"]
+        F0["Fase 0: Diagnóstico de Entorno\n(@sdd-architect)"] --> F1["Fase 1: Especificación y BDD\n(@sdd-architect)"]
+        F1 --> F2["Fase 2: Arquitectura y Tareas\n(@sdd-architect)"]
+    end
+    
+    subgraph Hito_B ["Hito B: Construcción y Simulación (Fases 3-5)"]
+        F2 --> F3["Fase 3: Implementación de Código\n(@sdd-implementer)"]
+        F3 --> F4{"¿Se detecta\nFrontend?"}
+        F4 -- Sí --> F4_UI["Fase 4: Diseño UX/UI\n(@sdd-implementer)"]
+        F4 -- No --> F5["Fase 5: Launcher / GAS / Nube\n(@sdd-launcher)"]
+        F4_UI --> F5
+    end
+    
+    subgraph Hito_C ["Hito C: Calidad y Cierre Autónomo (Fases 6-8)"]
+        F5 --> F6["Fase 6: Calidad QA\n(@sdd-release-manager + CLI)"]
+        F6 --> F7["Fase 7: Documentación Canónica\n(@sdd-release-manager)"]
+        F7 --> F8["Fase 8: Cierre y Archivación\n(@sdd-release-manager)"]
+    end
 ```
 
 ---
 
 ## 🤖 Elenco de Agentes
 
-### Agentes del Ciclo SDD
+### Agentes del Ciclo SDD (Consolidados en V2)
 
-| Agente | Rol | Fase |
+| Agente | Rol | Hito / Fases |
 |---|---|---|
-| `zugzbot` | Orquestador primario — rutea, delega y controla los límites de cada fase. | Siempre activo |
-| `sdd-inspector` | Diagnostica el stack tecnológico, dependencias y ejecuta/recomienda `npx autoskills`. | Fase 0 |
-| `sdd-proposer` | Conduce la entrevista técnica interactiva y define el alcance (`proposal.md`) y especificación (`spec.md`). | Fase 1 |
-| `sdd-planner` | Diseña la arquitectura modular (`orchestrator_architecture.md`) y el checklist (`orchestrator_tasks.md`). | Fase 2 |
-| `sdd-implementer` | Escribe código de producción senior robusto e incremental siguiendo el checklist. | Fase 3 |
-| `sdd-ui-designer` | Captura la UI mediante Puppeteer MCP para evaluar y perfeccionar la experiencia de usuario. | Fase 4 *(frontend)* |
-| `sdd-launcher` | Levanta el servidor de desarrollo local interactivo y verifica disponibilidad en tiempo real. | Fase 5 |
-| `sdd-verifier` | Ejecuta linters, pruebas unitarias y de integración en bucle de auto-curación. | Fase 6 |
-| `sdd-documenter` | Genera y actualiza de forma quirúrgica el README, TECHNICAL.md, USER_GUIDE.md y CHANGELOG.md. | Fase 7 |
-| `sdd-archiver` | Valida el estado del repositorio Git, archiva el cambio y firma el commit Git semántico. | Fase 8 |
+| `zugzbot` | Orquestador primario — rutea, delega y controla los límites de cada fase y Hito. | Siempre activo |
+| `sdd-architect` | Diagnostica el stack técnico, conduce entrevistas interactivas, define alcances (`proposal.md`), especificaciones BDD (`spec.md`) y el checklist atómico modular. | **Hito A**: Fases 0, 1 y 2 |
+| `sdd-implementer` | Escribe código modular senior y refina detalles de UX/UI en caso de frontend. | **Hito B**: Fases 3 y 4 |
+| `sdd-launcher` | Levanta entornos locales o realiza despliegues en la nube (ej: GAS/clasp) y detiene para pruebas manuales. | **Hito B**: Fase 5 |
+| `sdd-release-manager` | Ejecuta tests (`sdd test`), linter (`sdd lint`), auto-cura errores, documenta de forma quirúrgica, actualiza SemVer, limpia el lockfile y firma commits semánticos de producción. | **Hito C**: Fases 6, 7 y 8 |
 
 ### Agentes Auxiliares
 
 | Agente | Rol | Permisos |
 |---|---|---|
 | `aux-oracle` | Responde consultas de conocimiento general **sin relación directa con el proyecto**. | Solo lectura |
-| `aux-handyman` | Ejecuta tareas pequeñas e inmediatas que no ameritan iniciar un ciclo de vida SDD completo. | Lectura + Escritura |
+| `aux-handyman` | Ejecuta tareas pequeñas, puntuales e inmediatas (máx. 3 archivos) que no requieren un ciclo SDD completo. | Lectura + Escritura |
 
 ---
 
 ## 📋 El Ciclo de Vida SDD Completo
 
-Cada cambio significativo progresa de forma secuencial a través de estas fases gobernadas:
+Cada cambio significativo progresa de forma secuencial a través de estas fases gobernadas por hitos:
 
-0. **Fase 0 — Diagnóstico y Contexto (`sdd-inspector`)**
-   - Analiza en profundidad el estado tecnológico del proyecto, dependencias y frameworks.
-   - Sugiere y ejecuta de forma muy segura `npx autoskills --detect` para equipar al arnés con las habilidades ideales.
-
-1. **Fase 1 — Especificación (`sdd-proposer`)**
-   - Conduce una entrevista técnica ágil utilizando cuestionarios interactivos de opción múltiple.
-   - Generación de `openspec/changes/<nombre>/proposal.md` (alcance y negocio).
-   - Generación de `openspec/changes/<nombre>/specs/spec.md` con escenarios BDD (`Dado / Cuando / Entonces`).
-
-2. **Fase 2 — Planificación y Arquitectura (`sdd-planner`)**
-   - Diseño modular siguiendo principios SOLID y Arquitectura Limpia.
+### Hito A — Planificación y Diseño
+0. **Fase 0 — Diagnóstico y Contexto (`@sdd-architect`)**
+   - Analiza dependencias locales (Node/TS, Python, Go, Rust, Ruby, PHP) y frameworks.
+   - Recomienda y ejecuta de forma muy segura `npx autoskills --detect` para equipar al arnés con habilidades a la medida.
+1. **Fase 1 — Especificación (`@sdd-architect`)**
+   - Conduce una entrevista técnica ágil utilizando cuestionarios interactivos en OpenCode (`default_api:ask_question`).
+   - Generación de `proposal.md` (negocio) y `specs/spec.md` con escenarios BDD formales (`Dado-Cuando-Entonces`).
+2. **Fase 2 — Planificación y Arquitectura (`@sdd-architect`)**
    - Creación de `orchestrator_architecture.md` (diagramas Mermaid) y `orchestrator_tasks.md` (checklist global de tareas).
 
-3. **Fase 3 — Implementación (`sdd-implementer`)**
-   - Escritura de código incremental quirúrgico siguiendo estrictamente el checklist.
-   - Valida la ausencia de errores de compilación o LSP antes de cerrar.
+### Hito B — Construcción y Simulación
+3. **Fase 3 — Implementación de Código (`@sdd-implementer`)**
+   - Escritura de código incremental de forma quirúrgica siguiendo estrictamente el checklist y directrices del prompt base.
+4. **Fase 4 — Percepción y Diseño Visual (`@sdd-implementer`) — *Frontend***
+   - Captura la UI mediante Puppeteer MCP para evaluar y perfeccionar la experiencia visual en caso de existir frontend. Se omite automáticamente si no hay interfaz.
+5. **Fase 5 — Entorno y Pruebas Manuales (`@sdd-launcher`)**
+   - Inicia servidores de desarrollo en localhost o sube síncronamente a la nube (ej. `clasp push` para Google Apps Script) basándose en las lecciones del Cerebro del Proyecto.
+   - Presenta un enlace o tarjeta interactiva para validación del desarrollador (Human-In-The-Loop).
 
-4. **Fase 4 — Diseño Visual y UX (`sdd-ui-designer`) — *Frontend***
-   - **Integración Puppeteer MCP:** Levanta un navegador Chrome headless local.
-   - Interactúa, evalúa accesibilidad (WCAG AA), jerarquía, y genera el reporte `ui_review_report.md`.
-   - **Omisión Inteligente**: Si no se detecta frontend en el diagnóstico (Fase 0), se salta silenciosamente a la Fase 5.
-
-5. **Fase 5 — Servidor Local Interactivo (`sdd-launcher`)**
-   - Identifica el comando idóneo de inicio (ej: `npm run dev`, `python manage.py runserver`), arranca el servidor local en segundo plano y verifica su accesibilidad en tiempo real.
-   - Presenta un enlace interactivo (ej: `http://localhost:3000`) para que el desarrollador interactúe y compruebe manualmente.
-   - **Omisión Inteligente**: Se ignora y pasa directo a Fase 6 en piloto automático (`--auto`).
-
-6. **Fase 6 — Calidad y Pruebas QA (`sdd-verifier`)**
-   - Ejecuta linters, suite de pruebas unitarias y verifica integraciones backend mediante peticiones `curl`.
-   - **Bucle de Auto-curación:** Reactiva automáticamente al implementador si se detectan fallos lógicos.
-
-7. **Fase 7 — Documentación Canónica (`sdd-documenter`)**
-   - Escribe desde cero o actualiza de forma quirúrgica (respetando texto no relacionado) los documentos `README.md`, `docs/TECHNICAL.md`, y `docs/USER_GUIDE.md`.
-   - Inyecta la entrada de cambios en `CHANGELOG.md` global bajo `## [Unreleased]`.
-   - Genera el mensaje Conventional Commit semántico en `commit_message.txt`.
-
-8. **Fase 8 — Archivación y Cierre (`sdd-archiver`)**
-   - Consolida el historial, archiva las especificaciones en `openspec/changes/archive/` y realiza automáticamente un `git commit` semántico libre de marcas de IA.
+### Hito C — Calidad y Cierre Autónomo
+6. **Fase 6 — Calidad y Pruebas QA (`@sdd-release-manager`)**
+   - Ejecuta las directivas locales de calidad ejecutando `./.openspec/sdd lint` y `./.openspec/sdd test`.
+   - **Bucle de Auto-Curación:** Si se detectan fallos estáticos o lógicos, reactiva al implementador con logs detallados en un bucle continuo de corrección autónoma.
+7. **Fase 7 — Documentación Canónica (`@sdd-release-manager`)**
+   - Escribe o actualiza quirúrgicamente el `README.md` global, `CHANGELOG.md`, `brain.md` (lecciones aprendidas) y genera el mensaje Conventional Commit semántico libre de marcas de IA.
+8. **Fase 8 — Cierre y Archivación (`@sdd-release-manager`)**
+   - Limpia el lockfile `.openspec/sdd-lock.json`, archiva el historial del cambio y realiza el `git commit` semántico final de forma autónoma.
 
 ---
 
@@ -102,10 +92,10 @@ Cada cambio significativo progresa de forma secuencial a través de estas fases 
 
 El arnés SDD está optimizado para ofrecer una experiencia fluida, interactiva y de alto rendimiento:
 
-1. **Fase 0 — Diagnóstico Inteligente de Entrada**: El instalador analiza el stack local (TypeScript/JS, Python, Go, Rust, Ruby, PHP) y detecta dependencias, frameworks (Next.js, React, Django, etc.), bases de datos y frameworks de testeo, adaptando dinámicamente la activación del diseñador visual (`sdd-ui-designer`). **Además, sugiere el uso de `npx autoskills` para la autogeneración extremadamente segura de habilidades adaptadas a las tecnologías del proyecto.**
-2. **Cuestionarios de Selección Estructurados**: Zugzbot y `@sdd-proposer` aprovechan la herramienta interactiva de selección `AskUserQuestion` en OpenCode. En lugar de responder largas preguntas de texto abierto, el desarrollador responde completando formularios de opción múltiple ágilmente.
-3. **Piloto Automático (`--auto`)**: Los usuarios avanzados pueden pasar la bandera o parámetro `--auto` en sus comandos. Esto desactiva todas las pausas de confirmación entre fases, delegando y ejecutando de forma 100% autónoma el ciclo completo de SDD hasta finalizar el cambio.
-4. **Commits Git Automatizados y Convencionales**: Al finalizar el ciclo en la etapa de archivado, el sistema comprueba los cambios de código locales y realiza automáticamente un `git commit` semántico utilizando el mensaje impecable del archivo `commit_message.txt` sin dejar firmas de IA.
+1. **Consolidación en 4 Agentes Core**: Menor consumo de tokens, mayor consistencia contextual y rapidez de ejecución sin perder especialización.
+2. **Cuestionarios Interactivos Inteligentes**: Uso nativo de modales de opción múltiple (`default_api:ask_question`) para decisiones rápidas en OpenCode.
+3. **Control Local con CLI Novedoso (`sdd`)**: Utilidad portable `./.openspec/sdd` para monitorear el estado, hacer rollback o correr pruebas/linters directamente desde la terminal.
+4. **Piloto Automático (`--auto`)**: Omite pausas de aprobación en flujos maduros para velocidad pura de extremo a extremo.
 
 ---
 
@@ -119,43 +109,37 @@ El arnés SDD está optimizado para ofrecer una experiencia fluida, interactiva 
 - [OpenCode](https://opencode.ai) o [Cursor](https://cursor.sh) instalado.
 - Git 2.28+ configurado localmente.
 
-### Opción A — Instalación en un Solo Comando (Recomendado)
+### Opción A: V1 (Estable, Multi-Agente con 9 especialistas) — Rama `main`
 
-Navega a la raíz de tu proyecto destino y ejecuta:
+Para instalar la versión 1 clásica del arnés, navega a la raíz de tu proyecto destino y ejecuta:
 
 ```bash
-git clone --depth 1 https://github.com/Danielisla96/zugzbot.git /tmp/zugzbot-harness \
+git clone --depth 1 -b main https://github.com/Danielisla96/zugzbot.git /tmp/zugzbot-harness \
   && /tmp/zugzbot-harness/sdd-harness/bootstrap-sdd.sh \
   && rm -rf /tmp/zugzbot-harness
 ```
 
-Clona de forma efímera el arnés, inyecta los agentes y configuraciones locales de forma silenciosa, y limpia los residuos temporales sin dejar huella global.
+Clona de forma efímera la rama clásica, inyecta los 9 agentes clásicos y configuraciones locales de forma silenciosa.
 
-### Opción B — Instalación Local
+### Opción B: V2 (Ultra-rápido, Consolidado con 4 especialistas + CLI local) — Rama `fix/v2`
 
-Si ya tienes el repositorio clonado localmente:
+Para instalar la nueva versión 2 optimizada y de bajo consumo de tokens, navega a la raíz de tu proyecto destino y ejecuta:
+
+```bash
+git clone --depth 1 -b fix/v2 https://github.com/Danielisla96/zugzbot.git /tmp/zugzbot-harness \
+  && /tmp/zugzbot-harness/sdd-harness/bootstrap-sdd.sh \
+  && rm -rf /tmp/zugzbot-harness
+```
+
+Clona de forma efímera la rama optimizada, inyecta los 4 agentes consolidados, el prompt base y la utilidad local `sdd`.
+
+### Opción C — Instalación Local
+
+Si ya tienes el repositorio clonado localmente en tu máquina:
 
 ```bash
 cd /ruta/a/tu/proyecto-destino
 /ruta/a/zugzbot/sdd-harness/bootstrap-sdd.sh
-```
-
----
-
-### Lo que hace el Instalador
-
-El script de instalación ejecuta 9 pasos de forma silenciosa y elegante:
-
-```
-[0/8] Diagnóstico de Proyecto...             — Analiza dependencias y frameworks locales.
-[1/8] Verificando repositorio Git...         — Inicializa git e inyecta el .gitignore base.
-[2/8] Creando estructura de carpetas...       — Crea directorios .agent/, .opencode/ y openspec/.
-[3/8] Instalando perfiles de subagentes...     — Inyecta los prompts de sistema en español técnico.
-[4/8] Generando registro de agentes...        — Escribe el opencode.jsonc de proyecto.
-[5/8] Copiando habilidades y configs MCP...   — Configura habilidades de fase y Puppeteer MCP.
-[6/8] Escribiendo marcador de versión...       — Setea la versión del arnés en .agent/.
-[7/8] Creando checkpoint de Git...            — Realiza un commit con la instalación limpia.
-[8/8] Sincronizando reglamento (AGENTS.md)... — Instala la constitución base de comportamiento.
 ```
 
 ---
@@ -169,25 +153,25 @@ tu-proyecto/
 │   ├── skills/              # Definiciones de habilidades sdd-* y openspec-*
 │   └── workflows/           # Archivos de workflows declarativos opsx-*
 ├── .opencode/
-│   ├── agents/              # Prompts de sistema de todos los subagentes
+│   ├── agents/              # Prompts de sistema de todos los subagentes consolidados
 │   ├── commands/            # Mapeos de comandos slash
 │   ├── mcp-config.json      # Configuración MCP para OpenCode
 │   └── skills/              # Habilidades del runtime
-├── openspec/
-│   ├── changes/             # Cambios activos y archivados
-│   └── schemas/
-│       └── ssd-orchestrated/ # Esquemas y plantillas de documentos del ciclo
-├── docs/                    # Generado en Fase 5 por sdd-documenter
-│   ├── TECHNICAL.md
-│   └── USER_GUIDE.md
-├── opencode.jsonc           # Registro local de agentes del proyecto
+├── .openspec/
+│   ├── changes/             # Cambios activos e históricos archivados
+│   ├── schemas/
+│   │   └── ssd-orchestrated/# Esquemas y plantillas de documentos del ciclo
+│   ├── sdd                  # Utilidad portable de CLI local para monitoreo y control
+│   ├── sdd-lock.json        # Lockfile de persistencia de estado del ciclo SDD
+│   ├── prompt_base.md       # Reglas globales y personalidad base
+│   └── brain.md             # Cerebro de larga duración y lecciones aprendidas
 ├── AGENTS.md                # Reglamento de conducta obligatorio para los modelos
-└── README.md                # Actualizado automáticamente al final de cada ciclo
+└── README.md                # Este archivo de documentación del arnés
 ```
 
 ---
 
-## ⚡ Referencia de Comandos Slash
+## ⚡ Referencia de Comandos Slash en OpenCode
 
 | Comando | Descripción |
 |---|---|
@@ -198,10 +182,25 @@ tu-proyecto/
 
 ---
 
+## 🛠️ Utilidad de CLI Local (`sdd`)
+
+Puedes correr comandos directamente en la terminal de tu proyecto usando `./.openspec/sdd`:
+
+- `./.openspec/sdd status` (o simplemente `./.openspec/sdd`): Muestra el progreso del ciclo agrupado en hitos de decisión y fases.
+- `./.openspec/sdd validate`: Audita estructuralmente las propuestas y especificaciones BDD.
+- `./.openspec/sdd test`: Ejecuta de forma nativa la suite de pruebas del proyecto destino.
+- `./.openspec/sdd lint`: Ejecuta el linter o verificador estático de código local.
+- `./.openspec/sdd rollback`: Descarta de forma segura cambios Git locales no confirmados.
+- `./.openspec/sdd clean`: Purga logs de fallos, registros temporales y resetea el ciclo a Fase 0.
+
+---
+
 ## 📜 Reglamento de Conducta (AGENTS.md)
 
-Todos los agentes están severamente limitados por `AGENTS.md`, el cual garantiza:
+Todos los agentes están estrictamente limitados por `AGENTS.md`, el cual garantiza:
 - **Cero Código "Al Vuelo":** No se escribe una sola línea de código sin especificación aprobada, arquitectura de componentes trazada y checklist de tareas atómicas.
-- **Límites de Fase Rígidos:** Ningún subagente puede avanzar a la siguiente fase sin la firma explícita del desarrollador humano en el prompt.
-- **SOLID y Clean Architecture:** Es obligatorio seguir patrones limpios de diseño y la inyección de dependencias.
-- **Historial Limpio:** No se permiten commits genéricos; toda entrega debe estar descrita semánticamente sin marcas de IA.
+- **Límites de Hito Rígidos:** Ningún subagente puede avanzar al siguiente hito sin la firma explícita del desarrollador humano en el prompt en modo estándar.
+- **Calidad Absoluta**: Se requiere la verificación estática libre de advertencias y ejecución exitosa de pruebas antes de proceder al cierre.
+- **Mensajes de Commit Humanos**: Mensajes descriptivos impecables y libres de firmas robóticas o menciones de IA.
+- **SOLID y Clean Architecture**: Es obligatorio seguir patrones limpios de diseño y la inyección de dependencias.
+- **Historial Limpio**: No se permiten commits genéricos; toda entrega debe estar descrita semánticamente sin marcas de IA.
