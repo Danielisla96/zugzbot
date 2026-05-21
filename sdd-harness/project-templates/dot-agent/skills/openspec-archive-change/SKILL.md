@@ -65,7 +65,7 @@ Archive a completed change in the experimental workflow.
 
    If user chooses sync, use Task tool (subagent_type: "general-purpose", prompt: "Use Skill tool to invoke openspec-sync-specs for change '<name>'. Delta spec analysis: <include the analyzed delta spec summary>"). Proceed to archive regardless of choice.
 
-5. **Perform the archive**
+5. **Perform the archive and automated commit**
 
    Create the archive directory if it doesn't exist:
    ```bash
@@ -82,6 +82,16 @@ Archive a completed change in the experimental workflow.
    mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
    ```
 
+   **Automated Git Commit**:
+   - Check if Git is initialized in the workspace (`git rev-parse --is-inside-work-tree` is true).
+   - If yes, verify if `openspec/changes/archive/YYYY-MM-DD-<name>/commit_message.txt` exists.
+   - If the file exists and there are staged or unstaged changes, automatically stage and commit them:
+     ```bash
+     git add .
+     git commit -F openspec/changes/archive/YYYY-MM-DD-<name>/commit_message.txt
+     ```
+   - If successful, flag the commit status as active in the final output.
+
 6. **Display summary**
 
    Show archive completion summary including:
@@ -89,6 +99,7 @@ Archive a completed change in the experimental workflow.
    - Schema that was used
    - Archive location
    - Whether specs were synced (if applicable)
+   - Git Commit status (e.g. "✓ Automated Conventional Commit completed successfully" or "Skipped — no changes or git repository")
    - Note about any warnings (incomplete artifacts/tasks)
 
 **Output On Success**
@@ -100,6 +111,7 @@ Archive a completed change in the experimental workflow.
 **Schema:** <schema-name>
 **Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
 **Specs:** ✓ Synced to main specs (or "No delta specs" or "Sync skipped")
+**Git Commit:** ✓ Automated Conventional Commit completed successfully (or "Skipped — no changes or git repository")
 
 All artifacts complete. All tasks complete.
 ```

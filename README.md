@@ -15,8 +15,11 @@ graph TD
     B --> C["Fase 3: Implementación\n(sdd-implementer)"]
     C --> D{"¿Se detecta\nFrontend?"}
     D -- Sí --> E["Fase 3.5: Percepción Visual\n(sdd-ui-designer + Puppeteer MCP)"]
-    D -- No --> F["Fase 4: Verificación y QA\n(sdd-verifier)"]
-    E --> F
+    D -- No --> HIL{"¿Modo Auto?"}
+    E --> HIL
+    HIL -- No --> I["Fase 3.8: Servidor Interactivo\n(Human-in-the-Loop)"]
+    HIL -- Sí --> F["Fase 4: Verificación y QA\n(sdd-verifier)"]
+    I --> F
     F --> G["Fase 5: Documentación y Versionado\n(sdd-documenter)"]
     G --> H["Archivado del Cambio\n(openspec-archive-change)"]
 ```
@@ -68,12 +71,17 @@ Cada cambio significativo progresa de forma secuencial a través de estas fases 
    - Navega, interactúa, detecta problemas de escala, jerarquía y WCAG AA, y genera capturas del "Antes / Después".
    - Produce el reporte visual `ui_review_report.md`.
 
-5. **Fase 4 — Verificación y QA (`sdd-verifier`)**
+5. **Fase 3.8 — Servidor Local Interactivo (Human-in-the-Loop)**
+   - Levanta el servidor local o entorno automáticamente basándose en las tecnologías detectadas (ej: `npm run dev`, `python manage.py runserver`, etc.).
+   - Verifica la disponibilidad local y ofrece un enlace de verificación premium e interactivo (ej: `http://localhost:3000`) para que el desarrollador interactúe y verifique visual y manualmente la implementación antes de las pruebas formales.
+   - **Nota**: Este paso se ignora/salta de manera inteligente si se activa el modo Piloto Automático (`--auto`).
+
+6. **Fase 4 — Verificación y QA (`sdd-verifier`)**
    - Ejecuta análisis estático de código, linters y la suite de pruebas unitarias.
    - Levanta el backend local y realiza peticiones `curl` reales documentando respuestas exactas en `verification_report.md`.
    - **Bucle de Auto-curación:** Si un test falla, reactiva al implementador entregándole el log de error exacto.
 
-6. **Fase 5 — Documentación y Control de Versiones (`sdd-documenter`)**
+7. **Fase 5 — Documentación y Control de Versiones (`sdd-documenter`)**
    - Escribe o actualiza los tres documentos canónicos del proyecto:
      - `README.md` — inicio rápido y descripción
      - `docs/TECHNICAL.md` — detalles técnicos, arquitectura y catálogo de APIs
@@ -81,8 +89,19 @@ Cada cambio significativo progresa de forma secuencial a través de estas fases 
    - **Commit Semántico Automatizado:** Genera el mensaje impecable en `commit_message.txt` bajo *Conventional Commits* (cero atribuciones de IA).
    - **Keep a Changelog Quirúrgico:** Inyecta de forma quirúrgica la entrada del cambio en el archivo `CHANGELOG.md` global bajo la sección `## [Unreleased]`.
 
-7. **Archivado**
-   - Una vez firmado por el usuario, el cambio se archiva en `openspec/changes/archive/YYYY-MM-DD-<name>/`.
+8. **Archivado y Commit Automatizado**
+   - Una vez firmado por el usuario, el cambio se archiva en `openspec/changes/archive/YYYY-MM-DD-<name>/` y se realiza automáticamente un `git commit` semántico utilizando el archivo `commit_message.txt` si hay cambios locales listos para confirmar.
+
+---
+
+## ✨ Experiencia de Usuario (UX) Premium
+
+El arnés SDD está optimizado para ofrecer una experiencia fluida, interactiva y de alto rendimiento:
+
+1. **Fase 0 — Diagnóstico Inteligente de Entrada**: El instalador analiza el stack local (TypeScript/JS, Python, Go, Rust, Ruby, PHP) y detecta dependencias, frameworks (Next.js, React, Django, etc.), bases de datos y frameworks de testeo, adaptando dinámicamente la activación del diseñador visual (`sdd-ui-designer`). **Además, sugiere el uso de `npx autoskills` para la autogeneración extremadamente segura de habilidades adaptadas a las tecnologías del proyecto.**
+2. **Cuestionarios de Selección Estructurados**: Zugzbot y `@sdd-proposer` aprovechan la herramienta interactiva de selección `AskUserQuestion` en OpenCode. En lugar de responder largas preguntas de texto abierto, el desarrollador responde completando formularios de opción múltiple ágilmente.
+3. **Piloto Automático (`--auto`)**: Los usuarios avanzados pueden pasar la bandera o parámetro `--auto` en sus comandos. Esto desactiva todas las pausas de confirmación entre fases, delegando y ejecutando de forma 100% autónoma el ciclo completo de SDD hasta finalizar el cambio.
+4. **Commits Git Automatizados y Convencionales**: Al finalizar el ciclo en la etapa de archivado, el sistema comprueba los cambios de código locales y realiza automáticamente un `git commit` semántico utilizando el mensaje impecable del archivo `commit_message.txt` sin dejar firmas de IA.
 
 ---
 
@@ -121,17 +140,18 @@ cd /ruta/a/tu/proyecto-destino
 
 ### Lo que hace el Instalador
 
-El script de instalación ejecuta 8 pasos de forma silenciosa y elegante:
+El script de instalación ejecuta 9 pasos de forma silenciosa y elegante:
 
 ```
-[0/7] Verificando repositorio Git...         — Inicializa git e inyecta el .gitignore base.
-[1/7] Creando estructura de carpetas...       — Crea directorios .agent/, .opencode/ y openspec/.
-[2/7] Instalando perfiles de subagentes...     — Inyecta los prompts de sistema en español técnico.
-[3/7] Generando registro de agentes...        — Escribe el opencode.jsonc de proyecto.
-[4/7] Copiando habilidades y configs MCP...   — Configura habilidades de fase y Puppeteer MCP.
-[5/7] Escribiendo marcador de versión...       — Setea la versión del arnés en .agent/.
-[6/7] Creando checkpoint de Git...            — Realiza un commit con la instalación limpia.
-[7/7] Sincronizando reglamento (AGENTS.md)... — Instala la constitución base de comportamiento.
+[0/8] Diagnóstico de Proyecto...             — Analiza dependencias y frameworks locales.
+[1/8] Verificando repositorio Git...         — Inicializa git e inyecta el .gitignore base.
+[2/8] Creando estructura de carpetas...       — Crea directorios .agent/, .opencode/ y openspec/.
+[3/8] Instalando perfiles de subagentes...     — Inyecta los prompts de sistema en español técnico.
+[4/8] Generando registro de agentes...        — Escribe el opencode.jsonc de proyecto.
+[5/8] Copiando habilidades y configs MCP...   — Configura habilidades de fase y Puppeteer MCP.
+[6/8] Escribiendo marcador de versión...       — Setea la versión del arnés en .agent/.
+[7/8] Creando checkpoint de Git...            — Realiza un commit con la instalación limpia.
+[8/8] Sincronizando reglamento (AGENTS.md)... — Instala la constitución base de comportamiento.
 ```
 
 ---

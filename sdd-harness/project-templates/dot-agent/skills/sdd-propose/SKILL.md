@@ -24,25 +24,24 @@ Reunir los requerimientos del usuario y producir los artefactos canónicos de pr
 
 2. **Realizar la entrevista de requerimientos**
 
-   Formule las siguientes preguntas agrupadas. Espere las respuestas antes de pasar al siguiente grupo. NO formule todas las preguntas de una sola vez.
+   Para agilizar el proceso y evitar preguntas abiertas en la consola, **utilice de forma prioritaria la herramienta AskUserQuestion (`default_api:ask_question`)** para presentar cuestionarios estructurados al usuario.
 
-   **Grupo A — Contexto y Propósito**
-   - ¿Qué problema resuelve este cambio? ¿Quién es el usuario final o beneficiario?
-   - ¿Cuál es el resultado comercial o técnico esperado una vez implementado?
+   **Grupo A — Contexto y Propósito (Interactivo)**
+   - Formule preguntas sobre el problema a resolver y los objetivos esperados. 
+   - Proporcione opciones predefinidas o permita al usuario detallar sus respuestas.
 
-   **Grupo B — Alcance Técnico**
-   - ¿Cuál es el stack tecnológico (lenguaje, framework, base de datos, entorno de ejecución)?
-   - ¿Existen módulos, servicios o APIs actuales con los que este cambio deba integrarse?
-   - ¿Cuáles son las expectativas de rendimiento o escala (si aplica)?
+   **Grupo B — Alcance Técnico (Formulario de Selección)**
+   - Utilice la herramienta AskUserQuestion para presentar opciones de selección sobre el stack de desarrollo:
+     - Lenguaje: `Node.js (JavaScript)`, `Node.js (TypeScript)`, `Python`, `Go`, `Rust`, `PHP`, `Ruby`
+     - Framework / Entorno: `Next.js`, `React`, `Express`, `FastAPI`, `Django`, `Flask`, `Laravel`, `Rails`, `Genérico / Ninguno`
+     - Base de Datos: `SQLite`, `PostgreSQL`, `MySQL`, `MongoDB`, `Redis`, `Ninguna`
+     - Pruebas / QA: `Jest`, `Vitest`, `Pytest`, `Mocha`, `Ninguno`
 
    **Grupo C — Escenarios de Comportamiento**
-   - Descríbame paso a paso el flujo principal (camino feliz o happy-path).
-   - ¿Cuáles son los casos de error o escenarios límite más probables que debemos manejar?
-   - ¿Existen exclusiones explícitas (cosas que este cambio NO deba hacer)?
+   - Pregunte interactivamente por el happy-path principal y los casos límite o de error más probables.
 
    **Grupo D — Criterios de Aceptación**
-   - ¿Cómo sabrá que esto está terminado y correcto? ¿Qué define el éxito del cambio?
-   - ¿Existen requisitos de seguridad, regulatorios o de accesibilidad específicos?
+   - Pregunte interactivamente qué define el éxito y si existen requisitos específicos de seguridad o accesibilidad.
 
    Mantenga un tono sumamente consultivo, profesional y educado durante el diálogo. No proceda al Paso 3 hasta que todas las respuestas de los grupos estén consolidadas.
 
