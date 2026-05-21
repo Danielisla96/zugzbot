@@ -341,6 +341,9 @@ if [ "$SKIP_CONFIG" = false ]; then
     cat > "$OPENCODE_CONFIG" << 'EOF'
 {
   "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "question": "allow"
+  },
   "agent": {
     "zugzbot": {
       "mode": "primary",
@@ -349,38 +352,57 @@ if [ "$SKIP_CONFIG" = false ]; then
       "permission": {
         "task": {
           "sdd-*": "allow"
-        }
+        },
+        "question": "allow"
       }
     },
     "sdd-architect": {
       "mode": "subagent",
       "model": "opencode/deepseek-v4-flash-free",
-      "variant": "medium"
+      "variant": "medium",
+      "permission": {
+        "question": "allow"
+      }
     },
     "sdd-implementer": {
       "mode": "subagent",
       "model": "google/gemini-3.5-flash",
-      "variant": "medium"
+      "variant": "medium",
+      "permission": {
+        "question": "allow"
+      }
     },
     "sdd-launcher": {
       "mode": "subagent",
       "model": "opencode/deepseek-v4-flash-free",
-      "variant": "medium"
+      "variant": "medium",
+      "permission": {
+        "question": "allow"
+      }
     },
     "sdd-release-manager": {
       "mode": "subagent",
       "model": "opencode/deepseek-v4-flash-free",
-      "variant": "medium"
+      "variant": "medium",
+      "permission": {
+        "question": "allow"
+      }
     },
     "aux-oracle": {
       "mode": "subagent",
       "model": "opencode/deepseek-v4-flash-free",
-      "variant": "medium"
+      "variant": "medium",
+      "permission": {
+        "question": "allow"
+      }
     },
     "aux-handyman": {
       "mode": "subagent",
       "model": "google/gemini-3.5-flash",
-      "variant": "medium"
+      "variant": "medium",
+      "permission": {
+        "question": "allow"
+      }
     }
   }
 }
