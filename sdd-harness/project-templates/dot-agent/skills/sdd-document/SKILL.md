@@ -1,6 +1,6 @@
 ---
 name: sdd-document
-description: Generar los tres documentos canónicos del proyecto (README.md, docs/TECHNICAL.md, docs/USER_GUIDE.md) basándose en todos los artefactos de SDD producidos durante el ciclo de vida del cambio, además de automatizar la creación del mensaje de commit semántico y la actualización del CHANGELOG.md. Utilizar antes del archivado final.
+description: Generar el documento de referencia canónico del proyecto (README.md en la raíz) consolidando la especificación técnica y el manual de uso en secciones separadas, además de automatizar la creación del mensaje de commit semántico y la actualización quirúrgica del CHANGELOG.md. Utilizar antes del archivado final.
 license: MIT
 compatibility: Requiere un cambio de openspec activo con propuesta, especificación, arquitectura y reporte de verificación completados.
 metadata:
@@ -9,7 +9,7 @@ metadata:
   generatedBy: "zugzbot-harness"
 ---
 
-Generar los tres archivos de documentación técnica canónica para el proyecto, el mensaje de commit semántico y la actualización de CHANGELOG.md.
+Generar la documentación técnica consolidada en el archivo README.md de la raíz del proyecto, el mensaje de commit semántico y la actualización de CHANGELOG.md.
 
 **Entrada**: El nombre del cambio activo en kebab-case. Si se omite, infiéralo del contexto o solicítelo al usuario.
 
@@ -31,41 +31,32 @@ Generar los tres archivos de documentación técnica canónica para el proyecto,
 
    **IMPORTANTE**: No genere ningún documento sin haber consumido todas las fuentes. La calidad de la documentación depende de la riqueza del contexto leído.
 
-3. **Generar/Actualizar `README.md`**
+3. **Generar/Actualizar el `README.md` consolidado**
 
-   Escriba o actualice el archivo en la raíz del proyecto. Secciones requeridas:
-   - Nombre del proyecto + descripción clara de una sola oración.
-   - Qué hace y por qué existe (2–3 oraciones).
-   - Fila de badges del stack tecnológico.
-   - Guía de inicio rápido ("Quick Start") con comandos mínimos para instalar dependencias, correr la app y correr tests.
-   - Estructura de directorios (árbol simplificado de carpetas).
-   - Enlaces de navegación a `docs/TECHNICAL.md` y `docs/USER_GUIDE.md`.
+   Escriba o actualice quirúrgicamente el archivo `README.md` en la raíz del proyecto. Debe estructurarse estrictamente con las siguientes secciones principales:
 
-   Mínimo 60 líneas. Cero placeholders o textos genéricos.
+   - **Información General / Visión Global**:
+     - Nombre del proyecto + descripción clara de una sola oración.
+     - Qué hace y por qué existe (2–3 oraciones).
+     - Fila de badges del stack tecnológico.
+     - Estructura de directorios (árbol simplificado de carpetas).
 
-4. **Generar `docs/TECHNICAL.md`**
+   - **Especificación y Arquitectura Técnica (sección `## 🛠️ Especificación Técnica`)**:
+     - Arquitectura del sistema: explicación de capas, límites modulares y responsabilidades.
+     - Diagrama de flujo/secuencia en formato Mermaid representativo del flujo de datos real.
+     - Catálogo de APIs/Funciones públicas expuestas con firmas exactas, parámetros y respuestas.
+     - Decisiones de diseño clave y justificación técnica.
+     - Catálogo de dependencias externas añadidas y su propósito específico.
+     - Guía de extensión: paso a paso de cómo agregar un nuevo endpoint o módulo compatible.
 
-   Escriba el archivo en `docs/TECHNICAL.md`. Secciones requeridas:
-   - Arquitectura del sistema: explicación de capas, límites modulares y responsabilidades.
-   - Diagrama de flujo/secuencia en formato Mermaid representativo del flujo de datos real.
-   - Catálogo de APIs/Funciones públicas expuestas con firmas exactas, parámetros y respuestas.
-   - Decisiones de diseño clave y justificación técnica.
-   - Catálogo de dependencias externas añadidas y su propósito específico.
-   - Guía de extensión: paso a paso de cómo agregar un nuevo endpoint o módulo compatible.
+   - **Manual de Uso e Instalación (sección `## 📖 Manual de Uso / Guía del Usuario`)**:
+     - Requisitos de entorno (OS, versiones de runtimes, dependencias globales).
+     - Guía detallada de instalación paso a paso (clonar, configurar variables de entorno, levantar servicios).
+     - Instrucciones para ejecutar la aplicación localmente y la suite de pruebas locales.
+     - Ejemplos reales de consumo con peticiones HTTP/CLI y respuestas JSON exactas (extraídas directamente de `verification_report.md` — no inventes datos).
+     - Sección de Troubleshooting con errores comunes del proyecto, causas y soluciones.
 
-   Mínimo 80 líneas. El diagrama Mermaid debe reflejar la interacción real de la aplicación.
-
-5. **Generar `docs/USER_GUIDE.md`**
-
-   Escriba el archivo en `docs/USER_GUIDE.md`. Secciones requeridas:
-   - Requisitos de entorno (OS, versiones de runtimes, dependencias globales).
-   - Guía detallada de instalación paso a paso (clonar, configurar variables de entorno, levantar servicios).
-   - Instrucciones para ejecutar la aplicación localmente.
-   - Instrucciones para ejecutar la suite de pruebas locales.
-   - Ejemplos reales de consumo con peticiones HTTP/CLI y respuestas JSON exactas (extraídas directamente de `verification_report.md` — no invente datos).
-   - Sección de Troubleshooting con errores comunes del proyecto, causas y soluciones.
-
-   Mínimo 80 líneas. Los comandos deben estar verificados.
+   Mínimo 150 líneas en total. Cero placeholders o textos genéricos.
 
 6. **Generar el Mensaje de Commit Semántico**
 
@@ -96,16 +87,14 @@ Generar los tres archivos de documentación técnica canónica para el proyecto,
      - `Fixed`: Para correcciones de fallos (`fix`).
    - **Formato de la línea**:
      ```markdown
-     - **[<change-name>]**: <short description> (ver [detalles técnicos](docs/TECHNICAL.md)).
+     - **[<change-name>]**: <short description> (ver sección de especificación técnica en `README.md`).
      ```
    - Garantice no borrar ni alterar otros registros de cambios previos del archivo.
 
 8. **Verificar completitud**
 
    Confirme que los archivos existan y posean longitud real:
-   - `README.md` ≥ 60 líneas
-   - `docs/TECHNICAL.md` ≥ 80 líneas
-   - `docs/USER_GUIDE.md` ≥ 80 líneas
+    - `README.md` ≥ 150 líneas (incluyendo manual de uso y especificación técnica)
    - `..openspec/changes/<nombre>/commit_message.txt` estructurado sin firmas de IA.
    - `CHANGELOG.md` con la línea inyectada.
 
@@ -119,9 +108,7 @@ Generar los tres archivos de documentación técnica canónica para el proyecto,
 
    | Documento | Líneas | Resumen de Contenido |
    |---|---|---|
-   | README.md | <n> | Introducción, Quick Start y árbol de carpetas |
-   | docs/TECHNICAL.md | <n> | Arquitectura modular, diagramas Mermaid y contratos |
-   | docs/USER_GUIDE.md | <n> | Guía de instalación, ejemplos con curl reales y troubleshooting |
+    | README.md | <n> | Documentación consolidada: Visión Global, Especificación Técnica y Manual de Uso |
    | commit_message.txt | <n> | Mensaje de commit semántico convencional (Sin firmas de IA) |
    | CHANGELOG.md | <n> | Entrada inyectada bajo la sección correspondiente |
 
@@ -134,5 +121,5 @@ Generar los tres archivos de documentación técnica canónica para el proyecto,
 - **Queda estrictamente prohibida la adición de firmas "Co-Authored-By", marcas de IA, atribuciones de asistentes o nombres de herramientas de automatización en el mensaje de commit generado.** Debe ser puramente convencional y limpio.
 - Los comandos de consola y URLs declarados deben corresponder estrictamente con la base de código real.
 - Si existe un `README.md` previo, respete el contenido anterior no modificado y actualice/añada las secciones del cambio.
-- Cree el directorio `docs/` de forma implícita al guardar el path del archivo técnico.
+- No cree ningún directorio o archivo en docs/; toda la información técnica y de usuario debe residir en el README.md de la raíz.
 - No archive el cambio; el archivado es responsabilidad del orquestador tras la firma final del usuario.

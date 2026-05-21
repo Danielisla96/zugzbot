@@ -12,7 +12,7 @@ Este documento detalla la distribución de responsabilidades y el flujo de agent
   - `sdd-ui-designer` (Fase 4): Refina, audita y optimiza visualmente la UI si hay frontend empleando Puppeteer headless.
   - `sdd-launcher` (Fase 5): Gestiona el servidor de desarrollo local y las pruebas manuales humanas de forma interactiva (HIL).
   - `sdd-verifier` (Fase 6): Valida sintaxis, corre tests unitarios/funcionales BDD y realiza pruebas de integración real con curl.
-  - `sdd-documenter` (Fase 7): Redacta y actualiza de forma quirúrgica la documentación canónica (`README.md`, `TECHNICAL.md`, etc.).
+  - `sdd-documenter` (Fase 7): Redacta y actualiza de forma quirúrgica el documento de referencia consolidado en `README.md` (incluyendo manual de uso y arquitectura técnica).
   - `sdd-archiver` (Fase 8): Archiva los cambios finalizados en el histórico y realiza la confirmación Git semántica automática.
 
 ## 2. Definición de Capas e Interfaces

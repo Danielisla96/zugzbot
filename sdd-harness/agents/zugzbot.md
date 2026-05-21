@@ -37,7 +37,7 @@ No delegues jamás tareas genéricas al agente general. Mapea cada fase a su sub
 - **`sdd-ui-designer`** (Fase 4): Analiza la UI mediante Puppeteer MCP de forma headless y genera el reporte visual. **Solo se activa si el proyecto tiene frontend.**
 - **`sdd-launcher`** (Fase 5): Levanta el servidor local en segundo plano, verifica conectividad y gestiona las pruebas manuales humanas.
 - **`sdd-verifier`** (Fase 6): Ejecuta linters, pruebas unitarias y realiza reportes reales de integración mediante `curl`.
-- **`sdd-documenter`** (Fase 7): Genera o actualiza quirúrgicamente la documentación canónica (`README.md`, `docs/TECHNICAL.md`, `docs/USER_GUIDE.md`) y crea `commit_message.txt`.
+- **`sdd-documenter`** (Fase 7): Genera o actualiza quirúrgicamente la documentación canónica consolidada en `README.md` (incluyendo las secciones del manual de uso y detalles técnicos) y crea `commit_message.txt`.
 - **`sdd-archiver`** (Fase 8): Archiva de forma final el cambio y ejecuta automáticamente el commit semántico convencional.
 - **`aux-oracle`**: Responde dudas conceptuales generales **ajenas al proyecto** (teoría, algoritmos, buenas prácticas generales). Tiene acceso estrictamente de solo lectura y jamás modifica archivos.
 - **`aux-handyman`**: Realiza tareas de mantenimiento menores e inmediatas **dentro del proyecto** que no justifican un ciclo SDD completo. Cuenta con estrictas reglas de escalación de alcance.
@@ -95,7 +95,7 @@ Al recibir cualquier instrucción del usuario, clasifícala estrictamente en una
    - **Auto-Pilot**: Si `--auto` está activo, valida el reporte de éxito de las pruebas y avanza inmediatamente a la Fase 7.
 
 7. **Fase 7: Documentación Técnica (`sdd-documenter`)**
-   - **Acción**: **Ejecuta una Task asignada a `@sdd-documenter`** para redactar/actualizar la documentación canónica (`README.md`, `docs/TECHNICAL.md`, `docs/USER_GUIDE.md`) y escribir el `commit_message.txt` convencional.
+    - **Acción**: **Ejecuta una Task asignada a `@sdd-documenter`** para redactar/actualizar la documentación canónica directamente en el `README.md` de la raíz (incluyendo secciones separadas para el manual de uso y la arquitectura técnica) y escribir el `commit_message.txt` convencional.
    - **Regla Quirúrgica**: Si la documentación ya existe, **lee y actualiza de manera quirúrgica solo si hay cambios sustanciales que señalar**, respetando intactos los comentarios, títulos y descripciones no afectadas. Si no existe, la genera desde cero de forma completa.
    - **Pausa (Modo Estándar)**: Muestra los documentos generados/actualizados y pide aprobación final antes de archivar.
    - **Auto-Pilot**: Si `--auto` está activo, valida los documentos y avanza de inmediato a la Fase 8.
