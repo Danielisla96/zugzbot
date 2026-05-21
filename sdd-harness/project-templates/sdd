@@ -191,11 +191,91 @@ validate_schemas() {
     fi
 }
 
+show_interactive_menu() {
+    while true; do
+        clear 2>/dev/null || true
+        print_header
+        echo -e "  ${COLOR_ACTIVE}Selecciona una opción del menú interactivo:${NC}\n"
+        echo -e "    ${COLOR_HEADER}[1]${NC} 📊  Ver Estado y Progreso de las 9 Fases"
+        echo -e "    ${COLOR_HEADER}[2]${NC} 🔍  Validar Artefactos (BDD / Propuestas)"
+        echo -e "    ${COLOR_HEADER}[3]${NC} 🔄  Hacer Rollback de Cambios Locales"
+        echo -e "    ${COLOR_HEADER}[4]${NC} 🧹  Limpiar Caché y Reiniciar a Fase 0"
+        echo -e "    ${COLOR_HEADER}[5]${NC} ❓  Ver Tarjeta Informativa de Comandos"
+        echo -e "    ${COLOR_HEADER}[6]${NC} ❌  Salir del Monitor"
+        echo ""
+        echo -ne "  ${COLOR_MUTED}Ingresa tu opción [1-6]:${NC} "
+        read -r choice
+        echo ""
+        
+        case "$choice" in
+            1)
+                clear 2>/dev/null || true
+                print_header
+                show_status
+                echo -ne "  ${COLOR_MUTED}Presiona [Enter] para continuar...${NC}"
+                read -r
+                ;;
+            2)
+                clear 2>/dev/null || true
+                print_header
+                validate_schemas
+                echo -ne "  ${COLOR_MUTED}Presiona [Enter] para continuar...${NC}"
+                read -r
+                ;;
+            3)
+                clear 2>/dev/null || true
+                print_header
+                perform_rollback
+                echo -ne "  ${COLOR_MUTED}Presiona [Enter] para continuar...${NC}"
+                read -r
+                ;;
+            4)
+                clear 2>/dev/null || true
+                print_header
+                perform_clean
+                echo -ne "  ${COLOR_MUTED}Presiona [Enter] para continuar...${NC}"
+                read -r
+                ;;
+            5)
+                clear 2>/dev/null || true
+                print_header
+                echo -e "  ${COLOR_HEADER}Uso no interactivo:${NC} ./sdd [comando]"
+                echo ""
+                echo -e "  ${COLOR_HEADER}Comandos rápidos directos:${NC}"
+                echo -e "    ${COLOR_SUCCESS}status${NC}    - Muestra el progreso de las 9 fases directamente"
+                echo -e "    ${COLOR_SUCCESS}validate${NC}  - Audita estructuralmente las especificaciones"
+                echo -e "    ${COLOR_SUCCESS}rollback${NC}  - Descarta cambios Git locales no confirmados"
+                echo -e "    ${COLOR_SUCCESS}clean${NC}     - Puga logs, archivos temporales y resetea a Fase 0"
+                echo -e "    ${COLOR_SUCCESS}help${NC}      - Muestra esta tarjeta de comandos"
+                echo ""
+                echo -ne "  ${COLOR_MUTED}Presiona [Enter] para continuar...${NC}"
+                read -r
+                ;;
+            6)
+                echo -e "  ${COLOR_SUCCESS}¡Nos vemos! Éxito en tu ciclo de desarrollo. 🚀${NC}\n"
+                break
+                ;;
+            *)
+                echo -e "  ${COLOR_ERROR}❌ Opción no válida. Inténtalo de nuevo.${NC}"
+                sleep 1
+                ;;
+        esac
+    done
+}
+
 # Entry point
 case "$1" in
-    status|"")
+    status)
         print_header
         show_status
+        ;;
+    "")
+        if [ -t 0 ] && [ -t 1 ]; then
+            show_interactive_menu
+        else
+            print_header
+            show_status
+        fi
         ;;
     rollback)
         print_header
