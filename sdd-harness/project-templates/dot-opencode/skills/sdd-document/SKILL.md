@@ -22,10 +22,10 @@ Generar los tres archivos de documentación técnica canónica para el proyecto,
 2. **Leer todos los artefactos de origen**
 
    Lea en orden estricto antes de escribir cualquier documento:
-   - `openspec/changes/<nombre>/proposal.md`
-   - `openspec/changes/<nombre>/specs/spec.md`
-   - `openspec/changes/<nombre>/orchestrator_architecture.md`
-   - `openspec/changes/<nombre>/verification_report.md`
+   - `.openspec/changes/<nombre>/proposal.md`
+   - `.openspec/changes/<nombre>/specs/spec.md`
+   - `.openspec/changes/<nombre>/orchestrator_architecture.md`
+   - `.openspec/changes/<nombre>/verification_report.md`
    - Árbol de carpetas bajo `src/` (para entender la estructura real)
    - `README.md` en la raíz (si existe — actualice, no lo reemplace a ciegas)
 
@@ -69,7 +69,7 @@ Generar los tres archivos de documentación técnica canónica para el proyecto,
 
 6. **Generar el Mensaje de Commit Semántico**
 
-   Escriba el mensaje de commit convencional e impecable en `.openspec/changes/<nombre>/commit_message.txt`.
+   Escriba el mensaje de commit convencional e impecable en `..openspec/changes/<nombre>/commit_message.txt`.
    - **Formato Estricto de Conventional Commits (v1.0.0)**:
      ```
      <type>(<scope>): <short description>
@@ -106,7 +106,7 @@ Generar los tres archivos de documentación técnica canónica para el proyecto,
    - `README.md` ≥ 60 líneas
    - `docs/TECHNICAL.md` ≥ 80 líneas
    - `docs/USER_GUIDE.md` ≥ 80 líneas
-   - `.openspec/changes/<nombre>/commit_message.txt` estructurado sin firmas de IA.
+   - `..openspec/changes/<nombre>/commit_message.txt` estructurado sin firmas de IA.
    - `CHANGELOG.md` con la línea inyectada.
 
 9. **Reportar a Zugzbot**

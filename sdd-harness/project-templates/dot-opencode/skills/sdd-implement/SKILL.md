@@ -2,7 +2,7 @@
 name: sdd-implement
 description: Ejecutar el checklist de tareas de implementación producido en sdd-plan, escribiendo código fuente limpio de calidad de producción que respete estrictamente la arquitectura diseñada. Utilizar después de aprobar el checklist de planificación.
 license: MIT
-compatibility: Requiere acceso de lectura y escritura a src/ y openspec/. Acceso a diagnósticos de LSP es necesario para la validación estática de calidad.
+compatibility: Requiere acceso de lectura y escritura a src/ y .openspec/. Acceso a diagnósticos de LSP es necesario para la validación estática de calidad.
 metadata:
   author: zugzbot
   version: "1.0"
@@ -18,10 +18,10 @@ Ejecutar el checklist de tareas aprobado escribiendo código limpio y de calidad
 1. **Consumir todo el contexto antes de escribir código**
 
    Lea en orden estricto:
-   - `openspec/changes/<nombre>/proposal.md`
-   - `openspec/changes/<nombre>/specs/spec.md`
-   - `openspec/changes/<nombre>/orchestrator_architecture.md`
-   - `openspec/changes/<nombre>/orchestrator_tasks.md`
+   - `.openspec/changes/<nombre>/proposal.md`
+   - `.openspec/changes/<nombre>/specs/spec.md`
+   - `.openspec/changes/<nombre>/orchestrator_architecture.md`
+   - `.openspec/changes/<nombre>/orchestrator_tasks.md`
 
    Mapee mentalmente cada tarea sin marcar (`- [ ]`) a su archivo fuente de destino antes de comenzar a escribir.
 

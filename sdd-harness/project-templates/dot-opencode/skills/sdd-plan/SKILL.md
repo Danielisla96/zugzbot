@@ -2,7 +2,7 @@
 name: sdd-plan
 description: Traducir una propuesta y especificación de comportamiento aprobadas en un diseño técnico de arquitectura limpia y un checklist atómico de tareas de implementación. Utilizar después de aprobar sdd-propose y antes de escribir cualquier código.
 license: MIT
-compatibility: No requiere herramientas externas. Acceso de lectura y escritura a openspec/ es suficiente.
+compatibility: No requiere herramientas externas. Acceso de lectura y escritura a .openspec/ es suficiente.
 metadata:
   author: zugzbot
   version: "1.0"
@@ -18,10 +18,10 @@ Diseñar la arquitectura y producir el checklist de tareas para un cambio aproba
 1. **Leer todo el contexto antes de realizar cualquier acción**
 
    Lea en orden estricto:
-   - `openspec/changes/<nombre>/proposal.md`
-   - `openspec/changes/<nombre>/specs/spec.md`
+   - `.openspec/changes/<nombre>/proposal.md`
+   - `.openspec/changes/<nombre>/specs/spec.md`
    - El árbol actual del directorio `src/` (para entender la arquitectura existente)
-   - `openspec/changes/schemas/ssd-orchestrated/` (si existe, para comprender contratos de esquema)
+   - `.openspec/changes/schemas/ssd-orchestrated/` (si existe, para comprender contratos de esquema)
 
    No comience a escribir hasta haber consumido y comprendido estas cuatro fuentes.
 
@@ -41,7 +41,7 @@ Diseñar la arquitectura y producir el checklist de tareas para un cambio aproba
 
 3. **Escribir `orchestrator_architecture.md`**
 
-   Escriba en el archivo `openspec/changes/<nombre>/orchestrator_architecture.md`:
+   Escriba en el archivo `.openspec/changes/<nombre>/orchestrator_architecture.md`:
 
    ```markdown
    # Diseño de Arquitectura — <nombre-del-cambio>
@@ -96,7 +96,7 @@ Diseñar la arquitectura y producir el checklist de tareas para un cambio aproba
 
 4. **Escribir `orchestrator_tasks.md`**
 
-   Escriba en el archivo `openspec/changes/<nombre>/orchestrator_tasks.md`:
+   Escriba en el archivo `.openspec/changes/<nombre>/orchestrator_tasks.md`:
 
    Reglas para la descomposición de tareas:
    - Cada tarea debe ser resoluble de forma independiente (sin dependencias cíclicas en tareas no iniciadas).
@@ -143,8 +143,8 @@ Diseñar la arquitectura y producir el checklist de tareas para un cambio aproba
 
    **Cambio:** <nombre-del-cambio>
    **Artefactos escritos:**
-   - openspec/changes/<nombre>/orchestrator_architecture.md
-   - openspec/changes/<nombre>/orchestrator_tasks.md
+   - .openspec/changes/<nombre>/orchestrator_architecture.md
+   - .openspec/changes/<nombre>/orchestrator_tasks.md
 
    **Total de tareas planificadas:** <n>
    **Nuevos archivos a crear:** <n>

@@ -18,8 +18,8 @@ Revisar y mejorar el frontend (UI/UX) de la solución implementada utilizando pe
 1. **Resolver el nombre del cambio y leer el contexto técnico**
 
    Lea antes de realizar cualquier acción:
-   - `openspec/changes/<nombre>/proposal.md`
-   - `openspec/changes/<nombre>/orchestrator_architecture.md`
+   - `.openspec/changes/<nombre>/proposal.md`
+   - `.openspec/changes/<nombre>/orchestrator_architecture.md`
    - Árbol de carpetas de `src/` para identificar archivos de frontend.
 
    Identifique indicadores de interfaz:
@@ -94,7 +94,7 @@ Revisar y mejorar el frontend (UI/UX) de la solución implementada utilizando pe
 
 8. **Escribir `ui_review_report.md`**
 
-   Escriba en el archivo `openspec/changes/<nombre>/ui_review_report.md`:
+   Escriba en el archivo `.openspec/changes/<nombre>/ui_review_report.md`:
 
    ```markdown
    # Reporte de Revisión Visual — <nombre-del-cambio>
@@ -131,7 +131,7 @@ Revisar y mejorar el frontend (UI/UX) de la solución implementada utilizando pe
    **Cambio:** <nombre-del-cambio>
    **Issues detectados:** <n>  |  **Issues resueltos:** <n>
    **Archivos modificados:** <lista>
-   **Reporte guardado en:** openspec/changes/<nombre>/ui_review_report.md
+   **Reporte guardado en:** .openspec/changes/<nombre>/ui_review_report.md
 
    Fase 4 completada. Interfaz pulida y refinada visualmente. Lista para verificación.
    ```

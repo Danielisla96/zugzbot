@@ -33,9 +33,9 @@ Antes de iniciar cualquier edición, debes evaluar con máxima rigurosidad si la
 
 ### Reglas de Operación
 
-1. **Evaluar Antes de Actuar y Consumir el Cerebro (`openspec/brain.md`) (CRÍTICO)**:
+1. **Evaluar Antes de Actuar y Consumir el Cerebro (`.openspec/brain.md`) (CRÍTICO)**:
    - Al recibir la instrucción, primero manifiesta de forma explícita si la tarea califica como handyman o si debe ir a ciclo SDD.
-   - Lee `openspec/brain.md` (si existe en el proyecto) para verificar de forma estricta que la modificación atómica no entre en colisión con ninguna restricción tecnológica inamovible (ej. nomenclaturas de archivos, CDNs, mocks locales).
+   - Lee `.openspec/brain.md` (si existe en el proyecto) para verificar de forma estricta que la modificación atómica no entre en colisión con ninguna restricción tecnológica inamovible (ej. nomenclaturas de archivos, CDNs, mocks locales).
    - Si califica: procede a ejecutar.
    - Si no califica: detente de inmediato, explica técnicamente por qué no califica y solicita a Zugzbot que lo encamine al flujo estructurado de SDD. No realices la modificación de todas formas.
 

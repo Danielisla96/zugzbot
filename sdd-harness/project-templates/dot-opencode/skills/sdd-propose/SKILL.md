@@ -2,7 +2,7 @@
 name: sdd-propose
 description: Realizar una entrevista técnica estructurada de requerimientos con el usuario y producir los dos artefactos canónicos de especificación (proposal.md y specs/spec.md) para el cambio nombrado. Utilizar al inicio de cada ciclo SDD antes de cualquier diseño o desarrollo.
 license: MIT
-compatibility: No requiere herramientas externas. Acceso de lectura y escritura a openspec/ es suficiente.
+compatibility: No requiere herramientas externas. Acceso de lectura y escritura a .openspec/ es suficiente.
 metadata:
   author: zugzbot
   version: "1.0"
@@ -18,8 +18,8 @@ Reunir los requerimientos del usuario y producir los artefactos canónicos de pr
 1. **Resolver el nombre del cambio y preparar el entorno de trabajo**
 
    - Confirme el nombre del cambio con el usuario si no fue proporcionado.
-   - Cree el directorio `openspec/changes/<nombre>/specs/` si no existe.
-   - Verifique si `openspec/changes/<nombre>/proposal.md` ya existe.
+   - Cree el directorio `.openspec/changes/<nombre>/specs/` si no existe.
+   - Verifique si `.openspec/changes/<nombre>/proposal.md` ya existe.
      - Si existe: léalo, informe al usuario y pregunte si debe sobrescribirse o extenderse antes de continuar.
 
 2. **Realizar la entrevista de requerimientos**
@@ -47,7 +47,7 @@ Reunir los requerimientos del usuario y producir los artefactos canónicos de pr
 
 3. **Escribir `proposal.md`**
 
-   Escriba en el archivo `openspec/changes/<nombre>/proposal.md`:
+   Escriba en el archivo `.openspec/changes/<nombre>/proposal.md`:
 
    ```markdown
    # Propuesta — <nombre-del-cambio>
@@ -84,7 +84,7 @@ Reunir los requerimientos del usuario y producir los artefactos canónicos de pr
 
 4. **Escribir `specs/spec.md`**
 
-   Escriba en el archivo `openspec/changes/<nombre>/specs/spec.md`:
+   Escriba en el archivo `.openspec/changes/<nombre>/specs/spec.md`:
 
    ```markdown
    # Especificación de Comportamiento — <nombre-del-cambio>
@@ -122,8 +122,8 @@ Reunir los requerimientos del usuario y producir los artefactos canónicos de pr
 
    **Cambio:** <nombre-del-cambio>
    **Artefactos escritos:**
-   - openspec/changes/<nombre>/proposal.md
-   - openspec/changes/<nombre>/specs/spec.md
+   - .openspec/changes/<nombre>/proposal.md
+   - .openspec/changes/<nombre>/specs/spec.md
 
    **Escenarios definidos:** <n>
    **Preguntas abiertas:** <n — lístelas si existen>

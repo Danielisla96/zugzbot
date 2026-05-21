@@ -257,7 +257,7 @@ yarn-debug.log*
 Thumbs.db
 
 # SDD artifacts (generated, not source)
-openspec/changes/archive/
+.openspec/changes/archive/
 GITIGNORE
         echo -e "        ${COLOR_SUCCESS}✓ Archivo .gitignore creado.${NC}"
     fi
@@ -277,11 +277,11 @@ if [ "$DRY_RUN" = false ]; then
     mkdir -p "$TARGET_DIR/.opencode/skills"
     mkdir -p "$TARGET_DIR/.agent/workflows"
     mkdir -p "$TARGET_DIR/.agent/skills"
-    mkdir -p "$TARGET_DIR/openspec/schemas/ssd-orchestrated"
+    mkdir -p "$TARGET_DIR/.openspec/schemas/ssd-orchestrated"
     
     # Inicializar el lockfile de persistencia de estado si no existe
-    if [ ! -f "$TARGET_DIR/openspec/sdd-lock.json" ]; then
-        cp "$HARNESS_DIR/project-templates/openspec-schema/ssd-orchestrated/sdd-lock.json" "$TARGET_DIR/openspec/sdd-lock.json" 2>/dev/null || cat > "$TARGET_DIR/openspec/sdd-lock.json" << 'EOF'
+    if [ ! -f "$TARGET_DIR/.openspec/sdd-lock.json" ]; then
+        cp "$HARNESS_DIR/project-templates/openspec-schema/ssd-orchestrated/sdd-lock.json" "$TARGET_DIR/.openspec/sdd-lock.json" 2>/dev/null || cat > "$TARGET_DIR/.openspec/sdd-lock.json" << 'EOF'
 {
   "change_name": "nuevo-cambio",
   "active_phase": 0,
@@ -294,8 +294,8 @@ EOF
     fi
 
     # Inicializar el cerebro del proyecto si no existe
-    if [ ! -f "$TARGET_DIR/openspec/brain.md" ]; then
-        cp "$HARNESS_DIR/project-templates/openspec-schema/ssd-orchestrated/brain.md" "$TARGET_DIR/openspec/brain.md" 2>/dev/null || cat > "$TARGET_DIR/openspec/brain.md" << 'EOF'
+    if [ ! -f "$TARGET_DIR/.openspec/brain.md" ]; then
+        cp "$HARNESS_DIR/project-templates/openspec-schema/ssd-orchestrated/brain.md" "$TARGET_DIR/.openspec/brain.md" 2>/dev/null || cat > "$TARGET_DIR/.openspec/brain.md" << 'EOF'
 # 🧠 Cerebro del Proyecto: Memoria y Reglas de Larga Duración
 
 Este archivo actúa como la memoria a largo plazo y el cerebro del proyecto para **Zugzbot** y todos sus subagentes.
@@ -420,13 +420,13 @@ if [ "$DRY_RUN" = false ]; then
     cp -rn "$HARNESS_DIR"/project-templates/dot-opencode/skills/.  "$TARGET_DIR/.opencode/skills/" &>/dev/null || true
     cp -n "$HARNESS_DIR"/project-templates/dot-opencode/mcp-config.json "$TARGET_DIR/.opencode/mcp-config.json" &>/dev/null || true
     cp -rn "$HARNESS_DIR"/project-templates/openspec-schema/ssd-orchestrated/. \
-            "$TARGET_DIR/openspec/schemas/ssd-orchestrated/" &>/dev/null || true
+            "$TARGET_DIR/.openspec/schemas/ssd-orchestrated/" &>/dev/null || true
             
     # Copiar y otorgar permisos de ejecución al ejecutable local sdd
-    cp "$HARNESS_DIR/project-templates/sdd" "$TARGET_DIR/sdd" &>/dev/null || true
-    chmod +x "$TARGET_DIR/sdd" 2>/dev/null || true
+    cp "$HARNESS_DIR/project-templates/sdd" "$TARGET_DIR/.sdd" &>/dev/null || true
+    chmod +x "$TARGET_DIR/.sdd" 2>/dev/null || true
 fi
-echo -e "        ${COLOR_SUCCESS}✓ Habilidades, esquemas, configuraciones MCP y ejecutable local 'sdd' instalados.${NC}"
+echo -e "        ${COLOR_SUCCESS}✓ Habilidades, esquemas, configuraciones MCP y ejecutable local '.sdd' instalados.${NC}"
 
 
 # 6. Write harness version marker

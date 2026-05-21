@@ -2,7 +2,7 @@
 name: sdd-verify
 description: Validar el cambio implementado mediante análisis estático de código, ejecución de pruebas unitarias/funcionales y verificación real de integración con curl. Produce un reporte formal verification_report.md. Utilizar después de completar la fase de desarrollo (y diseño visual si aplica).
 license: MIT
-compatibility: Requiere acceso a terminal bash para ejecutar herramientas de calidad, suites de test y levantar el servidor local. Acceso de lectura y escritura a openspec/ y tests/ es requerido.
+compatibility: Requiere acceso a terminal bash para ejecutar herramientas de calidad, suites de test y levantar el servidor local. Acceso de lectura y escritura a .openspec/ y tests/ es requerido.
 metadata:
   author: zugzbot
   version: "1.0"
@@ -18,9 +18,9 @@ Validar el cambio implementado y producir el reporte de verificación formal.
 1. **Leer el contexto completo antes de correr comandos**
 
    Consuma en orden:
-   - `openspec/changes/<nombre>/proposal.md`
-   - `openspec/changes/<nombre>/specs/spec.md`
-   - `openspec/changes/<nombre>/orchestrator_tasks.md` (para confirmar que todas las tareas están `- [x]`)
+   - `.openspec/changes/<nombre>/proposal.md`
+   - `.openspec/changes/<nombre>/specs/spec.md`
+   - `.openspec/changes/<nombre>/orchestrator_tasks.md` (para confirmar que todas las tareas están `- [x]`)
    - El árbol actual de `src/` (para entender qué fue realmente implementado)
 
    Si alguna tarea bajo `orchestrator_tasks.md` permanece abierta (`- [ ]`), DETENGA su ejecución y repórtelo a Zugzbot.
@@ -77,7 +77,7 @@ Validar el cambio implementado y producir el reporte de verificación formal.
    - Si todos los tests pasan exitosamente: prosiga al Paso 5.
    - Si alguna prueba falla:
      1. Capture detalladamente el error y el stack trace.
-     2. Escriba el log de fallo en `openspec/changes/<nombre>/failure_log.md`.
+     2. Escriba el log de fallo en `.openspec/changes/<nombre>/failure_log.md`.
      3. Reporte el fallo a Zugzbot de inmediato para reactivar el bucle de auto-curación del implementador.
      4. Detenga el flujo y no prosiga a la verificación de integración.
 
@@ -116,7 +116,7 @@ Validar el cambio implementado y producir el reporte de verificación formal.
 
 6. **Escribir `verification_report.md`**
 
-   Escriba en el archivo `openspec/changes/<nombre>/verification_report.md`:
+   Escriba en el archivo `.openspec/changes/<nombre>/verification_report.md`:
 
    ```markdown
    # Reporte de Verificación — <nombre-del-cambio>
@@ -166,7 +166,7 @@ Validar el cambio implementado y producir el reporte de verificación formal.
    **Análisis Estático (Linter):** ✅ / ❌
    **Pruebas Automatizadas:** <n> exitosas / <n> fallidas
    **Integración Real:** ✅ / ❌
-   **Reporte de Verificación escrito en:** openspec/changes/<nombre>/verification_report.md
+   **Reporte de Verificación escrito en:** .openspec/changes/<nombre>/verification_report.md
 
    Fase 6 completada. Todo en verde. Lista para documentación.
    ```

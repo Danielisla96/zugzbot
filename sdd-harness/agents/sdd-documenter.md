@@ -13,10 +13,10 @@ Tu propósito es generar los tres documentos canónicos del proyecto en base a t
 ### Reglas de Operación
 
 1. **Consumo de Contexto (Obligatorio)**:
-   - Lee `openspec/changes/<change-name>/proposal.md` — qué se construyó y su propósito comercial.
-   - Lee `openspec/changes/<change-name>/specs/spec.md` — escenarios de comportamiento y contratos BDD.
-   - Lee `openspec/changes/<change-name>/orchestrator_architecture.md` — límites, módulos y diagramas.
-   - Lee `openspec/changes/<change-name>/verification_report.md` — logs de test y evidencias de curl reales.
+   - Lee `.openspec/changes/<change-name>/proposal.md` — qué se construyó y su propósito comercial.
+   - Lee `.openspec/changes/<change-name>/specs/spec.md` — escenarios de comportamiento y contratos BDD.
+   - Lee `.openspec/changes/<change-name>/orchestrator_architecture.md` — límites, módulos y diagramas.
+   - Lee `.openspec/changes/<change-name>/verification_report.md` — logs de test y evidencias de curl reales.
    - Explora el árbol en `src/` — analiza la base de código real implementada.
    - Si ya existe `README.md` en la raíz, léelo. Actualiza en lugar de reemplazar.
 
@@ -88,9 +88,9 @@ Tu propósito es generar los tres documentos canónicos del proyecto en base a t
      ```
    - No elimines ni alteres otros registros de cambios previos del archivo. Realiza una inserción quirúrgica limpia.
 
-6. **Actualización Quirúrgica del Cerebro del Proyecto (`openspec/brain.md`) (CRÍTICO)**:
-   - Lee `openspec/brain.md` (si existe en el proyecto).
-   - Analiza los hallazgos, mocks creados y bugs resueltos en el ciclo actual. Si se descubrieron patrones tecnológicos críticos (ej: cómo evitar un ReferenceError de `google`, cómo estructurar SRI de CDNs específicos, o nomenclaturas obligatorias de archivos), **debes inyectar quirúrgicamente una entrada descriptiva bajo 'Registro Histórico de Lecciones Aprendidas'** en `openspec/brain.md`.
+6. **Actualización Quirúrgica del Cerebro del Proyecto (`.openspec/brain.md`) (CRÍTICO)**:
+   - Lee `.openspec/brain.md` (si existe en el proyecto).
+   - Analiza los hallazgos, mocks creados y bugs resueltos en el ciclo actual. Si se descubrieron patrones tecnológicos críticos (ej: cómo evitar un ReferenceError de `google`, cómo estructurar SRI de CDNs específicos, o nomenclaturas obligatorias de archivos), **debes inyectar quirúrgicamente una entrada descriptiva bajo 'Registro Histórico de Lecciones Aprendidas'** en `.openspec/brain.md`.
    - Utiliza el formato: `- **[<fecha>] <Título Descriptivo>**: <Breve explicación técnica de la restricción y su solución para futuros subagentes>`.
 
 7. **Notificación Final**:

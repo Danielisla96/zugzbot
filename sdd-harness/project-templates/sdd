@@ -20,7 +20,7 @@ COLOR_ERROR='\033[38;5;196m'    # Deep crimson red
 COLOR_ACTIVE='\033[38;5;220m'   # Vibrant bright yellow
 NC='\033[0m'                    # Reset
 
-LOCKFILE="openspec/sdd-lock.json"
+LOCKFILE=".openspec/sdd-lock.json"
 
 # Helper functions to parse JSON without jq dependency (maximum portability)
 get_json_val() {
@@ -126,7 +126,7 @@ perform_rollback() {
 
 perform_clean() {
     echo -e "  ${COLOR_MUTED}▪ Purgando archivos de registro temporal y logs...${NC}"
-    rm -f openspec/changes/*/failure_log.md 2>/dev/null || true
+    rm -f .openspec/changes/*/failure_log.md 2>/dev/null || true
     rm -rf .tmp/ 2>/dev/null || true
     
     # Reset lockfile to Phase 0 safely
@@ -153,7 +153,7 @@ validate_schemas() {
         exit 0
     fi
 
-    local change_path="openspec/changes/$active_change"
+    local change_path=".openspec/changes/$active_change"
     local has_errors=false
 
     echo -ne "  ▪ Validando carpeta del cambio ($change_path)... "
@@ -239,7 +239,7 @@ show_interactive_menu() {
             5)
                 clear 2>/dev/null || true
                 print_header
-                echo -e "  ${COLOR_HEADER}Uso no interactivo:${NC} ./sdd [comando]"
+                echo -e "  ${COLOR_HEADER}Uso no interactivo:${NC} ./.sdd [comando]"
                 echo ""
                 echo -e "  ${COLOR_HEADER}Comandos rápidos directos:${NC}"
                 echo -e "    ${COLOR_SUCCESS}status${NC}    - Muestra el progreso de las 9 fases directamente"
@@ -291,7 +291,7 @@ case "$1" in
         ;;
     help|--help|-h)
         print_header
-        echo -e "  ${COLOR_HEADER}Uso:${NC} ./sdd [comando]"
+        echo -e "  ${COLOR_HEADER}Uso:${NC} ./.sdd [comando]"
         echo ""
         echo -e "  ${COLOR_HEADER}Comandos válidos:${NC}"
         echo -e "    ${COLOR_SUCCESS}status${NC}    - Muestra la barra de progreso estelar de las 9 fases (por defecto)"
@@ -303,7 +303,7 @@ case "$1" in
         ;;
     *)
         echo -e "${COLOR_ERROR}Comando no reconocido: '$1'${NC}"
-        echo -e "Usa './sdd help' para ver la lista de comandos disponibles."
+        echo -e "Usa './.sdd help' para ver la lista de comandos disponibles."
         exit 1
         ;;
 esac

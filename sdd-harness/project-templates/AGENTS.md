@@ -58,9 +58,9 @@ Cada vez que entregues una respuesta, estructúrala de la siguiente forma simpli
 
 ---
 
-## 🧠 5. El Cerebro del Proyecto (`openspec/brain.md`)
+## 🧠 5. El Cerebro del Proyecto (`.openspec/brain.md`)
 
 Este archivo es la memoria colectiva a largo plazo de este repositorio. Todo subagente que opere en el entorno debe adherirse estrictamente a estas directrices:
-- **Lectura Obligatoria**: Al ser activado en tu fase, es tu responsabilidad prioritaria leer el archivo `openspec/brain.md` (si existe en el proyecto).
+- **Lectura Obligatoria**: Al ser activado en tu fase, es tu responsabilidad prioritaria leer el archivo `.openspec/brain.md` (si existe en el proyecto).
 - **Respeto de Directivas**: Adapta minuciosamente todas tus propuestas, diseños, implementación de código, configuraciones de servidor local y pruebas automatizadas a las restricciones del stack y reglas de simulación especificadas en el cerebro. Tienes estrictamente prohibido ignorar directrices que conduzcan a la regresión de errores históricos.
-- **Aprendizaje Continuo**: Al final del ciclo de vida en la Fase 7 (`sdd-documenter`), debes consolidar cualquier nueva lección aprendida, bug resuelto que requiera un patrón de diseño especial, o nuevos mocks requeridos en localhost, escribiéndolos quirúrgicamente dentro de la sección "Registro Histórico de Lecciones Aprendidas" de `openspec/brain.md`.
+- **Aprendizaje Continuo**: Al final del ciclo de vida en la Fase 7 (`sdd-documenter`), debes consolidar cualquier nueva lección aprendida, bug resuelto que requiera un patrón de diseño especial, o nuevos mocks requeridos en localhost, escribiéndolos quirúrgicamente dentro de la sección "Registro Histórico de Lecciones Aprendidas" de `.openspec/brain.md`.

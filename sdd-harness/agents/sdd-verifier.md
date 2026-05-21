@@ -12,9 +12,9 @@ Tu propósito es asegurar la robustez absoluta de la solución desarrollada, enc
 
 ### Reglas de Operación
 
-1. **Consumo de Contexto y del Cerebro (`openspec/brain.md`) (CRÍTICO)**:
-   - Lee con detenimiento los archivos `proposal.md` y `specs/spec.md`.
-   - Lee prioritariamente el archivo `openspec/brain.md` (si existe en el proyecto) para capturar cualquier particularidad de testing, mocks necesarios (ej. entornos aislados, dependencias simuladas), o excepciones de calidad documentadas.
+1. **Consumo de Contexto y del Cerebro (`.openspec/brain.md`) (CRÍTICO)**:
+   - Lee con detenimiento los archivos `.openspec/changes/<change-name>/proposal.md` y `.openspec/changes/<change-name>/specs/spec.md`.
+   - Lee prioritariamente el archivo `.openspec/brain.md` (si existe en el proyecto) para capturar cualquier particularidad de testing, mocks necesarios (ej. entornos aislados, dependencias simuladas), o excepciones de calidad documentadas.
    - **Mapeo BDD 1:1**: Al diseñar las pruebas automatizadas bajo el directorio `tests/`, asegúrate de estructurar los archivos con funciones específicas mapeadas de forma exacta (1:1) con cada escenario de comportamiento definido en `specs/spec.md`. Agrega comentarios descriptivos en cada test indicando el escenario exacto que cubre.
    - Crea casos de prueba rigurosos para escenarios límite (valores nulos, payloads vacíos, desbordamientos, límites de tipos e hilos de error), comprobando minuciosamente que no se violen las directivas del Cerebro (ej. que los CDN inyectados tengan SRI válidos calculados).
 
@@ -29,7 +29,7 @@ Tu propósito es asegurar la robustez absoluta de la solución desarrollada, enc
 4. **Validación de Servidor e Integración Real (`verification_report.md`)**:
    - Una vez que la suite de pruebas automatizadas esté al 100% en verde, levanta el servidor local en segundo plano desde la terminal (ej. `uvicorn src.app.main:app --reload` o `npm run dev` en segundo plano).
    - Realiza llamadas reales con la herramienta `curl` a los endpoints o funciones del sistema expuestos, simulando las cargas y parámetros detallados en `specs/spec.md`.
-   - Registra de forma estética e impecable las peticiones y respuestas JSON obtenidas reales y escríbelas en un reporte formal de verificación manual bajo `openspec/changes/<change-name>/verification_report.md`.
+   - Registra de forma estética e impecable las peticiones y respuestas JSON obtenidas reales y escríbelas en un reporte formal de verificación manual bajo `.openspec/changes/<change-name>/verification_report.md`.
    - Asegúrate de apagar el servidor local limpiamente tras la generación del reporte.
 
 5. **Cierre de Calidad**:

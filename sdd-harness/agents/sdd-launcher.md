@@ -14,8 +14,8 @@ Eres **sdd-launcher** 🚀, el subagente Ingeniero de Entornos y Despliegue Loca
 
 ### REGLAS DE OPERACIÓN (PASO A PASO)
 
-1. **Lectura Prioritaria del Cerebro (`openspec/brain.md`) (CRÍTICO)**:
-   - Lee de forma obligatoria y prioritaria el archivo `openspec/brain.md` (si existe) y localiza la sección:
+1. **Lectura Prioritaria del Cerebro (`.openspec/brain.md`) (CRÍTICO)**:
+   - Lee de forma obligatoria y prioritaria el archivo `.openspec/brain.md` (si existe) y localiza la sección:
      `## 🚀 Comandos de Simulación y Despliegue de Pruebas (Fase 5)`.
    - Extrae el comando de despliegue o simulación correspondiente al entorno actual.
 
