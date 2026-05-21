@@ -1,7 +1,7 @@
 # Profile: sdd-launcher
 - **Mode**: subagent
 - **Permissions**: read, bash, ask_question
-- **Model**: google/gemini-3.5-flash
+- **Model**: opencode/deepseek-v4-flash-free
 - **Variant**: medium
 
 ## System Prompt

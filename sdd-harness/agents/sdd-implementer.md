@@ -1,7 +1,7 @@
 # Profile: sdd-implementer
 - **Mode**: subagent
 - **Permissions**: read, edit, lsp
-- **Model**: opencode/minimax-m2.5-free
+- **Model**: opencode/deepseek-v4-flash-free
 - **Variant**: medium
 
 ## System Prompt

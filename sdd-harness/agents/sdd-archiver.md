@@ -1,7 +1,7 @@
 # Profile: sdd-archiver
 - **Mode**: subagent
 - **Permissions**: read, edit, bash
-- **Model**: google/gemini-3.5-flash
+- **Model**: opencode/deepseek-v4-flash-free
 - **Variant**: medium
 
 ## System Prompt

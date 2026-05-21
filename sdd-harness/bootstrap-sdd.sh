@@ -350,7 +350,7 @@ if [ "$SKIP_CONFIG" = false ]; then
     },
     "sdd-inspector": {
       "mode": "subagent",
-      "model": "google/gemini-3.5-flash",
+      "model": "opencode/deepseek-v4-flash-free",
       "variant": "medium"
     },
     "sdd-proposer": {
@@ -365,7 +365,7 @@ if [ "$SKIP_CONFIG" = false ]; then
     },
     "sdd-implementer": {
       "mode": "subagent",
-      "model": "opencode/minimax-m2.5-free",
+      "model": "opencode/deepseek-v4-flash-free",
       "variant": "medium"
     },
     "sdd-ui-designer": {
@@ -375,7 +375,7 @@ if [ "$SKIP_CONFIG" = false ]; then
     },
     "sdd-launcher": {
       "mode": "subagent",
-      "model": "google/gemini-3.5-flash",
+      "model": "opencode/deepseek-v4-flash-free",
       "variant": "medium"
     },
     "sdd-verifier": {
@@ -390,7 +390,7 @@ if [ "$SKIP_CONFIG" = false ]; then
     },
     "sdd-archiver": {
       "mode": "subagent",
-      "model": "google/gemini-3.5-flash",
+      "model": "opencode/deepseek-v4-flash-free",
       "variant": "medium"
     },
     "aux-oracle": {
