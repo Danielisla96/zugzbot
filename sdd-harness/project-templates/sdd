@@ -6,7 +6,7 @@
 #
 # Scoped local command-line helper for SDD.
 #
-# Version: 1.0.0
+# Version: 1.2.0
 
 set -e
 
@@ -82,34 +82,68 @@ show_status() {
     local status_upper=$(echo "${status:-idle}" | tr '[:lower:]' '[:upper:]')
     echo -e "  ${COLOR_MUTED}▪ Estado Actual:${NC}   ${COLOR_SUCCESS}${status_upper}${NC}\n"
 
-    echo -e "  ${COLOR_HEADER}📈 PROGRESO DE LAS 9 FASES SDD:${NC}"
+    echo -e "  ${COLOR_HEADER}📈 PROGRESO DE LOS 3 HITOS (9 FASES SDD):${NC}"
     echo -e "  ${COLOR_BORDER}──────────────────────────────────────────────────────────────${NC}"
 
-    # Phases array declaration
+    # Define phases mapping
     local phases=(
-        "Fase 0: Diagnóstico de Entorno       (@sdd-inspector)"
-        "Fase 1: Propuesta y Especificación   (@sdd-proposer)"
-        "Fase 2: Arquitectura y Planificación (@sdd-planner)"
-        "Fase 3: Implementación de Código     (@sdd-implementer)"
-        "Fase 4: Percepción y Diseño Visual   (@sdd-ui-designer)"
-        "Fase 5: Entorno y Pruebas Manuales  (@sdd-launcher)"
-        "Fase 6: Calidad y Pruebas QA         (@sdd-verifier)"
-        "Fase 7: Documentación Canónica       (@sdd-documenter)"
-        "Fase 8: Archivación y Cierre         (@sdd-archiver)"
+        "F0: Diagnóstico de Entorno       (@sdd-architect)"
+        "F1: Propuesta y Especificación   (@sdd-architect)"
+        "F2: Arquitectura y Planificación (@sdd-architect)"
+        "F3: Implementación de Código     (@sdd-implementer)"
+        "F4: Percepción y Diseño Visual   (@sdd-implementer)"
+        "F5: Entorno y Pruebas Manuales   (@sdd-launcher)"
+        "F6: Calidad y Pruebas QA         (@sdd-release-manager)"
+        "F7: Documentación Canónica       (@sdd-release-manager)"
+        "F8: Archivación y Cierre         (@sdd-release-manager)"
     )
 
-    for i in "${!phases[@]}"; do
-        if [ "$i" -lt "$phase_num" ]; then
-            # Completed phase
-            echo -e "    ${COLOR_SUCCESS}✓ [Completado]${NC} ${COLOR_MUTED}${phases[$i]}${NC}"
-        elif [ "$i" -eq "$phase_num" ]; then
-            # Active phase
-            echo -e "  ${COLOR_ACTIVE}➡️  ⚡ [Activo]    ${phases[$i]}${NC}"
+    print_phase() {
+        local idx=$1
+        local active=$2
+        if [ "$idx" -lt "$active" ]; then
+            echo -e "      ${COLOR_SUCCESS}✓${NC} ${COLOR_MUTED}${phases[$idx]}${NC}"
+        elif [ "$idx" -eq "$active" ]; then
+            echo -e "      ${COLOR_ACTIVE}➡️  ⚡${NC} ${COLOR_ACTIVE}${phases[$idx]}${NC}"
         else
-            # Pending phase
-            echo -e "    ${COLOR_BORDER}▪ [Pendiente]  ${COLOR_MUTED}${phases[$i]}${NC}"
+            echo -e "      ${COLOR_MUTED}▪${NC} ${COLOR_MUTED}${phases[$idx]}${NC}"
         fi
-    done
+    }
+
+    # Hito A (Planificación y Diseño)
+    if [ "$phase_num" -le 2 ]; then
+        echo -e "  ${COLOR_ACTIVE}➡️  ⚡ [Hito A: Planificación y Diseño]${NC}"
+    else
+        echo -e "    ${COLOR_SUCCESS}✓ [Hito A: Planificación y Diseño]${NC}"
+    fi
+    print_phase 0 "$phase_num"
+    print_phase 1 "$phase_num"
+    print_phase 2 "$phase_num"
+    echo ""
+
+    # Hito B (Construcción y Simulación)
+    if [ "$phase_num" -ge 3 ] && [ "$phase_num" -le 5 ]; then
+        echo -e "  ${COLOR_ACTIVE}➡️  ⚡ [Hito B: Construcción y Simulación]${NC}"
+    elif [ "$phase_num" -gt 5 ]; then
+        echo -e "    ${COLOR_SUCCESS}✓ [Hito B: Construcción y Simulación]${NC}"
+    else
+        echo -e "    ${COLOR_BORDER}▪ [Hito B: Construcción y Simulación]${NC}"
+    fi
+    print_phase 3 "$phase_num"
+    print_phase 4 "$phase_num"
+    print_phase 5 "$phase_num"
+    echo ""
+
+    # Hito C (Calidad y Cierre)
+    if [ "$phase_num" -ge 6 ]; then
+        echo -e "  ${COLOR_ACTIVE}➡️  ⚡ [Hito C: Calidad y Cierre]${NC}"
+    else
+        echo -e "    ${COLOR_BORDER}▪ [Hito C: Calidad y Cierre]${NC}"
+    fi
+    print_phase 6 "$phase_num"
+    print_phase 7 "$phase_num"
+    print_phase 8 "$phase_num"
+
     echo -e "${COLOR_BORDER}  ──────────────────────────────────────────────────────────────${NC}\n"
 }
 
@@ -139,7 +173,7 @@ perform_clean() {
 {
   "change_name": "nuevo-cambio",
   "active_phase": 0,
-  "active_subagent": "sdd-inspector",
+  "active_subagent": "sdd-architect",
   "status": "idle",
   "auto_pilot": false,
   "last_updated": ""
@@ -195,19 +229,86 @@ validate_schemas() {
     fi
 }
 
+run_test() {
+    echo -e "  ${COLOR_HEADER}🧪 Ejecutando Suite de Pruebas...${NC}"
+    echo -e "  ${COLOR_BORDER}──────────────────────────────────────────────────────────────${NC}"
+    if [ -f "package.json" ]; then
+        if grep -q '"test"' package.json; then
+            npm run test
+        elif [ -d "node_modules/vitest" ] || grep -q '"vitest"' package.json; then
+            npx vitest run
+        elif [ -d "node_modules/jest" ] || grep -q '"jest"' package.json; then
+            npx jest
+        else
+            echo -e "  ${COLOR_WARNING}⚠ package.json detectado pero no hay framework de test estándar configurado.${NC}"
+            exit 1
+        fi
+    elif [ -f "requirements.txt" ] || [ -f "pyproject.toml" ] || [ -f "Pipfile" ]; then
+        if command -v pytest &>/dev/null; then
+            pytest
+        else
+            python -m unittest discover
+        fi
+    elif [ -f "go.mod" ]; then
+        go test ./...
+    elif [ -f "Cargo.toml" ]; then
+        cargo test
+    else
+        echo -e "  ${COLOR_WARNING}⚠ No se detectó suite de pruebas automatizadas estandarizada para este stack.${NC}"
+        echo -e "  Configura un script en tu proyecto o actualiza el Cerebro.${NC}"
+        exit 1
+    fi
+    echo -e "  ${COLOR_BORDER}──────────────────────────────────────────────────────────────${NC}"
+    echo -e "  ${COLOR_SUCCESS}✓ Pruebas completadas exitosamente.${NC}\n"
+}
+
+run_lint() {
+    echo -e "  ${COLOR_HEADER}🔍 Ejecutando Auditoría Estática (Linter)...${NC}"
+    echo -e "  ${COLOR_BORDER}──────────────────────────────────────────────────────────────${NC}"
+    if [ -f "package.json" ]; then
+        if grep -q '"lint"' package.json; then
+            npm run lint
+        elif [ -d "node_modules/eslint" ] || grep -q '"eslint"' package.json; then
+            npx eslint . --max-warnings=0
+        else
+            echo -e "  ${COLOR_SUCCESS}✓ package.json detectado pero linter no está preconfigurado (saltando linter estático).${NC}"
+        fi
+    elif [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+        if command -v flake8 &>/dev/null; then
+            flake8 .
+        elif command -v pylint &>/dev/null; then
+            pylint src/
+        else
+            echo -e "  ${COLOR_SUCCESS}✓ Entorno Python sin linters estáticos instalados (saltando linter estático).${NC}"
+        fi
+    elif [ -f "go.mod" ]; then
+        if command -v golangci-lint &>/dev/null; then
+            golangci-lint run
+        else
+            go vet ./...
+        fi
+    else
+        echo -e "  ${COLOR_SUCCESS}✓ No se requiere linter específico para este entorno.${NC}"
+    fi
+    echo -e "  ${COLOR_BORDER}──────────────────────────────────────────────────────────────${NC}"
+    echo -e "  ${COLOR_SUCCESS}✓ Linter completado sin errores críticos.${NC}\n"
+}
+
 show_interactive_menu() {
     while true; do
         clear 2>/dev/null || true
         print_header
         echo -e "  ${COLOR_ACTIVE}Selecciona una opción del menú interactivo:${NC}\n"
-        echo -e "    ${COLOR_HEADER}[1]${NC} 📊  Ver Estado y Progreso de las 9 Fases"
+        echo -e "    ${COLOR_HEADER}[1]${NC} 📊  Ver Estado y Progreso de Hitos"
         echo -e "    ${COLOR_HEADER}[2]${NC} 🔍  Validar Artefactos (BDD / Propuestas)"
-        echo -e "    ${COLOR_HEADER}[3]${NC} 🔄  Hacer Rollback de Cambios Locales"
-        echo -e "    ${COLOR_HEADER}[4]${NC} 🧹  Limpiar Caché y Reiniciar a Fase 0"
-        echo -e "    ${COLOR_HEADER}[5]${NC} ❓  Ver Tarjeta Informativa de Comandos"
-        echo -e "    ${COLOR_HEADER}[6]${NC} ❌  Salir del Monitor"
+        echo -e "    ${COLOR_HEADER}[3]${NC} 🧪  Ejecutar Pruebas Automatizadas (sdd test)"
+        echo -e "    ${COLOR_HEADER}[4]${NC} 🧹  Ejecutar Auditoría Estática (sdd lint)"
+        echo -e "    ${COLOR_HEADER}[5]${NC} 🔄  Hacer Rollback de Cambios Locales"
+        echo -e "    ${COLOR_HEADER}[6]${NC} 🧹  Limpiar Caché y Reiniciar a Fase 0"
+        echo -e "    ${COLOR_HEADER}[7]${NC} ❓  Ver Tarjeta Informativa de Comandos"
+        echo -e "    ${COLOR_HEADER}[8]${NC} ❌  Salir del Monitor"
         echo ""
-        echo -ne "  ${COLOR_MUTED}Ingresa tu opción [1-6]:${NC} "
+        echo -ne "  ${COLOR_MUTED}Ingresa tu opción [1-8]:${NC} "
         read -r choice
         echo ""
         
@@ -229,33 +330,49 @@ show_interactive_menu() {
             3)
                 clear 2>/dev/null || true
                 print_header
-                perform_rollback
+                run_test || true
                 echo -ne "  ${COLOR_MUTED}Presiona [Enter] para continuar...${NC}"
                 read -r
                 ;;
             4)
                 clear 2>/dev/null || true
                 print_header
-                perform_clean
+                run_lint || true
                 echo -ne "  ${COLOR_MUTED}Presiona [Enter] para continuar...${NC}"
                 read -r
                 ;;
             5)
                 clear 2>/dev/null || true
                 print_header
+                perform_rollback
+                echo -ne "  ${COLOR_MUTED}Presiona [Enter] para continuar...${NC}"
+                read -r
+                ;;
+            6)
+                clear 2>/dev/null || true
+                print_header
+                perform_clean
+                echo -ne "  ${COLOR_MUTED}Presiona [Enter] para continuar...${NC}"
+                read -r
+                ;;
+            7)
+                clear 2>/dev/null || true
+                print_header
                 echo -e "  ${COLOR_HEADER}Uso no interactivo:${NC} ./.openspec/sdd [comando]"
                 echo ""
                 echo -e "  ${COLOR_HEADER}Comandos rápidos directos:${NC}"
-                echo -e "    ${COLOR_SUCCESS}status${NC}    - Muestra el progreso de las 9 fases directamente"
+                echo -e "    ${COLOR_SUCCESS}status${NC}    - Muestra el progreso agrupado en hitos directamente"
                 echo -e "    ${COLOR_SUCCESS}validate${NC}  - Audita estructuralmente las especificaciones"
+                echo -e "    ${COLOR_SUCCESS}test${NC}      - Corre las pruebas locales de forma automatizada"
+                echo -e "    ${COLOR_SUCCESS}lint${NC}      - Audita el linter de código local"
                 echo -e "    ${COLOR_SUCCESS}rollback${NC}  - Descarta cambios Git locales no confirmados"
-                echo -e "    ${COLOR_SUCCESS}clean${NC}     - Puga logs, archivos temporales y resetea a Fase 0"
+                echo -e "    ${COLOR_SUCCESS}clean${NC}     - Purga logs, archivos temporales y resetea a Fase 0"
                 echo -e "    ${COLOR_SUCCESS}help${NC}      - Muestra esta tarjeta de comandos"
                 echo ""
                 echo -ne "  ${COLOR_MUTED}Presiona [Enter] para continuar...${NC}"
                 read -r
                 ;;
-            6)
+            8)
                 echo -e "  ${COLOR_SUCCESS}¡Nos vemos! Éxito en tu ciclo de desarrollo. 🚀${NC}\n"
                 break
                 ;;
@@ -293,15 +410,25 @@ case "$1" in
         print_header
         validate_schemas
         ;;
+    test)
+        print_header
+        run_test
+        ;;
+    lint)
+        print_header
+        run_lint
+        ;;
     help|--help|-h)
         print_header
         echo -e "  ${COLOR_HEADER}Uso:${NC} ./.openspec/sdd [comando]"
         echo ""
         echo -e "  ${COLOR_HEADER}Comandos válidos:${NC}"
-        echo -e "    ${COLOR_SUCCESS}status${NC}    - Muestra la barra de progreso estelar de las 9 fases (por defecto)"
+        echo -e "    ${COLOR_SUCCESS}status${NC}    - Muestra el progreso del ciclo agrupado en hitos de decisión (por defecto)"
         echo -e "    ${COLOR_SUCCESS}validate${NC}  - Audita estructuralmente las especificaciones y archivos de cambio"
+        echo -e "    ${COLOR_SUCCESS}test${NC}      - Ejecuta de forma nativa la suite de pruebas del proyecto"
+        echo -e "    ${COLOR_SUCCESS}lint${NC}      - Ejecuta el linter o verificador estático de código local"
         echo -e "    ${COLOR_SUCCESS}rollback${NC}  - Descarta de forma segura cambios Git locales no confirmados"
-        echo -e "    ${COLOR_SUCCESS}clean${NC}     - Puga logs de fallos, registros temporales y resetea a Fase 0"
+        echo -e "    ${COLOR_SUCCESS}clean${NC}     - Purga logs de fallos, registros temporales y resetea a Fase 0"
         echo -e "    ${COLOR_SUCCESS}help${NC}      - Muestra esta tarjeta informativa de comandos"
         echo ""
         ;;

@@ -88,7 +88,7 @@ Archive a completed change in the experimental workflow.
      {
        "change_name": "nuevo-cambio",
        "active_phase": 0,
-       "active_subagent": "sdd-inspector",
+       "active_subagent": "sdd-architect",
        "status": "idle",
        "auto_pilot": false,
        "last_updated": ""

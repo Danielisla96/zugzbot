@@ -3,32 +3,32 @@
 Lista maestra de tareas delegadas y estado de verificación.
 
 ## Fase 0: Diagnóstico y Contexto
-- [ ] sdd-inspector realiza el diagnóstico del proyecto y sugiere herramientas seguras (`npx autoskills`).
+- [ ] @sdd-architect realiza el diagnóstico del stack del proyecto y sugiere herramientas seguras (`npx autoskills`).
 
 ## Fase 1: Propuesta y Especificación
-- [ ] sdd-proposer interactúa con el usuario y define la propuesta (`proposal.md`).
-- [ ] sdd-proposer escribe los escenarios detallados de comportamiento (`specs/spec.md`).
+- [ ] @sdd-architect interactúa con el usuario para definir la propuesta (`proposal.md`).
+- [ ] @sdd-architect escribe los escenarios de comportamiento estructurados (`specs/spec.md`).
 
 ## Fase 2: Diseño y Arquitectura
-- [ ] sdd-planner diseña el plano técnico global (`orchestrator_architecture.md`).
-- [ ] sdd-planner atomiza e inicializa este checklist de tareas (`orchestrator_tasks.md`).
+- [ ] @sdd-architect diseña el plano técnico global (`orchestrator_architecture.md`).
+- [ ] @sdd-architect atomiza e inicializa este checklist de tareas (`orchestrator_tasks.md`).
 
 ## Fase 3: Implementación
-- [ ] sdd-implementer escribe el código fuente limpio y senior bajo mejores prácticas en `src/`.
+- [ ] @sdd-implementer escribe el código fuente limpio y modular bajo mejores prácticas en `src/`.
 
 ## Fase 4: Diseño Visual y UX
-- [ ] sdd-ui-designer analiza la interfaz de usuario con Puppeteer MCP y genera el reporte de percepción (`ui_review_report.md`). [CONDICIONAL - Omitido si no hay frontend]
+- [ ] @sdd-implementer analiza la interfaz de usuario con Puppeteer MCP y genera el reporte de consistencia (`ui_review_report.md`). [CONDICIONAL - Omitido si no hay frontend]
 
 ## Fase 5: Entorno y Pruebas Manuales
-- [ ] sdd-launcher levanta el servidor local o realiza el despliegue/sincronización (clasp push en GAS) para permitir la validación manual interactiva. [Omitido en `--auto`]
+- [ ] @sdd-launcher levanta el entorno de simulación local o realiza el despliegue/sincronización (ej: clasp push) para permitir validación humana. [Omitido en `--auto`]
 
 ## Fase 6: Calidad y Pruebas QA
-- [ ] sdd-verifier escribe y ejecuta la suite de pruebas unitarias y de integración.
-- [ ] sdd-verifier comprueba linters y autoriza la entrega definitiva sin errores.
+- [ ] @sdd-release-manager ejecuta linters nativos (`sdd lint`) y tests unitarios/integración (`sdd test`) en bucle de auto-curación.
 
 ## Fase 7: Documentación Canónica
-- [ ] sdd-documenter genera/actualiza quirúrgicamente el README.md consolidado de la raíz (incluyendo manual de uso y arquitectura técnica) y registra el cambio en `.openspec/CHANGELOG.md`.
+- [ ] @sdd-release-manager actualiza quirúrgicamente el README.md consolidado de la raíz, registra cambios en `.openspec/CHANGELOG.md` y actualiza el Cerebro del Proyecto (`.openspec/brain.md`).
 
 ## Fase 8: Archivación y Cierre
-- [ ] sdd-archiver consolida el historial, archiva las especificaciones y realiza el commit semántico automatizado en Git.
+- [ ] @sdd-release-manager consolida el historial, limpia el lockfile a idle y realiza el commit semántico automatizado en Git.
+
 

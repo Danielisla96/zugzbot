@@ -285,13 +285,16 @@ if [ "$DRY_RUN" = false ]; then
 {
   "change_name": "nuevo-cambio",
   "active_phase": 0,
-  "active_subagent": "sdd-inspector",
+  "active_subagent": "sdd-architect",
   "status": "idle",
   "auto_pilot": false,
   "last_updated": ""
 }
 EOF
     fi
+
+    # Inicializar el prompt base centralizado
+    cp "$HARNESS_DIR/project-templates/openspec-schema/ssd-orchestrated/prompt_base.md" "$TARGET_DIR/.openspec/prompt_base.md" 2>/dev/null || true
 
     # Inicializar el cerebro del proyecto si no existe
     if [ ! -f "$TARGET_DIR/.openspec/brain.md" ]; then
@@ -308,6 +311,7 @@ echo -e "        ${COLOR_SUCCESS}✓ Carpetas del ciclo SDD creadas, lockfile y 
 # 3. Install agent prompts locally (project-scoped, not global)
 echo -e "  ${COLOR_BORDER}[3/8]${NC} 🤖 Instalando perfiles de subagentes..."
 if [ "$DRY_RUN" = false ]; then
+    rm -f "$TARGET_DIR/.opencode/agents/"*.md &>/dev/null || true
     cp "$HARNESS_DIR"/agents/*.md "$TARGET_DIR/.opencode/agents/" &>/dev/null
 fi
 echo -e "        ${COLOR_SUCCESS}✓ Prompts de sistema inyectados de forma segura.${NC}"
@@ -348,17 +352,7 @@ if [ "$SKIP_CONFIG" = false ]; then
         }
       }
     },
-    "sdd-inspector": {
-      "mode": "subagent",
-      "model": "opencode/deepseek-v4-flash-free",
-      "variant": "medium"
-    },
-    "sdd-proposer": {
-      "mode": "subagent",
-      "model": "opencode/deepseek-v4-flash-free",
-      "variant": "medium"
-    },
-    "sdd-planner": {
+    "sdd-architect": {
       "mode": "subagent",
       "model": "opencode/deepseek-v4-flash-free",
       "variant": "medium"
@@ -368,27 +362,12 @@ if [ "$SKIP_CONFIG" = false ]; then
       "model": "opencode/deepseek-v4-flash-free",
       "variant": "medium"
     },
-    "sdd-ui-designer": {
-      "mode": "subagent",
-      "model": "opencode/deepseek-v4-flash-free",
-      "variant": "medium"
-    },
     "sdd-launcher": {
       "mode": "subagent",
       "model": "opencode/deepseek-v4-flash-free",
       "variant": "medium"
     },
-    "sdd-verifier": {
-      "mode": "subagent",
-      "model": "opencode/deepseek-v4-flash-free",
-      "variant": "medium"
-    },
-    "sdd-documenter": {
-      "mode": "subagent",
-      "model": "opencode/deepseek-v4-flash-free",
-      "variant": "medium"
-    },
-    "sdd-archiver": {
+    "sdd-release-manager": {
       "mode": "subagent",
       "model": "opencode/deepseek-v4-flash-free",
       "variant": "medium"
