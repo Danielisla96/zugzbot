@@ -1,0 +1,70 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "zugzbot": {
+      "mode": "primary",
+      "model": "opencode/deepseek-v4-flash-free",
+      "variant": "medium",
+      "permission": {
+        "task": {
+          "sdd-*": "allow"
+        }
+      }
+    },
+    "sdd-inspector": {
+      "mode": "subagent",
+      "model": "google/gemini-3.5-flash",
+      "variant": "medium"
+    },
+    "sdd-proposer": {
+      "mode": "subagent",
+      "model": "opencode/deepseek-v4-flash-free",
+      "variant": "medium"
+    },
+    "sdd-planner": {
+      "mode": "subagent",
+      "model": "opencode/deepseek-v4-flash-free",
+      "variant": "medium"
+    },
+    "sdd-implementer": {
+      "mode": "subagent",
+      "model": "opencode/minimax-m2.5-free",
+      "variant": "medium"
+    },
+    "sdd-ui-designer": {
+      "mode": "subagent",
+      "model": "opencode/deepseek-v4-flash-free",
+      "variant": "medium"
+    },
+    "sdd-launcher": {
+      "mode": "subagent",
+      "model": "google/gemini-3.5-flash",
+      "variant": "medium"
+    },
+    "sdd-verifier": {
+      "mode": "subagent",
+      "model": "opencode/deepseek-v4-flash-free",
+      "variant": "medium"
+    },
+    "sdd-documenter": {
+      "mode": "subagent",
+      "model": "opencode/deepseek-v4-flash-free",
+      "variant": "medium"
+    },
+    "sdd-archiver": {
+      "mode": "subagent",
+      "model": "google/gemini-3.5-flash",
+      "variant": "medium"
+    },
+    "aux-oracle": {
+      "mode": "subagent",
+      "model": "opencode/deepseek-v4-flash-free",
+      "variant": "medium"
+    },
+    "aux-handyman": {
+      "mode": "subagent",
+      "model": "opencode/deepseek-v4-flash-free",
+      "variant": "medium"
+    }
+  }
+}
