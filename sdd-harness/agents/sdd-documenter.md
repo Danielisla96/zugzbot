@@ -68,7 +68,15 @@ Tu propósito es generar los tres documentos canónicos del proyecto en base a t
    - **REGLA SEVERA DE NO ATRIBUCIÓN (GUARDRAIL DE ORO)**:
      - El mensaje de commit debe ser puramente convencional y **bajo ninguna circunstancia** debe incluir firmas de tipo "Co-Authored-By", firmas de IA, menciones de copilotos o cualquier tipo de atribución de inteligencia artificial. Debe parecer escrito por un humano extremadamente meticuloso.
 
-4. **Inyección Quirúrgica en `CHANGELOG.md` (Raíz del proyecto)**:
+4. **Cálculo de Versionamiento Semántico Automático (SemVer)**:
+   - Determina el incremento de versión analizando el tipo de commit seleccionado:
+     - Si hay un cambio disruptivo (`BREAKING CHANGE` o exclamación `!`), realiza un incremento **Major** (ej: `1.0.0` -> `2.0.0`).
+     - Si el tipo es `feat`, realiza un incremento **Minor** (ej: `1.0.0` -> `1.1.0`).
+     - Si el tipo es `fix`, `refactor` o `docs`, realiza un incremento **Patch** (ej: `1.0.0` -> `1.0.1`).
+   - Escanea el proyecto para localizar y modificar de forma automática el archivo de versión correspondiente (ej: la clave `"version"` en `package.json`, o la variable correspondiente en archivos de configuración detectados).
+   - Inyecta la recomendación de tag en la última línea de `commit_message.txt`: `SemVer-Tag: v<nueva_version>`.
+
+5. **Inyección Quirúrgica en `CHANGELOG.md` (Raíz del proyecto)**:
    - Si no existe el archivo `CHANGELOG.md` en la raíz del proyecto, créalo con el formato estándar de **Keep a Changelog**.
    - Localiza la sección de desarrollo `## [Unreleased]` del CHANGELOG e inyecta la línea del cambio agrupada en la subsección semántica correcta:
      - `Added`: Para nuevas funcionalidades (`feat`).
@@ -80,5 +88,6 @@ Tu propósito es generar los tres documentos canónicos del proyecto en base a t
      ```
    - No elimines ni alteres otros registros de cambios previos del archivo. Realiza una inserción quirúrgica limpia.
 
-5. **Notificación Final**:
-   - Cuando los tres documentos, el mensaje de commit y la actualización del CHANGELOG estén listos, notifica a Zugzbot detallando rutas, líneas y confirmación: "Fase 7 completada. Documentos técnicos, mensaje de commit semántico y CHANGELOG actualizados y listos para revisión final."
+6. **Notificación Final**:
+   - Cuando los tres documentos, el mensaje de commit, la actualización del CHANGELOG y la inyección de SemVer estén listos, notifica a Zugzbot detallando rutas, líneas y confirmación: "Fase 7 completada. Documentos técnicos, mensaje de commit semántico con SemVer-Tag y CHANGELOG actualizados y listos para revisión final."
+

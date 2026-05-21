@@ -1,0 +1,229 @@
+#!/bin/bash
+# ==============================================================================
+#  sdd
+#  Spec-Driven Development (SDD) Local Control Utility
+# ==============================================================================
+#
+# Scoped local command-line helper for SDD.
+#
+# Version: 1.0.0
+
+set -e
+
+# Curated HSL-tailored premium ANSI colors
+COLOR_BORDER='\033[38;5;239m'   # Charcoal grey
+COLOR_HEADER='\033[38;5;81m'    # Premium electric cyan
+COLOR_MUTED='\033[38;5;244m'     # Soft grey
+COLOR_SUCCESS='\033[38;5;120m'  # Bright vivid green
+COLOR_WARNING='\033[38;5;214m'  # Warm amber orange
+COLOR_ERROR='\033[38;5;196m'    # Deep crimson red
+COLOR_ACTIVE='\033[38;5;220m'   # Vibrant bright yellow
+NC='\033[0m'                    # Reset
+
+LOCKFILE="openspec/sdd-lock.json"
+
+# Helper functions to parse JSON without jq dependency (maximum portability)
+get_json_val() {
+    local key=$1
+    local file=$2
+    if [ -f "$file" ]; then
+        grep -o '"'"$key"'"[[:space:]]*:[[:space:]]*"[^"]*"' "$file" 2>/dev/null | head -n1 | cut -d'"' -f4 || echo ""
+    else
+        echo ""
+    fi
+}
+
+get_json_num() {
+    local key=$1
+    local file=$2
+    if [ -f "$file" ]; then
+        grep -o '"'"$key"'"[[:space:]]*:[[:space:]]*[0-9]*' "$file" 2>/dev/null | head -n1 | grep -o '[0-9]*' || echo "0"
+    else
+        echo "0"
+    fi
+}
+
+get_json_bool() {
+    local key=$1
+    local file=$2
+    if [ -f "$file" ]; then
+        grep -o '"'"$key"'"[[:space:]]*:[[:space:]]*[a-zA-Z]*' "$file" 2>/dev/null | head -n1 | awk -F: '{print $2}' | tr -d ' ' | tr -d ',' || echo "false"
+    else
+        echo "false"
+    fi
+}
+
+print_header() {
+    echo -e "${COLOR_BORDER}┌──────────────────────────────────────────────────────────────┐${NC}"
+    echo -e "${COLOR_BORDER}│${NC}  ${COLOR_HEADER}Zugzbot SDD Monitor${NC} ${COLOR_MUTED}• Control de Metodología Local${NC}      ${COLOR_BORDER}│${NC}"
+    echo -e "${COLOR_BORDER}└──────────────────────────────────────────────────────────────┘${NC}"
+}
+
+show_status() {
+    if [ ! -f "$LOCKFILE" ]; then
+        echo -e "  ${COLOR_ERROR}❌ Error: No se encuentra el archivo de bloqueo '${LOCKFILE}'.${NC}"
+        echo -e "     Asegúrate de inicializar el arnés corriendo 'bootstrap-sdd.sh'.\n"
+        exit 1
+    fi
+
+    # Read status variables
+    local change_name=$(get_json_val "change_name" "$LOCKFILE")
+    local phase_num=$(get_json_num "active_phase" "$LOCKFILE")
+    local subagent=$(get_json_val "active_subagent" "$LOCKFILE")
+    local status=$(get_json_val "status" "$LOCKFILE")
+    local auto_pilot=$(get_json_bool "auto_pilot" "$LOCKFILE")
+
+    echo -e "  ${COLOR_MUTED}▪ Cambio Activo:${NC}   ${COLOR_SUCCESS}${change_name:-Ninguno}${NC}"
+    echo -e "  ${COLOR_MUTED}▪ Modo de Vuelo:${NC}   $( [ "$auto_pilot" = "true" ] && echo -e "${COLOR_WARNING}✈ PILOTO AUTOMÁTICO (--auto)${NC}" || echo -e "${COLOR_HEADER}⚓ INTERACTIVO / ESTÁNDAR${NC}" )"
+    local status_upper=$(echo "${status:-idle}" | tr '[:lower:]' '[:upper:]')
+    echo -e "  ${COLOR_MUTED}▪ Estado Actual:${NC}   ${COLOR_SUCCESS}${status_upper}${NC}\n"
+
+    echo -e "  ${COLOR_HEADER}📈 PROGRESO DE LAS 9 FASES SDD:${NC}"
+    echo -e "  ${COLOR_BORDER}──────────────────────────────────────────────────────────────${NC}"
+
+    # Phases array declaration
+    local phases=(
+        "Fase 0: Diagnóstico de Entorno       (@sdd-inspector)"
+        "Fase 1: Propuesta y Especificación   (@sdd-proposer)"
+        "Fase 2: Arquitectura y Planificación (@sdd-planner)"
+        "Fase 3: Implementación de Código     (@sdd-implementer)"
+        "Fase 4: Percepción y Diseño Visual   (@sdd-ui-designer)"
+        "Fase 5: Servidor Local Interactivo   (@sdd-launcher)"
+        "Fase 6: Calidad y Pruebas QA         (@sdd-verifier)"
+        "Fase 7: Documentación Canónica       (@sdd-documenter)"
+        "Fase 8: Archivación y Cierre         (@sdd-archiver)"
+    )
+
+    for i in "${!phases[@]}"; do
+        if [ "$i" -lt "$phase_num" ]; then
+            # Completed phase
+            echo -e "    ${COLOR_SUCCESS}✓ [Completado]${NC} ${COLOR_MUTED}${phases[$i]}${NC}"
+        elif [ "$i" -eq "$phase_num" ]; then
+            # Active phase
+            echo -e "  ${COLOR_ACTIVE}➡️  ⚡ [Activo]    ${phases[$i]}${NC}"
+        else
+            # Pending phase
+            echo -e "    ${COLOR_BORDER}▪ [Pendiente]  ${COLOR_MUTED}${phases[$i]}${NC}"
+        fi
+    done
+    echo -e "${COLOR_BORDER}  ──────────────────────────────────────────────────────────────${NC}\n"
+}
+
+perform_rollback() {
+    echo -e "  ${COLOR_WARNING}⚠ ATENCIÓN: Se procederá a descartar todos los cambios locales${NC}"
+    echo -e "  no guardados en Git para regresar al checkpoint limpio del ciclo SDD."
+    echo -n "  ¿Estás seguro de continuar con el rollback? (s/n): "
+    read -r confirmation
+    if [[ "$confirmation" =~ ^[sS]$ ]]; then
+        echo -e "  ${COLOR_MUTED}▪ Descartando modificaciones de espacio de trabajo...${NC}"
+        git reset --hard HEAD
+        git clean -fd
+        echo -e "  ${COLOR_SUCCESS}✓ Espacio de trabajo restaurado limpiamente.${NC}\n"
+    else
+        echo -e "  ${COLOR_MUTED}▪ Rollback abortado por el usuario.${NC}\n"
+    fi
+}
+
+perform_clean() {
+    echo -e "  ${COLOR_MUTED}▪ Purgando archivos de registro temporal y logs...${NC}"
+    rm -f openspec/changes/*/failure_log.md 2>/dev/null || true
+    rm -rf .tmp/ 2>/dev/null || true
+    
+    # Reset lockfile to Phase 0 safely
+    if [ -f "$LOCKFILE" ]; then
+        cat > "$LOCKFILE" << 'EOF'
+{
+  "change_name": "nuevo-cambio",
+  "active_phase": 0,
+  "active_subagent": "sdd-inspector",
+  "status": "idle",
+  "auto_pilot": false,
+  "last_updated": ""
+}
+EOF
+    fi
+    echo -e "  ${COLOR_SUCCESS}✓ Caché de metodología SDD purgada y reseteada a Fase 0.${NC}\n"
+}
+
+validate_schemas() {
+    echo -e "  ${COLOR_HEADER}🔍 Validando Artefactos del Cambio Activo...${NC}"
+    local active_change=$(get_json_val "change_name" "$LOCKFILE")
+    if [ -z "$active_change" ] || [ "$active_change" = "nuevo-cambio" ]; then
+        echo -e "  ${COLOR_WARNING}⚠ No hay un cambio de desarrollo activo registrado en el lockfile.${NC}\n"
+        exit 0
+    fi
+
+    local change_path="openspec/changes/$active_change"
+    local has_errors=false
+
+    echo -ne "  ▪ Validando carpeta del cambio ($change_path)... "
+    if [ -d "$change_path" ]; then
+        echo -e "${COLOR_SUCCESS}OK${NC}"
+    else
+        echo -e "${COLOR_ERROR}FALLIDO (Directorio no existe)${NC}"
+        has_errors=true
+    fi
+
+    # Check proposal.md
+    if [ -f "$change_path/proposal.md" ]; then
+        echo -ne "  ▪ Validando propuesta (proposal.md)... "
+        if grep -q "## " "$change_path/proposal.md"; then
+            echo -e "${COLOR_SUCCESS}OK (Secciones estructuradas)${NC}"
+        else
+            echo -e "${COLOR_WARNING}ADVERTENCIA (Falta estructura de títulos)${NC}"
+        fi
+    fi
+
+    # Check specs/spec.md
+    if [ -f "$change_path/specs/spec.md" ]; then
+        echo -ne "  ▪ Validando especificación BDD (spec.md)... "
+        if grep -q "Scenario:" "$change_path/specs/spec.md" || grep -q "Escenario:" "$change_path/specs/spec.md"; then
+            echo -e "${COLOR_SUCCESS}OK (Escenarios BDD detectados)${NC}"
+        else
+            echo -e "${COLOR_WARNING}ADVERTENCIA (Faltan palabras clave 'Scenario/Escenario')${NC}"
+        fi
+    fi
+
+    if [ "$has_errors" = "true" ]; then
+        echo -e "  ${COLOR_ERROR}❌ Se encontraron inconsistencias estructurales en los artefactos.${NC}\n"
+    else
+        echo -e "  ${COLOR_SUCCESS}✓ Todos los artefactos detectados están en orden estructural.${NC}\n"
+    fi
+}
+
+# Entry point
+case "$1" in
+    status|"")
+        print_header
+        show_status
+        ;;
+    rollback)
+        print_header
+        perform_rollback
+        ;;
+    clean)
+        print_header
+        perform_clean
+        ;;
+    validate)
+        print_header
+        validate_schemas
+        ;;
+    help|--help|-h)
+        print_header
+        echo -e "  ${COLOR_HEADER}Uso:${NC} ./sdd [comando]"
+        echo ""
+        echo -e "  ${COLOR_HEADER}Comandos válidos:${NC}"
+        echo -e "    ${COLOR_SUCCESS}status${NC}    - Muestra la barra de progreso estelar de las 9 fases (por defecto)"
+        echo -e "    ${COLOR_SUCCESS}validate${NC}  - Audita estructuralmente las especificaciones y archivos de cambio"
+        echo -e "    ${COLOR_SUCCESS}rollback${NC}  - Descarta de forma segura cambios Git locales no confirmados"
+        echo -e "    ${COLOR_SUCCESS}clean${NC}     - Puga logs de fallos, registros temporales y resetea a Fase 0"
+        echo -e "    ${COLOR_SUCCESS}help${NC}      - Muestra esta tarjeta informativa de comandos"
+        echo ""
+        ;;
+    *)
+        echo -e "${COLOR_ERROR}Comando no reconocido: '$1'${NC}"
+        echo -e "Usa './sdd help' para ver la lista de comandos disponibles."
+        exit 1
+        ;;
+esac

@@ -278,8 +278,23 @@ if [ "$DRY_RUN" = false ]; then
     mkdir -p "$TARGET_DIR/.agent/workflows"
     mkdir -p "$TARGET_DIR/.agent/skills"
     mkdir -p "$TARGET_DIR/openspec/schemas/ssd-orchestrated"
+    
+    # Inicializar el lockfile de persistencia de estado si no existe
+    if [ ! -f "$TARGET_DIR/openspec/sdd-lock.json" ]; then
+        cp "$HARNESS_DIR/project-templates/openspec-schema/ssd-orchestrated/sdd-lock.json" "$TARGET_DIR/openspec/sdd-lock.json" 2>/dev/null || cat > "$TARGET_DIR/openspec/sdd-lock.json" << 'EOF'
+{
+  "change_name": "nuevo-cambio",
+  "active_phase": 0,
+  "active_subagent": "sdd-inspector",
+  "status": "idle",
+  "auto_pilot": false,
+  "last_updated": ""
+}
+EOF
+    fi
 fi
-echo -e "        ${COLOR_SUCCESS}✓ Carpetas del ciclo SDD creadas.${NC}"
+echo -e "        ${COLOR_SUCCESS}✓ Carpetas del ciclo SDD creadas y lockfile inicializado.${NC}"
+
 
 # 3. Install agent prompts locally (project-scoped, not global)
 echo -e "  ${COLOR_BORDER}[3/8]${NC} 🤖 Instalando perfiles de subagentes..."
@@ -397,8 +412,13 @@ if [ "$DRY_RUN" = false ]; then
     cp -n "$HARNESS_DIR"/project-templates/dot-opencode/mcp-config.json "$TARGET_DIR/.opencode/mcp-config.json" &>/dev/null || true
     cp -rn "$HARNESS_DIR"/project-templates/openspec-schema/ssd-orchestrated/. \
             "$TARGET_DIR/openspec/schemas/ssd-orchestrated/" &>/dev/null || true
+            
+    # Copiar y otorgar permisos de ejecución al ejecutable local sdd
+    cp "$HARNESS_DIR/project-templates/sdd" "$TARGET_DIR/sdd" &>/dev/null || true
+    chmod +x "$TARGET_DIR/sdd" 2>/dev/null || true
 fi
-echo -e "        ${COLOR_SUCCESS}✓ Habilidades, esquemas y configuraciones MCP instaladas.${NC}"
+echo -e "        ${COLOR_SUCCESS}✓ Habilidades, esquemas, configuraciones MCP y ejecutable local 'sdd' instalados.${NC}"
+
 
 # 6. Write harness version marker
 echo -e "  ${COLOR_BORDER}[6/8]${NC} 🏷  Escribiendo marcador de versión..."

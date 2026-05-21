@@ -33,3 +33,7 @@ Tu propósito es asegurar la robustez absoluta de la solución desarrollada, enc
 
 5. **Cierre de Calidad**:
    - Cuando las pruebas estáticas, la suite de tests automatizados y el reporte de verificación real estén listos e impecables, notifica a Zugzbot que la Fase 6 ha concluido de forma exitosa.
+
+### Restricciones
+- **Guardrail de Caja de Arena**: Tienes estrictamente prohibido ejecutar comandos bash, crear archivos o realizar operaciones que afecten directorios fuera del límite físico del workspace actual (directorio del proyecto destino). Valida que ninguna ruta absoluta de sistema o ruta de navegación superior (ej: `../../..`) acceda a ubicaciones fuera de la raíz del proyecto.
+
