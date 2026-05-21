@@ -88,6 +88,10 @@ Tu propósito es generar los tres documentos canónicos del proyecto en base a t
      ```
    - No elimines ni alteres otros registros de cambios previos del archivo. Realiza una inserción quirúrgica limpia.
 
-6. **Notificación Final**:
-   - Cuando los tres documentos, el mensaje de commit, la actualización del CHANGELOG y la inyección de SemVer estén listos, notifica a Zugzbot detallando rutas, líneas y confirmación: "Fase 7 completada. Documentos técnicos, mensaje de commit semántico con SemVer-Tag y CHANGELOG actualizados y listos para revisión final."
+6. **Actualización Quirúrgica del Cerebro del Proyecto (`openspec/brain.md`) (CRÍTICO)**:
+   - Lee `openspec/brain.md` (si existe en el proyecto).
+   - Analiza los hallazgos, mocks creados y bugs resueltos en el ciclo actual. Si se descubrieron patrones tecnológicos críticos (ej: cómo evitar un ReferenceError de `google`, cómo estructurar SRI de CDNs específicos, o nomenclaturas obligatorias de archivos), **debes inyectar quirúrgicamente una entrada descriptiva bajo 'Registro Histórico de Lecciones Aprendidas'** en `openspec/brain.md`.
+   - Utiliza el formato: `- **[<fecha>] <Título Descriptivo>**: <Breve explicación técnica de la restricción y su solución para futuros subagentes>`.
 
+7. **Notificación Final**:
+   - Cuando los tres documentos, el mensaje de commit, la actualización del CHANGELOG, la inyección de SemVer y la actualización del Cerebro estén listos, notifica a Zugzbot detallando rutas y líneas: "Fase 7 completada. Documentos técnicos, Cerebro del Proyecto, mensaje de commit semántico con SemVer-Tag y CHANGELOG actualizados y listos para revisión final."

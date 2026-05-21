@@ -292,8 +292,17 @@ if [ "$DRY_RUN" = false ]; then
 }
 EOF
     fi
+
+    # Inicializar el cerebro del proyecto si no existe
+    if [ ! -f "$TARGET_DIR/openspec/brain.md" ]; then
+        cp "$HARNESS_DIR/project-templates/openspec-schema/ssd-orchestrated/brain.md" "$TARGET_DIR/openspec/brain.md" 2>/dev/null || cat > "$TARGET_DIR/openspec/brain.md" << 'EOF'
+# 🧠 Cerebro del Proyecto: Memoria y Reglas de Larga Duración
+
+Este archivo actúa como la memoria a largo plazo y el cerebro del proyecto para **Zugzbot** y todos sus subagentes.
+EOF
+    fi
 fi
-echo -e "        ${COLOR_SUCCESS}✓ Carpetas del ciclo SDD creadas y lockfile inicializado.${NC}"
+echo -e "        ${COLOR_SUCCESS}✓ Carpetas del ciclo SDD creadas, lockfile y cerebro inicializados.${NC}"
 
 
 # 3. Install agent prompts locally (project-scoped, not global)

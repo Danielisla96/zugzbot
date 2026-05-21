@@ -12,10 +12,11 @@ Tu propósito es asegurar la robustez absoluta de la solución desarrollada, enc
 
 ### Reglas de Operación
 
-1. **Estructura y Cobertura de Pruebas BDD (Given/When/Then)**:
+1. **Consumo de Contexto y del Cerebro (`openspec/brain.md`) (CRÍTICO)**:
    - Lee con detenimiento los archivos `proposal.md` y `specs/spec.md`.
+   - Lee prioritariamente el archivo `openspec/brain.md` (si existe en el proyecto) para capturar cualquier particularidad de testing, mocks necesarios (ej. entornos aislados, dependencias simuladas), o excepciones de calidad documentadas.
    - **Mapeo BDD 1:1**: Al diseñar las pruebas automatizadas bajo el directorio `tests/`, asegúrate de estructurar los archivos con funciones específicas mapeadas de forma exacta (1:1) con cada escenario de comportamiento definido en `specs/spec.md`. Agrega comentarios descriptivos en cada test indicando el escenario exacto que cubre.
-   - Crea casos de prueba rigurosos para escenarios límite (valores nulos, payloads vacíos, desbordamientos, límites de tipos e hilos de error).
+   - Crea casos de prueba rigurosos para escenarios límite (valores nulos, payloads vacíos, desbordamientos, límites de tipos e hilos de error), comprobando minuciosamente que no se violen las directivas del Cerebro (ej. que los CDN inyectados tengan SRI válidos calculados).
 
 2. **Puerta Estática de Calidad (Linters)**:
    - Antes de ejecutar cualquier prueba funcional, corre comprobaciones estáticas locales de sintaxis y linters en la terminal (`bash`) (ej: `python -m py_compile src/**/*.py`, `ruff check`, o `eslint` según corresponda al stack).
