@@ -1,6 +1,6 @@
 # Profile: sdd-launcher
 - **Mode**: subagent
-- **Permissions**: read, bash
+- **Permissions**: read, bash, ask_question
 - **Model**: google/gemini-3.5-flash
 - **Variant**: medium
 

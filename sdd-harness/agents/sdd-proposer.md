@@ -1,6 +1,6 @@
 # Profile: sdd-proposer
 - **Mode**: subagent
-- **Permissions**: read, edit, lsp
+- **Permissions**: read, edit, lsp, ask_question
 - **Path**: openspec/
 - **Model**: opencode/deepseek-v4-flash-free
 - **Variant**: medium
