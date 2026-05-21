@@ -342,7 +342,8 @@ if [ "$SKIP_CONFIG" = false ]; then
 {
   "$schema": "https://opencode.ai/config.json",
   "permission": {
-    "question": "allow"
+    "question": "allow",
+    "lsp": "allow"
   },
   "agent": {
     "zugzbot": {
@@ -353,7 +354,8 @@ if [ "$SKIP_CONFIG" = false ]; then
         "task": {
           "sdd-*": "allow"
         },
-        "question": "allow"
+        "question": "allow",
+        "lsp": "allow"
       }
     },
     "sdd-architect": {
@@ -361,7 +363,8 @@ if [ "$SKIP_CONFIG" = false ]; then
       "model": "opencode/deepseek-v4-flash-free",
       "variant": "medium",
       "permission": {
-        "question": "allow"
+        "question": "allow",
+        "lsp": "allow"
       }
     },
     "sdd-implementer": {
@@ -369,7 +372,8 @@ if [ "$SKIP_CONFIG" = false ]; then
       "model": "google/gemini-3.5-flash",
       "variant": "medium",
       "permission": {
-        "question": "allow"
+        "question": "allow",
+        "lsp": "allow"
       }
     },
     "sdd-launcher": {
@@ -377,7 +381,8 @@ if [ "$SKIP_CONFIG" = false ]; then
       "model": "opencode/deepseek-v4-flash-free",
       "variant": "medium",
       "permission": {
-        "question": "allow"
+        "question": "allow",
+        "lsp": "allow"
       }
     },
     "sdd-release-manager": {
@@ -385,7 +390,8 @@ if [ "$SKIP_CONFIG" = false ]; then
       "model": "opencode/deepseek-v4-flash-free",
       "variant": "medium",
       "permission": {
-        "question": "allow"
+        "question": "allow",
+        "lsp": "allow"
       }
     },
     "aux-oracle": {
@@ -393,7 +399,8 @@ if [ "$SKIP_CONFIG" = false ]; then
       "model": "opencode/deepseek-v4-flash-free",
       "variant": "medium",
       "permission": {
-        "question": "allow"
+        "question": "allow",
+        "lsp": "allow"
       }
     },
     "aux-handyman": {
@@ -401,7 +408,8 @@ if [ "$SKIP_CONFIG" = false ]; then
       "model": "google/gemini-3.5-flash",
       "variant": "medium",
       "permission": {
-        "question": "allow"
+        "question": "allow",
+        "lsp": "allow"
       }
     }
   }
