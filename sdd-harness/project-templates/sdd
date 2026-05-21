@@ -10,6 +10,10 @@
 
 set -e
 
+# Ensure we run from the project root directory (parent of .openspec)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
 # Curated HSL-tailored premium ANSI colors
 COLOR_BORDER='\033[38;5;239m'   # Charcoal grey
 COLOR_HEADER='\033[38;5;81m'    # Premium electric cyan
@@ -239,7 +243,7 @@ show_interactive_menu() {
             5)
                 clear 2>/dev/null || true
                 print_header
-                echo -e "  ${COLOR_HEADER}Uso no interactivo:${NC} ./.sdd [comando]"
+                echo -e "  ${COLOR_HEADER}Uso no interactivo:${NC} ./.openspec/sdd [comando]"
                 echo ""
                 echo -e "  ${COLOR_HEADER}Comandos rápidos directos:${NC}"
                 echo -e "    ${COLOR_SUCCESS}status${NC}    - Muestra el progreso de las 9 fases directamente"
@@ -291,7 +295,7 @@ case "$1" in
         ;;
     help|--help|-h)
         print_header
-        echo -e "  ${COLOR_HEADER}Uso:${NC} ./.sdd [comando]"
+        echo -e "  ${COLOR_HEADER}Uso:${NC} ./.openspec/sdd [comando]"
         echo ""
         echo -e "  ${COLOR_HEADER}Comandos válidos:${NC}"
         echo -e "    ${COLOR_SUCCESS}status${NC}    - Muestra la barra de progreso estelar de las 9 fases (por defecto)"
@@ -303,7 +307,7 @@ case "$1" in
         ;;
     *)
         echo -e "${COLOR_ERROR}Comando no reconocido: '$1'${NC}"
-        echo -e "Usa './.sdd help' para ver la lista de comandos disponibles."
+        echo -e "Usa './.openspec/sdd help' para ver la lista de comandos disponibles."
         exit 1
         ;;
 esac

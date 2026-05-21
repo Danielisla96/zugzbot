@@ -423,10 +423,11 @@ if [ "$DRY_RUN" = false ]; then
             "$TARGET_DIR/.openspec/schemas/ssd-orchestrated/" &>/dev/null || true
             
     # Copiar y otorgar permisos de ejecución al ejecutable local sdd
-    cp "$HARNESS_DIR/project-templates/sdd" "$TARGET_DIR/.sdd" &>/dev/null || true
-    chmod +x "$TARGET_DIR/.sdd" 2>/dev/null || true
+    cp "$HARNESS_DIR/project-templates/sdd" "$TARGET_DIR/.openspec/sdd" &>/dev/null || true
+    chmod +x "$TARGET_DIR/.openspec/sdd" 2>/dev/null || true
+    rm -f "$TARGET_DIR/.sdd" &>/dev/null || true
 fi
-echo -e "        ${COLOR_SUCCESS}✓ Habilidades, esquemas, configuraciones MCP y ejecutable local '.sdd' instalados.${NC}"
+echo -e "        ${COLOR_SUCCESS}✓ Habilidades, esquemas, configuraciones MCP y ejecutable local '.openspec/sdd' instalados.${NC}"
 
 
 # 6. Write harness version marker
