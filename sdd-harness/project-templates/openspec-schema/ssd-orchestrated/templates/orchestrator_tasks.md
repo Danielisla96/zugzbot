@@ -19,8 +19,8 @@ Lista maestra de tareas delegadas y estado de verificación.
 ## Fase 4: Diseño Visual y UX
 - [ ] sdd-ui-designer analiza la interfaz de usuario con Puppeteer MCP y genera el reporte de percepción (`ui_review_report.md`). [CONDICIONAL - Omitido si no hay frontend]
 
-## Fase 5: Servidor Local Interactivo
-- [ ] sdd-launcher levanta el servidor de desarrollo local interactivo y verifica disponibilidad. [Omitido en `--auto`]
+## Fase 5: Entorno y Pruebas Manuales
+- [ ] sdd-launcher levanta el servidor local o realiza el despliegue/sincronización (clasp push en GAS) para permitir la validación manual interactiva. [Omitido en `--auto`]
 
 ## Fase 6: Calidad y Pruebas QA
 - [ ] sdd-verifier escribe y ejecuta la suite de pruebas unitarias y de integración.

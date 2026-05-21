@@ -25,7 +25,7 @@ La metodología de Spec-Driven Development (SDD) es **sagrada e inquebrantable**
 | **Fase 2: Planificación** | `@sdd-planner` | Diseña la arquitectura modular en `orchestrator_architecture.md` y el checklist en `orchestrator_tasks.md`. |
 | **Fase 3: Implementación** | `@sdd-implementer` | Escribe código modular senior siguiendo el checklist y validando que no queden errores estáticos de LSP. |
 | **Fase 4: Diseño Visual** | `@sdd-ui-designer` | Captura y refina la UI mediante Puppeteer MCP. *[Condicional: se omite si no hay frontend]*. |
-| **Fase 5: Servidor Local** | `@sdd-launcher` | Arranca el entorno en segundo plano y ofrece el enlace de prueba interactivo. *[Omitido en `--auto`]*. |
+| **Fase 5: Entorno de Pruebas** | `@sdd-launcher` | Levanta el entorno local (localhost) o remoto (clasp push en GAS) para validación manual interactiva. *[Omitido en `--auto`]*. |
 | **Fase 6: Pruebas QA** | `@sdd-verifier` | Ejecuta linters, pruebas unitarias y curl reales en un bucle activo de auto-curación. |
 | **Fase 7: Documentación** | `@sdd-documenter` | Actualiza de forma quirúrgica el `README.md` consolidado de la raíz (incluyendo manual de uso y arquitectura técnica), el `.openspec/CHANGELOG.md` y genera `.openspec/changes/<change-name>/commit_message.txt`. |
 | **Fase 8: Cierre** | `@sdd-archiver` | Mueve el cambio al histórico bajo `archive/` y realiza el `git commit` semántico automatizado. |

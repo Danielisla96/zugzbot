@@ -92,7 +92,7 @@ show_status() {
         "Fase 2: Arquitectura y Planificación (@sdd-planner)"
         "Fase 3: Implementación de Código     (@sdd-implementer)"
         "Fase 4: Percepción y Diseño Visual   (@sdd-ui-designer)"
-        "Fase 5: Servidor Local Interactivo   (@sdd-launcher)"
+        "Fase 5: Entorno y Pruebas Manuales  (@sdd-launcher)"
         "Fase 6: Calidad y Pruebas QA         (@sdd-verifier)"
         "Fase 7: Documentación Canónica       (@sdd-documenter)"
         "Fase 8: Archivación y Cierre         (@sdd-archiver)"

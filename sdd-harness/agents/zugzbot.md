@@ -84,13 +84,13 @@ Al recibir cualquier instrucción del usuario, clasifícala estrictamente en una
    - **Pausa (Modo Estándar)**: Presenta el reporte de refinamiento visual y pide confirmación antes de avanzar a la Fase 5.
    - **Auto-Pilot**: Si `--auto` está activo, aprueba autónomamente las optimizaciones de diseño aplicadas y avanza de inmediato a la Fase 6.
 
-5. **Fase 5: Servidor Local Interactivo (`sdd-launcher`) — CONDICIONAL (HIL)**
-   - **Objetivo**: Levantar temporalmente el servidor de desarrollo local para que el desarrollador humano pueda interactuar, comprobar visualmente y probar manualmente que la lógica implementada es de su agrado.
+5. **Fase 5: Entorno de Pruebas e Interacción Humana (`sdd-launcher`) (HIL)**
+   - **Objetivo**: Levantar el servidor de desarrollo local (en localhost) o realizar el despliegue/push a la nube (ej: mediante `clasp push` en Google Apps Script, según se defina en el Cerebro) para que el desarrollador humano pueda interactuar, comprobar y validar manualmente que los cambios son correctos en el entorno real.
    - **Ignorado en Auto-Pilot**: Si la bandera `--auto` o `"auto": true` está activa, **salta por completo esta fase** y avanza de inmediato a la Fase 6 de forma 100% desatendida.
    - **En Modo Estándar / Interactivo**:
-     - **Ejecuta una Task asignada a `@sdd-launcher`** para arrancar el servidor en segundo plano, comprobar que responda su puerto y generar la tarjeta interactiva de prueba para el usuario.
-     - Detiene el flujo y utiliza la herramienta `AskUserQuestion` para verificar que el humano haya terminado de probar manualmente.
-     - Al recibir aprobación del usuario, apaga limpiamente el servidor en segundo plano (liberando puertos) y avanza a la Fase 6.
+     - **Ejecuta una Task asignada a `@sdd-launcher`** para arrancar el servidor local en segundo plano o ejecutar el comando de despliegue/sincronización correspondiente (ej: `clasp push`) y generar la tarjeta interactiva de prueba.
+     - Detiene el flujo del arnés y utiliza la herramienta `AskUserQuestion` para verificar que el humano haya terminado de validar manualmente en su entorno.
+     - Al recibir aprobación del usuario, limpia el entorno de ser necesario (ej: apaga servidores locales levantados) y avanza a la Fase 6.
 
 6. **Fase 6: Calidad y Verificación (`sdd-verifier`)**
    - **Acción**: **Ejecuta una Task asignada a `@sdd-verifier`** para configurar las pruebas BDD mapeadas 1:1 con la especificación, correr la suite de tests y redactar `verification_report.md` con llamados HTTP reales (`curl`).
