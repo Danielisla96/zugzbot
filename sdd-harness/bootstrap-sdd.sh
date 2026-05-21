@@ -344,7 +344,7 @@ if [ "$SKIP_CONFIG" = false ]; then
   "agent": {
     "zugzbot": {
       "mode": "primary",
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "google/gemini-3-flash-preview",
       "variant": "medium",
       "permission": {
         "task": {
@@ -359,7 +359,7 @@ if [ "$SKIP_CONFIG" = false ]; then
     },
     "sdd-implementer": {
       "mode": "subagent",
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "google/gemini-3.5-flash",
       "variant": "medium"
     },
     "sdd-launcher": {
@@ -379,7 +379,7 @@ if [ "$SKIP_CONFIG" = false ]; then
     },
     "aux-handyman": {
       "mode": "subagent",
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "google/gemini-3.5-flash",
       "variant": "medium"
     }
   }

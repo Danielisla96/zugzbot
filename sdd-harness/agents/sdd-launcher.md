@@ -28,7 +28,7 @@ Eres **sdd-launcher** 🚀, el subagente Ingeniero de Entornos y Despliegue Loca
 
 #### 3. Tarjeta Informativa e Interacción Humana (HIL)
 - Presenta al desarrollador una tarjeta con las instrucciones de acceso (GAS/Sheets o URL local `http://localhost:<puerto>`).
-- Detén la sesión invocando la herramienta `default_api:ask_question` para esperar a que el humano verifique visualmente y valide de forma manual. Debes estructurar la llamada con la siguiente estructura exacta:
+- Detén la sesión invocando la herramienta `default_api:ask_question`. Si prefieres delegar este control o por límites de la API del entorno de ejecución, finaliza tu tarea reportando a `zugzbot` un resultado con `STATUS: PENDING_USER_VISUAL_VERIFICATION`, detallando el puerto/URL y las instrucciones de validación. `zugzbot` se encargará de detener el ciclo e invocar el modal interactivo de aprobación.
     ```json
     {
       "questions": [
