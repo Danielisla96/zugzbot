@@ -27,7 +27,7 @@ Lista maestra de tareas delegadas y estado de verificación.
 - [ ] sdd-verifier comprueba linters y autoriza la entrega definitiva sin errores.
 
 ## Fase 7: Documentación Canónica
-- [ ] sdd-documenter genera/actualiza quirúrgicamente el README.md consolidado de la raíz (incluyendo manual de uso y arquitectura técnica) y registra el cambio en el CHANGELOG global.
+- [ ] sdd-documenter genera/actualiza quirúrgicamente el README.md consolidado de la raíz (incluyendo manual de uso y arquitectura técnica) y registra el cambio en `.openspec/CHANGELOG.md`.
 
 ## Fase 8: Archivación y Cierre
 - [ ] sdd-archiver consolida el historial, archiva las especificaciones y realiza el commit semántico automatizado en Git.

@@ -1,15 +1,15 @@
 ---
 name: sdd-document
-description: Generar el documento de referencia canónico del proyecto (README.md en la raíz) consolidando la especificación técnica y el manual de uso en secciones separadas, además de automatizar la creación del mensaje de commit semántico y la actualización quirúrgica del CHANGELOG.md. Utilizar antes del archivado final.
+description: Generar el documento de referencia canónico del proyecto (README.md en la raíz) consolidando la especificación técnica y el manual de uso en secciones separadas, además de automatizar la creación del mensaje de commit semántico y la actualización quirúrgica de .openspec/CHANGELOG.md. Utilizar antes del archivado final.
 license: MIT
 compatibility: Requiere un cambio de openspec activo con propuesta, especificación, arquitectura y reporte de verificación completados.
 metadata:
   author: zugzbot
-  version: "1.1"
+  version: "1.2"
   generatedBy: "zugzbot-harness"
 ---
 
-Generar la documentación técnica consolidada en el archivo README.md de la raíz del proyecto, el mensaje de commit semántico y la actualización de CHANGELOG.md.
+Generar la documentación técnica consolidada en el archivo README.md de la raíz del proyecto, el mensaje de commit semántico y la actualización de .openspec/CHANGELOG.md.
 
 **Entrada**: El nombre del cambio activo en kebab-case. Si se omite, infiéralo del contexto o solicítelo al usuario.
 
@@ -60,7 +60,7 @@ Generar la documentación técnica consolidada en el archivo README.md de la ra�
 
 6. **Generar el Mensaje de Commit Semántico**
 
-   Escriba el mensaje de commit convencional e impecable en `..openspec/changes/<nombre>/commit_message.txt`.
+   Escriba el mensaje de commit convencional e impecable en `.openspec/changes/<nombre>/commit_message.txt`.
    - **Formato Estricto de Conventional Commits (v1.0.0)**:
      ```
      <type>(<scope>): <short description>
@@ -77,10 +77,10 @@ Generar la documentación técnica consolidada en el archivo README.md de la ra�
      - `refactor`: Para mejoras de código limpio o SOLID sin alterar funcionalidad.
      - `docs`: Si únicamente se modificaron archivos de documentación.
 
-7. **Inyección Quirúrgica en `CHANGELOG.md`**
+7. **Inyección Quirúrgica en `.openspec/CHANGELOG.md`**
 
-   Inyecte el cambio de forma quirúrgica en el archivo `CHANGELOG.md` en la raíz del proyecto.
-   - Si no existe el archivo `CHANGELOG.md`, créelo con el formato estándar de **Keep a Changelog**.
+   Inyecte el cambio de forma quirúrgica en el archivo `.openspec/CHANGELOG.md`.
+   - Si no existe el archivo `.openspec/CHANGELOG.md`, créelo con el formato estándar de **Keep a Changelog**.
    - Busque la sección de desarrollo `## [Unreleased]` del CHANGELOG e inserte la línea agrupada semánticamente:
      - `Added`: Para nuevas funcionalidades (`feat`).
      - `Changed`: Para refactorizaciones o mejoras de arquitectura (`refactor`).
@@ -95,8 +95,8 @@ Generar la documentación técnica consolidada en el archivo README.md de la ra�
 
    Confirme que los archivos existan y posean longitud real:
     - `README.md` ≥ 150 líneas (incluyendo manual de uso y especificación técnica)
-   - `..openspec/changes/<nombre>/commit_message.txt` estructurado sin firmas de IA.
-   - `CHANGELOG.md` con la línea inyectada.
+   - `.openspec/changes/<nombre>/commit_message.txt` estructurado sin firmas de IA.
+   - `.openspec/CHANGELOG.md` con la línea inyectada.
 
 9. **Reportar a Zugzbot**
 
@@ -109,8 +109,8 @@ Generar la documentación técnica consolidada en el archivo README.md de la ra�
    | Documento | Líneas | Resumen de Contenido |
    |---|---|---|
     | README.md | <n> | Documentación consolidada: Visión Global, Especificación Técnica y Manual de Uso |
-   | commit_message.txt | <n> | Mensaje de commit semántico convencional (Sin firmas de IA) |
-   | CHANGELOG.md | <n> | Entrada inyectada bajo la sección correspondiente |
+   | .openspec/changes/<nombre>/commit_message.txt | <n> | Mensaje de commit semántico convencional (Sin firmas de IA) |
+   | .openspec/CHANGELOG.md | <n> | Entrada inyectada bajo la sección correspondiente |
 
    Fase 7 completada. Documentación y control de versión listos para revisión y aprobación final.
    ```
