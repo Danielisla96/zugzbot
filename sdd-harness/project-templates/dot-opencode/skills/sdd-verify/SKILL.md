@@ -168,7 +168,7 @@ Validar el cambio implementado y producir el reporte de verificación formal.
    **Integración Real:** ✅ / ❌
    **Reporte de Verificación escrito en:** openspec/changes/<nombre>/verification_report.md
 
-   Fase 4 completada. Todo en verde. Lista para documentación.
+   Fase 6 completada. Todo en verde. Lista para documentación.
    ```
 
 **Guardrails**

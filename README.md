@@ -11,17 +11,18 @@ Este arnés implementa un ciclo de vida estricto de **Desarrollo Guiado por Espe
 
 ```mermaid
 graph TD
-    A["Fase 1: Especificación\n(sdd-proposer)"] --> B["Fase 2: Planificación y Arquitectura\n(sdd-planner)"]
+    A0["Fase 0: Diagnóstico\n(sdd-inspector)"] --> A["Fase 1: Especificación\n(sdd-proposer)"]
+    A --> B["Fase 2: Planificación y Arquitectura\n(sdd-planner)"]
     B --> C["Fase 3: Implementación\n(sdd-implementer)"]
     C --> D{"¿Se detecta\nFrontend?"}
-    D -- Sí --> E["Fase 3.5: Percepción Visual\n(sdd-ui-designer + Puppeteer MCP)"]
+    D -- Sí --> E["Fase 4: Diseño Visual y UX\n(sdd-ui-designer + Puppeteer MCP)"]
     D -- No --> HIL{"¿Modo Auto?"}
     E --> HIL
-    HIL -- No --> I["Fase 3.8: Servidor Interactivo\n(Human-in-the-Loop)"]
-    HIL -- Sí --> F["Fase 4: Verificación y QA\n(sdd-verifier)"]
+    HIL -- No --> I["Fase 5: Servidor Interactivo\n(sdd-launcher)"]
+    HIL -- Sí --> F["Fase 6: Calidad y Pruebas QA\n(sdd-verifier)"]
     I --> F
-    F --> G["Fase 5: Documentación y Versionado\n(sdd-documenter)"]
-    G --> H["Archivado del Cambio\n(openspec-archive-change)"]
+    F --> G["Fase 7: Documentación Canónica\n(sdd-documenter)"]
+    G --> H["Fase 8: Archivación y Cierre\n(sdd-archiver)"]
 ```
 
 ---
@@ -33,12 +34,15 @@ graph TD
 | Agente | Rol | Fase |
 |---|---|---|
 | `zugzbot` | Orquestador primario — rutea, delega y controla los límites de cada fase. | Siempre activo |
-| `sdd-proposer` | Conduce la entrevista técnica, genera `proposal.md` y `spec.md` con escenarios BDD. | Fase 1 |
-| `sdd-planner` | Diseña la arquitectura técnica, genera diagramas Mermaid y el checklist de tareas. | Fase 2 |
-| `sdd-implementer` | Escribe código de producción siguiendo de forma estricta el checklist de tareas. | Fase 3 |
-| `sdd-ui-designer` | Levanta el servidor local, captura la UI mediante Puppeteer MCP y aplica mejoras UX/UI. | Fase 3.5 *(frontend)* |
-| `sdd-verifier` | Ejecuta linters, pruebas unitarias y realiza reportes reales de integración mediante `curl`. | Fase 4 |
-| `sdd-documenter` | Generates los documentos canónicos, crea el mensaje de commit semántico y actualiza CHANGELOG.md. | Fase 5 |
+| `sdd-inspector` | Diagnostica el stack tecnológico, dependencias y ejecuta/recomienda `npx autoskills`. | Fase 0 |
+| `sdd-proposer` | Conduce la entrevista técnica interactiva y define el alcance (`proposal.md`) y especificación (`spec.md`). | Fase 1 |
+| `sdd-planner` | Diseña la arquitectura modular (`orchestrator_architecture.md`) y el checklist (`orchestrator_tasks.md`). | Fase 2 |
+| `sdd-implementer` | Escribe código de producción senior robusto e incremental siguiendo el checklist. | Fase 3 |
+| `sdd-ui-designer` | Captura la UI mediante Puppeteer MCP para evaluar y perfeccionar la experiencia de usuario. | Fase 4 *(frontend)* |
+| `sdd-launcher` | Levanta el servidor de desarrollo local interactivo y verifica disponibilidad en tiempo real. | Fase 5 |
+| `sdd-verifier` | Ejecuta linters, pruebas unitarias y de integración en bucle de auto-curación. | Fase 6 |
+| `sdd-documenter` | Genera y actualiza de forma quirúrgica el README, TECHNICAL.md, USER_GUIDE.md y CHANGELOG.md. | Fase 7 |
+| `sdd-archiver` | Valida el estado del repositorio Git, archiva el cambio y firma el commit Git semántico. | Fase 8 |
 
 ### Agentes Auxiliares
 
@@ -53,44 +57,44 @@ graph TD
 
 Cada cambio significativo progresa de forma secuencial a través de estas fases gobernadas:
 
+0. **Fase 0 — Diagnóstico y Contexto (`sdd-inspector`)**
+   - Analiza en profundidad el estado tecnológico del proyecto, dependencias y frameworks.
+   - Sugiere y ejecuta de forma muy segura `npx autoskills --detect` para equipar al arnés con las habilidades ideales.
+
 1. **Fase 1 — Especificación (`sdd-proposer`)**
-   - Entrevista técnica guiada con el usuario.
+   - Conduce una entrevista técnica ágil utilizando cuestionarios interactivos de opción múltiple.
    - Generación de `openspec/changes/<nombre>/proposal.md` (alcance y negocio).
    - Generación de `openspec/changes/<nombre>/specs/spec.md` con escenarios BDD (`Dado / Cuando / Entonces`).
 
 2. **Fase 2 — Planificación y Arquitectura (`sdd-planner`)**
    - Diseño modular siguiendo principios SOLID y Arquitectura Limpia.
-   - Creación de `orchestrator_architecture.md` (diagramas Mermaid) y `orchestrator_tasks.md` (checklist).
+   - Creación de `orchestrator_architecture.md` (diagramas Mermaid) y `orchestrator_tasks.md` (checklist global de tareas).
 
 3. **Fase 3 — Implementación (`sdd-implementer`)**
-   - Escritura de código incremental quirúrgico siguiendo el checklist de tareas.
-   - Valida el código con el compilador/LSP del entorno antes de entregar.
+   - Escritura de código incremental quirúrgico siguiendo estrictamente el checklist.
+   - Valida la ausencia de errores de compilación o LSP antes de cerrar.
 
-4. **Fase 3.5 — Percepción Visual y UX (`sdd-ui-designer`) — *Frontend***
-   - **Integración Puppeteer MCP (Cero-Configuración):** Levanta automáticamente un navegador Chrome headless local.
-   - Navega, interactúa, detecta problemas de escala, jerarquía y WCAG AA, y genera capturas del "Antes / Después".
-   - Produce el reporte visual `ui_review_report.md`.
+4. **Fase 4 — Diseño Visual y UX (`sdd-ui-designer`) — *Frontend***
+   - **Integración Puppeteer MCP:** Levanta un navegador Chrome headless local.
+   - Interactúa, evalúa accesibilidad (WCAG AA), jerarquía, y genera el reporte `ui_review_report.md`.
+   - **Omisión Inteligente**: Si no se detecta frontend en el diagnóstico (Fase 0), se salta silenciosamente a la Fase 5.
 
-5. **Fase 3.8 — Servidor Local Interactivo (Human-in-the-Loop)**
-   - Levanta el servidor local o entorno automáticamente basándose en las tecnologías detectadas (ej: `npm run dev`, `python manage.py runserver`, etc.).
-   - Verifica la disponibilidad local y ofrece un enlace de verificación premium e interactivo (ej: `http://localhost:3000`) para que el desarrollador interactúe y verifique visual y manualmente la implementación antes de las pruebas formales.
-   - **Nota**: Este paso se ignora/salta de manera inteligente si se activa el modo Piloto Automático (`--auto`).
+5. **Fase 5 — Servidor Local Interactivo (`sdd-launcher`)**
+   - Identifica el comando idóneo de inicio (ej: `npm run dev`, `python manage.py runserver`), arranca el servidor local en segundo plano y verifica su accesibilidad en tiempo real.
+   - Presenta un enlace interactivo (ej: `http://localhost:3000`) para que el desarrollador interactúe y compruebe manualmente.
+   - **Omisión Inteligente**: Se ignora y pasa directo a Fase 6 en piloto automático (`--auto`).
 
-6. **Fase 4 — Verificación y QA (`sdd-verifier`)**
-   - Ejecuta análisis estático de código, linters y la suite de pruebas unitarias.
-   - Levanta el backend local y realiza peticiones `curl` reales documentando respuestas exactas en `verification_report.md`.
-   - **Bucle de Auto-curación:** Si un test falla, reactiva al implementador entregándole el log de error exacto.
+6. **Fase 6 — Calidad y Pruebas QA (`sdd-verifier`)**
+   - Ejecuta linters, suite de pruebas unitarias y verifica integraciones backend mediante peticiones `curl`.
+   - **Bucle de Auto-curación:** Reactiva automáticamente al implementador si se detectan fallos lógicos.
 
-7. **Fase 5 — Documentación y Control de Versiones (`sdd-documenter`)**
-   - Escribe o actualiza los tres documentos canónicos del proyecto:
-     - `README.md` — inicio rápido y descripción
-     - `docs/TECHNICAL.md` — detalles técnicos, arquitectura y catálogo de APIs
-     - `docs/USER_GUIDE.md` — instalación, consumo real y troubleshooting
-   - **Commit Semántico Automatizado:** Genera el mensaje impecable en `commit_message.txt` bajo *Conventional Commits* (cero atribuciones de IA).
-   - **Keep a Changelog Quirúrgico:** Inyecta de forma quirúrgica la entrada del cambio en el archivo `CHANGELOG.md` global bajo la sección `## [Unreleased]`.
+7. **Fase 7 — Documentación Canónica (`sdd-documenter`)**
+   - Escribe desde cero o actualiza de forma quirúrgica (respetando texto no relacionado) los documentos `README.md`, `docs/TECHNICAL.md`, y `docs/USER_GUIDE.md`.
+   - Inyecta la entrada de cambios en `CHANGELOG.md` global bajo `## [Unreleased]`.
+   - Genera el mensaje Conventional Commit semántico en `commit_message.txt`.
 
-8. **Archivado y Commit Automatizado**
-   - Una vez firmado por el usuario, el cambio se archiva en `openspec/changes/archive/YYYY-MM-DD-<name>/` y se realiza automáticamente un `git commit` semántico utilizando el archivo `commit_message.txt` si hay cambios locales listos para confirmar.
+8. **Fase 8 — Archivación y Cierre (`sdd-archiver`)**
+   - Consolida el historial, archiva las especificaciones en `openspec/changes/archive/` y realiza automáticamente un `git commit` semántico libre de marcas de IA.
 
 ---
 

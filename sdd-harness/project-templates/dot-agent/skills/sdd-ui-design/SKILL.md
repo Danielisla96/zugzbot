@@ -27,7 +27,7 @@ Revisar y mejorar el frontend (UI/UX) de la solución implementada utilizando pe
    - Archivos de estilos: `.css`, `.scss`, `.less`.
    - `package.json` con dependencias de UI (react, vue, svelte, vite, next, etc.).
 
-   **Si no se detecta frontend**: Detenga la ejecución y notifique a Zugzbot: "No se detecta frontend en el proyecto. Omitiendo Fase 3.5."
+   **Si no se detecta frontend**: Detenga la ejecución y notifique a Zugzbot: "No se detecta frontend en el proyecto. Omitiendo Fase 4."
 
 2. **Detectar y arrancar el servidor de desarrollo local**
 
@@ -133,7 +133,7 @@ Revisar y mejorar el frontend (UI/UX) de la solución implementada utilizando pe
    **Archivos modificados:** <lista>
    **Reporte guardado en:** openspec/changes/<nombre>/ui_review_report.md
 
-   Fase 3.5 completada. Interfaz pulida y refinada visualmente. Lista para verificación.
+   Fase 4 completada. Interfaz pulida y refinada visualmente. Lista para verificación.
    ```
 
 **Guardrails**

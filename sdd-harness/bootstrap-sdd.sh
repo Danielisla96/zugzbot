@@ -196,7 +196,7 @@ echo -e "        ${COLOR_MUTED}▪ Frameworks:${NC}     ${COLOR_SUCCESS}${DETECT
 echo -e "        ${COLOR_MUTED}▪ Base de Datos:${NC}  ${COLOR_SUCCESS}${DETECTED_DBS}${NC}"
 echo -e "        ${COLOR_MUTED}▪ Pruebas / QA:${NC}   ${COLOR_SUCCESS}${DETECTED_TESTS}${NC}"
 if [ "$HAS_FRONTEND" = true ]; then
-    echo -e "        ${COLOR_MUTED}▪ UI Designer:${NC}    ${COLOR_SUCCESS}Habilitado (Fase 3.5 activa)${NC}"
+    echo -e "        ${COLOR_MUTED}▪ UI Designer:${NC}    ${COLOR_SUCCESS}Habilitado (Fase 4 activa)${NC}"
 else
     echo -e "        ${COLOR_MUTED}▪ UI Designer:${NC}    ${COLOR_WARNING}Desactivado (Sin frontend)${NC}"
 fi
@@ -324,6 +324,11 @@ if [ "$SKIP_CONFIG" = false ]; then
         }
       }
     },
+    "sdd-inspector": {
+      "mode": "subagent",
+      "model": "google/gemini-3.5-flash",
+      "variant": "medium"
+    },
     "sdd-proposer": {
       "mode": "subagent",
       "model": "opencode/deepseek-v4-flash-free",
@@ -339,6 +344,16 @@ if [ "$SKIP_CONFIG" = false ]; then
       "model": "opencode/minimax-m2.5-free",
       "variant": "medium"
     },
+    "sdd-ui-designer": {
+      "mode": "subagent",
+      "model": "opencode/deepseek-v4-flash-free",
+      "variant": "medium"
+    },
+    "sdd-launcher": {
+      "mode": "subagent",
+      "model": "google/gemini-3.5-flash",
+      "variant": "medium"
+    },
     "sdd-verifier": {
       "mode": "subagent",
       "model": "opencode/deepseek-v4-flash-free",
@@ -349,9 +364,9 @@ if [ "$SKIP_CONFIG" = false ]; then
       "model": "opencode/deepseek-v4-flash-free",
       "variant": "medium"
     },
-    "sdd-ui-designer": {
+    "sdd-archiver": {
       "mode": "subagent",
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "google/gemini-3.5-flash",
       "variant": "medium"
     },
     "aux-oracle": {

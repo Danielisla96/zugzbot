@@ -125,7 +125,7 @@ Generar los tres archivos de documentación técnica canónica para el proyecto,
    | commit_message.txt | <n> | Mensaje de commit semántico convencional (Sin firmas de IA) |
    | CHANGELOG.md | <n> | Entrada inyectada bajo la sección correspondiente |
 
-   Fase 5 completada. Documentación y control de versión listos para revisión y aprobación final.
+   Fase 7 completada. Documentación y control de versión listos para revisión y aprobación final.
    ```
 
 **Guardrails**
