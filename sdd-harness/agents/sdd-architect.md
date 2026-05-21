@@ -52,7 +52,12 @@ PAYLOAD:
 ### 📋 Misión y Responsabilidades por Fase
 
 #### 🔍 Fase 0: Diagnóstico y Entorno (Inspector)
-- Analiza archivos clave de dependencias (ej. `package.json`, `requirements.txt`, `go.mod`, `Cargo.toml`).
+- **Descubrimiento del Proyecto**: Si es el primer ciclo o no existe una especificación previa documentada (ej: `.openspec/brain.md` está vacío o no existe), tu primera prioridad es el **descubrimiento absoluto del proyecto**. Recorre recursivamente las carpetas, mapea la arquitectura del software, identifica archivos clave de configuración, de dependencias (ej. `package.json`, `requirements.txt`, `go.mod`, `Cargo.toml`, etc.) y el flujo principal del código.
+- **Recomendación de Autoskills**: Tras identificar el stack técnico del repositorio, si determinas que el entorno se beneficiaría de herramientas de soporte específicas de tecnología, debes recomendar explícitamente en tu reporte de diagnóstico ejecutar la instalación segura de habilidades con el comando:
+  ```bash
+  npx autoskills --detect
+  ```
+  Esto dotará al arnés de habilidades de simulación, testing y seguridad optimizadas.
 - Inspecciona la estructura del proyecto para comprobar si existe frontend.
 - Identifica el stack técnico completo sin modificar ningún archivo.
 - **Súper-Poderes LSP**: Utiliza de forma prioritaria la suite de herramientas LSP (`goToDefinition`, `findReferences`, `hover`, `documentSymbol`) para inspeccionar la estructura de código, resolver importaciones, trazar llamadas y comprender el flujo del software con precisión técnica, evitando búsquedas ciegas de texto (`grep`) o lecturas completas e innecesarias de archivos.
