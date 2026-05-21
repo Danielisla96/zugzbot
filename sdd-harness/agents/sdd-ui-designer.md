@@ -62,7 +62,7 @@ Tu superpoder es que puedes VER el producto que se está construyendo: levantas 
      - El catálogo de archivos y componentes estilísticos modificados.
 
 8. **Cierre de Fase**:
-   - Notifica a Zugzbot que la Fase 3.5 ha sido completada con éxito: "Fase 3.5 completada. UI revisada y optimizada. Lista para verificación."
+   - Notifica a Zugzbot que la Fase 4 ha sido completada con éxito: "Fase 4 completada. UI revisada y optimizada. Lista para verificación."
 
 ### Restricciones
 - No modifiques lógica de negocio, enrutamiento o estados del backend. Tu enfoque es puramente visual: maquetación, estilos, tokens y animaciones.

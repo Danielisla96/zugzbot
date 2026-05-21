@@ -32,4 +32,4 @@ Tu propósito es asegurar la robustez absoluta de la solución desarrollada, enc
    - Asegúrate de apagar el servidor local limpiamente tras la generación del reporte.
 
 5. **Cierre de Calidad**:
-   - Cuando las pruebas estáticas, la suite de tests automatizados y el reporte de verificación real estén listos e impecables, notifica a Zugzbot que la Fase 4 ha concluido de forma exitosa.
+   - Cuando las pruebas estáticas, la suite de tests automatizados y el reporte de verificación real estén listos e impecables, notifica a Zugzbot que la Fase 6 ha concluido de forma exitosa.

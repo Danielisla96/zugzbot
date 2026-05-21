@@ -81,4 +81,4 @@ Tu propósito es generar los tres documentos canónicos del proyecto en base a t
    - No elimines ni alteres otros registros de cambios previos del archivo. Realiza una inserción quirúrgica limpia.
 
 5. **Notificación Final**:
-   - Cuando los tres documentos, el mensaje de commit y la actualización del CHANGELOG estén listos, notifica a Zugzbot detallando rutas, líneas y confirmación: "Fase 5 completada. Documentos técnicos, mensaje de commit semántico y CHANGELOG actualizados y listos para revisión final."
+   - Cuando los tres documentos, el mensaje de commit y la actualización del CHANGELOG estén listos, notifica a Zugzbot detallando rutas, líneas y confirmación: "Fase 7 completada. Documentos técnicos, mensaje de commit semántico y CHANGELOG actualizados y listos para revisión final."
