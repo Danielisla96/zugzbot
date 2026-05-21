@@ -24,18 +24,23 @@ Reunir los requerimientos del usuario y producir los artefactos canónicos de pr
 
 2. **Realizar la entrevista de requerimientos**
 
-   Para agilizar el proceso y evitar preguntas abiertas en la consola, **utilice de forma prioritaria la herramienta AskUserQuestion (`default_api:ask_question`)** para presentar cuestionarios estructurados al usuario.
+   Para agilizar el proceso y evitar preguntas abiertas en la consola, **utilice de forma prioritaria la herramienta nativa `question` de OpenCode** para presentar cuestionarios estructurados al usuario.
+
+   **REGLAS CRÍTICAS PARA LA HERRAMIENTA `question`**:
+   - Campo de selección múltiple: se define con la propiedad `multiple: true/false` (no use `is_multi_select`).
+   - Campo de opciones: es un arreglo de objetos: `options: { label: string, description?: string }[]` (no use arreglos planos de strings).
+   - **Límite Estricto de 30 Caracteres**: Tanto el `header` como el `label` de cada opción **no deben superar los 30 caracteres** o el validador Zod de OpenCode lanzará un error de validación `400 Bad Request`. Use la etiqueta `label` para el nombre corto (ej: `"Node.js (TS)"`) y la descripción larga en `description` (ej: `"Node.js con soporte completo de TypeScript"`).
 
    **Grupo A — Contexto y Propósito (Interactivo)**
    - Formule preguntas sobre el problema a resolver y los objetivos esperados. 
-   - Proporcione opciones predefinidas o permita al usuario detallar sus respuestas.
+   - Proporcione opciones estructuradas y descriptivas bajo el esquema de la herramienta `question`.
 
    **Grupo B — Alcance Técnico (Formulario de Selección)**
-   - Utilice la herramienta AskUserQuestion para presentar opciones de selección sobre el stack de desarrollo:
-     - Lenguaje: `Node.js (JavaScript)`, `Node.js (TypeScript)`, `Python`, `Go`, `Rust`, `PHP`, `Ruby`
-     - Framework / Entorno: `Next.js`, `React`, `Express`, `FastAPI`, `Django`, `Flask`, `Laravel`, `Rails`, `Genérico / Ninguno`
-     - Base de Datos: `SQLite`, `PostgreSQL`, `MySQL`, `MongoDB`, `Redis`, `Ninguna`
-     - Pruebas / QA: `Jest`, `Vitest`, `Pytest`, `Mocha`, `Ninguno`
+   - Utilice la herramienta `question` para presentar opciones de selección sobre el stack de desarrollo:
+     - Lenguaje: `label: "Node.js (TS)"`, `label: "Node.js (JS)"`, `label: "Python"`, `label: "Go"`, `label: "Rust"`
+     - Framework / Entorno: `label: "Next.js"`, `label: "React"`, `label: "Express"`, `label: "FastAPI"`, `label: "Django"`, `label: "Laravel"`, `label: "Ninguno"`
+     - Base de Datos: `label: "SQLite (Local)"`, `label: "PostgreSQL"`, `label: "MySQL"`, `label: "MongoDB"`, `label: "Ninguna"`
+     - Pruebas / QA: `label: "Vitest"`, `label: "Jest"`, `label: "Pytest"`, `label: "Ninguno"`
 
    **Grupo C — Escenarios de Comportamiento**
    - Pregunte interactivamente por el happy-path principal y los casos límite o de error más probables.

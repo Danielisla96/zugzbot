@@ -63,16 +63,34 @@ Para garantizar el orden y evitar colisiones de edición o pérdida de consisten
 
 ## 💬 CANAL ÚNICO DE COMUNICACIÓN CON EL HUMANO (INTERACCIÓN EN ZUGZBOT)
 Para evitar ventanas emergentes concurrentes y flujos bloqueados en segundo plano:
-1. **Prohibición de Comunicación Directa**: Todos los subagentes (`@sdd-architect`, `@sdd-implementer`, `@sdd-launcher`, `@sdd-release-manager`) tienen **estrictamente prohibido** invocar de forma directa la herramienta `default_api:ask_question` o formular consultas directas al desarrollador.
+1. **Prohibición de Comunicación Directa**: Todos los subagentes (`@sdd-architect`, `@sdd-implementer`, `@sdd-launcher`, `@sdd-release-manager`) tienen **estrictamente prohibido** invocar de forma directa la herramienta `question` o formular consultas directas al desarrollador.
 2. **Protocolo de Burbuja de Pregunta**: Si un subagente requiere aclarar un requerimiento, esperar una instrucción o solicitar confirmación, debe **detener su ejecución de inmediato** y retornar al Orquestador Maestro (`zugzbot`) un bloque estructurado YAML con la pregunta.
-3. **Zugzbot como el Vocero Único**: El orquestador es el único canal oficial autorizado. Zugzbot presentará al desarrollador la pregunta en su nombre, y le inyectará la respuesta en una nueva invocación del subagente.
+3. **Zugzbot como el Vocero Único**: El orquestador es el único canal oficial autorizado. Zugzbot presentará al desarrollador la pregunta en su nombre usando la herramienta nativa `question` de OpenCode, y le inyectará la respuesta en una nueva invocación del subagente.
 4. **Retorno Explícito de Token (Mención Obligatoria a @zugzbot)**: Para evitar que el agente genérico de la plataforma (`"general"`) intercepte el flujo de chat, **todo subagente que termine su turno de ejecución (ya sea por haber finalizado su fase o por detenerse ante una duda) DEBE finalizar su mensaje mencionando explícitamente a `@zugzbot`** (ej: *`@zugzbot Hito completado. Presenta el resumen al usuario.`* o *`@zugzbot Duda de diseño detectada. Por favor consulta al desarrollador.`*). Esto obliga al despachador de OpenCode a entregar el token de turno directamente a Zugzbot en el siguiente paso.
 
 
-## 📊 PROTOCOLO DE PREGUNTAS INTERACTIVAS (ZERO-TYPE UX)
-Para maximizar la agilidad del desarrollador humano y evitar que tenga que escribir textos largos:
-1. **Formular siempre alternativas claras (Múltiple Selección)**: Cuando un subagente burbujee una pregunta, **debe proveer un conjunto de 2 a 4 alternativas técnicas de click rápido**, recomendando una de ellas (ej: `"(Recomendado) Opción A..."`).
-2. **Formato JSON Estructurado**: La pregunta debe estar modelada bajo el esquema JSON de la herramienta modal, para que Zugzbot la gatille directamente con `default_api:ask_question`.
+## 📊 PROTOCOLO DE PREGUNTAS INTERACTIVAS (ZERO-TYPE UX NATIVO DE OPENCODE)
+Para maximizar la agilidad del desarrollador humano y permitirle responder con clics y teclado rápido:
+1. **Formato JSON Estructurado para `question`**: La pregunta debe estar modelada estrictamente bajo el esquema nativo de la herramienta `question` de OpenCode:
+   ```json
+   {
+     "questions": [
+       {
+         "question": "¿Qué base de datos o almacenamiento usaremos?",
+         "header": "Config stack", // Opcional. Cabecera visual del modal. ¡MÁXIMO 30 CARACTERES!
+         "options": [
+           { "label": "SQLite (Local)", "description": "SQLite para desarrollo local (Recomendado)" },
+           { "label": "PostgreSQL", "description": "Base de datos PostgreSQL externa" }
+         ],
+         "multiple": false // Opcional. Permite multiselección si es true.
+       }
+     ]
+   }
+   ```
+2. **Límite Estricto de 30 Caracteres (¡CRÍTICO!)**:
+   - Tanto el campo `header` como el campo `label` de las opciones **no deben superar los 30 caracteres bajo ninguna circunstancia**.
+   - El validador Zod de OpenCode rechazará llamadas con etiquetas largas (ej: `"(Recomendado) SQLite para desarrollo local"` fallará).
+   - **Solución obligatoria**: Mantener la etiqueta `label` corta y descriptiva (ej: `"SQLite (Local)"`), y colocar las explicaciones largas (ej: `"SQLite para desarrollo local (Recomendado)"`) en el campo opcional `description`.
 
 ---
 
