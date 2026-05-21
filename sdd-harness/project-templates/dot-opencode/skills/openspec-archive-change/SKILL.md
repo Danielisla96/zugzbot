@@ -82,14 +82,27 @@ Archive a completed change in the experimental workflow.
    mv .openspec/changes/<name> .openspec/changes/archive/YYYY-MM-DD-<name>
    ```
 
-   **Automated Git Commit**:
-   - Check if Git is initialized in the workspace (`git rev-parse --is-inside-work-tree` is true).
-   - If yes, verify if `.openspec/changes/archive/YYYY-MM-DD-<name>/commit_message.txt` exists.
-   - If the file exists and there are staged or unstaged changes, automatically stage and commit them:
-     ```bash
-     git add .
-     git commit -F .openspec/changes/archive/YYYY-MM-DD-<name>/commit_message.txt
-     ```
+    **Reset Lockfile state before commit**:
+    - Overwrite `.openspec/sdd-lock.json` to its idle/reset state to ensure that the completed status is captured in the same commit:
+      ```json
+      {
+        "change_name": "nuevo-cambio",
+        "active_phase": 0,
+        "active_subagent": "sdd-inspector",
+        "status": "idle",
+        "auto_pilot": false,
+        "last_updated": ""
+      }
+      ```
+
+    **Automated Git Commit**:
+    - Check if Git is initialized in the workspace (`git rev-parse --is-inside-work-tree` is true).
+    - If yes, verify if `.openspec/changes/archive/YYYY-MM-DD-<name>/commit_message.txt` exists.
+    - If the file exists and there are staged or unstaged changes, automatically stage and commit them:
+      ```bash
+      git add .
+      git commit -F .openspec/changes/archive/YYYY-MM-DD-<name>/commit_message.txt
+      ```
    - If successful, flag the commit status as active in the final output.
 
 6. **Display summary**

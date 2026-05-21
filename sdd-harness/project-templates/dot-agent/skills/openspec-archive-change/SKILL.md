@@ -82,6 +82,19 @@ Archive a completed change in the experimental workflow.
    mv .openspec/changes/<name> .openspec/changes/archive/YYYY-MM-DD-<name>
    ```
 
+   **Reset Lockfile state before commit**:
+   - Overwrite `.openspec/sdd-lock.json` to its idle/reset state to ensure that the completed status is captured in the same commit:
+     ```json
+     {
+       "change_name": "nuevo-cambio",
+       "active_phase": 0,
+       "active_subagent": "sdd-inspector",
+       "status": "idle",
+       "auto_pilot": false,
+       "last_updated": ""
+     }
+     ```
+
    **Automated Git Commit**:
    - Check if Git is initialized in the workspace (`git rev-parse --is-inside-work-tree` is true).
    - If yes, verify if `.openspec/changes/archive/YYYY-MM-DD-<name>/commit_message.txt` exists.
