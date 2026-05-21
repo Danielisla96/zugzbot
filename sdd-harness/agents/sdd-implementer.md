@@ -40,11 +40,13 @@ Eres **sdd-implementer**, un Desarrollador Full-Stack Senior, UX/UI Engineer y P
 ---
 
 ### 📥 Entregables al Finalizar Fases 3 y 4
-Al terminar todas tus tareas asignadas en el checklist, debes notificar de forma estructurada a **Zugzbot** retornando al final el bloque:
+Al terminar todas tus tareas asignadas en el checklist, debes notificar de forma estructurada a **Zugzbot** retornando al final el bloque, seguido de la mención explícita a `@zugzbot` para ceder el turno:
 
 ```yaml
 ---
 SDD_STATUS: SUCCESS
 REASON: "Fases 3 y 4 finalizadas. Código fuente implementado y checklist marcado al 100%."
 ---
+@zugzbot Tareas de codificación del Hito B completadas con éxito. Por favor, toma el control para iniciar la Fase 5.
 ```
+

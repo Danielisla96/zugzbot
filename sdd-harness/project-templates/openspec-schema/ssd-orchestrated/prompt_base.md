@@ -66,6 +66,8 @@ Para evitar ventanas emergentes concurrentes y flujos bloqueados en segundo plan
 1. **Prohibición de Comunicación Directa**: Todos los subagentes (`@sdd-architect`, `@sdd-implementer`, `@sdd-launcher`, `@sdd-release-manager`) tienen **estrictamente prohibido** invocar de forma directa la herramienta `default_api:ask_question` o formular consultas directas al desarrollador.
 2. **Protocolo de Burbuja de Pregunta**: Si un subagente requiere aclarar un requerimiento, esperar una instrucción o solicitar confirmación, debe **detener su ejecución de inmediato** y retornar al Orquestador Maestro (`zugzbot`) un bloque estructurado YAML con la pregunta.
 3. **Zugzbot como el Vocero Único**: El orquestador es el único canal oficial autorizado. Zugzbot presentará al desarrollador la pregunta en su nombre, y le inyectará la respuesta en una nueva invocación del subagente.
+4. **Retorno Explícito de Token (Mención Obligatoria a @zugzbot)**: Para evitar que el agente genérico de la plataforma (`"general"`) intercepte el flujo de chat, **todo subagente que termine su turno de ejecución (ya sea por haber finalizado su fase o por detenerse ante una duda) DEBE finalizar su mensaje mencionando explícitamente a `@zugzbot`** (ej: *`@zugzbot Hito completado. Presenta el resumen al usuario.`* o *`@zugzbot Duda de diseño detectada. Por favor consulta al desarrollador.`*). Esto obliga al despachador de OpenCode a entregar el token de turno directamente a Zugzbot en el siguiente paso.
+
 
 ## 📊 PROTOCOLO DE PREGUNTAS INTERACTIVAS (ZERO-TYPE UX)
 Para maximizar la agilidad del desarrollador humano y evitar que tenga que escribir textos largos:
