@@ -1,0 +1,14 @@
+{
+  "name": "zugzbot-sdd",
+  "version": "1.3.0",
+  "description": "Especificaciones y herramientas para la metodología SDD de Zugzbot en OpenCode",
+  "main": "index.js",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@opencode-ai/plugin": "^1.0.0",
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}
