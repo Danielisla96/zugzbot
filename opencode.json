@@ -6,6 +6,11 @@
   },
   "lsp": {
     "typescript": {
+      "command": [
+        "npx",
+        "typescript-language-server",
+        "--stdio"
+      ],
       "extensions": [
         ".ts",
         ".tsx",
@@ -22,7 +27,7 @@
   "agent": {
     "zugzbot": {
       "mode": "primary",
-      "model": "google/gemini-3.5-flash",
+      "model": "google/gemini-3-flash-preview",
       "variant": "medium",
       "permission": {
         "task": {
@@ -79,7 +84,7 @@
     },
     "aux-handyman": {
       "mode": "subagent",
-      "model": "google/gemini-3.5-flash",
+      "model": "google/gemini-3-flash-preview",
       "variant": "medium",
       "permission": {
         "question": "allow",

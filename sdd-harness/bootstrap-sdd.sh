@@ -316,23 +316,23 @@ if [ "$DRY_RUN" = false ]; then
 fi
 echo -e "        ${COLOR_SUCCESS}✓ Prompts de sistema inyectados de forma segura.${NC}"
 
-# 4. Generate project-local opencode.jsonc
-echo -e "  ${COLOR_BORDER}[4/8]${NC} ⚙️  Generando registro de agentes (opencode.jsonc)..."
-OPENCODE_CONFIG="$TARGET_DIR/opencode.jsonc"
+# 4. Generate project-local opencode.json
+echo -e "  ${COLOR_BORDER}[4/8]${NC} ⚙️  Generando registro de agentes (opencode.json)..."
+OPENCODE_CONFIG="$TARGET_DIR/opencode.json"
 SKIP_CONFIG=false
 
 if [ "$DRY_RUN" = true ]; then
     SKIP_CONFIG=true
 elif [ -f "$OPENCODE_CONFIG" ]; then
-    echo -e "        ${COLOR_WARNING}⚠  Ya existe opencode.jsonc en el proyecto destino.${NC}"
+    echo -e "        ${COLOR_WARNING}⚠  Ya existe opencode.json en el proyecto destino.${NC}"
     if [ "$AUTO_CONFIRM" = true ]; then
         confirm="s"
-        echo -e "        ${COLOR_MUTED}▪ [Auto-confirm] Sobrescribiendo opencode.jsonc...${NC}"
+        echo -e "        ${COLOR_MUTED}▪ [Auto-confirm] Sobrescribiendo opencode.json...${NC}"
     else
         read -p "        ¿Sobrescribir con la configuración del arnés SDD? (s/n): " confirm
     fi
     if [[ ! "$confirm" =~ ^[sS]$ ]]; then
-        echo -e "        ${COLOR_MUTED}▪ Manteniendo opencode.jsonc original.${NC}"
+        echo -e "        ${COLOR_MUTED}▪ Manteniendo opencode.json original.${NC}"
         SKIP_CONFIG=true
     fi
 fi
@@ -345,10 +345,30 @@ if [ "$SKIP_CONFIG" = false ]; then
     "question": "allow",
     "lsp": "allow"
   },
+  "lsp": {
+    "typescript": {
+      "command": [
+        "npx",
+        "typescript-language-server",
+        "--stdio"
+      ],
+      "extensions": [
+        ".ts",
+        ".tsx",
+        ".js",
+        ".jsx",
+        ".mjs",
+        ".cjs",
+        ".mts",
+        ".cts",
+        ".gs"
+      ]
+    }
+  },
   "agent": {
     "zugzbot": {
       "mode": "primary",
-      "model": "google/gemini-3.5-flash",
+      "model": "google/gemini-3-flash-preview",
       "variant": "medium",
       "permission": {
         "task": {
@@ -405,7 +425,7 @@ if [ "$SKIP_CONFIG" = false ]; then
     },
     "aux-handyman": {
       "mode": "subagent",
-      "model": "google/gemini-3.5-flash",
+      "model": "google/gemini-3-flash-preview",
       "variant": "medium",
       "permission": {
         "question": "allow",
@@ -415,7 +435,7 @@ if [ "$SKIP_CONFIG" = false ]; then
   }
 }
 EOF
-    echo -e "        ${COLOR_SUCCESS}✓ Archivo opencode.jsonc inyectado.${NC}"
+    echo -e "        ${COLOR_SUCCESS}✓ Archivo opencode.json inyectado.${NC}"
 fi
 
 # 5. Copy skills, workflows, commands and OpenSpec schemas
