@@ -372,62 +372,9 @@ if [ "$SKIP_CONFIG" = false ]; then
       "variant": "medium",
       "permission": {
         "task": {
-          "sdd-*": "allow"
+          "sdd-*": "allow",
+          "aux-*": "allow"
         },
-        "question": "allow",
-        "lsp": "allow"
-      }
-    },
-    "sdd-architect": {
-      "mode": "subagent",
-      "model": "google/gemini-3-flash-preview",
-      "variant": "medium",
-      "permission": {
-        "question": "allow",
-        "lsp": "allow"
-      }
-    },
-    "sdd-implementer": {
-      "mode": "subagent",
-      "model": "google/gemini-3.5-flash",
-      "variant": "medium",
-      "permission": {
-        "question": "allow",
-        "lsp": "allow"
-      }
-    },
-    "sdd-launcher": {
-      "mode": "subagent",
-      "model": "google/gemini-3-flash-preview",
-      "variant": "medium",
-      "permission": {
-        "question": "allow",
-        "lsp": "allow"
-      }
-    },
-    "sdd-release-manager": {
-      "mode": "subagent",
-      "model": "google/gemini-3-flash-preview",
-      "variant": "medium",
-      "permission": {
-        "question": "allow",
-        "lsp": "allow"
-      }
-    },
-    "aux-oracle": {
-      "mode": "subagent",
-      "model": "google/gemini-3-flash-preview",
-      "variant": "medium",
-      "permission": {
-        "question": "allow",
-        "lsp": "allow"
-      }
-    },
-    "aux-handyman": {
-      "mode": "subagent",
-      "model": "google/gemini-3-flash-preview",
-      "variant": "medium",
-      "permission": {
         "question": "allow",
         "lsp": "allow"
       }
