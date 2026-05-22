@@ -348,7 +348,7 @@ if [ "$SKIP_CONFIG" = false ]; then
   "agent": {
     "zugzbot": {
       "mode": "primary",
-      "model": "google/gemini-3-flash-preview",
+      "model": "google/gemini-3.5-flash",
       "variant": "medium",
       "permission": {
         "task": {

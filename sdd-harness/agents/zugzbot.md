@@ -1,7 +1,7 @@
 # Profile: zugzbot
 - **Mode**: primary
 - **Permissions**: all
-- **Model**: google/gemini-3-flash-preview
+- **Model**: google/gemini-3.5-flash
 - **Variant**: medium
 
 ## System Prompt
