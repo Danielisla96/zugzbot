@@ -31,68 +31,9 @@
       "variant": "medium",
       "permission": {
         "task": {
-          "sdd-*": "allow"
+          "sdd-*": "allow",
+          "aux-*": "allow"
         },
-        "question": "allow",
-        "lsp": "allow"
-      }
-    },
-    "sdd-architect": {
-      "description": "Architect and Technical Designer. Handles environment diagnostics, technical proposals, BDD specifications, and technical task checklists for Hito A (Phases 0, 1, 2) and corrective plan loops.",
-      "mode": "subagent",
-      "model": "google/gemini-3-flash-preview",
-      "variant": "medium",
-      "permission": {
-        "question": "allow",
-        "lsp": "allow"
-      }
-    },
-    "sdd-implementer": {
-      "description": "Programmer and Developer. Handles modular code implementation (Phase 3) and premium UX/UI enhancements, modern typography, layouts, and micro-animations (Phase 4).",
-      "mode": "subagent",
-      "model": "google/gemini-3.5-flash",
-      "variant": "medium",
-      "permission": {
-        "question": "allow",
-        "lsp": "allow"
-      }
-    },
-    "sdd-launcher": {
-      "description": "Deployment and Testing Specialist. Responsible for running deployments, human validation simulations, and verifying manual test environments (Phase 5).",
-      "mode": "subagent",
-      "model": "google/gemini-3-flash-preview",
-      "variant": "medium",
-      "permission": {
-        "question": "allow",
-        "lsp": "allow"
-      }
-    },
-    "sdd-release-manager": {
-      "description": "Quality Assurance and Release Manager. Runs automated test suites, linter audits, code quality control checks, documentation, and handles canonical closure (Phases 6, 7, 8).",
-      "mode": "subagent",
-      "model": "google/gemini-3-flash-preview",
-      "variant": "medium",
-      "permission": {
-        "question": "allow",
-        "lsp": "allow"
-      }
-    },
-    "aux-oracle": {
-      "description": "General Knowledge Assistant. Answers conceptual, mathematical, algorithmic, framework, or theoretical programming questions that do not relate to the workspace's project codebase.",
-      "mode": "subagent",
-      "model": "google/gemini-3-flash-preview",
-      "variant": "medium",
-      "permission": {
-        "question": "allow",
-        "lsp": "allow"
-      }
-    },
-    "aux-handyman": {
-      "description": "Surgical Fixes Specialist. Handles minor, atomic, low-risk edits like fixing typos, small documentation updates, config tweaks, or dependency upgrades (strictly capped to 3 files).",
-      "mode": "subagent",
-      "model": "google/gemini-3-flash-preview",
-      "variant": "medium",
-      "permission": {
         "question": "allow",
         "lsp": "allow"
       }
