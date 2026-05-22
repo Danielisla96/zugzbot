@@ -51,3 +51,11 @@ Este archivo es la memoria colectiva a largo plazo de este repositorio. Todo sub
 - **Lectura Obligatoria**: Al ser activado en tu fase, es tu responsabilidad prioritaria leer el archivo `.openspec/brain.md` y `.openspec/prompt_base.md` en el proyecto.
 - **Respeto de Directivas**: Adapta minuciosamente todas tus propuestas, diseños, implementación de código, configuraciones de servidor local y pruebas automatizadas a las restricciones del stack y reglas de simulación especificadas en el cerebro. Tienes estrictamente prohibido ignorar directrices que conduzcan a la regresión de errores históricos.
 - **Aprendizaje Continuo**: Al final del ciclo de vida en la Fase 7 (`@sdd-release-manager`), debes consolidar cualquier nueva lección aprendida, bug resuelto que requiera un patrón de diseño especial, o nuevos mocks requeridos en localhost, escribiéndolos quirúrgicamente dentro de la sección "Registro Histórico de Lecciones Aprendidas" de `.openspec/brain.md`.
+
+---
+
+## 🛡️ 5. Política de Seguridad Mandatoria: Cooldown de Dependencias (3 Días / 4320 Minutos)
+
+Para mitigar riesgos de ataques a la cadena de suministro, inyección de malware y virus de día cero en dependencias recién publicadas, se establece la siguiente norma de carácter obligatorio:
+- **Período de Cooldown de 4320 Minutos**: Queda estrictamente **PROHIBIDO** proponer, importar, configurar o instalar cualquier paquete, librería, módulo o dependencia nueva (en Node/npm, Python/pip, u otro gestor) que haya sido publicada o actualizada en los últimos 3 días (4320 minutos).
+- **Resolución de Versiones**: Al requerir una nueva librería, los agentes deben comprobar activamente las fechas de publicación y seleccionar de forma mandatoria una versión previa segura que cumpla estrictamente con este período de cooldown (la máxima versión publicada hace más de 3 días). Esta regla se aplica rigurosamente y sin excepciones.

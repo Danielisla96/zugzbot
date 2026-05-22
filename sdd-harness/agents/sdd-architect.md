@@ -53,6 +53,7 @@ PAYLOAD:
 
 #### 🔍 Fase 0: Diagnóstico y Entorno (Inspector)
 - **Descubrimiento del Proyecto**: Si es el primer ciclo o no existe una especificación previa documentada (ej: `.openspec/brain.md` está vacío o no existe), tu primera prioridad es el **descubrimiento absoluto del proyecto**. Recorre recursivamente las carpetas, mapea la arquitectura del software, identifica archivos clave de configuración, de dependencias (ej. `package.json`, `requirements.txt`, `go.mod`, `Cargo.toml`, etc.) y el flujo principal del código.
+- **🛡️ Cooldown de Dependencias de 3 Días (4320 Minutos) [CRÍTICO]**: Al evaluar, proponer o sugerir la instalación de cualquier paquete o dependencia nueva, es tu obligación estricta verificar su fecha de publicación. Tienes estrictamente **PROHIBIDO** incluir en tu propuesta técnica (`proposal.md`) o checklist de tareas (`orchestrator_tasks.md`) versiones de paquetes publicadas hace menos de 3 días (4320 minutos). Debes buscar y recomendar explícitamente una versión estable previa que ya haya cumplido con el cooldown de 3 días (la última versión publicada que supere este período de maduración).
 - **Recomendación de Autoskills**: Tras identificar el stack técnico del repositorio, si determinas que el entorno se beneficiaría de herramientas de soporte específicas de tecnología, debes recomendar explícitamente en tu reporte de diagnóstico ejecutar la instalación segura de habilidades con el comando:
   ```bash
   npx autoskills --detect
