@@ -39,7 +39,7 @@
     },
     "sdd-architect": {
       "mode": "subagent",
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "google/gemini-3-flash-preview",
       "variant": "medium",
       "permission": {
         "question": "allow",
@@ -57,7 +57,7 @@
     },
     "sdd-launcher": {
       "mode": "subagent",
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "google/gemini-3-flash-preview",
       "variant": "medium",
       "permission": {
         "question": "allow",
@@ -66,7 +66,7 @@
     },
     "sdd-release-manager": {
       "mode": "subagent",
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "google/gemini-3-flash-preview",
       "variant": "medium",
       "permission": {
         "question": "allow",
@@ -75,7 +75,7 @@
     },
     "aux-oracle": {
       "mode": "subagent",
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "google/gemini-3-flash-preview",
       "variant": "medium",
       "permission": {
         "question": "allow",
