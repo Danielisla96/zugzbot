@@ -251,15 +251,18 @@ Tras ejecutar la instalación, tu repositorio quedará configurado localmente co
 
 ```
 tu-proyecto/
-├── .opencode/
-│   ├── agents/              # Prompts de sistema e instrucciones de los subagentes consolidados
-│   │   ├── sdd-architect.md     # Instrucciones del Arquitecto (Fases 0 a 2 + LSP)
-│   │   ├── sdd-implementer.md   # Reglas del Programador (Lógica + UI/UX Premium)
-│   │   ├── sdd-launcher.md      # Instrucciones del Ingeniero de Plataforma (Fase 5)
-│   │   └── sdd-release-manager.md # Instrucciones de Cierre, QA y Git Semántico (Fases 6 a 8)
-│   ├── commands/            # Configuración de comandos slash integrados
-│   ├── mcp-config.json      # Configuración local de servidores MCP
-│   └── skills/              # Habilidades e integraciones en caliente de OpenCode
+ ├── .opencode/
+ │   ├── agents/              # Prompts de sistema e instrucciones de los agentes consolidados
+ │   │   ├── zugzbot.md           # Orquestador Maestro, Vocero Oficial y Guardián Didáctico
+ │   │   ├── sdd-architect.md     # Arquitecto de Software y Diseñador Técnico (Fases 0 a 2)
+ │   │   ├── sdd-implementer.md   # Programador y Desarrollador especialista (Fases 3 y 4)
+ │   │   ├── sdd-launcher.md      # Ingeniero de Entornos y Despliegue Local (Fase 5)
+ │   │   ├── sdd-release-manager.md # QA Lead y Technical Writer (Fases 6 a 8)
+ │   │   ├── aux-oracle.md        # Asistente de Conocimiento General y Consultas Teóricas
+ │   │   └── aux-handyman.md      # Asistente de Tareas Rápidas y No Estructurales
+ │   ├── commands/            # Configuración de comandos slash integrados
+ │   ├── mcp-config.json      # Configuración local de servidores MCP
+ │   └── skills/              # Habilidades e integraciones en caliente de OpenCode
 ├── .openspec/
 │   ├── changes/             # Historial y directorio de cambios activos (Specs BDD y tareas)
 │   ├── schemas/             # Esquemas JSON de validación estructural
