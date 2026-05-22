@@ -66,8 +66,15 @@ Para evitar ventanas emergentes concurrentes y flujos bloqueados en segundo plan
 1. **Prohibición de Comunicación Directa**: Todos los subagentes (`@sdd-architect`, `@sdd-implementer`, `@sdd-launcher`, `@sdd-release-manager`) tienen **estrictamente prohibido** invocar de forma directa la herramienta `question` o formular consultas directas al desarrollador.
 2. **Protocolo de Burbuja de Pregunta**: Si un subagente requiere aclarar un requerimiento, esperar una instrucción o solicitar confirmación, debe **detener su ejecución de inmediato** y retornar al Orquestador Maestro (`zugzbot`) un bloque estructurado YAML con la pregunta.
 3. **Zugzbot como el Vocero Único**: El orquestador es el único canal oficial autorizado. Zugzbot presentará al desarrollador la pregunta en su nombre usando la herramienta nativa `question` de OpenCode, y le inyectará la respuesta en una nueva invocación del subagente.
-4. **Retorno Explícito de Token (Mención Obligatoria a @zugzbot)**: Para evitar que el agente genérico de la plataforma (`"general"`) intercepte el flujo de chat, **todo subagente que termine su turno de ejecución (ya sea por haber finalizado su fase o por detenerse ante una duda) DEBE finalizar su mensaje mencionando explícitamente a `@zugzbot`** (ej: *`@zugzbot Hito completado. Presenta el resumen al usuario.`* o *`@zugzbot Duda de diseño detectada. Por favor consulta al desarrollador.`*). Esto obliga al despachador de OpenCode a entregar el token de turno directamente a Zugzbot en el siguiente paso.
+4. **💬 Protocolo Estricto de Handoff y Vocería**:
+   - **El Orquestador (`@zugzbot`)** delegará obligatoriamente con el formato rígido: 
+     `"soy zugz, te pido <tarea>. al finalizar respondeme etiquetandome con los datos resumidos y con el path de openspec donde dejaste tu analisis o resultados."`
+   - **El Subagente** responderá obligatoriamente con el formato rígido: 
+     `"soy <subagent_name>, aca va mi respuesta: <respuesta_y_metadatos>. esto esta listo para pasarselo a <subagent_downstream> (el paso que viene)"`
+   - **Mapeo Downstream**: `@sdd-architect` $\rightarrow$ `@sdd-implementer`, `@sdd-implementer` $\rightarrow$ `@sdd-launcher`, `@sdd-launcher` $\rightarrow$ `@sdd-release-manager` (o `@sdd-architect` si falla), `@sdd-release-manager` $\rightarrow$ `@zugzbot`.
+5. **Retorno Explícito de Token (Mención Obligatoria a @zugzbot)**: Para evitar que el agente genérico de la plataforma (`"general"`) intercepte el flujo de chat, **todo subagente que termine su turno de ejecución (ya sea por haber finalizado su fase, auto-compactación o por detenerse ante una duda) DEBE finalizar su mensaje mencionando explícitamente a `@zugzbot`** (ej: *`@zugzbot Hito completado. Presenta el resumen al usuario.`* o *`@zugzbot Duda de diseño detectada. Por favor consulta al desarrollador.`*). Esto obliga al despachador de OpenCode a entregar el token de turno directamente a Zugzbot en el siguiente paso.
 
+---
 
 ## 📊 PROTOCOLO DE PREGUNTAS INTERACTIVAS (ZERO-TYPE UX NATIVO DE OPENCODE)
 Para maximizar la agilidad del desarrollador humano y permitirle responder con clics y teclado rápido:
@@ -104,23 +111,13 @@ Todos los subagentes deben aplicar de forma severa y constante principios de des
 
 ---
 
-## 🧹 REGLA DE COMPACTACIÓN DE CONTEXTO (PREVENCIÓN DE DEGRADACIÓN TÉCNICA)
-
+## 🧹 REGLA DE COMPACTACIÓN DE CONTEXTO Y AUTO-COMPACTACIÓN POR FASE
 Para evitar la pérdida de razonamiento del modelo debido a la acumulación de historial en sesiones largas o bucles iterativos complejos:
 1. **Detección Proactiva de Límite**: Si el historial de chat acumulado supera el 50% de la ventana de contexto de tu modelo (o si empiezas a notar pérdida de memoria, repeticiones o desvíos de tus instrucciones), debes activar inmediatamente el protocolo de compactación.
-2. **Generación de Snapshot Consolidado**: Escribe de forma mandatoria un resumen exhaustivo en el archivo `.openspec/changes/<change-name>/compaction_snapshot.md` conteniendo:
-   - **Objetivo de la Tarea**: Qué requerimiento o corrección estamos ejecutando.
-   - **Ficheros Afectados e Implementaciones**: Qué se modificó, qué código está en pie y qué lógicas ya se cubrieron.
-   - **Errores de Compilación o Calidad**: El log exacto del linter, tests o compilador que estén fallando de forma activa.
-   - **Checklist de Próximos Pasos**: Tareas específicas restantes para culminar con éxito la fase o el hito actual.
-3. **Detención y Salida YAML Estructurada**: Retorna inmediatamente el control a `@zugzbot` imprimiendo el bloque con estado `COMPACTION_REQUIRED` al final de tu respuesta:
-   ```yaml
-   ---
-   SDD_STATUS: COMPACTION_REQUIRED
-   REASON: "El contexto acumulado excede el 50% de la ventana soportada. Snapshot guardado en compaction_snapshot.md."
-   SNAPSHOT_PATH: ".openspec/changes/<change-name>/compaction_snapshot.md"
-   ---
-   @zugzbot Compactación de contexto requerida. Por favor, detén la ejecución y solicita al desarrollador que limpie el historial y refresque la sesión.
-   ```
-4. **Resumir con el Historial Limpio**: Al iniciarse una sesión fresca post-compactación, lee prioritariamente el snapshot consolidado para heredar el 100% del estado técnico acumulado y reanudar el desarrollo con un contexto de modelo completamente libre.
+2. **Auto-Compactación Obligatoria al Finalizar Fase**:
+   - Al completar exitosamente tu fase y checklist de tareas, **tienes estrictamente prohibido** dejar la sesión cargada para el siguiente agente.
+   - **Debes generar de forma mandatoria** un snapshot de consolidación detallado en `.openspec/changes/<change-name>/compaction_snapshot.md` con los entregables y estado de código actual.
+   - Detén tu turno retornando el control a `@zugzbot` con el estado primario **`COMPACTION_REQUIRED`**, especificando en la variable **`NEXT_PHASE_STATUS`** de los metadatos YAML el estado real de hito que corresponde (ej: `HITO_A_COMPLETED`, `CORRECTIVE_PLAN_READY` o `SUCCESS`).
+   - Esto pausa el flujo y guía al desarrollador a borrar el historial del chat para que la siguiente fase se ejecute con una sesión de modelo fresca e impecable.
+3. **Resumir con el Historial Limpio**: Al iniciarse una sesión fresca post-compactación, lee prioritariamente el snapshot consolidado para heredar el 100% del estado técnico acumulado y reanudar el desarrollo con un contexto de modelo completamente libre.
 

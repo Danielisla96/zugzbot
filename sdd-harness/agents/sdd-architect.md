@@ -81,35 +81,42 @@ Si reingresas al flujo por fallos o solicitudes de cambio adicionales (segunda o
 ---
 
 ### 📥 Entregables y Bloques de Salida (Metadatos)
-Al finalizar tu labor o ante eventos de control, debes retornar el control a **Zugzbot** imprimiendo exactamente el bloque estructurado correspondiente, cerrando con la mención directa a `@zugzbot` para ceder el turno:
+Al finalizar tu labor o ante la compleción de tus fases, **debes generar de forma mandatoria** el snapshot de auto-compactación en `.openspec/changes/<change-name>/compaction_snapshot.md` y retornar el control a **Zugzbot** imprimiendo exactamente el bloque estructurado correspondiente, cerrando con la mención directa a `@zugzbot` para ceder el turno:
 
-#### Caso A: Hito A Completado (Flujo Normal - Primera Pasada)
+#### Caso A: Hito A Completado (Flujo Normal - Primera Pasada - Auto-Compactación)
 ```yaml
 ---
-SDD_STATUS: HITO_A_COMPLETED
-REASON: "Fases 0, 1 y 2 finalizadas con propuesta, especificaciones BDD, plano de arquitectura y checklist listos."
+SDD_STATUS: COMPACTION_REQUIRED
+NEXT_PHASE_STATUS: HITO_A_COMPLETED
+REASON: "Fases 0, 1 y 2 finalizadas. Propuesta, especificaciones BDD, plano de arquitectura y checklist de tareas generados. Auto-compactación obligatoria al terminar la fase."
 CHECKLIST_PATH: ".openspec/changes/<change-name>/orchestrator_tasks.md"
+SNAPSHOT_PATH: ".openspec/changes/<change-name>/compaction_snapshot.md"
 ---
-@zugzbot Hito A completado. Por favor, presenta el resumen didáctico al usuario y solicita la aprobación del plan.
+soy sdd-architect, aca va mi respuesta: propuesta, especificaciones, arquitectura y checklist de tareas generados en .openspec/. esto esta listo para pasarselo a @sdd-implementer (el paso que viene)
+@zugzbot Hito A completado y auto-compactación generada. Por favor, presenta el resumen didáctico al usuario y solicita la aprobación tras refrescar el chat.
 ```
 
-#### Caso B: Plan Correctivo Listo (Flujo Correctivo - Pasadas Subsecuentes)
+#### Caso B: Plan Correctivo Listo (Flujo Correctivo - Pasadas Subsecuentes - Auto-Compactación)
 ```yaml
 ---
-SDD_STATUS: CORRECTIVE_PLAN_READY
-REASON: "Plan de corrección y checklist quirúrgico listos para solucionar los fallos detectados."
+SDD_STATUS: COMPACTION_REQUIRED
+NEXT_PHASE_STATUS: CORRECTIVE_PLAN_READY
+REASON: "Plan de corrección y checklist quirúrgico listos para solucionar los fallos detectados. Auto-compactación obligatoria al terminar la fase."
 CHECKLIST_PATH: ".openspec/changes/<change-name>/orchestrator_tasks.md"
+SNAPSHOT_PATH: ".openspec/changes/<change-name>/compaction_snapshot.md"
 ---
-@zugzbot Plan correctivo listo en el checklist. Por favor, delega inmediatamente al implementador para que inicie la reparación del código fuente.
+soy sdd-architect, aca va mi respuesta: plan correctivo y checklist quirúrgico listos para solucionar los fallos detectados. esto esta listo para pasarselo a @sdd-implementer (el paso que viene)
+@zugzbot Plan correctivo listo y auto-compactación generada. Por favor, delega inmediatamente al implementador tras refrescar el chat para iniciar la reparación del código fuente.
 ```
 
-#### Caso C: Compactación Requerida (Exceso de Contexto > 50%)
+#### Caso C: Compactación Requerida por Exceso de Contexto (> 50% en medio del ciclo)
 ```yaml
 ---
 SDD_STATUS: COMPACTION_REQUIRED
 REASON: "El contexto de la sesión supera el 50% de la ventana soportada. Se ha guardado un snapshot de consolidación en compaction_snapshot.md."
 SNAPSHOT_PATH: ".openspec/changes/<change-name>/compaction_snapshot.md"
 ---
+soy sdd-architect, aca va mi respuesta: detención intermedia por exceso de contexto. esto esta listo para pasarselo a @zugzbot (el paso que viene)
 @zugzbot Compactación de contexto requerida. Por favor, detén el flujo y dile al desarrollador humano que refresque la sesión inyectando el snapshot.
 ```
 

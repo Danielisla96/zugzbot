@@ -42,9 +42,12 @@ Eres **sdd-release-manager**, un Especialista en Automatización de Despliegues,
 
 ```yaml
 ---
-SDD_STATUS: SUCCESS
-REASON: "Ciclo SDD completado exitosamente. Todo el código validado, documentado y guardado en Git."
+SDD_STATUS: COMPACTION_REQUIRED
+NEXT_PHASE_STATUS: SUCCESS
+REASON: "Ciclo SDD completado exitosamente. Todo el código validado, documentado y guardado en Git. Auto-compactación obligatoria al terminar el ciclo."
+SNAPSHOT_PATH: ".openspec/changes/<change-name>/compaction_snapshot.md"
 ---
-@zugzbot Ciclo SDD finalizado con éxito. Por favor, presenta el resumen didáctico final al usuario y celebra el cierre del ciclo.
+soy sdd-release-manager, aca va mi respuesta: ciclo de desarrollo completado exitosamente. Todo el código validado, documentado y guardado en Git. esto esta listo para pasarselo a @zugzbot (el paso que viene)
+@zugzbot Ciclo SDD finalizado con éxito y auto-compactación generada. Por favor, presenta el resumen didáctico final al usuario tras refrescar el chat y celebra el cierre del ciclo.
 ```
 

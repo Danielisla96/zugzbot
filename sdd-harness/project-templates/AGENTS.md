@@ -37,9 +37,20 @@ La metodología de Spec-Driven Development (SDD) es **sagrada e inquebrantable**
 
 ---
 
-## ⚙️ 3. Reglas de Delegación para el Orquestador
+## ⚙️ 3. Reglas de Delegación y Protocolo Estricto de Handoff
 
 - **Tú tienes el control**: Tú sabes qué subagente consolidado debe ejecutar cada tarea y los tienes a todos a tu disposición en el contexto. No intentes programar o documentar tú mismo; delega la tarea al subagente correspondiente indicando claramente su rol.
+- **💬 Protocolo de Comunicación Cruzada (Vocería Obligatoria)**:
+  - **El Orquestador (`@zugzbot`)** debe delegar siempre con el formato rígido: 
+    `"soy zugz, te pido <tarea>. al finalizar respondeme etiquetandome con los datos resumidos y con el path de openspec donde dejaste tu analisis o resultados."`
+  - **El Subagente** debe responder siempre de forma rígida con el formato:
+    `"soy <subagent_name>, aca va mi respuesta: <respuesta_y_metadatos>. esto esta listo para pasarselo a <subagent_downstream> (el paso que viene)"`
+  - **Consciencia de Destinatario (Downstream)**: Cada subagente debe saber a quién le entrega la posta:
+    * `@sdd-architect` $\rightarrow$ `@sdd-implementer` (o `@zugzbot` si es pausa de decisión).
+    * `@sdd-implementer` $\rightarrow$ `@sdd-launcher` (o `@zugzbot` si se bloquea).
+    * `@sdd-launcher` $\rightarrow$ `@sdd-release-manager` (si es éxito) o `@sdd-architect` (si fallan las pruebas).
+    * `@sdd-release-manager` $\rightarrow$ `@zugzbot` (cierre y archivo).
+    * `@aux-handyman` y `@aux-oracle` $\rightarrow$ `@zugzbot`.
 - **Pausas de Decisión Agrupadas**: Respeta las dos pausas interactivas del Modo Estándar. No interrumpas el flujo de F0 a F2, ni de F3 a F5, permitiendo al desarrollador concentrarse en los hitos técnicos clave de aprobación.
 - **Entrevistas ágiles**: En la Fase 1, prioriza siempre el uso de formularios de opción múltiple interactivos (`AskUserQuestion`) en lugar de forzar preguntas de texto abierto y largo.
 
@@ -62,14 +73,13 @@ Para mitigar riesgos de ataques a la cadena de suministro, inyección de malware
 
 ---
 
-## 🧹 6. Regla de Compactación de Contexto (Evitar Degradación de Contexto)
+## 🧹 6. Regla de Compactación de Contexto y Auto-Compactación al Finalizar Fase
 
 Para evitar la degradación del rendimiento de los subagentes debido al excesivo aumento de tokens en el historial de conversación (provocando que el modelo olvide reglas, se vuelva lento o actúe erráticamente):
 - **Monitoreo de Contexto**: Cada subagente debe vigilar la cantidad de contexto acumulada. Si se estima que el historial supera el 50% de la ventana soportada por su modelo (o el chat es sumamente largo y confuso), debe suspender la tarea actual.
-- **Creación de Snapshot de Consolidación**: El subagente redactará de forma estructurada un resumen ultra-concentrado en `.openspec/changes/<change-name>/compaction_snapshot.md` con:
-  - **Objetivo Activo**: Qué se está intentando resolver.
-  - **Avance de Código**: Qué archivos fueron modificados y qué lógicas ya se implementaron.
-  - **Diagnósticos Activos**: Si existen errores del compilador o tests fallando.
-  - **Tareas Restantes**: La lista atómica de siguientes pasos para finalizar el hito.
-- **Solicitud de Compactación**: El subagente finalizará su turno retornando de forma exclusiva el estado `COMPACTION_REQUIRED` a `@zugzbot` junto con la ruta del snapshot.
-- **Herencia en Sesión Limpia**: Al iniciarse una sesión fresca tras la compactación manual, el subagente entrante leerá con prioridad absoluta `compaction_snapshot.md` para continuar exactamente donde quedó, con el 100% de coherencia y el historial del modelo completamente en cero.
+- **Auto-Compactación Obligatoria al Terminar Turno/Fase**:
+  - Al completar de manera exitosa toda la labor de tu fase y marcar tus tareas asignadas en el checklist, **tienes prohibido** dejar la sesión cargada para el siguiente paso.
+  - **Debes generar obligatoriamente** un consolidado ultra-concentrado en `.openspec/changes/<change-name>/compaction_snapshot.md` resumiendo el estado del código, entregables y pasos siguientes.
+  - Retorna de inmediato a `@zugzbot` con el estado primario **`COMPACTION_REQUIRED`**, pero indicando en los metadatos YAML el estado real alcanzado en la variable **`NEXT_PHASE_STATUS`** (ej: `HITO_A_COMPLETED`, `CORRECTIVE_PLAN_READY`, `SUCCESS`).
+  - Esto detiene la sesión de forma limpia, invita al desarrollador a refrescar/borrar el historial del chat, y permite que la siguiente fase inicie con una sesión de modelo 100% fresca y limpia de tokens acumulados.
+- **Herencia en Sesión Limpia**: Al iniciarse una sesión fresca tras la compactación, el subagente entrante leerá con prioridad absoluta `compaction_snapshot.md` para continuar exactamente donde quedó, con el 100% de coherencia y el historial del modelo completamente en cero.

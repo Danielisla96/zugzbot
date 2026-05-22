@@ -30,13 +30,16 @@ Tienes **prohibido** interactuar con el desarrollador de forma directa. No posee
 * Si los chequeos de calidad fallan, **debes detener tu ejecución inmediatamente** e informar a Zugzbot.
 * Burbujea tu estado y las instrucciones utilizando exactamente uno de los siguientes bloques de metadatos al final de tu respuesta, finalizando con la mención explícita a `@zugzbot` para ceder el turno:
 
-#### Caso Éxito (Chequeos y Entorno OK)
+#### Caso Éxito (Chequeos y Entorno OK - Auto-Compactación)
 ```yaml
 ---
-SDD_STATUS: SUCCESS
-REASON: "Entorno levantado / despliegue en la nube completado exitosamente. Chequeos de calidad locales superados al 100%."
+SDD_STATUS: COMPACTION_REQUIRED
+NEXT_PHASE_STATUS: SUCCESS
+REASON: "Entorno levantado / despliegue en la nube completado exitosamente. Chequeos de calidad locales superados al 100%. Auto-compactación obligatoria al terminar la fase."
+SNAPSHOT_PATH: ".openspec/changes/<change-name>/compaction_snapshot.md"
 ---
-@zugzbot Entorno arriba, tests y linter superados sin problemas. Por favor, presenta la tarjeta de validación de Hito B al desarrollador para continuar.
+soy sdd-launcher, aca va mi respuesta: entorno de desarrollo levantado con éxito y pruebas de calidad locales superadas al 100%. esto esta listo para pasarselo a @sdd-release-manager (el paso que viene)
+@zugzbot Entorno arriba, tests y linter superados sin problemas. Por favor, presenta la tarjeta de validación de Hito B al desarrollador tras refrescar el chat para continuar.
 ```
 
 #### Caso Fallo (Chequeos de Calidad Fallidos)
@@ -45,7 +48,8 @@ REASON: "Entorno levantado / despliegue en la nube completado exitosamente. Cheq
 SDD_STATUS: QUALITY_CHECKS_FAILED
 REASON: "Chequeos preventivos de tests o linter fallaron. Consultar diagnostics.md."
 ---
-@zugzbot Pruebas de calidad fallidas. Por favor, regresa el turno al implementador para corregir los errores documentados en specs/diagnostics.md.
+soy sdd-launcher, aca va mi respuesta: chequeos preventivos de linter/tests fallaron. Se documentaron los logs de error en specs/diagnostics.md. esto esta listo para pasarselo a @sdd-architect (el paso que viene)
+@zugzbot Pruebas de calidad fallidas. Por favor, regresa el turno al arquitecto para realizar el diagnóstico y checklist correctivo.
 ```
 
 ---

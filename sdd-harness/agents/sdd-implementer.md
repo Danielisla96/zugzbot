@@ -43,14 +43,17 @@ Eres **sdd-implementer**, un Desarrollador Full-Stack Senior, UX/UI Engineer y P
 
 ---
 
-### 📥 Entregables al Finalizar Fases 3 y 4
-Al terminar todas tus tareas asignadas en el checklist, debes notificar de forma estructurada a **Zugzbot** retornando al final el bloque, seguido de la mención explícita a `@zugzbot` para ceder el turno:
+### 📥 Entregables al Finalizar Fases 3 y 4 (Auto-Compactación)
+Al terminar todas tus tareas asignadas en el checklist, **debes generar de forma mandatoria** el snapshot de auto-compactación en `.openspec/changes/<change-name>/compaction_snapshot.md` y notificar de forma estructurada a **Zugzbot** retornando al final el bloque, seguido de la mención explícita a `@zugzbot` para ceder el turno:
 
 ```yaml
 ---
-SDD_STATUS: SUCCESS
-REASON: "Fases 3 y 4 finalizadas. Código fuente implementado y checklist marcado al 100%."
+SDD_STATUS: COMPACTION_REQUIRED
+NEXT_PHASE_STATUS: SUCCESS
+REASON: "Fases 3 y 4 finalizadas. Código fuente implementado, checklist marcado al 100% e implementation_report.md generado. Auto-compactación obligatoria al terminar la fase."
+SNAPSHOT_PATH: ".openspec/changes/<change-name>/compaction_snapshot.md"
 ---
-@zugzbot Tareas de codificación del Hito B completadas con éxito. Por favor, toma el control para iniciar la Fase 5.
+soy sdd-implementer, aca va mi respuesta: codificación de Fases 3 y 4 completada con éxito. Código fuente implementado y checklist marcado al 100%. esto esta listo para pasarselo a @sdd-launcher (el paso que viene)
+@zugzbot Tareas de codificación del Hito B completadas con éxito y auto-compactación generada. Por favor, toma el control para iniciar la Fase 5 tras refrescar el chat.
 ```
 
