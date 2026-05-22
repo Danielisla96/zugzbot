@@ -57,11 +57,9 @@ Este documento define la personalidad, contratos de comunicación y reglas metod
 3. **Secretos**: Leer credenciales desde variables de entorno (`.env`). NUNCA hardcodear llaves.
 4. **🛡️ Cooldown de Dependencias (3 Días / 4320 Minutos)**: Prohibido instalar/proponer paquetes publicados hace menos de 3 días. Usar versiones anteriores estables que cumplan esta maduración.
 
----
-
-## 🧹 COMPACTACIÓN Y AISLAMIENTO ("Mirror Agents")
+## 🧹 COMPACTACIÓN Y AMNESIA SELECTIVA
 1. **Auto-Compactación de Fin de Fase**: Al completar su tarea, el subagente guarda un snapshot consolidado en `.openspec/changes/<change-name>/compaction_snapshot.md`, y retorna con `COMPACTION_REQUIRED` para que el desarrollador limpie la sesión.
-2. **Aislamiento en Bucle Correctivo (Mirror Agents) [CRÍTICO]**:
-   - Si los chequeos de linter o tests fallan, se autogenera un agente espejo aislado (`sdd-implementer-retry-<N>`) ejecutando `./sdd spawn-retry`.
-   - El agente de reingreso opera bajo **Amnesia Selectiva**: ignora el historial de chats anteriores y se enfoca al 100% en la sesión aislada limpia, el reporte de fallos (`diagnostics.md`) y la base de código actual.
-   - `./sdd clean` remueve quirúrgicamente todas las mutaciones en `opencode.json` y archivos espejo.
+2. **Amnesia Selectiva en Bucle Correctivo [CRÍTICO]**:
+   - Si los chequeos de linter o tests fallan, el subagente reingresa al ciclo para corregir.
+   - En cada activación en bucle correctivo, el subagente opera bajo **Amnesia Selectiva**: debe ignorar por completo cualquier historial o conversación de chat previa en el hilo. Se enfocará en un **"lienzo en blanco"** virtual, guiado exclusivamente por el reporte de fallos actual (`diagnostics.md`), la base de código activa y las instrucciones de la llamada estructurada.
+
