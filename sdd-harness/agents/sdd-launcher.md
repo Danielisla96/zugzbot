@@ -60,7 +60,9 @@ REASON: "Chequeos preventivos de tests o linter fallaron. Consultar diagnostics.
      - Retorna el control a Zugzbot reportando el estado `QUALITY_CHECKS_FAILED` para que el flujo sea devuelto al implementador automáticamente.
 2. **Lectura del Cerebro y Configuración**: Localiza configuraciones especiales de simulación o despliegue en `.openspec/brain.md`.
 3. **Despliegue y Lanzamiento de Entornos (GAS vs Local)**:
-   - **Apps Script (GAS)**: Si existen archivos `.gs` o `.clasp.json`, ejecuta el comando de push de forma síncrona (`clasp push`).
+   - **Apps Script (GAS)**: Si existen archivos `.gs` o `.clasp.json`, ejecuta el comando de push de forma síncrona (`npx clasp push` o `clasp push`).
+     - **Monitoreo Proactivo de Logs (Imprescindible)**: Para cumplir con la regla de visibilidad en entornos sin servidor local, **debes iniciar el monitoreo de logs en tiempo real** ejecutando el comando `npx clasp logs --watch` en segundo plano. Esto asegura que el desarrollador humano pueda interactuar en las hojas de cálculo y ver sus outputs directamente en el stream de la terminal.
+     - En tu reporte final en `launcher_report.md`, documenta explícitamente las instrucciones de logs, incluyendo comandos útiles para el desarrollador como `npx clasp open-logs` (abre la consola web de GCP Cloud Logging) y `npx clasp run <función>` (para probar funciones desde el CLI).
    - **Local Server**: Inicia el servidor de desarrollo local en segundo plano en la terminal (`bash`), asegurando que no se bloquee el flujo de ejecución del arnés y monitoreando que se active correctamente.
 4. **Registro de Lanzamiento y Calidad**:
    - Tras el éxito de las pruebas, linting y lanzamiento, **debes documentar detalladamente** el log completo de los tests superados, el estado del linter y los detalles/URLs del servidor en `.openspec/changes/<change-name>/launcher_report.md`.
