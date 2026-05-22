@@ -289,7 +289,8 @@ La instalación es **100% local, no intrusiva y contenida** dentro del directori
 Navega a la raíz del repositorio de tu proyecto destino y ejecuta el siguiente comando en la terminal:
 
 ```bash
-git clone --depth 1 -b fix/v2 https://github.com/Danielisla96/zugzbot.git /tmp/zugzbot-harness \
+rm -rf /tmp/zugzbot-harness \
+  && git clone --depth 1 -b fix/v2 https://github.com/Danielisla96/zugzbot.git /tmp/zugzbot-harness \
   && /tmp/zugzbot-harness/sdd-harness/bootstrap-sdd.sh \
   && rm -rf /tmp/zugzbot-harness
 ```
