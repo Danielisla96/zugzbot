@@ -380,7 +380,7 @@ if [ "$SKIP_CONFIG" = false ]; then
     },
     "sdd-architect": {
       "mode": "subagent",
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "google/gemini-3-flash-preview",
       "variant": "medium",
       "permission": {
         "question": "allow",
@@ -398,7 +398,7 @@ if [ "$SKIP_CONFIG" = false ]; then
     },
     "sdd-launcher": {
       "mode": "subagent",
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "google/gemini-3-flash-preview",
       "variant": "medium",
       "permission": {
         "question": "allow",
@@ -407,7 +407,7 @@ if [ "$SKIP_CONFIG" = false ]; then
     },
     "sdd-release-manager": {
       "mode": "subagent",
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "google/gemini-3-flash-preview",
       "variant": "medium",
       "permission": {
         "question": "allow",
@@ -416,7 +416,7 @@ if [ "$SKIP_CONFIG" = false ]; then
     },
     "aux-oracle": {
       "mode": "subagent",
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "google/gemini-3-flash-preview",
       "variant": "medium",
       "permission": {
         "question": "allow",
