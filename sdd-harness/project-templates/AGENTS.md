@@ -59,3 +59,17 @@ Este archivo es la memoria colectiva a largo plazo de este repositorio. Todo sub
 Para mitigar riesgos de ataques a la cadena de suministro, inyección de malware y virus de día cero en dependencias recién publicadas, se establece la siguiente norma de carácter obligatorio:
 - **Período de Cooldown de 4320 Minutos**: Queda estrictamente **PROHIBIDO** proponer, importar, configurar o instalar cualquier paquete, librería, módulo o dependencia nueva (en Node/npm, Python/pip, u otro gestor) que haya sido publicada o actualizada en los últimos 3 días (4320 minutos).
 - **Resolución de Versiones**: Al requerir una nueva librería, los agentes deben comprobar activamente las fechas de publicación y seleccionar de forma mandatoria una versión previa segura que cumpla estrictamente con este período de cooldown (la máxima versión publicada hace más de 3 días). Esta regla se aplica rigurosamente y sin excepciones.
+
+---
+
+## 🧹 6. Regla de Compactación de Contexto (Evitar Degradación de Contexto)
+
+Para evitar la degradación del rendimiento de los subagentes debido al excesivo aumento de tokens en el historial de conversación (provocando que el modelo olvide reglas, se vuelva lento o actúe erráticamente):
+- **Monitoreo de Contexto**: Cada subagente debe vigilar la cantidad de contexto acumulada. Si se estima que el historial supera el 50% de la ventana soportada por su modelo (o el chat es sumamente largo y confuso), debe suspender la tarea actual.
+- **Creación de Snapshot de Consolidación**: El subagente redactará de forma estructurada un resumen ultra-concentrado en `.openspec/changes/<change-name>/compaction_snapshot.md` con:
+  - **Objetivo Activo**: Qué se está intentando resolver.
+  - **Avance de Código**: Qué archivos fueron modificados y qué lógicas ya se implementaron.
+  - **Diagnósticos Activos**: Si existen errores del compilador o tests fallando.
+  - **Tareas Restantes**: La lista atómica de siguientes pasos para finalizar el hito.
+- **Solicitud de Compactación**: El subagente finalizará su turno retornando de forma exclusiva el estado `COMPACTION_REQUIRED` a `@zugzbot` junto con la ruta del snapshot.
+- **Herencia en Sesión Limpia**: Al iniciarse una sesión fresca tras la compactación manual, el subagente entrante leerá con prioridad absoluta `compaction_snapshot.md` para continuar exactamente donde quedó, con el 100% de coherencia y el historial del modelo completamente en cero.

@@ -102,3 +102,25 @@ Todos los subagentes deben aplicar de forma severa y constante principios de des
 4. **Secretos y Credenciales**: Queda estrictamente prohibido codificar secretos, llaves API o contraseñas en duro. Deben ser leídos siempre desde variables de entorno (`.env`).
 5. **🛡️ Cooldown Obligatorio de Dependencias (4320 Minutos / 3 Días) [CRÍTICO]**: Por motivos de seguridad (prevención de malware y virus recién inyectados), queda estrictamente **PROHIBIDO** proponer, importar o instalar cualquier paquete o dependencia nueva (ya sea de Node/npm, Python/pip, o cualquier otro gestor de paquetes de cualquier lenguaje) que haya sido publicado hace menos de 3 días (4320 minutos). Al proponer, evaluar o sugerir dependencias, es obligatorio comprobar su fecha de lanzamiento y seleccionar una versión previa segura que cumpla estrictamente con este cooldown (la máxima versión publicada que tenga más de 3 días de antigüedad). Esta regla se aplica al pie de la letra para cualquier instalación o importación.
 
+---
+
+## 🧹 REGLA DE COMPACTACIÓN DE CONTEXTO (PREVENCIÓN DE DEGRADACIÓN TÉCNICA)
+
+Para evitar la pérdida de razonamiento del modelo debido a la acumulación de historial en sesiones largas o bucles iterativos complejos:
+1. **Detección Proactiva de Límite**: Si el historial de chat acumulado supera el 50% de la ventana de contexto de tu modelo (o si empiezas a notar pérdida de memoria, repeticiones o desvíos de tus instrucciones), debes activar inmediatamente el protocolo de compactación.
+2. **Generación de Snapshot Consolidado**: Escribe de forma mandatoria un resumen exhaustivo en el archivo `.openspec/changes/<change-name>/compaction_snapshot.md` conteniendo:
+   - **Objetivo de la Tarea**: Qué requerimiento o corrección estamos ejecutando.
+   - **Ficheros Afectados e Implementaciones**: Qué se modificó, qué código está en pie y qué lógicas ya se cubrieron.
+   - **Errores de Compilación o Calidad**: El log exacto del linter, tests o compilador que estén fallando de forma activa.
+   - **Checklist de Próximos Pasos**: Tareas específicas restantes para culminar con éxito la fase o el hito actual.
+3. **Detención y Salida YAML Estructurada**: Retorna inmediatamente el control a `@zugzbot` imprimiendo el bloque con estado `COMPACTION_REQUIRED` al final de tu respuesta:
+   ```yaml
+   ---
+   SDD_STATUS: COMPACTION_REQUIRED
+   REASON: "El contexto acumulado excede el 50% de la ventana soportada. Snapshot guardado en compaction_snapshot.md."
+   SNAPSHOT_PATH: ".openspec/changes/<change-name>/compaction_snapshot.md"
+   ---
+   @zugzbot Compactación de contexto requerida. Por favor, detén la ejecución y solicita al desarrollador que limpie el historial y refresque la sesión.
+   ```
+4. **Resumir con el Historial Limpio**: Al iniciarse una sesión fresca post-compactación, lee prioritariamente el snapshot consolidado para heredar el 100% del estado técnico acumulado y reanudar el desarrollo con un contexto de modelo completamente libre.
+
