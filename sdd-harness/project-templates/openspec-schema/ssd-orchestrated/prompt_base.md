@@ -120,4 +120,9 @@ Para evitar la pérdida de razonamiento del modelo debido a la acumulación de h
    - Detén tu turno retornando el control a `@zugzbot` con el estado primario **`COMPACTION_REQUIRED`**, especificando en la variable **`NEXT_PHASE_STATUS`** de los metadatos YAML el estado real de hito que corresponde (ej: `HITO_A_COMPLETED`, `CORRECTIVE_PLAN_READY` o `SUCCESS`).
    - Esto pausa el flujo y guía al desarrollador a borrar el historial del chat para que la siguiente fase se ejecute con una sesión de modelo fresca e impecable.
 3. **Resumir con el Historial Limpio**: Al iniciarse una sesión fresca post-compactación, lee prioritariamente el snapshot consolidado para heredar el 100% del estado técnico acumulado y reanudar el desarrollo con un contexto de modelo completamente libre.
+4. **Bucle Correctivo con Aislamiento de Sesión ("Mirror Agents") y Amnesia Selectiva [CRÍTICO]**:
+   - Si una fase de verificación de QA o linter ejecutada por `@sdd-launcher` o `@sdd-release-manager` falla, la reutilización del mismo hilo de chat del Implementador provocaría una acumulación dañina de contexto (sesgo técnico y loops infinitos de error).
+   - Por ende, el arnés de control autogenera dinámicamente un **subagente espejo aislado** (`sdd-implementer-retry-<N>`) registrándolo en `opencode.json` y creando un prompt en `.opencode/agents/` al invocar `spawn-retry`.
+   - Cuando un subagente de corrección es inicializado en esta sesión 100% aislada de OpenCode, debe aplicar la **Amnesia Selectiva**: ignorar por completo hilos anteriores y concentrarse únicamente en el reporte de fallos actual (`failure_log.md`), el lockfile de estado y la base del código actual del proyecto.
+   - Este comportamiento escalable garantiza que cada iteración de corrección ocurra en una pizarra completamente en blanco, eliminando el sesgo acumulativo de contexto. Al final, `./sdd clean` removerá quirúrgicamente todos los agentes espejo dinámicos creados.
 

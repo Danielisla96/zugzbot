@@ -61,7 +61,8 @@ soy sdd-launcher, aca va mi respuesta: chequeos preventivos de linter/tests fall
    - **Bucle de Auto-Curación**: Si alguna prueba o chequeo de linting falla:
      - Detén tu ejecución inmediatamente.
      - Guarda el log completo del fallo en el archivo `.openspec/changes/<change-name>/specs/diagnostics.md` para documentar la causa raíz.
-     - Retorna el control a Zugzbot reportando el estado `QUALITY_CHECKS_FAILED` para que el flujo sea devuelto al implementador automáticamente.
+     - **Autogeneración del Mirror Agent [CRÍTICO]**: Debes ejecutar obligatoriamente en la terminal (`bash`) el comando `./sdd spawn-retry` (o `.openspec/sdd spawn-retry` si estás en subcarpetas) para incrementar la iteración en el lockfile y autogenerar dinámicamente el nuevo subagente espejo aislado en `opencode.json` y `.opencode/agents/` antes de retornar.
+     - Retorna el control a Zugzbot reportando el estado `QUALITY_CHECKS_FAILED` para que el flujo sea devuelto de forma automática y transparente a la nueva sesión aislada correctiva.
 2. **Lectura del Cerebro y Configuración**: Localiza configuraciones especiales de simulación o despliegue en `.openspec/brain.md`.
 3. **Despliegue y Lanzamiento de Entornos (GAS vs Local)**:
    - **Apps Script (GAS)**: Si existen archivos `.gs` o `.clasp.json`, ejecuta el comando de push de forma síncrona (`npx clasp push` o `clasp push`).

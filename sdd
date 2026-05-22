@@ -172,6 +172,26 @@ perform_rollback() {
 }
 
 perform_clean() {
+    echo -e "  ${COLOR_MUTED}▪ Purgando subagentes dinámicos de reingreso...${NC}"
+    if [ -f "opencode.json" ]; then
+        python3 -c "
+import json
+try:
+    with open('opencode.json', 'r') as f:
+        data = json.load(f)
+    keys_to_remove = [k for k in data.get('agent', {}).keys() if 'retry-' in k]
+    for k in keys_to_remove:
+        del data['agent'][k]
+    with open('opencode.json', 'w') as f:
+        json.dump(data, f, indent=2)
+    print('  ✓ Subagentes retry temporales removidos de opencode.json')
+except Exception as e:
+    print(f'  ⚠ Advertencia al limpiar opencode.json: {e}')
+" 2>/dev/null || true
+    fi
+
+    rm -f .opencode/agents/*-retry-*.md 2>/dev/null || true
+
     echo -e "  ${COLOR_MUTED}▪ Purgando archivos de registro temporal y logs...${NC}"
     rm -f .openspec/changes/*/failure_log.md 2>/dev/null || true
     rm -rf .tmp/ 2>/dev/null || true
@@ -184,12 +204,72 @@ perform_clean() {
   "active_phase": 0,
   "active_subagent": "sdd-architect",
   "status": "idle",
+  "iteration": 0,
   "auto_pilot": false,
   "last_updated": ""
 }
 EOF
     fi
     echo -e "  ${COLOR_SUCCESS}✓ Caché de metodología SDD purgada y reseteada a Fase 0.${NC}\n"
+}
+
+spawn_retry() {
+    echo -e "  ${COLOR_MUTED}▪ Detectando iteración actual y auto-mutando subagente...${NC}"
+    if [ ! -f "$LOCKFILE" ]; then
+        echo -e "  ${COLOR_ERROR}❌ Error: No se encuentra el archivo de bloqueo '${LOCKFILE}'.${NC}"
+        exit 1
+    fi
+
+    # Leer iteración actual
+    local current_iter=$(get_json_num "iteration" "$LOCKFILE")
+    local next_iter=$((current_iter + 1))
+
+    # Duplicar el agente base con el nuevo ID de iteración
+    if [ -f "opencode.json" ]; then
+        python3 -c "
+import json
+try:
+    with open('opencode.json', 'r') as f:
+        data = json.load(f)
+    if 'agent' in data and 'sdd-implementer' in data['agent']:
+        base_agent = data['agent']['sdd-implementer']
+        new_agent_name = \"sdd-implementer-retry-$next_iter\"
+        data['agent'][new_agent_name] = base_agent.copy()
+        with open('opencode.json', 'w') as f:
+            json.dump(data, f, indent=2)
+        print(f'  ✓ Inyectado {new_agent_name} en opencode.json')
+    else:
+        print('  ⚠ Advertencia: sdd-implementer no encontrado en opencode.json')
+except Exception as e:
+    print(f'  ❌ Error al modificar opencode.json: {e}')
+"
+    fi
+
+    # Crear el archivo de prompt espejo en .opencode/agents/
+    if [ -d ".opencode/agents" ]; then
+        if [ -f ".opencode/agents/sdd-implementer.md" ]; then
+            cp ".opencode/agents/sdd-implementer.md" ".opencode/agents/sdd-implementer-retry-${next_iter}.md"
+            echo -e "  ${COLOR_SUCCESS}✓ Prompt espejo creado en .opencode/agents/sdd-implementer-retry-${next_iter}.md${NC}"
+        else
+            echo -e "  ${COLOR_WARNING}⚠ Advertencia: Prompt base sdd-implementer.md no encontrado.${NC}"
+        fi
+    fi
+
+    # Actualizar el lockfile con la nueva iteración y el agente activo
+    python3 -c "
+import json
+try:
+    with open('$LOCKFILE', 'r') as f:
+        lock = json.load(f)
+    lock['iteration'] = $next_iter
+    lock['active_subagent'] = 'sdd-implementer-retry-$next_iter'
+    lock['status'] = 'corrective_loop'
+    with open('$LOCKFILE', 'w') as f:
+        json.dump(lock, f, indent=2)
+    print('  ✓ sdd-lock.json actualizado a iteración $next_iter')
+except Exception as e:
+    print(f'  ❌ Error al modificar $LOCKFILE: {e}')
+"
 }
 
 validate_schemas() {
@@ -415,6 +495,10 @@ case "$1" in
         print_header
         perform_clean
         ;;
+    spawn-retry)
+        print_header
+        spawn_retry
+        ;;
     validate)
         print_header
         validate_schemas
@@ -432,13 +516,14 @@ case "$1" in
         echo -e "  ${COLOR_HEADER}Uso:${NC} ./sdd [comando] o ./.openspec/sdd [comando]"
         echo ""
         echo -e "  ${COLOR_HEADER}Comandos válidos:${NC}"
-        echo -e "    ${COLOR_SUCCESS}status${NC}    - Muestra la barra de progreso estelar agrupada en hitos (por defecto)"
-        echo -e "    ${COLOR_SUCCESS}validate${NC}  - Audita estructuralmente las especificaciones y archivos de cambio"
-        echo -e "    ${COLOR_SUCCESS}test${NC}      - Ejecuta de forma nativa la suite de pruebas del proyecto"
-        echo -e "    ${COLOR_SUCCESS}lint${NC}      - Ejecuta el linter o verificador estático de código local"
-        echo -e "    ${COLOR_SUCCESS}rollback${NC}  - Descarta de forma segura cambios Git locales no confirmados"
-        echo -e "    ${COLOR_SUCCESS}clean${NC}     - Purga logs de fallos, registros temporales y resetea a Fase 0"
-        echo -e "    ${COLOR_SUCCESS}help${NC}      - Muestra esta tarjeta informativa de comandos"
+        echo -e "    ${COLOR_SUCCESS}status${NC}      - Muestra la barra de progreso estelar agrupada en hitos (por defecto)"
+        echo -e "    ${COLOR_SUCCESS}validate${NC}    - Audita estructuralmente las especificaciones y archivos de cambio"
+        echo -e "    ${COLOR_SUCCESS}test${NC}        - Ejecuta de forma nativa la suite de pruebas del proyecto"
+        echo -e "    ${COLOR_SUCCESS}lint${NC}        - Ejecuta el linter o verificador estático de código local"
+        echo -e "    ${COLOR_SUCCESS}rollback${NC}    - Descarta de forma segura cambios Git locales no confirmados"
+        echo -e "    ${COLOR_SUCCESS}spawn-retry${NC} - Incrementa la iteración y crea un subagente espejo aislado"
+        echo -e "    ${COLOR_SUCCESS}clean${NC}       - Purga logs de fallos, registros temporales y resetea a Fase 0"
+        echo -e "    ${COLOR_SUCCESS}help${NC}        - Muestra esta tarjeta informativa de comandos"
         echo ""
         ;;
     *)

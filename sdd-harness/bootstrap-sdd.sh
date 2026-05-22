@@ -287,6 +287,7 @@ if [ "$DRY_RUN" = false ]; then
   "active_phase": 0,
   "active_subagent": "sdd-architect",
   "status": "idle",
+  "iteration": 0,
   "auto_pilot": false,
   "last_updated": ""
 }
