@@ -122,283 +122,99 @@ OPENCODE_EXPERIMENTAL=true opencode
 
 ## 💬 Simulación del "Pinponeo" Multi-Agente (End-to-End)
 
-Para entender cómo funciona el arnés, veamos una **transcripción realista** de cómo interactúan el Desarrollador (Usuario), `@zugzbot` y los subagentes en un proyecto real.
-
-### 🎬 Escenario
-El usuario quiere agregar una funcionalidad para calcular el descuento por volumen de compra en un sistema de facturación en Node.js + Vitest.
+Para entender la magia detrás de Zugzbot, veamos una **simulación compacta y ultra-explicativa** de cómo cooperan el Desarrollador (Usuario), `@zugzbot` y los subagentes consolidados al implementar una nueva funcionalidad: *calcular un descuento automático de volumen del 10% para compras mayores a 5 artículos*.
 
 ---
 
 ### 1️⃣ Activación e Hito A (Planificación y Diseño)
 
 **Usuario ➔ `@zugzbot`**
-> Oye `@zugzbot`, me pidieron implementar un descuento automático del 10% cuando el cliente compre más de 5 artículos en el carrito. Esto hay que integrarlo en el motor de facturación existente. ¿Podemos iniciar un ciclo SDD, porfa?
-
-**`@zugzbot` ➔ Sistema (`sdd-lock.json`)**
-*Zugzbot actualiza el estado local y bloquea el ciclo para evitar colisiones.*
-```json
-{
-  "state": "active",
-  "active_agent": "sdd-architect",
-  "phase": "Phase_0_Discovery",
-  "current_change": "volume-discount"
-}
-```
+> Oye `@zugzbot`, me pidieron implementar un descuento del 10% automático cuando compren más de 5 artículos. Hay que integrarlo en el motor de facturación. ¿Iniciamos un ciclo SDD?
 
 **`@zugzbot` ➔ `@sdd-architect`**
-> `@sdd-architect`: Te paso el token del ciclo. Inicia el Hito A (Fases 0, 1 y 2) para el cambio `volume-discount`. Ejecuta el descubrimiento del proyecto, corre `npx autoskills --detect` para asegurar las habilidades correctas, e indexa las firmas de cálculo de facturación usando LSP.
+> ¡Al tiro! `@sdd-architect`, te paso el token del ciclo. Ejecuta la Fase 0 (Diagnóstico), Fase 1 (BDD Spec) y Fase 2 (Checklist). Indexa el código de facturación con LSP y verifica si faltan habilidades locales.
 
-**`@sdd-architect` ➔ Terminal y LSP (Consola interna de OpenCode)**
-1. *El Arquitecto ejecuta diagnóstico inicial:*
-   ```bash
-   npx autoskills --detect
-   ```
-   *Autoskills detecta un entorno Node.js con Vitest e instala automáticamente la habilidad `vitest-helper`.*
-2. *Usa LSP (`goToDefinition`) para saltar directamente a `src/billing/calculator.js` y ver la estructura actual de la función `calculateTotal`.*
-3. *Usa LSP (`hover`) en la firma de `calculateTotal` y descubre que recibe un objeto `Cart` con la estructura `{ items: Array<{ qty: number, price: number }> }`.*
-4. *El Arquitecto crea la especificación técnica y las pruebas BDD en `.openspec/changes/volume-discount/specs/discount.spec`:*
-   ```gherkin
-   Feature: Descuento por Volumen
-     Scenario: Compra de más de 5 artículos aplica 10% de descuento
-       Given un carrito con 6 artículos de un valor neto de $100 cada uno
-       When se calcula el total de la factura
-       Then el descuento aplicado debe ser $60
-       And el total neto a cobrar debe ser $540
-   ```
-5. *Escribe el checklist quirúrgico de tareas en `.openspec/changes/volume-discount/tasks.md`.*
-6. *Devuelve el control a `@zugzbot` escribiendo su reporte técnico.*
+**🛠️ El Arquitecto trabaja en la planificación del cambio:**
+*   **Descubrimiento & LSP**: Navega el proyecto usando herramientas LSP nativas (`goToDefinition` y `hover`) en `src/billing/calculator.js`. Identifica que la función `calculateTotal` recibe un carrito con formato `{ items: Array<{ qty: number, price: number }> }`.
+*   **Auto-habilidades**: Ejecuta `npx autoskills --detect` para autoconfigurar soporte para Vitest.
+*   **Especificaciones**: Diseña un escenario BDD en Gherkin (`discount.spec`) detallando el caso: *6 artículos de $100 c/u -> Descuento: $60, Neto: $540*.
+*   **Checklist**: Escribe el plan de tareas quirúrgico en `volume-discount/tasks.md` detallando los archivos a crear y modificar.
 
 **`@sdd-architect` ➔ `@zugzbot`**
-> ```yaml
-> ---
-> SDD_STATUS: HITO_A_COMPLETED
-> REASON: "Fases 0, 1 y 2 terminadas. Se mapeó la lógica de facturación mediante LSP en `src/billing/calculator.js`. Plan y pruebas BDD listos."
-> TASKS_CHECKLIST: ".openspec/changes/volume-discount/tasks.md"
-> ---
-> `@zugzbot`: El plan arquitectónico está impecable. Quedo a la espera de la aprobación del desarrollador.
-> ```
+> *[Hito A Completado]*: Mapeé la lógica con LSP en `calculator.js`. Plan arquitectónico y especificación BDD redactados. Quedamos listos para la aprobación del desarrollador.
 
 **`@zugzbot` ➔ Usuario**
-> ¡Hola! `@sdd-architect` completó su análisis de forma espectacular. Corrió `npx autoskills --detect` para integrar los helpers de testing, y usó LSP para verificar la firma de `calculateTotal` en `src/billing/calculator.js`.
->
-> Aquí tienes el resumen del **Hito A**:
-> *   **Propuesta**: Modificar `src/billing/calculator.js` para inyectar una función interna `applyVolumeDiscount(cart)`.
-> *   **Especificación BDD**: Creada una regla Gherkin para aplicar 10% de descuento en carritos con más de 5 artículos.
-> *   **Archivos a Modificar/Crear**:
->     *   `[MODIFY] src/billing/calculator.js`
->     *   `[NEW] tests/billing/discount.test.js`
->
-> 📋 **¿Aprobamos el diseño para iniciar la codificación?**
-> *Responde `1` para dar el vamos, o indícame si quieres hacer algún ajuste.*
+> ¡Impecable! `@sdd-architect` inspeccionó el repositorio usando LSP. Aquí tienes el plan para el **Hito A**:
+> *   **Propuesta**: Inyectar lógica de descuento en `src/billing/calculator.js` y crear pruebas unitarias en `tests/billing/discount.test.js`.
+> *   **BDD**: Escenario de descuento del 10% para compras mayores a 5 items.
+> 
+> 📋 **¿Aprobamos el diseño para iniciar la construcción?** (Responde `1` para sí, o indica ajustes).
 
 ---
 
-### 2️⃣ Hito B (Construcción, Simulación y la Magia de la Auto-Curación)
+### 2️⃣ Hito B (Construcción y Bucle Autónomo de Auto-Curación)
 
 **Usuario ➔ `@zugzbot`**
-> 1, démosle no más! Quedó súper claro el plan.
-
-**`@zugzbot` ➔ Sistema (`sdd-lock.json`)**
-```json
-{
-  "state": "active",
-  "active_agent": "sdd-implementer",
-  "phase": "Phase_3_Coding",
-  "current_change": "volume-discount"
-}
-```
+> 1, ¡démosle no más!
 
 **`@zugzbot` ➔ `@sdd-implementer`**
-> `@sdd-implementer`: El plan fue aprobado por el desarrollador. Ejecuta las Fases 3 y 4. Lee `.openspec/changes/volume-discount/tasks.md` y realiza la codificación. Usa LSP para validar las firmas del motor de facturación antes de inyectar cambios.
+> `@sdd-implementer`: Plan aprobado. Iniciamos Fases 3 y 4. Lee las tareas en `tasks.md` y programa la lógica. Apóyate en LSP para evitar romper firmas del sistema.
 
-**`@sdd-implementer` ➔ Archivos del Código**
-1. *El Implementador usa LSP (`goToDefinition`) para leer la línea exacta de importación en `src/billing/calculator.js`.*
-2. *Realiza la codificación:*
-   ```javascript
-   // src/billing/calculator.js
-   export function calculateTotal(cart) {
-     const subtotal = cart.items.reduce((acc, item) => acc + (item.price * item.qty), 0);
-     const totalQty = cart.items.reduce((acc, item) => acc + item.qty, 0);
-     
-     // Aplicar descuento por volumen
-     let discount = 0;
-     if (totalQty > 5) {
-       discount = subtotal * 0.10; // 10% de descuento
-     }
-     
-     return {
-       subtotal,
-       discount,
-       total: subtotal - discount
-     };
-   }
-   ```
-3. *Crea el archivo de pruebas `tests/billing/discount.test.js`:*
-   ```javascript
-   import { expect, test } from 'vitest';
-   import { calculateTotal } from '../../src/billing/calculator';
-
-   test('Aplica 10% de descuento si hay mas de 5 items', () => {
-     const cart = {
-       items: [
-         { price: 100, qty: 6 }
-       ]
-     };
-     const result = calculateTotal(cart);
-     expect(result.discount).toBe(60);
-     expect(result.total).toBe(540);
-   });
-   ```
-4. *Marca los elementos completados en el archivo `tasks.md`.*
-5. *Entrega el reporte de construcción.*
+**🛠️ El Implementador trabaja en la codificación:**
+*   **Desarrollo**: Modifica `src/billing/calculator.js` agregando la regla de descuento del 10%. Crea el archivo de pruebas `tests/billing/discount.test.js` usando Vitest para corroborar el caso BDD.
+*   **Registro**: Marca las casillas en `tasks.md` y genera el reporte técnico de la implementación.
 
 **`@sdd-implementer` ➔ `@zugzbot`**
-> ```yaml
-> ---
-> SDD_STATUS: SUCCESS
-> REASON: "Fase 3 finalizada. Lógica de descuento integrada y pruebas unitarias escritas."
-> ---
-> `@zugzbot`: Lógica lista. Pasa el token a `@sdd-launcher` para levantar la simulación y correr las pruebas iniciales.
-> ```
+> *[Construcción Completa]*: Lógica programada y pruebas de Vitest listas. Handoff al Lanzador.
 
 **`@zugzbot` ➔ `@sdd-launcher`**
-> `@sdd-launcher`: Toma el control. Activa la Fase 5. Corre la suite de pruebas preventivas y levanta el entorno de simulación local.
+> `@sdd-launcher`: Toma el token. Fase 5 activa. Corre tests preventivos y levanta el entorno de simulación.
 
----
+**💥 El Lanzador ejecuta pruebas locales (Ocurre un error de sintaxis en los tests):**
+*   **Fallo de QA**: `@sdd-launcher` ejecuta `npm run test` preventivo, pero falla debido a un error tipográfico en la importación de `calculator` (olvidó la extensión `.js` requerida por el bundler estricto).
+*   **Acción**: El Lanzador escribe automáticamente el error en `diagnostics.md` y notifica a `@zugzbot` con estado `QUALITY_CHECKS_FAILED`. **No se interrumpe al usuario.**
+*   **Bucle de Auto-Curación**: `@zugzbot` re-asigna el token al Implementador con el diagnóstico.
 
-### 💥 Bucle de Auto-Curación (Detrás de escena: Algo falla)
+**🛠️ El Implementador trabaja en la auto-curación autónoma:**
+*   **Resolución**: `@sdd-implementer` lee `diagnostics.md`, corrige la extensión a `calculator.js` y entrega la corrección de forma silenciosa en segundos.
 
-**`@sdd-launcher` ➔ Terminal de Pruebas**
-*El Lanzador corre las pruebas usando el comando configurado:*
-```bash
-npm run test
-```
-*¡Oh no! Las pruebas fallan por un error tipográfico en la importación de `calculateTotal` en `tests/billing/discount.test.js` (puso `../../src/billing/calculator` en lugar de `../../src/billing/calculator.js` y el bundler estricto se queja).*
-
-**`@sdd-launcher` ➔ Archivos de Control**
-1. *El Lanzador no molesta al usuario. Genera automáticamente un archivo de diagnóstico temporal `.openspec/diagnostics.md`:*
-   ```markdown
-   # DIAGNÓSTICO DE FALLA - FASE 5
-   - **Módulo**: Tests unitarios
-   - **Error**: `Error: Cannot find module '../../src/billing/calculator'` en `tests/billing/discount.test.js:1`
-   ```
-2. *Devuelve el flujo con estado de error controlado:*
-   ```yaml
-   ---
-   SDD_STATUS: ERROR_DETECTED
-   REASON: "Fallo en la suite de pruebas al intentar importar el módulo en los tests."
-   DIAGNOSTIC_PATH: ".openspec/diagnostics.md"
-   ---
-   ```
-
-**`@zugzbot` ➔ `@sdd-implementer` (Auto-Healing Trigger)**
-> `@sdd-implementer`: `@sdd-launcher` detectó un fallo de QA en las pruebas preventivas. Lee `.openspec/diagnostics.md` y corrige la codificación de inmediato de forma autónoma. No levantes banderas con el desarrollador aún.
-
-**`@sdd-implementer` ➔ Archivos del Código**
-1. *El Implementador lee `.openspec/diagnostics.md`.*
-2. *Usa LSP (`goToDefinition`) para corroborar la ruta relativa exacta de `src/billing/calculator.js` respecto a `tests/billing/discount.test.js`.*
-3. *Corrige la línea 1 de `tests/billing/discount.test.js`:*
-   ```javascript
-   // Corregido: se añade la extensión .js requerida por el entorno estricto de ESM
-   import { calculateTotal } from '../../src/billing/calculator.js';
-   ```
-4. *Guarda el archivo y responde:*
-   ```yaml
-   ---
-   SDD_STATUS: REPAIRED
-   REASON: "Error de importación corregido añadiendo la extensión .js."
-   ---
-   ```
-
-**`@zugzbot` ➔ `@sdd-launcher` (Re-Intento)**
-> `@sdd-launcher`: El Implementador ha reparado el código. Re-ejecuta la Fase 5.
-
-**`@sdd-launcher` ➔ Terminal de Pruebas y Servidor**
-1. *Vuelve a ejecutar `npm run test`. ¡Todas las pruebas pasan al 100%!*
-2. *Levanta el servidor local de desarrollo (`npm run dev`) en el puerto 3000.*
-3. *Entrega el reporte final de simulación exitoso:*
-
-```yaml
----
-SDD_STATUS: LAUNCHER_READY
-LOCAL_URL: "http://localhost:3000"
-QA_STATUS: "PASSED (1/1 tests ok, 0 lint warnings)"
----
-`@zugzbot`: Entorno de simulación levantado impecable en puerto 3000. QA preventiva limpia.
-```
+**🔄 Re-Intento Exitoso:**
+*   `@sdd-launcher` ejecuta las pruebas nuevamente (¡pasan al 100%!) y levanta el servidor local en el puerto `3000`.
 
 **`@zugzbot` ➔ Usuario**
-> ¡Éxito total! La lógica se construyó perfectamente y el entorno local está listo.
->
+> ¡Éxito total! La lógica se programó e integró.
+> 
 > > [!NOTE]
-> > Durante la simulación preventiva, detectamos un error menor de importación en los tests unitarios. El arnés activó el **Bucle de Auto-Curación** y `@sdd-implementer` lo reparó de forma autónoma en segundos, logrando un QA del 100% libre de advertencias.
->
-> 🌐 **Servidor de Simulación Activo**: Puedes verificar los cambios y probar en vivo en [http://localhost:3000](http://localhost:3000).
->
-> 📋 **¿Todo funciona impecable por tu lado? ¿Procedemos al cierre de la versión en Git?**
-> *Responde `1` para dar la orden de cierre o coméntame cualquier detalle.*
+> > Durante la simulación preventiva se detectó un fallo de importación en los tests. El arnés activó el **Bucle de Auto-Curación** y `@sdd-implementer` lo reparó de forma autónoma, logrando un QA del 100% limpio.
+> 
+> 🌐 **Servidor Activo**: Puedes probar los cambios en vivo en [http://localhost:3000](http://localhost:3000).
+> 📋 **¿Funciona impecable? ¿Procedemos al cierre?** (Responde `1` para sí, o indica detalles).
 
 ---
 
-### 3️⃣ Hito C (Aseguramiento de Calidad y Cierre Autónomo)
+### 3️⃣ Hito C (Aseguramiento de Calidad y Cierre Automatizado)
 
 **Usuario ➔ `@zugzbot`**
-> 1, ¡funciona de lujo! Dale con el cierre.
-
-**`@zugzbot` ➔ Sistema (`sdd-lock.json`)**
-```json
-{
-  "state": "active",
-  "active_agent": "sdd-release-manager",
-  "phase": "Phase_6_ReleaseQA",
-  "current_change": "volume-discount"
-}
-```
+> 1, funciona filete. Dale con el cierre.
 
 **`@zugzbot` ➔ `@sdd-release-manager`**
-> `@sdd-release-manager`: El Hito B fue aprobado por el desarrollador. Entras en acción para las Fases 6, 7 y 8. Ejecuta los linters y pruebas oficiales, actualiza la memoria del proyecto, genera el CHANGELOG y realiza el commit semántico en Git de manera autónoma.
+> `@sdd-release-manager`: Hito B aprobado. Procede de forma autónoma al Hito C (Fases 6, 7 y 8). Ejecuta la auditoría estática, documenta y cierra la versión en Git.
 
-**`@sdd-release-manager` ➔ Terminal y Repositorio**
-1. *El Release Manager corre la suite oficial de auditoría:*
-   ```bash
-   ./.openspec/sdd validate && ./.openspec/sdd lint
-   ```
-2. *QA estático y linters completados con 0 errores.*
-3. *Actualiza `.openspec/brain.md` agregando la lección aprendida:*
-   > * Lección #42: Al trabajar con bundlers estrictos de ESM, las importaciones en las suites de pruebas de Vitest requieren de forma mandatoria especificar la extensión explícita `.js` para evitar fallos de resolución en tiempo de compilación efímera.
-4. *Actualiza `.openspec/CHANGELOG.md` documentando la versión:*
-   ```markdown
-   ## [1.2.0] - 2026-05-22
-   ### Added
-   - Implementación de descuento automático por volumen (10%) para compras de más de 5 artículos en `src/billing/calculator.js`.
-   - Pruebas unitarias de descuento en `tests/billing/discount.test.js`.
-   ```
-5. *Limpia archivos residuales y purga los locks de ejecución:*
-   ```bash
-   ./.openspec/sdd clean
-   ```
-6. *Prepara el mensaje de commit y firma en Git de forma autónoma:*
-   ```bash
-   git add .
-   git commit -m "feat(billing): add 10% volume discount utility for sales above 5 items"
-   ```
-7. *Devuelve el estado a Inactivo (Idle) y notifica el cierre de ciclo:*
-   ```yaml
-   ---
-   SDD_STATUS: IDLE
-   REASON: "Ciclo de vida cerrado de forma exitosa. Cambios integrados a Git de forma semántica y memoria de brain.md sincronizada."
-   ---
-   ```
+**🛠️ El Gestor de Lanzamientos trabaja en el cierre técnico:**
+*   **QA Final**: Corre la validación definitiva con `./.openspec/sdd validate` y `./.openspec/sdd lint`.
+*   **Memoria del Proyecto**: Registra la lección aprendida sobre extensiones ESM en `.openspec/brain.md`.
+*   **Changelog**: Registra la nueva versión `1.2.0` en `CHANGELOG.md`.
+*   **Git**: Ejecuta `git commit` semántico autónomo: `feat(billing): add 10% volume discount...`.
+*   **Liberación**: Purga locks y resetea el estado a inactivo (`idle`).
 
 **`@zugzbot` ➔ Usuario**
 > 🎉 **¡Ciclo Cerrado de forma 100% Exitosa!**
->
-> Hemos completado la integración de forma impecable y automatizada. Aquí tienes tu reporte del **Hito C**:
-> *   **QA Estática**: 100% aprobada (Vitest corrió todas las pruebas limpias).
-> *   **Changelog**: Actualizado en `.openspec/CHANGELOG.md` y memoria de lecciones aprendidas registrada en `.openspec/brain.md`.
-> *   **Git Commit Semántico**: Realizado de manera limpia:
->     `feat(billing): add 10% volume discount utility for sales above 5 items`
->
+> 
+> Todo el flujo ha sido completado:
+> *   **QA Estática**: 100% aprobada.
+> *   **Changelog & Memoria**: Documentados con éxito en `.openspec/brain.md` y `CHANGELOG.md`.
+> *   **Git Commit**: Firmado y cerrado: `feat(billing): add 10% volume discount...`.
+> 
 > El arnés de Zugzbot ha retornado al estado inactivo (`idle`). ¡Listo para el siguiente desafío! 🚀
 
 ---
