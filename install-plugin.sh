@@ -60,7 +60,20 @@ cp -r "${PLUGIN_DIR}/agents" "${REPO_DIR}/.opencode/agents"
 cp -r "${PLUGIN_DIR}/commands" "${REPO_DIR}/.opencode/commands"
 cp -r "${PLUGIN_DIR}/skills" "${REPO_DIR}/.opencode/skills"
 cp -r "${PLUGIN_DIR}/tools" "${REPO_DIR}/.opencode/tools"
+
+# Copiar plugins y pre-compilar TSX a JS para máxima compatibilidad
 cp -r "${PLUGIN_DIR}/plugins/." "${REPO_DIR}/.opencode/plugins/"
+if [ -f "${REPO_DIR}/.opencode/plugins/plugin_tui.tsx" ]; then
+    echo -e "  ${COLOR_MUTED}▪ Pre-compilando plugin_tui.tsx a plugin_tui.js con Bun...${NC}"
+    bun build --target=node --external=solid-js --external=@opentui/solid --external=@opencode-ai/plugin/tui "${REPO_DIR}/.opencode/plugins/plugin_tui.tsx" --outfile="${REPO_DIR}/.opencode/plugins/plugin_tui.js" > /dev/null
+    rm -f "${REPO_DIR}/.opencode/plugins/plugin_tui.tsx"
+fi
+
+# Vincular plugin TUI globalmente para que se cargue de forma confiable
+mkdir -p ~/.config/opencode/plugins
+rm -f ~/.config/opencode/plugins/plugin_tui.js
+rm -f ~/.config/opencode/plugins/plugin_tui.tsx
+ln -s "${REPO_DIR}/.opencode/plugins/plugin_tui.js" ~/.config/opencode/plugins/plugin_tui.js
 
 # Asegurar registro de plugin TUI local en tui.json si no existe
 if [ ! -f "${REPO_DIR}/tui.json" ]; then
@@ -69,7 +82,7 @@ if [ ! -f "${REPO_DIR}/tui.json" ]; then
 {
   "$schema": "https://opencode.ai/tui.json",
   "plugin": [
-    "./.opencode/plugins/plugin_tui.tsx"
+    "./.opencode/plugins/plugin_tui.js"
   ]
 }
 EOF
