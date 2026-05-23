@@ -1,0 +1,9 @@
+feat(tui): add subagent monitoring and cost tracking
+
+- Implemented recursive `collectSessionIds` to capture sub-agent activity.
+- Added visual indentation for sub-agents in the TUI sidebar.
+- Integrated cost and token tracking across all sub-sessions.
+- Added animated ASCII mascot mascot to the monitor.
+- Bumped version to 1.4.0.
+
+[skip ci]

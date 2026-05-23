@@ -1,11 +1,11 @@
 {
   "changeName": "animated-ascii-mascot",
   "phase": 1,
-  "status": "idle",
+  "status": "in_progress",
   "activeSubagent": "sdd-architect",
   "iteration": 1,
   "lastUpdate": "2026-05-23T12:00:00.000Z",
-  "active_phase": 0,
+  "active_phase": 6,
   "last_updated": "2026-05-23",
-  "active_subagent": "sdd-architect"
+  "active_subagent": "sdd-release-manager"
 }

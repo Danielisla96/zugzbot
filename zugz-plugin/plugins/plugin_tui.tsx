@@ -10,12 +10,26 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
         // --- Funciones Auxiliares ---
 
         function collectSessionIds(sessionId: string): string[] {
-          try {
-            const children = api.state.session.children?.(sessionId) ?? []
-            return [sessionId, ...children.map((c: any) => c.id ?? c)]
-          } catch {
-            return [sessionId]
+          const results: string[] = []
+          const visited = new Set<string>()
+
+          function traverse(sid: string) {
+            if (!sid || visited.has(sid)) return
+            visited.add(sid)
+            results.push(sid)
+            try {
+              const children = api.state.session.children?.(sid) ?? []
+              for (const c of children) {
+                const childId = c?.id ?? c
+                if (childId) {
+                  traverse(childId)
+                }
+              }
+            } catch {}
           }
+
+          traverse(sessionId)
+          return results
         }
 
         function extractAgentName(messages: any[], sessionInfo: any, sessionId: string): string {
@@ -40,6 +54,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
           cost: number
           tokensInput: number
           tokensOutput: number
+          isSubagent: boolean
         }
 
         interface TotalMetrics {
@@ -58,6 +73,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
           const agentMap: Record<string, AgentMetrics> = {}
 
           for (const sid of sessionIds) {
+            const isSubagent = sid !== props.session_id
             let messages: any[] = []
             try {
               messages = api.state.session.messages(sid) || []
@@ -103,6 +119,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                     cost: 0,
                     tokensInput: 0,
                     tokensOutput: 0,
+                    isSubagent: isSubagent,
                   }
                 }
 
@@ -118,6 +135,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                 cost: 0,
                 tokensInput: 0,
                 tokensOutput: 0,
+                isSubagent: isSubagent,
               }
             }
           }
@@ -175,7 +193,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
               <box gap={0} paddingLeft={1} paddingTop={1}>
                 {metrics().agents.map((agent) => (
                   <text fg={api.theme.current.text}>
-                    • <b>{agent.name}</b>: ${agent.cost.toFixed(4)} (I:{formatTokens(agent.tokensInput)}/O:{formatTokens(agent.tokensOutput)})
+                    {agent.isSubagent ? "  └─ " : "• "}<b>{agent.name}</b>: ${agent.cost.toFixed(4)} (I:{formatTokens(agent.tokensInput)}/O:{formatTokens(agent.tokensOutput)})
                   </text>
                 ))}
               </box>
