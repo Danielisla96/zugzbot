@@ -1,6 +1,0 @@
-feat(tui): add animated ascii mascot to sidebar
-
-- Implements a blinking ASCII mascot (Zugz) in the TUI plugin.
-- Uses SolidJS signals and setInterval for the animation logic.
-- Adds cleanup logic to prevent memory leaks.
-- Updates README and internal documentation.
