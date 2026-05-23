@@ -254,7 +254,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
             {sddProgress() && sddProgress()?.changeName !== "nuevo-cambio" && sddProgress()?.changeName !== "Ninguno" && (
               <box gap={0} paddingLeft={1} paddingTop={1} paddingBottom={0}>
                 <text fg="#FF7300">
-                  <b>🌱 SDD:</b> <text fg={api.theme.current.text}>{sddProgress()?.changeName}</text>
+                  {`🌱 SDD: ${sddProgress()?.changeName ?? ""}`}
                 </text>
                 <box gap={0} paddingTop={1}>
                   {[
@@ -279,13 +279,13 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                     
                     return (
                       <text fg={fgColor}>
-                        {prefix}<b>{ph.name}</b> <text fg={api.theme.current.textMuted}>{ph.agent}</text>
+                        {`${prefix}${ph.name} ${ph.agent}`}
                       </text>
                     )
                   })}
                 </box>
                 <text fg={api.theme.current.borderSubtle} paddingTop={1}>
-                  ────────────────────────────────────
+                  {"────────────────────────────────────"}
                 </text>
               </box>
             )}
@@ -294,14 +294,14 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
             <box gap={0} paddingLeft={1} paddingTop={1} paddingBottom={0}>
               {metrics().agents.map((agent) => (
                 <text fg={agent.isSubagent ? api.theme.current.textMuted : api.theme.current.text}>
-                  {agent.isSubagent ? "  " : ""}<b>{agent.name}</b>: {formatCost(agent.cost)} ({formatTokens(agent.tokensInput)}/{formatTokens(agent.tokensOutput)})
+                  {`${agent.isSubagent ? "  " : ""}${agent.name}: ${formatCost(agent.cost)} (${formatTokens(agent.tokensInput)}/${formatTokens(agent.tokensOutput)})`}
                 </text>
               ))}
               <text fg={api.theme.current.borderSubtle}>
-                ────────────────────────────────────
+                {"────────────────────────────────────"}
               </text>
               <text fg={api.theme.current.success}>
-                <b>Total:</b> {formatCost(metrics().totalCost)} ({formatTokens(metrics().totalInput)}/{formatTokens(metrics().totalOutput)})
+                {`Total: ${formatCost(metrics().totalCost)} (${formatTokens(metrics().totalInput)}/${formatTokens(metrics().totalOutput)})`}
               </text>
             </box>
 
