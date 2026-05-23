@@ -52,6 +52,7 @@ rm -rf "${REPO_DIR}/.opencode/agents"
 rm -rf "${REPO_DIR}/.opencode/commands"
 rm -rf "${REPO_DIR}/.opencode/skills"
 rm -rf "${REPO_DIR}/.opencode/tools"
+rm -rf "${REPO_DIR}/.opencode/plugins"
 
 # 4. Vincular arnés SDD localmente
 echo -e "  ${COLOR_MUTED}▪ Vinculando arnés SDD...${NC}"
@@ -60,10 +61,24 @@ ln -sf "${PLUGIN_DIR}/agents"   "${REPO_DIR}/.opencode/agents"
 ln -sf "${PLUGIN_DIR}/commands" "${REPO_DIR}/.opencode/commands"
 ln -sf "${PLUGIN_DIR}/skills"   "${REPO_DIR}/.opencode/skills"
 ln -sf "${PLUGIN_DIR}/tools"    "${REPO_DIR}/.opencode/tools"
+ln -sf "${PLUGIN_DIR}/plugins"  "${REPO_DIR}/.opencode/plugins"
 
 # Vincular node_modules de zugz-plugin a .opencode/node_modules para resolución de dependencias
 rm -rf "${PLUGIN_DIR}/node_modules"
 ln -sf "${REPO_DIR}/.opencode/node_modules" "${PLUGIN_DIR}/node_modules"
+
+# Asegurar registro de plugin TUI local en tui.json si no existe
+if [ ! -f "${REPO_DIR}/tui.json" ]; then
+    echo -e "  ${COLOR_MUTED}▪ Creando archivo tui.json local para registrar el plugin TUI...${NC}"
+    cat << 'EOF' > "${REPO_DIR}/tui.json"
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "plugin": [
+    "./.opencode/plugins/plugin_tui.tsx"
+  ]
+}
+EOF
+fi
 
 # 5. Asegurar package.json en .opencode/ para dependencias
 echo -e "  ${COLOR_MUTED}▪ Generando .opencode/package.json con dependencias...${NC}"
