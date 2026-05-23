@@ -1,0 +1,5 @@
+feat(ui): update ascii art color to bitonal (cyan/magenta)
+
+- Added COLOR_MAGENTA variable to install-plugin.sh.
+- Split ASCII art output into two blocks to apply Cyan/Magenta gradient.
+- Bumped version to 1.3.1.

@@ -4,6 +4,7 @@ set -euo pipefail
 
 # Colores premium
 COLOR_HEADER="\033[1;36m"
+COLOR_MAGENTA="\033[1;35m"
 COLOR_SUCCESS="\033[1;32m"
 COLOR_WARNING="\033[1;33m"
 COLOR_ERROR="\033[1;31m"
@@ -16,6 +17,9 @@ cat << "EOF"
   ______  _    _  _____  ______ 
  |___  / | |  | |/ ____||___  / 
     / /  | |  | | |  __    / /  
+EOF
+echo -e "${COLOR_MAGENTA}"
+cat << "EOF"
    / /   | |  | | | |_ |  / /   
   / /__  | |__| | |__| | / /__  
  /_____|  \____/ \_____|/_____| 
