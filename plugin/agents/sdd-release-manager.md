@@ -4,11 +4,7 @@ mode: subagent
 model: google/gemini-3-flash-preview
 variant: medium
 permission:
-  edit:
-    - "package.json"
-    - "README.md"
-    - "CHANGELOG.md"
-    - ".openspec/**"
+  edit: allow
   bash: allow
   lsp: allow
 ---
