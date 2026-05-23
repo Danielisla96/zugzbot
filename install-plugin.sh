@@ -14,15 +14,12 @@ NC="\033[0m"
 
 echo -e "${COLOR_ERROR}"
 cat << "EOF"
-  ______  _    _  _____  ______ 
- |___  / | |  | |/ ____||___  / 
-    / /  | |  | | |  __    / /  
-EOF
-echo -e "${COLOR_WARNING}"
-cat << "EOF"
-   / /   | |  | | | |_ |  / /   
-  / /__  | |__| | |__| | / /__  
- /_____|  \____/ \_____|/_____| 
+   ███████╗██╗   ██╗ ██████╗ ███████╗
+   ╚══███╔╝██║   ██║██╔════╝ ╚══███╔╝
+     ███╔╝ ██║   ██║██║  ███╗  ███╔╝ 
+    ███╔╝  ██║   ██║██║   ██║ ███╔╝  
+   ███████╗╚██████╔╝╚██████╔╝███████╗
+   ╚══════╝ ╚═════╝  ╚═════╝ ╚══════╝
 EOF
 echo -e "${NC}"
 
@@ -52,10 +49,11 @@ if [ ! -f ~/.config/opencode/opencode.jsonc ]; then
 fi
 
 echo -e "  ${COLOR_MUTED}▪ Limpiando enlaces simbólicos previos...${NC}"
-rm -f ~/.config/opencode/agents
-rm -f ~/.config/opencode/commands
-rm -f ~/.config/opencode/skills
-rm -f ~/.config/opencode/tools
+rm -rf ~/.config/opencode/agents
+rm -rf ~/.config/opencode/commands
+rm -rf ~/.config/opencode/skills
+rm -rf ~/.config/opencode/tools
+rm -rf ~/.config/opencode/plugins/plugin_tui.tsx
 
 
 echo -e "  ${COLOR_MUTED}▪ Removiendo dependencias obsoletas de opencode.jsonc y package.json...${NC}"
@@ -101,11 +99,16 @@ npm install --legacy-peer-deps --quiet
 cd "${REPO_DIR}"
 
 # 4. Vincular Arnés SDD
-echo -e "  ${COLOR_MUTED}▪ Creando enlaces simbólicos del arnés...${NC}"
+echo -e "  ${COLOR_MUTED}▪ Creando enlaces simbólicos del arnés y plugin TUI...${NC}"
 ln -s "${PLUGIN_DIR}/agents" ~/.config/opencode/agents
 ln -s "${PLUGIN_DIR}/commands" ~/.config/opencode/commands
 ln -s "${PLUGIN_DIR}/skills" ~/.config/opencode/skills
 ln -s "${PLUGIN_DIR}/tools" ~/.config/opencode/tools
+
+# Vincular plugin TUI globalmente para que se cargue en todas las sesiones de opencode
+mkdir -p ~/.config/opencode/plugins
+ln -s "${REPO_DIR}/.opencode/plugins/plugin_tui.tsx" ~/.config/opencode/plugins/plugin_tui.tsx
+
 echo -e "  ${COLOR_MUTED}▪ Sincronizando dependencias de OpenCode global...${NC}"
 cd ~/.config/opencode
 npm install --legacy-peer-deps --quiet
