@@ -1,8 +1,8 @@
 {
   "change_name": "visual-sdd-status",
-  "active_phase": 8,
-  "active_subagent": "sdd-release-manager",
-  "status": "in_progress",
+  "active_phase": 0,
+  "active_subagent": "sdd-architect",
+  "status": "idle",
   "auto_pilot": false,
   "iteration": 1,
   "last_updated": "2026-05-23"
