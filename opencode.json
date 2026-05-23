@@ -27,6 +27,36 @@
     }
   },
   "agent": {
+    "sdd-explorer": {
+      "permission": {
+        "bash": {
+          "*": "ask",
+          "ls": "allow",
+          "ls *": "allow",
+          "ls -la *": "allow",
+          "find *": "allow",
+          "cat *": "allow",
+          "grep *": "allow",
+          "wc *": "allow",
+          "mkdir *": "allow",
+          "mkdir -p *": "allow",
+          "cp *": "allow",
+          "mv *": "allow",
+          "node --version": "allow",
+          "node -v": "allow",
+          "npm --version": "allow",
+          "npm -v": "allow",
+          "git log *": "allow",
+          "git status": "allow",
+          "git status *": "allow",
+          "git branch": "allow",
+          "git branch *": "allow",
+          "npx autoskills": "allow",
+          "npx autoskills *": "allow",
+          "npx -y autoskills *": "allow"
+        }
+      }
+    },
     "sdd-planner": {
       "permission": {
         "bash": {

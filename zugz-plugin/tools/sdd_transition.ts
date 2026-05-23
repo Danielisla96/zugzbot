@@ -10,7 +10,8 @@ export default tool({
     status: tool.schema.string().describe("El nuevo estado del ciclo (ej: 'idle', 'in_progress', 'corrective_loop')"),
     reason: tool.schema.string().describe("La justificación o explicación resumida de los cambios logrados en esta fase"),
     activeSubagent: tool.schema.string().optional().describe("El subagente activo opcional (ej: 'sdd-planner', 'sdd-builder')"),
-    iteration: tool.schema.number().optional().describe("El número de iteración correctiva opcional")
+    iteration: tool.schema.number().optional().describe("El número de iteración correctiva opcional"),
+    changeName: tool.schema.string().optional().describe("El nombre del cambio de desarrollo activo opcional")
   },
   async execute(args, context) {
     const projectRoot = context.worktree || context.directory;
@@ -67,6 +68,10 @@ export default tool({
 
     if (args.iteration !== undefined) {
       lockfile.iteration = args.iteration;
+    }
+
+    if (args.changeName) {
+      lockfile.change_name = args.changeName;
     }
 
     // Escribir los cambios

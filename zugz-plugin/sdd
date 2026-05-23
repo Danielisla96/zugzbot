@@ -86,12 +86,12 @@ show_status() {
     local status_upper=$(echo "${status:-idle}" | tr '[:lower:]' '[:upper:]')
     echo -e "  ${COLOR_MUTED}▪ Estado Actual:${NC}   ${COLOR_SUCCESS}${status_upper}${NC}\n"
 
-    echo -e "  ${COLOR_HEADER}📈 PROGRESO DE LOS 3 HITOS (3 FASES SDD SIMPLIFICADO):${NC}"
+    echo -e "  ${COLOR_HEADER}📈 PROGRESO DE LOS 4 HITOS (SDD: F0 + 3 FASES):${NC}"
     echo -e "  ${COLOR_BORDER}──────────────────────────────────────────────────────────────${NC}"
 
-    # Define phases mapping
+    # Define phases mapping (index 0-3 → Fase 0 to Fase 3)
     local phases=(
-        ""
+        "F0: Diagnóstico e Indexación       (@sdd-explorer)"
         "F1: Planificación e Interrogatorio  (@sdd-planner)"
         "F2: Construcción y Despliegue      (@sdd-builder)"
         "F3: Documentación y Cierre          (@sdd-archiver)"
@@ -109,11 +109,22 @@ show_status() {
         fi
     }
 
-    # Hito A (Planificación e Interrogación)
-    if [ "$phase_num" -le 1 ]; then
-        echo -e "  ${COLOR_ACTIVE}➡️  ⚡ [Hito A: Planificación e Interrogatorio]${NC}"
+    # Hito 0 (Diagnóstico e Indexación)
+    if [ "$phase_num" -le 0 ]; then
+        echo -e "  ${COLOR_ACTIVE}➡️  ⚡ [Hito 0: Diagnóstico e Indexación]${NC}"
     else
+        echo -e "    ${COLOR_SUCCESS}✓ [Hito 0: Diagnóstico e Indexación]${NC}"
+    fi
+    print_phase 0 "$phase_num"
+    echo ""
+
+    # Hito A (Planificación e Interrogación)
+    if [ "$phase_num" -eq 1 ]; then
+        echo -e "  ${COLOR_ACTIVE}➡️  ⚡ [Hito A: Planificación e Interrogatorio]${NC}"
+    elif [ "$phase_num" -gt 1 ]; then
         echo -e "    ${COLOR_SUCCESS}✓ [Hito A: Planificación e Interrogatorio]${NC}"
+    else
+        echo -e "    ${COLOR_BORDER}▪ [Hito A: Planificación e Interrogatorio]${NC}"
     fi
     print_phase 1 "$phase_num"
     echo ""
@@ -160,20 +171,20 @@ perform_clean() {
     rm -f .openspec/changes/*/failure_log.md 2>/dev/null || true
     rm -rf .tmp/ 2>/dev/null || true
     
-    # Reset lockfile to Phase 1 safely
+    # Reset lockfile to Phase 0 (ready for sdd-explorer)
     if [ -f "$LOCKFILE" ]; then
         cat > "$LOCKFILE" << 'EOF'
 {
   "change_name": "nuevo-cambio",
-  "active_phase": 1,
-  "active_subagent": "sdd-planner",
+  "active_phase": 0,
+  "active_subagent": "sdd-explorer",
   "status": "idle",
   "auto_pilot": false,
   "last_updated": ""
 }
 EOF
     fi
-    echo -e "  ${COLOR_SUCCESS}✓ Caché de metodología SDD purgada y reseteada a Fase 1.${NC}\n"
+    echo -e "  ${COLOR_SUCCESS}✓ Caché SDD purgada y reseteada a Fase 0 (Diagnóstico).${NC}\n"
 }
 
 validate_schemas() {
@@ -307,12 +318,14 @@ generate_and_open_dashboard() {
 
     # Define phases mapping for the HTML
     local phases_json=(
+        "F0: Diagnóstico e Indexación"
         "F1: Planificación e Interrogación"
         "F2: Construcción y Despliegue"
         "F3: Documentación y Cierre"
     )
 
     local phases_agents=(
+        "@sdd-explorer"
         "@sdd-planner"
         "@sdd-builder"
         "@sdd-archiver"
@@ -321,12 +334,12 @@ generate_and_open_dashboard() {
     # Build the phases list dynamically in HTML
     local phases_html=""
     local idx=0
-    for ((i=0; i<3; i++)); do
+    for ((i=0; i<4; i++)); do
         local phase_title="${phases_json[$i]}"
         local agent_name="${phases_agents[$i]}"
         local status_class="pending"
         local status_icon="○"
-        local phase_val=$((i+1))
+        local phase_val=$((i))
         
         if [ "$phase_val" -lt "$phase_num" ]; then
             status_class="completed"
@@ -345,7 +358,7 @@ generate_and_open_dashboard() {
         </div>'
     done
 
-    # Percentage calculation
+    # Percentage calculation (4 phases: 0-3)
     local percentage=$(( (phase_num * 100) / 3 ))
     if [ $percentage -gt 100 ]; then percentage=100; fi
 

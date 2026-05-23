@@ -1,6 +1,8 @@
 /** @jsxImportSource @opentui/solid */
 import type { TuiPlugin, TuiPluginModule } from "@opencode-ai/plugin/tui"
 import { createSignal, onCleanup } from "solid-js"
+import fs from "fs"
+import path from "path"
 
 const PluginTuiSidebar: TuiPlugin = async (api) => {
   api.slots.register({
@@ -9,6 +11,25 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
       sidebar_content(_ctx, props: { session_id: string; children?: any }) {
         // --- Estado reactivo y Polling de IDs de Sesión ---
         const [sessionIds, setSessionIds] = createSignal<string[]>([props.session_id])
+
+        // --- Helper para leer el progreso SDD ---
+        const getSddProgress = () => {
+          try {
+            const lockPath = path.join(process.cwd(), ".openspec/sdd-lock.json")
+            const altPath = path.join(process.cwd(), "openspec/sdd-lock.json")
+            const actualPath = fs.existsSync(lockPath) ? lockPath : (fs.existsSync(altPath) ? altPath : null)
+            
+            if (actualPath) {
+              const data = JSON.parse(fs.readFileSync(actualPath, "utf-8"))
+              return {
+                changeName: data.change_name || "Ninguno",
+                activePhase: typeof data.active_phase === "number" ? data.active_phase : 0,
+                status: data.status || "idle",
+              }
+            }
+          } catch (e) { }
+          return null
+        }
 
         // Función para actualizar recursivamente la lista de sesión IDs usando api.client
         const updateSessionIds = async () => {
@@ -167,11 +188,13 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
 
         // --- Estado reactivo y Polling ---
         const [metrics, setMetrics] = createSignal<TotalMetrics>(getMetrics([props.session_id]))
+        const [sddProgress, setSddProgress] = createSignal<{ changeName: string; activePhase: number; status: string } | null>(getSddProgress())
         const [colorIndex, setColorIndex] = createSignal(0)
 
         // Actualizamos los IDs de las sesiones cada 2 segundos
         const idsInterval = setInterval(() => {
           updateSessionIds()
+          setSddProgress(getSddProgress())
         }, 2000)
 
         // Actualizamos las métricas cada segundo basadas en el signal de sesión IDs
@@ -208,6 +231,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
 
         // Ejecutar inmediatamente al inicio
         updateSessionIds()
+        setSddProgress(getSddProgress())
 
         onCleanup(() => {
           clearInterval(idsInterval)
@@ -225,6 +249,46 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                 </text>
               ))}
             </box>
+
+            {/* Componente Visual de Progreso SDD de 3 Fases */}
+            {sddProgress() && sddProgress()?.changeName !== "nuevo-cambio" && sddProgress()?.changeName !== "Ninguno" && (
+              <box gap={0} paddingLeft={1} paddingTop={1} paddingBottom={0}>
+                <text fg="#FF7300">
+                  <b>🌱 SDD:</b> <text fg={api.theme.current.text}>{sddProgress()?.changeName}</text>
+                </text>
+                <box gap={0} paddingTop={1}>
+                  {[
+                    { id: 0, name: "Diagnóstico", agent: "@sdd-explorer" },
+                    { id: 1, name: "Planificación", agent: "@sdd-planner" },
+                    { id: 2, name: "Construcción", agent: "@sdd-builder" },
+                    { id: 3, name: "Cierre & Git", agent: "@sdd-archiver" }
+                  ].map((ph) => {
+                    const isActive = sddProgress()?.activePhase === ph.id
+                    const isCompleted = (sddProgress()?.activePhase ?? 0) > ph.id
+                    
+                    let prefix = "  ○ "
+                    let fgColor = api.theme.current.textMuted
+                    
+                    if (isCompleted) {
+                      prefix = "  ✓ "
+                      fgColor = api.theme.current.success
+                    } else if (isActive) {
+                      prefix = "  ⚡ "
+                      fgColor = "#FF7300"
+                    }
+                    
+                    return (
+                      <text fg={fgColor}>
+                        {prefix}<b>{ph.name}</b> <text fg={api.theme.current.textMuted}>{ph.agent}</text>
+                      </text>
+                    )
+                  })}
+                </box>
+                <text fg={api.theme.current.borderSubtle} paddingTop={1}>
+                  ────────────────────────────────────
+                </text>
+              </box>
+            )}
 
             {/* Monitor de Agentes Compacto y Plano (Efecto Sándwich) */}
             <box gap={0} paddingLeft={1} paddingTop={1} paddingBottom={0}>

@@ -77,7 +77,7 @@ Feature: [Breve descripción de la funcionalidad]
 ---
 
 ### 📥 Metadatos y Transición de Fases
-Al finalizar de escribir el archivo `specs/spec.md` tras coordinar el interrogatorio con el usuario, realiza la transición a la siguiente fase ejecutando la herramienta personalizada `sdd_transition` (o bien devuelve el bloque de metadatos YAML y la mención explícita a `@zugzbot`):
+Al finalizar de escribir el archivo `specs/spec.md` tras coordinar el interrogatorio con el usuario, realiza la transición a la siguiente fase ejecutando la herramienta personalizada `sdd_transition` (asegurándote de pasar el parámetro opcional `changeName` con el nombre del cambio activo, extraído del directorio del cambio, ej: `navbar-ux-restructure`), o bien devuelve el bloque de metadatos YAML y la mención explícita a `@zugzbot`:
 
 ```yaml
 ---
@@ -85,6 +85,7 @@ SDD_STATUS: COMPACTION_REQUIRED
 NEXT_PHASE_STATUS: HITO_A_COMPLETED
 REASON: "Fase 1 completada. Encuesta interactiva resuelta y especificación detallada specs/spec.md generada con éxito."
 SPEC_PATH: ".openspec/changes/<change-name>/specs/spec.md"
+CHANGE_NAME: "<nombre-del-cambio>"
 ---
 soy sdd-planner, especificación detallada y planos listos en specs/spec.md.
 @zugzbot Hito A completado. Presenta el resumen del plan e interrogatorio para transicionar al implementador de Fase 2 (sdd-builder).
