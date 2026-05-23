@@ -91,15 +91,15 @@ show_status() {
 
     # Define phases mapping
     local phases=(
-        "F0: Diagnóstico de Entorno       (@sdd-architect)"
+        "F0: Diagnóstico e Indexación    (@sdd-explorer)"
         "F1: Propuesta y Especificación   (@sdd-architect)"
-        "F2: Arquitectura y Planificación (@sdd-architect)"
-        "F3: Implementación de Código     (@sdd-implementer)"
-        "F4: Percepción y Diseño Visual   (@sdd-implementer)"
+        "F2: Arquitectura y Planificación (@sdd-planner)"
+        "F3: Implementación de Lógica     (@sdd-implementer)"
+        "F4: Percepción y Diseño Visual   (@sdd-designer)"
         "F5: Entorno y Pruebas Manuales   (@sdd-launcher)"
-        "F6: Calidad y Pruebas QA         (@sdd-release-manager)"
-        "F7: Documentación Canónica       (@sdd-release-manager)"
-        "F8: Archivación y Cierre         (@sdd-release-manager)"
+        "F6: Calidad y Pruebas QA         (@sdd-verifier)"
+        "F7: Documentación Canónica       (@sdd-documenter)"
+        "F8: Archivación y Cierre         (@sdd-archiver)"
     )
 
     print_phase() {
@@ -177,7 +177,7 @@ perform_clean() {
 {
   "change_name": "nuevo-cambio",
   "active_phase": 0,
-  "active_subagent": "sdd-architect",
+  "active_subagent": "sdd-explorer",
   "status": "idle",
   "auto_pilot": false,
   "last_updated": ""
@@ -318,10 +318,10 @@ generate_and_open_dashboard() {
 
     # Define phases mapping for the HTML
     local phases_json=(
-        "F0: Diagnóstico de Entorno"
+        "F0: Diagnóstico e Indexación"
         "F1: Propuesta y Especificación"
         "F2: Arquitectura y Planificación"
-        "F3: Implementación de Código"
+        "F3: Implementación de Lógica"
         "F4: Percepción y Diseño Visual"
         "F5: Entorno y Pruebas Manuales"
         "F6: Calidad y Pruebas QA"
@@ -330,15 +330,15 @@ generate_and_open_dashboard() {
     )
 
     local phases_agents=(
+        "@sdd-explorer"
         "@sdd-architect"
-        "@sdd-architect"
-        "@sdd-architect"
+        "@sdd-planner"
         "@sdd-implementer"
-        "@sdd-implementer"
+        "@sdd-designer"
         "@sdd-launcher"
-        "@sdd-release-manager"
-        "@sdd-release-manager"
-        "@sdd-release-manager"
+        "@sdd-verifier"
+        "@sdd-documenter"
+        "@sdd-archiver"
     )
 
     # Build the phases list dynamically in HTML

@@ -58,17 +58,17 @@ export default tool({
     } else {
       // Autocompletado del subagente según la fase
       const subagentMapping: { [key: number]: string } = {
-        0: "sdd-architect",
+        0: "sdd-explorer",
         1: "sdd-architect",
-        2: "sdd-architect",
+        2: "sdd-planner",
         3: "sdd-implementer",
-        4: "sdd-implementer",
+        4: "sdd-designer",
         5: "sdd-launcher",
-        6: "sdd-release-manager",
-        7: "sdd-release-manager",
-        8: "sdd-release-manager"
+        6: "sdd-verifier",
+        7: "sdd-documenter",
+        8: "sdd-archiver"
       };
-      lockfile.active_subagent = subagentMapping[args.nextPhase] || "sdd-architect";
+      lockfile.active_subagent = subagentMapping[args.nextPhase] || "sdd-explorer";
     }
 
     if (args.iteration !== undefined) {
