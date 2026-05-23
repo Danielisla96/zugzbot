@@ -4,4 +4,4 @@ description: Controlar el ciclo Spec-Driven Development (status, approve, test, 
 
 Ejecutando comando SDD: $ARGUMENTS
 
-!`bash ./sdd $ARGUMENTS`
+!`bash /Users/wavesbyte/Documents/zugzbot/plugin/sdd $ARGUMENTS`

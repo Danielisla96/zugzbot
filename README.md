@@ -245,6 +245,52 @@ El arnés incorpora una utilidad portable ubicada en `./.openspec/sdd` (un scrip
 
 ---
 
+## 🔌 Integración y Monitor TUI en Tiempo Real (OpenCode Plugin)
+
+El arnés incorpora un **plugin nativo para OpenCode TUI** que añade un **Monitor SDD en Tiempo Real** directamente en el panel lateral de tu editor (desplegable presionando la tecla **`b`**).
+
+Este monitor muestra el progreso de las fases de forma reactiva, una barra de carga ASCII premium y el subagente encargado actual sin tener que abrir navegadores externos.
+
+### ❓ ¿Por qué la carpeta `plugin/` contiene un `node_modules`?
+Durante el desarrollo, la carpeta `plugin/` genera su propio `node_modules` local. Esto **solo es necesario en tiempo de desarrollo** por dos motivos:
+1. **IntelliSense y Autocompletado:** Para que tu editor (VS Code, Cursor, OpenCode, etc.) reconozca los tipos de `solid-js` y `@opencode-ai/plugin` y no marque errores de sintaxis en rojo.
+2. **Typechecking (`npm run typecheck`):** Para poder compilar y validar la seguridad de tipos de TypeScript durante el desarrollo.
+
+> [!IMPORTANT]
+> **No es necesario para el funcionamiento en producción/tiempo de ejecución.** OpenCode ya incluye y resuelve estas dependencias internamente de forma automática al cargar el plugin. Por lo mismo, este directorio está convenientemente ignorado en `.gitignore` y nunca se sube a tu repositorio Git.
+
+### 🚀 Cómo instalar y activar el Plugin en OpenCode
+
+Puedes instalar este plugin de dos formas según tu preferencia:
+
+#### Opción A: Instalación Global (Disponible en TODOS tus proyectos en tu Mac - Recomendado)
+Si quieres que el Monitor SDD esté activo de forma global en cualquier carpeta donde ejecutes `opencode`:
+
+1. Abre tu terminal de macOS.
+2. Crea el directorio de plugins globales de OpenCode si no existe:
+   ```bash
+   mkdir -p ~/.config/opencode/plugins
+   ```
+3. Crea un enlace simbólico desde el archivo del plugin hacia tu configuración global:
+   ```bash
+   ln -s /Users/wavesbyte/Documents/zugzbot/plugin/sdd-sidebar.tsx ~/.config/opencode/plugins/sdd-sidebar.tsx
+   ```
+4. **¡Listo!** Cierra e inicia tu instancia de `opencode` y presiona **`b`** para abrir el panel lateral con el monitor activo en tiempo real.
+
+#### Opción B: Instalación Local (Solo en el proyecto actual)
+Si prefieres activar el plugin únicamente dentro de un proyecto específico:
+
+1. Crea la carpeta de plugins locales si no existe en la raíz de tu proyecto destino:
+   ```bash
+   mkdir -p .opencode/plugins
+   ```
+2. Crea un enlace simbólico o copia el archivo:
+   ```bash
+   ln -s /Users/wavesbyte/Documents/zugzbot/plugin/sdd-sidebar.tsx .opencode/plugins/sdd-sidebar.tsx
+   ```
+
+---
+
 ## 📂 Estructura de Archivos del Proyecto Post-Bootstrap
 
 Tras ejecutar la instalación, tu repositorio quedará configurado localmente con los siguientes archivos y carpetas estructuradas:
