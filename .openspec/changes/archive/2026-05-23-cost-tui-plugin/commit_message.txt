@@ -1,0 +1,7 @@
+feat(plugin): implement Cost Monitor TUI for OpenCode
+
+- Add cost-monitor plugin with SolidJS components.
+- Implement telemetry reader for quota JSON files.
+- Add reactive sidebar panel and summary widget.
+- Aggregate costs by agent name from session titles.
+- Update package version to 1.4.0.

@@ -245,6 +245,23 @@ El arnés incorpora una utilidad portable ubicada en `./.openspec/sdd` (un scrip
 
 ---
 
+### 📊 Cost Monitor Plugin (Nuevo)
+El arnés ahora incluye un monitor de costos en tiempo real que:
+- Lee las cuotas y consumo de la sesión desde el sistema de archivos de OpenCode.
+- Agrupa costos por agente (detectado automáticamente por el título de la sesión).
+- Muestra un desglose detallado en el panel lateral (Sidebar).
+- Incluye un widget de resumen en la parte inferior de la pantalla de inicio.
+
+```mermaid
+graph LR
+    A[OpenCode Quota JSON] --> B[Telemetry Reader]
+    B --> C[Aggregator]
+    C --> D[SolidJS Store]
+    D --> E[TUI UI Components]
+```
+
+---
+
 ## 🔌 Integración y Monitor TUI en Tiempo Real (OpenCode Plugin)
 
 El arnés incorpora un **plugin nativo para OpenCode TUI** que añade un **Monitor SDD en Tiempo Real** directamente en el panel lateral de tu editor (desplegable presionando la tecla **`b`**).

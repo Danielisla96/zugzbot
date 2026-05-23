@@ -1,0 +1,9 @@
+{
+  "name": "cost-monitor",
+  "displayName": "OpenCode Cost Monitor",
+  "description": "Visualización y monitoreo de costos por agente en tiempo real.",
+  "version": "1.0.0",
+  "engines": {
+    "opencode": "^1.0.0"
+  }
+}
