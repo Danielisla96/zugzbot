@@ -1,11 +1,11 @@
 # Checklist Técnico: Implementación de Agent Monitor
 
 ## Fase Correctiva (Simplificación Extrema) 🧪 (Prioridad Crítica)
-- [ ] **Limpieza de Componente TUI**: Simplificar `SidebarPanel.ts` para renderizar únicamente un saludo dinámico "¡Hola desde Zugzbot SDD!".
-- [ ] **Verificación de Reactividad**: Usar un `createSignal` o similar para asegurar que el contenido puede cambiar.
-- [ ] **Ajuste de Posicionamiento**: Cambiar `SLOT_ORDER_SIDEBAR` a un valor que garantice visibilidad prioritaria (ej: `50` o `10`).
-- [ ] **Sincronización de Identidad**: Asegurar que `package.json` y `tui.ts` usen consistentemente el ID `zugzbot-sdd`.
-- [ ] **Corrección de Lockfile**: Actualizar `change_name` en `.openspec/sdd-lock.json` a `agent-monitor-sidebar-plugin` para habilitar la carga de metadatos reales.
+- [x] **Limpieza de Componente TUI**: Simplificar `SidebarPanel.ts` para renderizar únicamente un saludo dinámico "¡Hola desde Zugzbot SDD!".
+- [x] **Verificación de Reactividad**: Usar un `createSignal` o similar para asegurar que el contenido puede cambiar.
+- [x] **Ajuste de Posicionamiento**: Cambiar `SLOT_ORDER_SIDEBAR` a un valor que garantice visibilidad prioritaria (ej: `50` o `10`).
+- [x] **Sincronización de Identidad**: Asegurar que `package.json` y `tui.ts` usen consistentemente el ID `zugzbot-sdd`.
+- [x] **Corrección de Lockfile**: Actualizar `change_name` en `.openspec/sdd-lock.json` a `agent-monitor-sidebar-plugin` para habilitar la carga de metadatos reales.
 
 ## Fase Correctiva: Identidad y Visibilidad 🕵️‍♂️ (Prioridad Alta)
 - [x] **Estandarización de Directorio**: Renombrar el directorio `./plugin` a `./zugzbot-sdd` para evitar ambigüedades y conflictos con nombres genéricos.

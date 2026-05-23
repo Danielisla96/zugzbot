@@ -1,18 +1,64 @@
-# Compaction Snapshot - Agent Monitor Sidebar Plugin (Fase 2: Simplificación)
+# 🧠 Consolidado de Contexto de Alta Densidad (SDD Compaction)
+Fecha de consolidación: 2026-05-23
+Cambio Activo: `agent-monitor-sidebar-plugin`
 
-## Contexto Actual
-- **Problema**: El plugin carga pero muestra "Saludo inicial" (placeholder desconocido) en lugar de la UI real.
-- **Estado**: `change_name` sincronizado a `agent-monitor-sidebar-plugin` en `sdd-lock.json`.
-- **Decisión Arquitectónica**: Implementar un "Hello World" dinámico para validar la cadena de renderizado y reactividad antes de restaurar la lógica compleja.
+---
 
-## Decisiones Técnicas
-1. **Slot**: Mantener `sidebar_content`.
-2. **Prioridad**: Bajar `SLOT_ORDER_SIDEBAR` de 150 a 50 para asegurar que aparezca en la parte superior.
-3. **Simplificación**: Reducir `SidebarPanel.ts` a un saludo básico reactivo.
-4. **ID**: Forzar el uso de `zugzbot-sdd` en toda la configuración.
+## 📜 Propuesta y Objetivos
+# Propuesta Técnica: Plugin de Monitoreo de Agentes en Sidebar
 
-## Checklist Resumido (Fase 2)
-- Simplificar componente TUI.
-- Ajustar orden de slot.
-- Validar reactividad con señal de SolidJS.
-- Confirmar visibilidad en sidebar.
+---
+
+## 📐 Especificaciones y Escenarios
+Escenarios BDD no estructurados.
+
+---
+
+## 🏛️ Estructura Arquitectónica
+Esquema Arquitectónico:
+```mermaid
+graph LR
+    subgraph OpenCode Core
+        Events[Event Bus]
+        Session[Session State]
+    end
+
+    subgraph Plugin Backend (index.ts)
+        Hook[Plugin Hook]
+        Store[Local State Manager]
+    end
+
+    subgraph Plugin Frontend (tui.ts)
+        Sidebar[Sidebar Component]
+        Status[Status Bar Component]
+    end
+
+    Events -->|session.status / session.updated| Hook
+    Hook --> Store
+    Store -->|Reactive Update| Sidebar
+    Store -->|Reactive Update| Status
+    Session -->|Context| Sidebar
+```
+
+---
+
+## 📋 Estado del Checklist
+Checklist de Tareas: 34/34 completadas.
+- [x] **Limpieza de Componente TUI**: Simplificar `SidebarPanel.ts` para renderizar únicamente un saludo dinámico "¡Hola desde Zugzbot SDD!".
+- [x] **Verificación de Reactividad**: Usar un `createSignal` o similar para asegurar que el contenido puede cambiar.
+- [x] **Ajuste de Posicionamiento**: Cambiar `SLOT_ORDER_SIDEBAR` a un valor que garantice visibilidad prioritaria (ej: `50` o `10`).
+- [x] **Sincronización de Identidad**: Asegurar que `package.json` y `tui.ts` usen consistentemente el ID `zugzbot-sdd`.
+- [x] **Corrección de Lockfile**: Actualizar `change_name` en `.openspec/sdd-lock.json` a `agent-monitor-sidebar-plugin` para habilitar la carga de metadatos reales.
+- [x] **Estandarización de Directorio**: Renombrar el directorio `./plugin` a `./zugzbot-sdd` para evitar ambigüedades y conflictos con nombres genéricos.
+- [x] **Corrección de Metadatos en `package.json`**:
+    - [x] Agregar `"displayName": "Zugzbot SDD Monitor"`.
+    - [x] Integrar campos de `plugin.json` (publisher, version) y eliminar `plugin.json`.
+- [x] **Ajuste de Carga y Registro**:
+... (y más)
+
+---
+
+> [!TIP]
+> **Acción Recomendada para Limpiar Memoria de Contexto:**
+> Si eres un subagente y ves este archivo, tu memoria ha sido compactada con éxito.
+> Lee **únicamente** este archivo de consolidación para entender el estado actual y los contratos técnicos previos. Descarta la lectura repetitiva de chats históricos o archivos de logs antiguos.
