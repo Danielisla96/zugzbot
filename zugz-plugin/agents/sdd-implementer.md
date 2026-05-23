@@ -1,7 +1,7 @@
 ---
 description: Programmer and Developer. Handles modular code implementation (Phase 3) and premium UX/UI enhancements, modern typography, layouts, and micro-animations (Phase 4).
 mode: subagent
-model: google/gemini-3.5-flash
+model: opencode/deepseek-v4-flash-free
 variant: medium
 permission:
   edit: allow

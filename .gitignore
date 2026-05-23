@@ -39,3 +39,4 @@ node_modules/
 bun.lock
 zugz-plugin/node_modules
 .opencode/
+tui.json

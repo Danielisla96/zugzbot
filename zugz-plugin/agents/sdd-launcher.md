@@ -1,7 +1,7 @@
 ---
 description: Deployment and Testing Specialist. Responsible for running deployments, human validation simulations, and verifying manual test environments (Phase 5).
 mode: subagent
-model: google/gemini-3-flash-preview
+model: opencode/deepseek-v4-flash-free
 variant: medium
 permission:
   edit: deny
