@@ -35,5 +35,7 @@ Thumbs.db
 # --- Proyecto ---
 # No ignorar .env.example, solo el .env real
 !.env.example
+node_modules/
+bun.lock
 zugz-plugin/node_modules
 .opencode/

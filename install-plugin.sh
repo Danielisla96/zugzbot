@@ -61,6 +61,10 @@ ln -sf "${PLUGIN_DIR}/commands" "${REPO_DIR}/.opencode/commands"
 ln -sf "${PLUGIN_DIR}/skills"   "${REPO_DIR}/.opencode/skills"
 ln -sf "${PLUGIN_DIR}/tools"    "${REPO_DIR}/.opencode/tools"
 
+# Vincular node_modules de zugz-plugin a .opencode/node_modules para resolución de dependencias
+rm -rf "${PLUGIN_DIR}/node_modules"
+ln -sf "${REPO_DIR}/.opencode/node_modules" "${PLUGIN_DIR}/node_modules"
+
 # 5. Asegurar package.json en .opencode/ para dependencias
 echo -e "  ${COLOR_MUTED}▪ Generando .opencode/package.json con dependencias...${NC}"
 cat << 'EOF' > "${REPO_DIR}/.opencode/package.json"
@@ -72,8 +76,13 @@ cat << 'EOF' > "${REPO_DIR}/.opencode/package.json"
 }
 EOF
 
+echo -e "  ${COLOR_MUTED}▪ Instalando dependencias en .opencode/...${NC}"
 cd "${REPO_DIR}/.opencode"
-npm install --legacy-peer-deps --quiet
+if command -v bun &> /dev/null; then
+    bun install --quiet
+else
+    npm install --legacy-peer-deps --quiet
+fi
 cd "${REPO_DIR}"
 
 echo -e "${COLOR_BORDER}┌──────────────────────────────────────────────────────────────┐${NC}"
