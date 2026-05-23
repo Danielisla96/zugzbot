@@ -37,7 +37,13 @@ if [ ! -d "$PLUGIN_DIR" ]; then
     exit 1
 fi
 
-echo -e "  ${COLOR_MUTED}▪ Directorio detectado:${NC} ${COLOR_SUCCESS}${REPO_DIR}${NC}"
+# Directorio de destino (por defecto la raíz del repositorio)
+TARGET_DIR="${1:-$REPO_DIR}"
+mkdir -p "$TARGET_DIR"
+TARGET_DIR="$(cd "$TARGET_DIR" && pwd)"
+
+echo -e "  ${COLOR_MUTED}▪ Repositorio origen:${NC} ${COLOR_SUCCESS}${REPO_DIR}${NC}"
+echo -e "  ${COLOR_MUTED}▪ Proyecto destino:${NC}   ${COLOR_SUCCESS}${TARGET_DIR}${NC}"
 
 # 2. Limpiar instalación global previa del plugin TUI
 echo -e "  ${COLOR_MUTED}▪ Limpiando plugin TUI global previo...${NC}"
@@ -46,29 +52,49 @@ rm -f ~/.config/opencode/plugins/plugin_tui.tsx
 
 # 3. Limpiar directorios locales del arnés previos
 echo -e "  ${COLOR_MUTED}▪ Limpiando directorios locales del arnés...${NC}"
-rm -rf "${REPO_DIR}/.opencode/agents"
-rm -rf "${REPO_DIR}/.opencode/commands"
-rm -rf "${REPO_DIR}/.opencode/skills"
-rm -rf "${REPO_DIR}/.opencode/tools"
-rm -rf "${REPO_DIR}/.opencode/plugins"
+rm -rf "${TARGET_DIR}/.opencode/agents"
+rm -rf "${TARGET_DIR}/.opencode/commands"
+rm -rf "${TARGET_DIR}/.opencode/skills"
+rm -rf "${TARGET_DIR}/.opencode/tools"
+rm -rf "${TARGET_DIR}/.opencode/plugins"
 
-# 4. Vincular arnés SDD localmente
-echo -e "  ${COLOR_MUTED}▪ Vinculando arnés SDD...${NC}"
-mkdir -p "${REPO_DIR}/.opencode"
-ln -sf "${PLUGIN_DIR}/agents"   "${REPO_DIR}/.opencode/agents"
-ln -sf "${PLUGIN_DIR}/commands" "${REPO_DIR}/.opencode/commands"
-ln -sf "${PLUGIN_DIR}/skills"   "${REPO_DIR}/.opencode/skills"
-ln -sf "${PLUGIN_DIR}/tools"    "${REPO_DIR}/.opencode/tools"
-ln -sf "${PLUGIN_DIR}/plugins"  "${REPO_DIR}/.opencode/plugins"
-
-# Vincular node_modules de zugz-plugin a .opencode/node_modules para resolución de dependencias
-rm -rf "${PLUGIN_DIR}/node_modules"
-ln -sf "${REPO_DIR}/.opencode/node_modules" "${PLUGIN_DIR}/node_modules"
+# 4. Copiar o Vincular arnés SDD según el destino
+if [ "$TARGET_DIR" = "$REPO_DIR" ]; then
+    echo -e "  ${COLOR_MUTED}▪ Vinculando arnés SDD localmente (Modo Desarrollo)...${NC}"
+    mkdir -p "${TARGET_DIR}/.opencode"
+    ln -sf "${PLUGIN_DIR}/agents"   "${TARGET_DIR}/.opencode/agents"
+    ln -sf "${PLUGIN_DIR}/commands" "${TARGET_DIR}/.opencode/commands"
+    ln -sf "${PLUGIN_DIR}/skills"   "${TARGET_DIR}/.opencode/skills"
+    ln -sf "${PLUGIN_DIR}/tools"    "${TARGET_DIR}/.opencode/tools"
+    ln -sf "${PLUGIN_DIR}/plugins"  "${TARGET_DIR}/.opencode/plugins"
+    
+    # Vincular node_modules de zugz-plugin a .opencode/node_modules para resolución de dependencias
+    rm -rf "${PLUGIN_DIR}/node_modules"
+    ln -sf "${TARGET_DIR}/.opencode/node_modules" "${PLUGIN_DIR}/node_modules"
+else
+    echo -e "  ${COLOR_MUTED}▪ Instalando arnés SDD de forma permanente...${NC}"
+    mkdir -p "${TARGET_DIR}/.opencode"
+    cp -rf "${PLUGIN_DIR}/agents"   "${TARGET_DIR}/.opencode/agents"
+    cp -rf "${PLUGIN_DIR}/commands" "${TARGET_DIR}/.opencode/commands"
+    cp -rf "${PLUGIN_DIR}/skills"   "${TARGET_DIR}/.opencode/skills"
+    cp -rf "${PLUGIN_DIR}/tools"    "${TARGET_DIR}/.opencode/tools"
+    cp -rf "${PLUGIN_DIR}/plugins"  "${TARGET_DIR}/.opencode/plugins"
+    
+    # Copiar opencode.json y AGENTS.md si no existen en el destino
+    if [ ! -f "${TARGET_DIR}/opencode.json" ]; then
+        echo -e "  ${COLOR_MUTED}▪ Copiando opencode.json al destino...${NC}"
+        cp "${REPO_DIR}/opencode.json" "${TARGET_DIR}/opencode.json"
+    fi
+    if [ ! -f "${TARGET_DIR}/AGENTS.md" ]; then
+        echo -e "  ${COLOR_MUTED}▪ Copiando AGENTS.md al destino...${NC}"
+        cp "${REPO_DIR}/AGENTS.md" "${TARGET_DIR}/AGENTS.md"
+    fi
+fi
 
 # Asegurar registro de plugin TUI local en tui.json si no existe
-if [ ! -f "${REPO_DIR}/tui.json" ]; then
+if [ ! -f "${TARGET_DIR}/tui.json" ]; then
     echo -e "  ${COLOR_MUTED}▪ Creando archivo tui.json local para registrar el plugin TUI...${NC}"
-    cat << 'EOF' > "${REPO_DIR}/tui.json"
+    cat << 'EOF' > "${TARGET_DIR}/tui.json"
 {
   "$schema": "https://opencode.ai/tui.json",
   "plugin": [
@@ -80,7 +106,7 @@ fi
 
 # 5. Asegurar package.json en .opencode/ para dependencias
 echo -e "  ${COLOR_MUTED}▪ Generando .opencode/package.json con dependencias...${NC}"
-cat << 'EOF' > "${REPO_DIR}/.opencode/package.json"
+cat << 'EOF' > "${TARGET_DIR}/.opencode/package.json"
 {
   "name": "zugzbot-sdd-local",
   "dependencies": {
@@ -90,7 +116,7 @@ cat << 'EOF' > "${REPO_DIR}/.opencode/package.json"
 EOF
 
 echo -e "  ${COLOR_MUTED}▪ Instalando dependencias en .opencode/...${NC}"
-cd "${REPO_DIR}/.opencode"
+cd "${TARGET_DIR}/.opencode"
 if command -v bun &> /dev/null; then
     bun install --quiet
 else

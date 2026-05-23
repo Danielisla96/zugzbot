@@ -310,38 +310,64 @@ tu-proyecto/
 
 ---
 
-## 📦 Instalación e Integración Global del Plugin (1 solo Comando)
+## 📦 Instalación e Integración de la Metodología
 
-La instalación se realiza vinculando el contenido de tu directorio local `/Users/wavesbyte/Documents/zugzbot/plugin/` de manera directa a la configuración global de OpenCode. 
+El arnés de Zugzbot admite dos tipos de instalación según tus necesidades de desarrollo y uso.
 
-Para facilitarte la vida, el repositorio incluye un script autoejecutable (`install-plugin.sh`) que realiza todo el proceso de forma automatizada y segura en un solo paso:
-1. Purgará limpiamente cualquier enlace simbólico previo para evitar conflictos de tipo `"File exists"`.
-2. Creará los directorios globales necesarios.
-3. Vinculará de forma transparente tu arnés de subagentes, herramientas, habilidades y comandos slash.
-4. Activará el **Monitor TUI en Tiempo Real** en tu panel lateral de OpenCode.
+---
 
-### 🚀 Instrucciones de Instalación
+### 1️⃣ Instalación en otros Proyectos (1 Solo Comando desde GitHub)
+Para instalar este arnés de forma permanente y 100% autoconfigurada en **cualquier proyecto de tu sistema**, abre la terminal en la raíz de tu proyecto de destino y ejecuta el siguiente comando único:
 
-Navega a la raíz del repositorio de Zugzbot y ejecuta el instalador:
+```bash
+git clone -b plugin_opencode_v2 --depth=1 https://github.com/Danielisla96/zugzbot.git /tmp/zugzbot && /tmp/zugzbot/install-plugin.sh "$(pwd)" && rm -rf /tmp/zugzbot
+```
+
+#### 🛠️ ¿Qué hace este comando automáticamente?
+1. Realiza una clonación ultra-rápida y efímera del repositorio de Zugzbot en tu directorio `/tmp/`.
+2. Ejecuta el instalador copiando de forma permanente todos los subagentes, comandos de barra modulares, habilidades y herramientas personalizadas a tu directorio `.opencode/`.
+3. Crea y preconfigura de forma transparente los archivos de reglas y comportamiento en la raíz de tu proyecto:
+   - **`opencode.json`**: Centraliza instrucciones globales y automatiza los permisos de las subtareas del swarm.
+   - **`AGENTS.md`**: Define el reglamento operativo y activa la directiva de **Carga Perezosa (Lazy Loading)** para optimización extrema de tokens.
+   - **`tui.json`**: Configura la carga del panel de monitoreo reactivo.
+4. Elimina limpiamente la caché temporal de clonación.
+
+---
+
+### 2️⃣ Instalación para Desarrollo Local (Modo Enlazado)
+Si estás realizando modificaciones al arnés de Zugzbot y deseas probar los cambios en tiempo real, puedes vincularlo localmente. Navega a la raíz de tu repositorio clonado de Zugzbot y ejecuta:
+
 ```bash
 ./install-plugin.sh
 ```
 
-¡Eso es todo! El script resolverá la ruta del repositorio dinámicamente y completará la configuración global en segundos.
+El script creará automáticamente enlaces simbólicos (`symlinks`) entre la carpeta `zugz-plugin/` y el directorio de desarrollo del proyecto, permitiendo que OpenCode asimile al instante tus cambios de código, estilos y prompts.
 
-### 💻 Uso del Monitor y la Metodología
+---
 
-Abre tu editor OpenCode en cualquier proyecto donde desees trabajar con la metodología SDD activa:
+### 💻 Uso del Monitor y los Comandos de Barra
+
+Una vez instalado, abre tu editor OpenCode en tu proyecto ejecutando:
 ```bash
 OPENCODE_EXPERIMENTAL=true opencode
 ```
-Una vez dentro de la TUI, presiona la tecla **`b`** para abrir el panel lateral y verás el **[SDD Monitor]** latiendo en tiempo real a medida que los agentes progresan de forma autónoma.
+
+#### ⚡ Comandos Aislados Disponibles
+Ahora dispones de comandos slash específicos configurados como subtareas aisladas (`subtask: true`) para evitar contaminar la conversación principal:
+- `/sdd-architect <change-name>`: Spawnea una subtarea aislada con `@sdd-architect` para Fase 0, 1 y 2. Auto-ejecuta `npx autoskills -y`.
+- `/sdd-implementer <change-name>`: Abre una subtarea con `@sdd-implementer` para codificar y afinar la UI (Fase 3 y 4).
+- `/sdd-launcher <change-name>`: Corre linter/tests y levanta servidores de desarrollo locales (Fase 5).
+- `/sdd-release <change-name>`: Ejecuta auditoría final, changelogs e inyecta lecciones en `brain.md` y cierra Git commit semántico (Fase 6, 7 y 8).
+
+Presiona la tecla **`b`** en la TUI para desplegar el panel lateral reactivo y ver el **[SDD Monitor]** latiendo en tiempo real con la ola animada naranja de Zugz.
 
 ---
 
 ## 📜 Reglamento de Conducta del Equipo (AGENTS.md)
 
-Todos los subagentes operan bajo la estricta directiva de `AGENTS.md`, la cual asegura:
+Todos los subagentes operan bajo la estricta directiva de `AGENTS.md` (copiado automáticamente a tu proyecto), la cual asegura:
 1.  **Código Limpio e Higiene Estructural**: Respetar patrones SOLID, modularización y evitar duplicaciones absurdas.
 2.  **Cero Alucinaciones de APIs**: Es mandatorio validar la compatibilidad de firmas llamando a las herramientas LSP en lugar de realizar conjeturas.
 3.  **Higiene en Control de Versiones**: Commits de Git con mensajes limpios, breves y libres de marcas que delaten autoría de un modelo de IA.
+4.  **Carga Perezosa de Archivos**: Los agentes cargan el cerebro y reportes técnicos bajo demanda con la herramienta `read` únicamente cuando la fase lo requiera, resultando en sesiones increíblemente eficientes de consumo de tokens.
+
