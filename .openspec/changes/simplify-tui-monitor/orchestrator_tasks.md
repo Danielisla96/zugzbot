@@ -13,7 +13,7 @@
 
 ## 📦 Fase 1: Poda de código muerto (Tasks 1–5)
 
-### Task 1 — Eliminar constantes y tipos obsoletos
+### Task 1 — Eliminar constantes y tipos obsoletos `✅`
 
 **Objetivo:** Remover constantes e interfaces que solo usaba el subsistema de breakdown.
 
@@ -56,7 +56,7 @@ interface MetricsBreakdown {
 
 ---
 
-### Task 2 — Reemplazar `getDefaultAction()` por constante inline
+### Task 2 — Reemplazar `getDefaultAction()` por constante inline `✅`
 
 **Objetivo:** Eliminar la función `getDefaultAction()` y reemplazarla por una constante `PHASE_ACTIONS` declarada en el scope del slot `sidebar_content` (o inline en `getActiveAgentData`).
 
@@ -103,7 +103,7 @@ interface MetricsBreakdown {
 
 ---
 
-### Task 3 — Reemplazar `getAgentForPhase()` por constante inline
+### Task 3 — Reemplazar `getAgentForPhase()` por constante inline `✅`
 
 **Objetivo:** Eliminar la función `getAgentForPhase()` y reemplazarla por una constante `PHASE_AGENTS`.
 
@@ -150,7 +150,7 @@ interface MetricsBreakdown {
 
 ---
 
-### Task 4 — Eliminar funciones auxiliares de breakdown
+### Task 4 — Eliminar funciones auxiliares de breakdown `✅`
 
 **Objetivo:** Remover las 6 funciones que conforman el subsistema de cálculo de métricas de sesión.
 
@@ -183,7 +183,7 @@ interface MetricsBreakdown {
 
 ---
 
-### Task 5 — Eliminar estado del subsistema de breakdown
+### Task 5 — Eliminar estado del subsistema de breakdown `✅`
 
 **Objetivo:** Remover las variables de estado que gestionaban el breakdown colapsable.
 
@@ -214,7 +214,7 @@ interface MetricsBreakdown {
 
 ## 🔧 Fase 2: Compresión y simplificación (Tasks 6–10)
 
-### Task 6 — Simplificar el polling
+### Task 6 — Simplificar el polling `✅`
 
 **Objetivo:** El `setInterval` actual hace 4 cosas (lockfile + timestamp + breakdown + diff). Reducir a solo 2 (lockfile + timestamp).
 
@@ -252,7 +252,7 @@ interface MetricsBreakdown {
 
 ---
 
-### Task 7 — Simplificar `getActiveAgentData()`
+### Task 7 — Simplificar `getActiveAgentData()` `✅`
 
 **Objetivo:** Eliminar la dependencia de `getDefaultAction()` (eliminada en Task 2) y usar la constante `PHASE_ACTIONS` como fallback.
 
@@ -312,7 +312,7 @@ interface MetricsBreakdown {
 
 ---
 
-### Task 8 — Comprimir componente `SDDMonitor`
+### Task 8 — Comprimir componente `SDDMonitor` `✅`
 
 **Objetivo:** Reemplazar el componente `SDDMonitor` actual (~138 líneas, líneas 219–357) por una versión comprimida (~80 líneas) con pipeline compacto.
 
@@ -437,7 +437,7 @@ El slot `sidebar_content` tendrá las siguientes constantes inline (agregar desp
 
 ---
 
-### Task 9 — Eliminar componentes `AgentMetricsRow` y `SDDUsage`
+### Task 9 — Eliminar componentes `AgentMetricsRow` y `SDDUsage` `✅`
 
 **Objetivo:** Remover los dos componentes de visualización del breakdown.
 
@@ -463,7 +463,7 @@ El slot `sidebar_content` tendrá las siguientes constantes inline (agregar desp
 
 ---
 
-### Task 10 — Simplificar el JSX de retorno del slot
+### Task 10 — Simplificar el JSX de retorno del slot `✅`
 
 **Objetivo:** Remover `<SDDUsage />` y los separadores del return, quedando solo `<SDDMonitor />` seguido de `{props.children}`.
 
@@ -509,7 +509,7 @@ El slot `sidebar_content` tendrá las siguientes constantes inline (agregar desp
 
 ## ✅ Fase 3: Verificación final (Tasks 11–13)
 
-### Task 11 — Verificar export y estructura de slots intactos
+### Task 11 — Verificar export y estructura de slots intactos `✅`
 
 **Objetivo:** Confirmar que la estructura de integración con OpenCode no se ha visto afectada.
 
@@ -528,7 +528,7 @@ El slot `sidebar_content` tendrá las siguientes constantes inline (agregar desp
 
 ---
 
-### Task 12 — Contar líneas finales
+### Task 12 — Contar líneas finales `✅`
 
 **Objetivo:** Verificar que el archivo resultante tiene 180 líneas (±20).
 
@@ -543,7 +543,7 @@ wc -l plugin/zugzbot-sdd/plugins/plugin_tui.tsx
 
 ---
 
-### Task 13 — Verificación completa de BDD
+### Task 13 — Verificación completa de BDD `✅`
 
 **Objetivo:** Ejecutar una verificación manual de todos los escenarios BDD.
 
