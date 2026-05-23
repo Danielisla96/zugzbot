@@ -41,7 +41,16 @@ fi
 
 echo -e "  ${COLOR_MUTED}▪ Directorio detectado:${NC} ${COLOR_SUCCESS}${REPO_DIR}${NC}"
 
-# 2. Paso 0: Limpiar instalaciones previas y desvincular paquetes npm locales conflictivos
+# 2. Paso 0: Asegurar directorios y limpiar instalaciones previas
+echo -e "  ${COLOR_MUTED}▪ Asegurando directorios de configuración global...${NC}"
+mkdir -p ~/.config/opencode
+if [ ! -f ~/.config/opencode/package.json ]; then
+    echo '{"dependencies": {"@opencode-ai/plugin": "1.15.4"}}' > ~/.config/opencode/package.json
+fi
+if [ ! -f ~/.config/opencode/opencode.jsonc ]; then
+    echo '{"$schema": "https://opencode.ai/config.json", "model": "opencode/deepseek-v4-flash-free", "plugin": []}' > ~/.config/opencode/opencode.jsonc
+fi
+
 echo -e "  ${COLOR_MUTED}▪ Limpiando enlaces simbólicos previos...${NC}"
 rm -f ~/.config/opencode/agents
 rm -f ~/.config/opencode/commands

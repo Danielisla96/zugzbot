@@ -1,8 +1,7 @@
 ---
 description: Architect and Technical Designer. Handles environment diagnostics, technical proposals, BDD specifications, and technical task checklists for Hito A (Phases 0, 1, 2) and corrective plan loops.
 mode: subagent
-model: google/gemini-3-flash-preview
-variant: medium
+model: opencode/deepseek-v4-flash-free
 permission:
   edit: allow
   bash: ask

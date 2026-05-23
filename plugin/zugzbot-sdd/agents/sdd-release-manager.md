@@ -1,8 +1,7 @@
 ---
 description: Quality Assurance and Release Manager. Runs automated test suites, linter audits, code quality control checks, documentation, and handles canonical closure (Phases 6, 7, 8).
 mode: subagent
-model: google/gemini-3-flash-preview
-variant: medium
+model: opencode/deepseek-v4-flash-free
 permission:
   edit: allow
   bash: allow
