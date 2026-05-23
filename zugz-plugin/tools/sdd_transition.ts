@@ -6,10 +6,10 @@ import { execSync } from "child_process"
 export default tool({
   description: "Tránsiciona de fase en el ciclo Spec-Driven Development (SDD), actualizando el archivo de bloqueo lockfile .openspec/sdd-lock.json de forma segura, e integra control de cambios en Git de forma automática.",
   args: {
-    nextPhase: tool.schema.number().describe("El número de la siguiente fase del ciclo SDD (0-8)"),
+    nextPhase: tool.schema.number().describe("El número de la siguiente fase del ciclo SDD (1-3)"),
     status: tool.schema.string().describe("El nuevo estado del ciclo (ej: 'idle', 'in_progress', 'corrective_loop')"),
     reason: tool.schema.string().describe("La justificación o explicación resumida de los cambios logrados en esta fase"),
-    activeSubagent: tool.schema.string().optional().describe("El subagente activo opcional (ej: 'sdd-architect', 'sdd-implementer')"),
+    activeSubagent: tool.schema.string().optional().describe("El subagente activo opcional (ej: 'sdd-planner', 'sdd-builder')"),
     iteration: tool.schema.number().optional().describe("El número de iteración correctiva opcional")
   },
   async execute(args, context) {
@@ -58,17 +58,11 @@ export default tool({
     } else {
       // Autocompletado del subagente según la fase
       const subagentMapping: { [key: number]: string } = {
-        0: "sdd-explorer",
-        1: "sdd-architect",
-        2: "sdd-planner",
-        3: "sdd-implementer",
-        4: "sdd-designer",
-        5: "sdd-launcher",
-        6: "sdd-verifier",
-        7: "sdd-documenter",
-        8: "sdd-archiver"
+        1: "sdd-planner",
+        2: "sdd-builder",
+        3: "sdd-archiver"
       };
-      lockfile.active_subagent = subagentMapping[args.nextPhase] || "sdd-explorer";
+      lockfile.active_subagent = subagentMapping[args.nextPhase] || "sdd-planner";
     }
 
     if (args.iteration !== undefined) {

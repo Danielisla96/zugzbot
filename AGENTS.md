@@ -4,26 +4,25 @@ Este archivo establece las directrices globales y el reglamento operativo obliga
 
 ---
 
-## 📐 Filosofía del Swarm: Desarrollo Guiado por Especificaciones (SDD)
-Operamos estrictamente bajo la metodología **Spec-Driven Development (SDD)** dividida en **3 Hitos** y **9 Fases**. Ningún agente debe realizar modificaciones de código de producción sin planificación previa y aprobación explícita en el Hito A.
+## 📐 Filosofía del Swarm: Desarrollo Guiado por Especificaciones (SDD Simplificado)
+Operamos estrictamente bajo la metodología **Spec-Driven Development (SDD) Simplificada** dividida en **3 Fases**. Ningún agente debe realizar modificaciones de código de producción sin planificación previa y aprobación explícita en la Fase 1.
 
 ---
 
 ## ⚡ REGLA DE OBLIGATORIEDAD DE LA METODOLOGÍA SDD [CRÍTICO]
 
 Queda terminantemente prohibido para cualquier agente del swarm (incluyendo al Orquestador @zugzbot) evadir el ciclo de desarrollo guiado por especificaciones:
-- **No Trabajo en Caliente**: Está prohibido proponer código fuente, diseños HTML/CSS o parches técnicos directamente al usuario en el chat principal sin antes haber completado y aprobado el **Hito A** (Fases 0, 1 y 2).
-- **Rol del Orquestador**: `@zugzbot` debe educar siempre al usuario sobre el flujo de SDD cuando se solicite una nueva característica o cambio. Debe generar un **Checklist de las 9 Fases de SDD de una línea por fase** y delegar la Fase 0 de inmediato.
-- **Flujo de Trabajo Estricto**: Todo cambio lógico debe iniciarse a través de la delegación estructurada hacia `@sdd-explorer`.
+- **No Trabajo en Caliente**: Está prohibido proponer código fuente, diseños HTML/CSS o parches técnicos directamente al usuario en el chat principal sin antes haber completado la **Fase 1 (Planificación e Interrogación)** y obtenido su visto bueno explícito.
+- **Rol del Orquestador**: `@zugzbot` debe educar siempre al usuario sobre el flujo de SDD cuando se solicite una nueva característica o cambio. Debe generar un **Roadmap de las 3 Fases de SDD de una línea por fase** y delegar la Fase 1 de inmediato.
+- **Flujo de Trabajo Estricto**: Todo cambio lógico debe iniciarse a través de la delegación estructurada hacia `@sdd-planner`.
 
 ---
 
-## 🔍 PROTOCOLO DE EXPLORACIÓN E INDEXACIÓN INTEGRAL [CRÍTICO]
+## 🔍 PROTOCOLO DE PLANIFICACIÓN E INTERROGACIÓN [CRÍTICO]
 
 Para optimizar el uso de tokens y dotar al swarm de memoria técnica persistente sin amnesia de sesión:
-- **Fase 0 (Exploración Completa)**: El `@sdd-explorer` realiza una exploración completa del repositorio para mapear la arquitectura, APIs y layouts.
-- **Regla de Exploración Incremental**: Si ya existe un reporte `explore_report.md` en disco, `@sdd-explorer` **no re-escribirá todo el archivo**. Detectará su presencia y realizará exclusivamente un **barrido diferencial incremental** para indexar únicamente nuevos archivos, funciones modificadas o dependencias actualizadas, guardando los cambios de forma modular. Sirve como la documentación viva del proyecto.
-- **Carga Perezosa (Lazy Loading)**: En fases posteriores, los agentes tienen estrictamente prohibido volver a barrer el proyecto completo. Deben leer con la herramienta `read` únicamente los archivos indicados en los `INPUTS` de la delegación (como `explore_report.md` o `spec.md`).
+- **Indexación y Encuesta (Fase 1)**: El `@sdd-planner` realiza una exploración incremental del repositorio para mapear archivos directamente afectados. Formula una **encuesta interactiva de 3 a 5 preguntas concretas** al usuario para afinar los requisitos reales.
+- **Carga Perezosa (Lazy Loading)**: En fases posteriores, los agentes tienen estrictamente prohibido volver a barrer el proyecto completo. Deben leer con la herramienta `read` únicamente los archivos indicados en los `INPUTS` de la delegación (como `specs/spec.md` o `verification_report.md`).
 
 ---
 
@@ -33,10 +32,9 @@ Para optimizar al máximo el consumo de cuotas y tokens en todas las sesiones, s
 
 > [!IMPORTANT]
 > **Carga Perezosa de Referencias**:
-> Cuando encuentres referencias a archivos grandes de la metodología (como especificaciones `@.openspec/changes/*/specs/spec.md`, reportes de lanzamiento o el cerebro del proyecto `@.openspec/brain.md`), **tienes estrictamente PROHIBIDO cargarlos todos de forma preventiva**.
+> Cuando encuentres referencias a archivos grandes de la metodología (como especificaciones `.openspec/changes/*/specs/spec.md` o el cerebro del proyecto `.openspec/brain.md`), **tienes estrictamente PROHIBIDO cargarlos todos de forma preventiva**.
 > 
 > - **Acción**: Utiliza tu herramienta `read` para cargar estos archivos **únicamente bajo demanda** (on a need-to-know basis), basándote estrictamente en el archivo que requiere la fase en curso.
-> - **Firmas y LSP**: Utiliza preferentemente las herramientas del Servidor de Lenguaje experimental (`goToDefinition`, `hover`) para inspeccionar firmas en caliente en lugar de leer el contenido completo de archivos grandes de código.
 
 ---
 
@@ -52,21 +50,15 @@ Para optimizar los tiempos de ejecución, evitar la dispersión mental del swarm
 
 ---
 
-## 🏛️ Estructura Granular del Swarm de 9 Agentes y Flujo de Datos
+## 🏛️ Estructura Simplificada de 3 Agentes y Flujo de Datos
 
 Cada fase cuenta con un agente único ultra-especializado con inputs y outputs rígidos y bien definidos:
 
 | Fase | Agente | Rol | Inputs Obligatorios de Entrada | Entregable (Output) Producido |
 | :--- | :--- | :--- | :--- | :--- |
-| **F0** | **`@sdd-explorer`** | Diagnóstico | Requerimiento de usuario + codebase actual | `explore_report.md` (Exploración técnica general) |
-| **F1** | **`@sdd-architect`** | Diseñador Conceptual | `explore_report.md` | `proposal.md` (Solución) + `specs/spec.md` (BDD) |
-| **F2** | **`@sdd-planner`** | Planificador Técnico | `explore_report.md` + `proposal.md` + `specs/spec.md` | `orchestrator_architecture.md` + `orchestrator_tasks.md` |
-| **F3** | **`@sdd-implementer`**| Programador Lógico | `proposal.md` + `specs/spec.md` + `orchestrator_architecture.md` + `orchestrator_tasks.md` | Lógica implementada + checklist marcado `- [x]` |
-| **F4** | **`@sdd-designer`** | Diseñador Estético | Código de F3 + `orchestrator_tasks.md` (tareas de UX) | Refinamiento de CSS, tipografía, micro-animaciones en UI |
-| **F5** | **`@sdd-launcher`** | Desplegador local | Código final (F3+F4) + `specs/spec.md` | Entorno en caliente (`dev server` / `clasp push`) + `launcher_report.md` |
-| **F6** | **`@sdd-verifier`** | QA Auditor | Código final + `specs/spec.md` + `launcher_report.md` | `verification_report.md` (Logs de linter y resultados de tests) |
-| **F7** | **`@sdd-documenter`**| Documentador Técnico | Cambios en código + `verification_report.md` | Versión bumps en `package.json`, `CHANGELOG.md` y `commit_message.txt` |
-| **F8** | **`@sdd-archiver`** | Archivador Git | `commit_message.txt` + `orchestrator_tasks.md` (verificada) | Rama de Git commiteada con éxito + carpeta archivada en `archive/` |
+| **F1** | **`@sdd-planner`** | Planificador e Interrogador | Requerimiento de usuario + codebase actual | `specs/spec.md` (Plano técnico consolidado + encuesta + BDD) |
+| **F2** | **`@sdd-builder`** | Constructor y Desplegador | `specs/spec.md` | Código funcional y estético + `verification_report.md` |
+| **F3** | **`@sdd-archiver`** | Especialista de Cierre | `specs/spec.md` + `verification_report.md` | Versión bumps, CHANGELOG, Git Commit y Carpeta archivada |
 
 ---
 
@@ -74,68 +66,57 @@ Cada fase cuenta con un agente único ultra-especializado con inputs y outputs r
 
 Todos los entregables creados por los agentes en `.openspec/changes/<change-name>/` deben respetar obligatoriamente las siguientes plantillas rígidas de alta densidad:
 
-### 1. `explore_report.md`
+### 1. `specs/spec.md`
 ```markdown
-# Diagnóstico: [nombre-cambio]
-## 1. Archivos Directamente Afectados
-- `ruta/archivo_a.js` (Líneas 10-35: descripción)
-## 2. API e Interacciones Existentes
-- Función `onclick="funcionA()"` en `archivo_a.js`.
-## 3. Estado y Comportamiento Responsive
-- Detalle de quirks de viewport o estilos existentes.
-```
+# Plano Técnico de Especificación: [nombre-cambio]
 
-### 2. `proposal.md`
-```markdown
-# Propuesta Técnica: [nombre-cambio]
-## 1. Solución Propuesta
+## 1. Diagnóstico y Archivos Afectados
+- `ruta/archivo_a.js` (Líneas 10-35: descripción de lógica actual y APIs involucradas)
+- `ruta/estilos.css` (Clases CSS que requieren modificación o extensión)
+
+## 2. Consenso de Encuesta con el Usuario
+- **Pregunta A**: [Resumen de la duda y decisión adoptada]
+- **Pregunta B**: [Resumen de la duda y decisión adoptada]
+
+## 3. Propuesta de Solución y Arquitectura
 - [Un solo párrafo conciso con el enfoque técnico]
-## 2. Arquitectura de Cambios
-- **Componente A**: Reestructuración de estructura, clases CSS.
-## 3. Estructura Visual
-```[Diagrama ASCII o Mermaid]```
+- **Diagrama de Componentes**:
+```mermaid
+graph TD
+    A[Componente A] -->|Interacción| B[Componente B]
 ```
 
-### 3. `specs/spec.md`
+## 4. Especificaciones BDD (Comportamiento)
+Feature: [Breve descripción de la funcionalidad]
+  Scenario: [Caso de prueba principal o flujo clave]
+    Given [Contexto inicial del sistema]
+    When [Acción que realiza el usuario o sistema]
+    Then [Resultado final esperado]
+
+## 5. Criterios de Aceptación y Calidad (QA)
+- [ ] Criterio 1: El elemento X debe responder de manera Y ante Z.
+- [ ] Criterio 2: El diseño estético debe incorporar responsive y micro-animaciones fluidas.
+```
+
+### 2. `verification_report.md`
 ```markdown
-# Especificaciones BDD: [nombre-cambio]
-Feature: [Descripción]
-  Scenario: [Caso de prueba principal]
-    Given [Contexto inicial]
-    When [Acción]
-    Then [Resultado esperado]
+# Reporte de Validación Técnica: [nombre-cambio]
+
+## 1. Auditoría Estática (Linter)
+- **Estado**: [PASÓ | ADVERTENCIAS | ERRORES CORREGIDOS]
+- **Logs relevantes**: [Resumen limpio del linter]
+
+## 2. Pruebas Automatizadas (Tests)
+- **Estado**: [PASARON | NO CONFIGURADOS | FALLIDOS]
+- **Logs relevantes**: [Resumen de tests corridos y tiempos de ejecución]
+
+## 3. Estado de Despliegue y Simulación
+- **Entorno en Caliente**: [ACTIVO | ERROR EN DESPLIEGUE]
+- **Dirección Local/Despliegue**: `http://localhost:XXXX` o URL de visualización.
+- **Detalle de UX e Interacción**: Confirmación de la correcta aplicación del diseño responsive y micro-animaciones.
 ```
 
-### 4. `orchestrator_tasks.md`
-```markdown
-# Checklist de Orquestación: [nombre-cambio]
-## Hito B - Construcción
-### Fase 3: Implementación
-- [ ] Tarea 1: Lógica principal
-### Fase 4: UX Premium
-- [ ] Tarea 2: Animaciones y refinamiento visual
-## Hito C - Cierre
-### Fase 7-8: Cierre
-- [ ] Tarea 3: Documentar y archivar
-```
-
-### 5. `launcher_report.md`
-```markdown
-# Reporte de Entorno: [nombre-cambio]
-- **Estado de Carga**: [EXITOSO | CON ERRORES]
-- **Dirección Local/GAS**: `https://...`
-- **Watch logs**: [ logs mínimos ]
-```
-
-### 6. `verification_report.md`
-```markdown
-# Reporte de Verificación QA: [nombre-cambio]
-- **Tests Automatizados**: [PASARON | NO CONFIGURADOS | FALLARON]
-- **Auditoría de Linter**: [SIN ERRORES | ADVERTENCIAS]
-- **Logs de Error / Fallos**: [Línea exacta]
-```
-
-### 7. `commit_message.txt`
+### 3. `commit_message.txt`
 ```text
 [tipo]([scope]): [breve descripción en minúscula y presente]
 
@@ -147,12 +128,8 @@ Feature: [Descripción]
 
 ## 📂 Convenciones de la Base de Código
 
-1. **Higiene de Archivos**:
-   - Todo cambio lógico en `src/`, `lib/`, etc., debe estar precedido por el checklist correspondiente en `.openspec/changes/<change-name>/orchestrator_tasks.md`.
-   - Las tareas completadas deben marcarse quirúrgicamente como `- [x]`.
-
-2. **Memoria en `brain.md`**:
+1. **Memoria en `brain.md`**:
    - Solo se registran aprendizajes técnicos de **alto valor y no triviales** (bugs complejos de librerías, peculiaridades de ESM/CJS, trucos de bundlers o decisiones arquitectónicas clave). Evita el ruido genérico sobre tareas triviales.
 
-3. **🛡️ Cooldown de Dependencias**:
+2. **🛡️ Cooldown de Dependencias**:
    - Cualquier dependencia agregada debe tener al menos **3 días de publicada** en el registro oficial. Carga la habilidad `sdd-dependency-cooldown` para verificar su antigüedad antes de cualquier importación.
