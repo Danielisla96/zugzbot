@@ -251,6 +251,7 @@ El arnés ahora incluye un monitor de costos en tiempo real que:
 - Agrupa costos por agente (detectado automáticamente por el título de la sesión).
 - Muestra un desglose detallado en el panel lateral (Sidebar).
 - Incluye un widget de resumen en la parte inferior de la pantalla de inicio.
+- **Mascota ASCII Animada**: Incorpora a Zugz, la mascota del sistema, que reacciona y parpadea periódicamente para dar feedback visual de que el plugin está activo.
 
 ```mermaid
 graph LR

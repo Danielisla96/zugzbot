@@ -134,17 +134,39 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
 
         // --- Estado reactivo y Polling ---
         const [metrics, setMetrics] = createSignal<TotalMetrics>(getMetrics())
+        const [mascotFrame, setMascotFrame] = createSignal(0)
 
         const interval = setInterval(() => {
           setMetrics(getMetrics())
         }, 1000)
 
+        const mascotInterval = setInterval(() => {
+          setMascotFrame(1)
+          setTimeout(() => {
+            setMascotFrame(0)
+          }, 200)
+        }, 3000)
+
+        const mascotAscii = () => {
+          return mascotFrame() === 0
+            ? ' (\\__/)\n  [o_o]\n (") (")'
+            : ' (\\__/)\n  [-_-]\n (") (")'
+        }
+
         onCleanup(() => {
           clearInterval(interval)
+          clearInterval(mascotInterval)
         })
 
         return (
           <box gap={0}>
+            {/* Mascota ASCII Animada */}
+            <box gap={0} paddingTop={1} paddingLeft={1}>
+              <text fg={api.theme.current.accent}>
+                {mascotAscii()}
+              </text>
+            </box>
+
             {/* Monitor de Agentes Compacto */}
             <box gap={0} paddingTop={1} paddingBottom={1}>
               <text fg={api.theme.current.accent}>
