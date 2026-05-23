@@ -9,5 +9,74 @@
       "sdd-*": "allow",
       "aux-*": "allow"
     }
+  },
+  "lsp": {
+    "typescript": {
+      "command": ["typescript-language-server", "--stdio"],
+      "extensions": [
+        ".ts",
+        ".tsx",
+        ".js",
+        ".jsx",
+        ".mjs",
+        ".cjs",
+        ".mts",
+        ".cts",
+        ".gs"
+      ]
+    }
+  },
+  "agent": {
+    "sdd-planner": {
+      "permission": {
+        "bash": {
+          "*": "ask",
+          "ls": "allow",
+          "ls *": "allow",
+          "mkdir *": "allow",
+          "grep *": "allow",
+          "git status": "allow",
+          "git status *": "allow"
+        }
+      }
+    },
+    "sdd-builder": {
+      "permission": {
+        "bash": {
+          "*": "ask",
+          "ls": "allow",
+          "ls *": "allow",
+          "mkdir *": "allow",
+          "grep *": "allow",
+          "git status": "allow",
+          "git status *": "allow",
+          "npm test": "allow",
+          "npm test *": "allow",
+          "npm run test": "allow",
+          "npm run test *": "allow",
+          "npm run lint": "allow",
+          "npm run lint *": "allow",
+          "npx vitest *": "allow",
+          "npx jest *": "allow"
+        }
+      }
+    },
+    "sdd-archiver": {
+      "permission": {
+        "bash": {
+          "*": "ask",
+          "ls": "allow",
+          "ls *": "allow",
+          "mkdir *": "allow",
+          "grep *": "allow",
+          "git status": "allow",
+          "git status *": "allow",
+          "git add *": "allow",
+          "git commit *": "allow",
+          "git checkout *": "allow",
+          "git show-ref *": "allow"
+        }
+      }
+    }
   }
 }
