@@ -1,9 +1,9 @@
 import type { TuiPlugin } from '@opencode-ai/plugin/tui'
-import tuiPlugin from './sdd-plugin/tui'
+import helloPlugin from './hello/tui'
 
-const id = 'zugzbot.sdd-sidebar'
+const id = 'zugzbot.hello'
 
-const tui: TuiPlugin = tuiPlugin.tui
+const tui: TuiPlugin = helloPlugin.tui
 
 const plugin = {
   id,

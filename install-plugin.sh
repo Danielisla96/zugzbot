@@ -47,16 +47,13 @@ rm -f ~/.config/opencode/agents
 rm -f ~/.config/opencode/commands
 rm -f ~/.config/opencode/skills
 rm -f ~/.config/opencode/tools
-rm -f ~/.config/opencode/plugins/sdd-sidebar.tsx
-rm -f ~/.config/opencode/plugins/sdd-sidebar.ts
+
 
 echo -e "  ${COLOR_MUTED}▪ Limpiando enlaces simbólicos y configuraciones locales previas...${NC}"
 rm -rf "${REPO_DIR}/.opencode/agents"
 rm -rf "${REPO_DIR}/.opencode/commands"
 rm -rf "${REPO_DIR}/.opencode/skills"
 rm -rf "${REPO_DIR}/.opencode/tools"
-rm -rf "${REPO_DIR}/.opencode/plugins/sdd-sidebar.tsx"
-rm -rf "${REPO_DIR}/.opencode/plugins/sdd-sidebar.ts"
 rm -rf "${REPO_DIR}/.opencode/package.json"
 rm -rf "${REPO_DIR}/.opencode/package-lock.json"
 rm -rf "${REPO_DIR}/.opencode/node_modules"
@@ -118,11 +115,11 @@ mkdir -p "${REPO_DIR}/.opencode/plugins"
 
 # 5. Vincular Arnés SDD y Plugin TUI localmente
 echo -e "  ${COLOR_MUTED}▪ Creando enlaces simbólicos locales de arnés...${NC}"
-ln -s "${PLUGIN_DIR}/agents" "${REPO_DIR}/.opencode/agents"
-ln -s "${PLUGIN_DIR}/commands" "${REPO_DIR}/.opencode/commands"
-ln -s "${PLUGIN_DIR}/skills" "${REPO_DIR}/.opencode/skills"
-ln -s "${PLUGIN_DIR}/tools" "${REPO_DIR}/.opencode/tools"
-ln -s "${PLUGIN_DIR}/sdd-sidebar.ts" "${REPO_DIR}/.opencode/plugins/sdd-sidebar.ts"
+ln -sf "${PLUGIN_DIR}/agents" "${REPO_DIR}/.opencode/agents"
+ln -sf "${PLUGIN_DIR}/commands" "${REPO_DIR}/.opencode/commands"
+ln -sf "${PLUGIN_DIR}/skills" "${REPO_DIR}/.opencode/skills"
+ln -sf "${PLUGIN_DIR}/tools" "${REPO_DIR}/.opencode/tools"
+ln -sf "${PLUGIN_DIR}/hello-sidebar.ts" "${REPO_DIR}/.opencode/plugins/hello-sidebar.ts"
 
 
 echo -e "${COLOR_BORDER}┌──────────────────────────────────────────────────────────────┐${NC}"

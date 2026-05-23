@@ -5,12 +5,10 @@
   "main": "index.js",
   "exports": {
     ".": "./index.js",
-    "./tui": "./sdd-plugin/tui.ts",
-    "./cost-monitor": "./cost-monitor/tui.ts"
+    "./hello": "./hello-sidebar.ts"
   },
   "oc-plugin": [
-    "tui",
-    "cost-monitor"
+    "hello"
   ],
   "scripts": {
     "typecheck": "tsc --noEmit"
