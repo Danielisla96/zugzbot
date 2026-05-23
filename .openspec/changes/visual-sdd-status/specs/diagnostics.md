@@ -1,19 +1,16 @@
-# Diagnóstico de Calidad: Visual SDD Status
+# Diagnóstico de Fallo: Visual SDD Status
 
-## Error: Violación de Restricción de Ancho (37 caracteres)
-- **Componente:** `SDDMiniMonitor` / `getPhaseName`
-- **Descripción:** La Fase 2 ("Arquitectura y Planificación") al ser envuelta en corchetes `[]` resulta en una cadena de 38 caracteres.
-- **Evidencia:**
-  - `[` (1)
-  - `Fase 2: Arquitectura y Planificación` (36)
-  - `]` (1)
-  - **Total:** 38 caracteres.
-- **Impacto:** Incumplimiento del Escenario "Restricción de Ancho de Pantalla (37 caracteres)" en `spec.md`.
+## Síntoma
+El indicador de fase en el TUI excede el ancho máximo permitido de 37 caracteres.
 
-## Observaciones de Auditoría UI (sdd_ui_auditor)
-- **Advertencia:** Faltan transiciones suaves (cubic-bezier) en los cambios de estado visual.
+## Causa Raíz
+La Fase 2 tiene el nombre "Fase 2: Arquitectura y Planificación".
+- Longitud del nombre: 36 caracteres.
+- Longitud total con corchetes `[]`: 38 caracteres.
+- Límite establecido: 37 caracteres.
 
-## Verificación de Polling
-- **Estado:** ✅ CORRECTO
-- **Frecuencia:** 2000ms
-- **Seguridad:** Implementado con try-catch y existsSync.
+## Impacto
+Desalineación visual en la barra lateral del TUI y posible truncado o desbordamiento dependiendo del motor de renderizado de la terminal.
+
+## Solución Propuesta
+Reducir la longitud de los nombres de las fases en la función `getPhaseName` para que ninguno exceda los 35 caracteres, permitiendo que el formato `[Nombre]` se mantenga en 37 caracteres exactos o menos.

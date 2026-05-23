@@ -8,7 +8,7 @@ Como desarrollador, quiero ver el progreso del ciclo SDD y el estado de los suba
 ### Escenario: Visualización de la Fase SDD Actual
   Dado que el archivo `.openspec/sdd-lock.json` indica que el proyecto está en la "Fase 2"
   Cuando abro el TUI de Zugzbot
-  Entonces debería ver el texto "[Fase 2: Arquitectura y Planificación]" en la barra lateral
+  Entonces debería ver el texto "[Fase 2: Arquitectura y Plan]" en la barra lateral
   Y debería ver una barra de progreso ASCII con 2 segmentos llenos: "[■■□□□□□□□□]"
   Y el color del texto debería ser Violeta (Accent)
 

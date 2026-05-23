@@ -43,7 +43,7 @@ Sidebar (37 chars)
 |   [o_o]      Working on: architect  |
 |  (") (")                            |
 |                                     |
-| [Fase 2: Arquitectura]              |
+| [Fase 2: Arquitectura y Plan]        |
 | [■■□□□□□□□□] 25%                    |
 | ─────────────────────────────────── |
 | [Monitor de Agentes] 🤖             |

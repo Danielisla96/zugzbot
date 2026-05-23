@@ -30,3 +30,20 @@ Este documento detalla las tareas necesarias para implementar el monitor visual 
     - Verificar que el TUI se actualiza automáticamente al cambiar el `sdd-lock.json`.
 - [x] **D.2: Auditoría Visual (sdd-ux-premium)**
     - Ejecutar `sdd_ui_auditor` para asegurar consistencia estética y espaciado.
+
+## Hito E: Corrección de Límites Visuales (Bucle Correctivo)
+- [ ] **E.1: Acortar Nombres de Fases**
+    - Modificar `getPhaseName` en `plugin_tui.tsx`.
+    - Asegurar que ningún nombre exceda los 35 caracteres (37 con corchetes).
+    - Nuevos nombres propuestos:
+        - 0: "Fase 0: Inicialización"
+        - 1: "Fase 1: Planificación"
+        - 2: "Fase 2: Arquitectura y Plan"
+        - 3: "Fase 3: Implementación"
+        - 4: "Fase 4: Diseño Visual"
+        - 5: "Fase 5: Pruebas y QA"
+        - 6: "Fase 6: Documentación"
+        - 7: "Fase 7: Despliegue"
+        - 8: "Fase 8: Mantenimiento"
+- [ ] **E.2: Validación Final de Ancho**
+    - Verificar manualmente o vía script que la Fase 2 (la más larga anteriormente) ahora mide <= 37 chars con corchetes.
