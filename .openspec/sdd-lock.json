@@ -1,8 +1,8 @@
 {
   "change_name": "agent-monitor-sidebar-plugin",
-  "active_phase": 4,
-  "active_subagent": "sdd-implementer",
-  "status": "in_progress",
+  "active_phase": 6,
+  "active_subagent": "sdd-release-manager",
+  "status": "SUCCESS",
   "auto_pilot": false,
   "iteration": 1,
   "last_updated": "2026-05-23"
