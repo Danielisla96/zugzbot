@@ -1,8 +1,8 @@
 {
   "change_name": "simplify-tui-monitor",
   "active_phase": 5,
-  "active_subagent": "sdd-implementer",
-  "status": "idle",
+  "active_subagent": "sdd-launcher",
+  "status": "in_progress",
   "auto_pilot": false,
   "iteration": 0,
   "last_updated": "2026-05-23"
