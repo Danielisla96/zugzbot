@@ -2,7 +2,7 @@
   "change_name": "visual-sdd-status",
   "active_phase": 5,
   "active_subagent": "sdd-launcher",
-  "status": "in_progress",
+  "status": "quality_checks_failed",
   "auto_pilot": false,
   "iteration": 0,
   "last_updated": "2026-05-23"
