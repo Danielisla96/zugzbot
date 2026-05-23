@@ -47,8 +47,7 @@ rm -f ~/.config/opencode/agents
 rm -f ~/.config/opencode/commands
 rm -f ~/.config/opencode/skills
 rm -f ~/.config/opencode/tools
-rm -f ~/.config/opencode/plugins/sdd-sidebar.tsx
-rm -f ~/.config/opencode/plugins/sdd-sidebar.ts
+
 
 echo -e "  ${COLOR_MUTED}▪ Removiendo dependencias obsoletas de opencode.jsonc y package.json...${NC}"
 node -e "
@@ -92,19 +91,16 @@ cd "${PLUGIN_DIR}"
 npm install --legacy-peer-deps --quiet
 cd "${REPO_DIR}"
 
-# 4. Vincular Arnés SDD y Plugin TUI Local
+# 4. Vincular Arnés SDD
 echo -e "  ${COLOR_MUTED}▪ Creando enlaces simbólicos del arnés...${NC}"
 ln -s "${PLUGIN_DIR}/agents" ~/.config/opencode/agents
 ln -s "${PLUGIN_DIR}/commands" ~/.config/opencode/commands
 ln -s "${PLUGIN_DIR}/skills" ~/.config/opencode/skills
 ln -s "${PLUGIN_DIR}/tools" ~/.config/opencode/tools
-ln -s "${PLUGIN_DIR}/sdd-sidebar.ts" ~/.config/opencode/plugins/sdd-sidebar.ts
-
 echo -e "  ${COLOR_MUTED}▪ Sincronizando dependencias de OpenCode global...${NC}"
 cd ~/.config/opencode
 npm install --legacy-peer-deps --quiet
 cd "${REPO_DIR}"
-
 
 echo -e "${COLOR_BORDER}┌──────────────────────────────────────────────────────────────┐${NC}"
 echo -e "${COLOR_BORDER}│${NC}  ${COLOR_SUCCESS}🎉 ¡PLUGIN INSTALADO CON ÉXITO!${NC}                             ${COLOR_BORDER}│${NC}"
@@ -112,6 +108,5 @@ echo -e "${COLOR_BORDER}├─────────────────�
 echo -e "${COLOR_BORDER}│${NC}  Siguientes pasos recomendados:                              ${COLOR_BORDER}│${NC}"
 echo -e "${COLOR_BORDER}│${NC}  1. Abre tu proyecto favorito en la terminal.                ${COLOR_BORDER}│${NC}"
 echo -e "${COLOR_BORDER}│${NC}  2. Levanta tu entorno de OpenCode ejecutando:               ${COLOR_BORDER}│${NC}"
-echo -e "${COLOR_BORDER}│${NC}     ${COLOR_HEADER}OPENCODE_EXPERIMENTAL=true opencode${NC}                      ${COLOR_BORDER}│${NC}"
-echo -e "${COLOR_BORDER}│${NC}  3. Presiona la tecla ${COLOR_WARNING}b${NC} para desplegar el monitor TUI lateral.  ${COLOR_BORDER}│${NC}"
+echo -e "${COLOR_BORDER}│${NC}     ${COLOR_HEADER}opencode${NC}                                                    ${COLOR_BORDER}│${NC}"
 echo -e "${COLOR_BORDER}└──────────────────────────────────────────────────────────────┘${NC}"
