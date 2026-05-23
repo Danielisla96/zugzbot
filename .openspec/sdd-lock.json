@@ -1,9 +1,9 @@
 {
   "change_name": "visual-sdd-status",
-  "active_phase": 5,
-  "active_subagent": "sdd-launcher",
-  "status": "quality_checks_failed",
+  "active_phase": 2,
+  "active_subagent": "sdd-architect",
+  "status": "corrective_loop",
   "auto_pilot": false,
-  "iteration": 0,
+  "iteration": 1,
   "last_updated": "2026-05-23"
 }
