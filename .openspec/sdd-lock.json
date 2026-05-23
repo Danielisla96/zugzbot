@@ -1,9 +1,9 @@
 {
-  "change_name": "nuevo-cambio",
-  "active_phase": 6,
-  "active_subagent": "sdd-release-manager",
-  "status": "in_progress",
+  "change_name": "agent-monitor-sidebar-plugin",
+  "active_phase": 3,
+  "active_subagent": "sdd-implementer",
+  "status": "corrective_loop",
   "auto_pilot": false,
-  "iteration": 0,
+  "iteration": 1,
   "last_updated": "2026-05-23"
 }
