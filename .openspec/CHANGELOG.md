@@ -8,5 +8,10 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 ## [Unreleased]
 
 ### Added
-- **Mascota ASCII Animada**: Implementada en el Sidebar del TUI. Zugz ahora parpadea cada 3 segundos.
-- Lógica de frames para animación usando signals de SolidJS en el plugin de TUI.
+- **Visualizador de Estado SDD**: Nuevo monitor reactivo en el Sidebar del TUI que muestra la fase actual y el subagente activo en tiempo real.
+- **Mascota Dinámica**: La mascota Zugz ahora reacciona visualmente al estado del ciclo SDD.
+- **Polling Reactivo**: Implementación de sistema de observación sobre `.openspec/sdd-lock.json` para actualizaciones sin recarga manual.
+
+### Changed
+- **Mascota ASCII Animada**: Mejorada con integración de estados SDD.
+- Refactorización del Sidebar para optimizar el espacio (límite de 37 caracteres).

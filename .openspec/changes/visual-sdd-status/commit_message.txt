@@ -1,0 +1,7 @@
+feat: implement visual SDD status monitor in TUI sidebar
+
+- Add reactive SDD state polling (2s interval) from sdd-lock.json.
+- Implement SDDMiniMonitor component for phase and agent visualization.
+- Refactor Zugz mascot to integrate with SDD lifecycle states.
+- Optimize layout for TUI sidebar constraints (37 chars).
+- Update plugin version to 1.4.0.
