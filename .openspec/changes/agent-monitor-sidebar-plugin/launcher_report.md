@@ -1,14 +1,22 @@
-# Launcher Report - agent-monitor-sidebar-plugin
+# Launcher Report: agent-monitor-sidebar-plugin
 
-## 🚀 Quality Checks
-- [x] **Typecheck**: `npm run typecheck` passed successfully.
-- [x] **Component Verification**:
-    - Text "¡Hola desde Zugzbot SDD!" found in `SidebarPanel.ts`.
-    - Slot order 50 confirmed in `constants.ts`.
+## Resumen de Validación
+- **Ubicación del Plugin:** `.opencode/plugins/` - **OK**
+- **Validación de package.json:**
+  - displayName: "Zugzbot SDD Monitor" - **OK**
+  - exports: Configurados correctamente (`.`, `./tui`, `./server`) - **OK**
+- **Punto de Entrada (Server):** `index.js` presente y validado - **OK**
+- **Punto de Entrada (TUI):** `sdd-plugin/tui.ts` presente - **OK**
 
-## 🌐 Environment Status
-- **Local Dev Server**: Ready for manual validation.
-- **TUI Plugin**: Active and registered.
+## Chequeos de Calidad
+- **Typecheck:** PASSED
+  - *Nota:* Se ejecutó directamente vía `tsc.js` debido a un problema con el shim de `npm`.
+- **Linter:** N/A (No definido en package.json)
+- **Tests:** N/A (No definidos en package.json)
 
-## 📝 Diagnostic Logs
-All checks passed. No errors found.
+## Estado de Despliegue
+- El plugin está posicionado para carga automática por OpenCode.
+- No se requiere declaración en `opencode.json`.
+- Servidor de desarrollo: No aplica (Carga nativa).
+
+**Estado Final: LISTO PARA RELEASE**
