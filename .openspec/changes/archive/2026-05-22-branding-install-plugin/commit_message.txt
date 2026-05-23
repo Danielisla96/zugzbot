@@ -1,0 +1,5 @@
+style(branding): add ASCII art logo to install-plugin.sh
+
+- Added "zugz" ASCII logo at the start of the installation script.
+- Used COLOR_HEADER for the logo.
+- Ensured clean output with NC (No Color) reset.
