@@ -1,93 +1,97 @@
 # 🧠 Consolidado de Contexto de Alta Densidad (SDD Compaction)
-**Fecha:** 2026-05-23
-**Cambio:** `simplify-tui-monitor`
-**Fase completada:** Fase 2 — Arquitectura y Planificación
-**Subagente:** sdd-architect 📐
+Fecha de consolidación: 2026-05-23
+Cambio Activo: `simplify-tui-monitor`
 
 ---
 
-## 📋 Resumen del cambio
-
-Simplificar `plugin/zugzbot-sdd/plugins/plugin_tui.tsx` de 424 → ~180 líneas:
-- **Eliminar** subsistema de breakdown de costos/tokens (~120 líneas)
-- **Reemplazar** funciones de mapeo por constantes inline
-- **Comprimir** SDDMonitor con pipeline compacto de 1 línea
-- **Simplificar** polling y getActiveAgentData
+## 📜 Propuesta y Objetivos
+# Propuesta Técnica: Simplificación del Monitor TUI SDD
 
 ---
 
-## 🏛️ Arquitectura post-simplificación
+## 📐 Especificaciones y Escenarios
+Escenarios BDD no estructurados.
 
+---
+
+## 🏛️ Estructura Arquitectónica
+Esquema Arquitectónico:
+```mermaid
+graph TB
+    subgraph "PluginTuiSidebar (entry point)"
+        A["PluginTuiSidebar(api)"]
+        A --> B["loadLockfile()"]
+        A --> C["api.slots.register()"]
+    end
+
+    subgraph "sidebar_content (slot order: 100)"
+        D["sidebar_content(ctx, props)"]
+        D --> E["🔵 Estado (createSignal)"]
+        E --> E1["lockState ← loadLockfile()"]
+        E --> E2["currentTime ← Date.now()"]
+
+        D --> F["📡 Polling (setInterval 1000ms)"]
+        F --> F1["setLockState(loadLockfile())"]
+        F --> F2["setCurrentTime(Date.now())"]
+
+        D --> G["📂 getActiveAgentData(state)"]
+        G --> G1["Lee phase_history.jsonl"]
+        G --> G2["Fallback: constante PHASE_ACTIONS"]
+
+        D --> H["🖥️ SDDMonitor() ← Componente visual"]
+        H --> H1["Header (cambio + modo)"]
+        H --> H2["Fase activa destacada"]
+        H --> H3["Barra de progreso compacta"]
+        H --> H4["Tarjeta agente activo"]
+        H --> H5["Siguiente paso / ciclo completo"]
+
+        D --> I["onCleanup()"]
+        I --> I1["clearInterval(interval)"]
+
+        D --> J["✅ Return JSX"]
+        J --> J1["<SDDMonitor/>"]
+        J --> J2["<props.children/>"]
+    end
+
+    subgraph "🗑️ ELIMINADO (no existe post-simplificación)"
+        K["calculateBreakdown()"]
+        L["collectSessionIds()"]
+        M["extractAgentName()"]
+        N["sumMetrics()"]
+        O["truncateAgentName()"]
+        P["hasMetricsChanged()"]
+        Q["SDDUsage()"]
+        R["AgentMetricsRow()"]
+        S["breakdownState / showBreakdown / previousBreakdown"]
+        T["getDefaultAction()"]
+        U["getAgentForPhase()"]
+        K -.-> L -.-> M -.-> N -.-> O -.-> P -.-> Q -.-> R
+    end
+
+    style A fill:#1a1a2e,stroke:#e94560,color:#fff
+    style H fill:#16213e,stroke:#0f3460,color:#fff
+    style K fill:#3d0000,stroke:#ff0000,color:#ff6666
+    style L fill:#3d0000,stroke:#ff0000,color:#ff6666
+    style M fill:#3d0000,stroke:#ff0000,color:#ff6666
+    style N fill:#3d0000,stroke:#ff0000,color:#ff6666
+    style O fill:#3d0000,stroke:#ff0000,color:#ff6666
+    style P fill:#3d0000,stroke:#ff0000,color:#ff6666
+    style Q fill:#3d0000,stroke:#ff0000,color:#ff6666
+    style R fill:#3d0000,stroke:#ff0000,color:#ff6666
+    style S fill:#3d0000,stroke:#ff0000,color:#ff6666
+    style T fill:#3d0000,stroke:#ff0000,color:#ff6666
+    style U fill:#3d0000,stroke:#ff0000,color:#ff6666
 ```
-PluginTuiSidebar
-├── loadLockfile()                  [sin cambios]
-├── api.slots.register()
-│   └── sidebar_content()
-│       ├── lockState (signal)
-│       ├── currentTime (signal)
-│       ├── PHASE_ACTIONS (const)    [nuevo, reemplaza getDefaultAction]
-│       ├── PHASE_AGENTS (const)     [nuevo, reemplaza getAgentForPhase]
-│       ├── PHASE_NAMES/ICONS (const) [nuevo]
-│       ├── getActiveAgentData()     [simplificado, usa PHASE_ACTIONS]
-│       ├── Polling (solo lock+time) [simplificado]
-│       ├── SDDMonitor()            [comprimido ~80 líneas]
-│       └── Return (SDDMonitor + children)
-
-🗑️ ELIMINADO: calculateBreakdown, collectSessionIds, extractAgentName,
-   sumMetrics, truncateAgentName, hasMetricsChanged, SDDUsage,
-   AgentMetricsRow, getDefaultAction, getAgentForPhase
-```
 
 ---
 
-## 📐 Especificaciones BDD (12 escenarios)
+## 📋 Estado del Checklist
+Checklist de Tareas: 0/0 completadas.
 
-| ESC | Descripción | Archivo |
-|-----|-------------|---------|
-| 001 | Monitor inactivo sin lockfile | specs/spec.md |
-| 002 | Pipeline muestra fases ✔/●/○ | specs/spec.md |
-| 003 | Cambio de nombre y modo | specs/spec.md |
-| 004 | Tarjeta agente activo (5 campos) | specs/spec.md |
-| 005 | Estado de espera 🟡 | specs/spec.md |
-| 006 | Siguiente paso (fase < 8) | specs/spec.md |
-| 007 | Ciclo completado (fase 8) | specs/spec.md |
-| 008 | Polling actualiza automáticamente | specs/spec.md |
-| 009 | Cleanup al desmontar | specs/spec.md |
-| 010 | Sin breakdown de sesión | specs/spec.md |
-| 011 | Export y slots intactos | specs/spec.md |
-| 012 | loadLockfile sigue funcionando | specs/spec.md |
-
----
-
-## 📋 Checklist de tareas (13 tasks atómicas)
-
-**Ubicación:** `orchestrator_tasks.md`
-
-**Fase 1 — Poda (T1–T5):** Eliminar constantes, tipos, funciones de breakdown, estado
-**Fase 2 — Compresión (T6–T10):** Simplificar polling, getActiveAgentData, SDDMonitor, return JSX
-**Fase 3 — Verificación (T11–T13):** Export, line count, BDD validation
-
-**Archivos de referencia:**
-- Código fuente: `plugin/zugzbot-sdd/plugins/plugin_tui.tsx`
-- Arquitectura: `orchestrator_architecture.md`
-- Checklist: `orchestrator_tasks.md`
-- Especificaciones: `specs/spec.md`
-
----
-
-## 📊 Métricas
-
-| Concepto | Original | Objetivo | % |
-|----------|----------|----------|---|
-| Líneas totales | 424 | ~180 | -57% |
-| Funciones eliminadas | — | 10 | 100% |
-| Componentes eliminados | — | 2 | 100% |
-| Estado eliminado | — | 3 señales | 100% |
-| SDDMonitor | ~138 líneas | ~80 líneas | -42% |
 
 ---
 
 > [!TIP]
-> **Para sdd-implementer 💻:** Lee `orchestrator_tasks.md` para la secuencia exacta de ediciones.
-> Cada task referencia las líneas exactas del archivo original y los escenarios BDD que cubre.
-> Orden sugerido: T1→T5 (una gran poda), T6→T7 (simplificaciones), T8 (corazón), T9→T10 (limpieza).
+> **Acción Recomendada para Limpiar Memoria de Contexto:**
+> Si eres un subagente y ves este archivo, tu memoria ha sido compactada con éxito.
+> Lee **únicamente** este archivo de consolidación para entender el estado actual y los contratos técnicos previos. Descarta la lectura repetitiva de chats históricos o archivos de logs antiguos.
