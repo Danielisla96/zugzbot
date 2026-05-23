@@ -41,8 +41,8 @@ fi
 
 echo -e "  ${COLOR_MUTED}▪ Directorio detectado:${NC} ${COLOR_SUCCESS}${REPO_DIR}${NC}"
 
-# 2. Paso 0: Limpiar instalaciones previas y desvincular paquetes npm locales conflictivos
-echo -e "  ${COLOR_MUTED}▪ Limpiando enlaces simbólicos previos...${NC}"
+# 2. Paso 0: Limpiar instalaciones previas (globales y locales) y desvincular paquetes npm locales conflictivos
+echo -e "  ${COLOR_MUTED}▪ Limpiando enlaces simbólicos globales previos...${NC}"
 rm -f ~/.config/opencode/agents
 rm -f ~/.config/opencode/commands
 rm -f ~/.config/opencode/skills
@@ -50,40 +50,60 @@ rm -f ~/.config/opencode/tools
 rm -f ~/.config/opencode/plugins/sdd-sidebar.tsx
 rm -f ~/.config/opencode/plugins/sdd-sidebar.ts
 
-echo -e "  ${COLOR_MUTED}▪ Removiendo dependencias obsoletas de opencode.jsonc y package.json...${NC}"
+echo -e "  ${COLOR_MUTED}▪ Limpiando enlaces simbólicos y configuraciones locales previas...${NC}"
+rm -rf "${REPO_DIR}/.opencode/agents"
+rm -rf "${REPO_DIR}/.opencode/commands"
+rm -rf "${REPO_DIR}/.opencode/skills"
+rm -rf "${REPO_DIR}/.opencode/tools"
+rm -rf "${REPO_DIR}/.opencode/plugins/sdd-sidebar.tsx"
+rm -rf "${REPO_DIR}/.opencode/plugins/sdd-sidebar.ts"
+rm -rf "${REPO_DIR}/.opencode/package.json"
+rm -rf "${REPO_DIR}/.opencode/package-lock.json"
+rm -rf "${REPO_DIR}/.opencode/node_modules"
+
+echo -e "  ${COLOR_MUTED}▪ Removiendo referencias globales y locales de configuración...${NC}"
 node -e "
 const fs = require('fs');
 const path = require('path');
 
-// 1. Limpiar opencode.jsonc
-const configPath = path.join(process.env.HOME, '.config', 'opencode', 'opencode.jsonc');
-if (fs.existsSync(configPath)) {
-  let content = fs.readFileSync(configPath, 'utf8');
-  try {
-    const clean = content.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '');
-    const config = JSON.parse(clean);
-    if (config.plugin) {
-      config.plugin = config.plugin.filter(p => p !== 'zugzbot-sdd');
-      fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
-    }
-  } catch (e) {
-    // Si falla el parsing por comentarios complejos, removerlo por regex simple
-    if (content.includes('\"zugzbot-sdd\"')) {
-      content = content.replace(/\"zugzbot-sdd\",?\s*/g, '');
-      fs.writeFileSync(configPath, content);
+// 1. Limpiar opencode.jsonc / opencode.json global
+const globalConfigPath = path.join(process.env.HOME, '.config', 'opencode', 'opencode.jsonc');
+const cleanConfig = (filePath) => {
+  if (fs.existsSync(filePath)) {
+    let content = fs.readFileSync(filePath, 'utf8');
+    try {
+      const clean = content.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '');
+      const config = JSON.parse(clean);
+      if (config.plugin) {
+        config.plugin = config.plugin.filter(p => p !== 'zugzbot-sdd');
+        fs.writeFileSync(filePath, JSON.stringify(config, null, 2) + '\n');
+      }
+    } catch (e) {
+      if (content.includes('\"zugzbot-sdd\"')) {
+        content = content.replace(/\"zugzbot-sdd\",?\\s*/g, '');
+        fs.writeFileSync(filePath, content);
+      }
     }
   }
+};
+cleanConfig(globalConfigPath);
+cleanConfig(path.join(process.env.HOME, '.config', 'opencode', 'opencode.json'));
+
+// 2. Limpiar package.json global
+const globalPkgPath = path.join(process.env.HOME, '.config', 'opencode', 'package.json');
+if (fs.existsSync(globalPkgPath)) {
+  try {
+    const pkg = JSON.parse(fs.readFileSync(globalPkgPath, 'utf8'));
+    if (pkg.dependencies && pkg.dependencies['zugzbot-sdd']) {
+      delete pkg.dependencies['zugzbot-sdd'];
+      fs.writeFileSync(globalPkgPath, JSON.stringify(pkg, null, 2) + '\n');
+    }
+  } catch (e) {}
 }
 
-// 2. Limpiar package.json
-const pkgPath = path.join(process.env.HOME, '.config', 'opencode', 'package.json');
-if (fs.existsSync(pkgPath)) {
-  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-  if (pkg.dependencies && pkg.dependencies['zugzbot-sdd']) {
-    delete pkg.dependencies['zugzbot-sdd'];
-    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
-  }
-}
+// 3. Limpiar opencode.json del proyecto local
+const localConfigPath = path.join('${REPO_DIR}', 'opencode.json');
+cleanConfig(localConfigPath);
 "
 
 # 3. Asegurar dependencias locales del plugin para el compilador de OpenCode
@@ -92,18 +112,17 @@ cd "${PLUGIN_DIR}"
 npm install --legacy-peer-deps --quiet
 cd "${REPO_DIR}"
 
-# 4. Vincular Arnés SDD y Plugin TUI Local
-echo -e "  ${COLOR_MUTED}▪ Creando enlaces simbólicos del arnés...${NC}"
-ln -s "${PLUGIN_DIR}/agents" ~/.config/opencode/agents
-ln -s "${PLUGIN_DIR}/commands" ~/.config/opencode/commands
-ln -s "${PLUGIN_DIR}/skills" ~/.config/opencode/skills
-ln -s "${PLUGIN_DIR}/tools" ~/.config/opencode/tools
-ln -s "${PLUGIN_DIR}/sdd-sidebar.ts" ~/.config/opencode/plugins/sdd-sidebar.ts
+# 4. Crear estructura del directorio local .opencode
+echo -e "  ${COLOR_MUTED}▪ Creando directorio de configuración del proyecto .opencode...${NC}"
+mkdir -p "${REPO_DIR}/.opencode/plugins"
 
-echo -e "  ${COLOR_MUTED}▪ Sincronizando dependencias de OpenCode global...${NC}"
-cd ~/.config/opencode
-npm install --legacy-peer-deps --quiet
-cd "${REPO_DIR}"
+# 5. Vincular Arnés SDD y Plugin TUI localmente
+echo -e "  ${COLOR_MUTED}▪ Creando enlaces simbólicos locales de arnés...${NC}"
+ln -s "${PLUGIN_DIR}/agents" "${REPO_DIR}/.opencode/agents"
+ln -s "${PLUGIN_DIR}/commands" "${REPO_DIR}/.opencode/commands"
+ln -s "${PLUGIN_DIR}/skills" "${REPO_DIR}/.opencode/skills"
+ln -s "${PLUGIN_DIR}/tools" "${REPO_DIR}/.opencode/tools"
+ln -s "${PLUGIN_DIR}/sdd-sidebar.ts" "${REPO_DIR}/.opencode/plugins/sdd-sidebar.ts"
 
 
 echo -e "${COLOR_BORDER}┌──────────────────────────────────────────────────────────────┐${NC}"
