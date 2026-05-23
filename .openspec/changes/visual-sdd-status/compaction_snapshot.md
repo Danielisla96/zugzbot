@@ -41,7 +41,7 @@ graph TD
 ---
 
 ## 📋 Estado del Checklist
-Checklist de Tareas: 7/9 completadas.
+Checklist de Tareas: 9/9 completadas.
 - [x] **B.1: Tipado de Datos SDD**
 - [x] **B.2: Señal y Polling Reactivo**
 - [x] **C.1: Refactor de Mascota "Zugz"**
@@ -49,8 +49,8 @@ Checklist de Tareas: 7/9 completadas.
 - [x] **C.3: Ajuste de Layout y Limites (37 chars)**
 - [x] **D.1: Test de Reactividad**
 - [x] **D.2: Auditoría Visual (sdd-ux-premium)**
-- [ ] **E.1: Acortar Nombres de Fases**
-- [ ] **E.2: Validación Final de Ancho**
+- [x] **E.1: Acortar Nombres de Fases**
+- [x] **E.2: Validación Final de Ancho**
 
 ---
 

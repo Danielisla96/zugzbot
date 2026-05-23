@@ -32,7 +32,7 @@ Este documento detalla las tareas necesarias para implementar el monitor visual 
     - Ejecutar `sdd_ui_auditor` para asegurar consistencia estética y espaciado.
 
 ## Hito E: Corrección de Límites Visuales (Bucle Correctivo)
-- [ ] **E.1: Acortar Nombres de Fases**
+- [x] **E.1: Acortar Nombres de Fases**
     - Modificar `getPhaseName` en `plugin_tui.tsx`.
     - Asegurar que ningún nombre exceda los 35 caracteres (37 con corchetes).
     - Nuevos nombres propuestos:
@@ -45,5 +45,5 @@ Este documento detalla las tareas necesarias para implementar el monitor visual 
         - 6: "Fase 6: Documentación"
         - 7: "Fase 7: Despliegue"
         - 8: "Fase 8: Mantenimiento"
-- [ ] **E.2: Validación Final de Ancho**
+- [x] **E.2: Validación Final de Ancho**
     - Verificar manualmente o vía script que la Fase 2 (la más larga anteriormente) ahora mide <= 37 chars con corchetes.
