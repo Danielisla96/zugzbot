@@ -9,6 +9,26 @@ Operamos estrictamente bajo la metodología **Spec-Driven Development (SDD)** di
 
 ---
 
+## ⚡ REGLA DE OBLIGATORIEDAD DE LA METODOLOGÍA SDD [CRÍTICO]
+
+Queda terminantemente prohibido para cualquier agente del swarm (incluyendo al Orquestador @zugzbot) evadir el ciclo de desarrollo guiado por especificaciones:
+- **No Trabajo en Caliente**: Está prohibido proponer código fuente, diseños HTML/CSS o parches técnicos directamente al usuario en el chat principal sin antes haber completado y aprobado el **Hito A** (Fases 0, 1 y 2).
+- **Rol del Orquestador**: `@zugzbot` debe educar siempre al usuario sobre el flujo de SDD cuando se solicite una nueva característica o cambio. Debe generar un **Checklist / TODO List de las 9 Fases de SDD** personalizado para la solicitud del usuario y delegar la Fase 0 al subagente correspondiente.
+- **Flujo de Trabajo Estricto**: Todo cambio lógico debe iniciarse a través de la delegación estructurada hacia `@sdd-architect`.
+
+---
+
+## 🔍 PROTOCOLO DE EXPLORACIÓN Y PERSISTENCIA DE CONTEXTO [CRÍTICO]
+
+Para optimizar el uso de tokens y dotar al swarm de memoria técnica persistente sin amnesia de sesión:
+- **Fase 0 (Diagnóstico de Entorno)**: El `@sdd-architect` debe ejecutar el subagente integrado `@explore` para indexar y analizar la arquitectura del código, stack tecnológico y archivos clave del proyecto.
+- **Mandamiento de Persistencia**: El `@sdd-architect` (que posee permisos `edit: allow` exclusivos sobre `.openspec/`) capturará el reporte completo del subagente `@explore` y lo **guardará obligatoriamente** en disco:
+  - Para exploraciones generales o actualización del índice de base de código: Guardar en `.openspec/brain.md` o `.openspec/explore_summary.md`.
+  - Para características específicas: Guardar en `.openspec/changes/<change-name>/explore_report.md` o `.openspec/changes/<change-name>/specs/explore_summary.md`.
+- **Carga Perezosa (Lazy Loading)**: En fases posteriores (Fases 3 y 4 de codificación), `@sdd-implementer` debe leer bajo demanda este reporte persistido con la herramienta `read` para conocer con precisión las firmas, componentes y layouts a modificar, optimizando cuotas de forma extrema.
+
+---
+
 ## ⚡ REGLA DE CARGA PEREZOSA (LAZY LOADING) [CRÍTICO]
 
 Para optimizar al máximo el consumo de cuotas y tokens en todas las sesiones, se establece la siguiente regla de lectura obligatoria:
