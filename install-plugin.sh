@@ -32,10 +32,10 @@ echo -e "${COLOR_BORDER}└─────────────────�
 
 # 1. Obtener la ruta absoluta del repositorio
 REPO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PLUGIN_DIR="${REPO_DIR}/plugin"
+PLUGIN_DIR="${REPO_DIR}/plugin/zugzbot-sdd"
 
 if [ ! -d "$PLUGIN_DIR" ]; then
-    echo -e "  ${COLOR_ERROR}❌ Error: No se encuentra la carpeta 'plugin/' en ${REPO_DIR}.${NC}"
+    echo -e "  ${COLOR_ERROR}❌ Error: No se encuentra la carpeta 'plugin/zugzbot-sdd' en ${REPO_DIR}.${NC}"
     exit 1
 fi
 
