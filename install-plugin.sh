@@ -40,9 +40,6 @@ cd "${PLUGIN_DIR}"
 npm install --legacy-peer-deps --quiet
 cd "${REPO_DIR}"
 
-# 4. Crear directorios de configuración de OpenCode si no existen
-mkdir -p ~/.config/opencode/plugins
-
 # 4. Vincular Arnés SDD
 echo -e "  ${COLOR_MUTED}▪ Creando enlaces simbólicos del arnés...${NC}"
 ln -s "${PLUGIN_DIR}/agents" ~/.config/opencode/agents
@@ -50,9 +47,47 @@ ln -s "${PLUGIN_DIR}/commands" ~/.config/opencode/commands
 ln -s "${PLUGIN_DIR}/skills" ~/.config/opencode/skills
 ln -s "${PLUGIN_DIR}/tools" ~/.config/opencode/tools
 
-# 5. Vincular Monitor TUI
-echo -e "  ${COLOR_MUTED}▪ Vinculando Monitor TUI reactivo en tiempo real...${NC}"
-ln -s "${PLUGIN_DIR}/sdd-sidebar.tsx" ~/.config/opencode/plugins/sdd-sidebar.tsx
+# 5. Registrar e instalar el plugin como paquete nativo en OpenCode
+echo -e "  ${COLOR_MUTED}▪ Registrando plugin en la configuración global de OpenCode...${NC}"
+node -e "
+const fs = require('fs');
+const path = require('path');
+const pkgPath = path.join(process.env.HOME, '.config', 'opencode', 'package.json');
+if (fs.existsSync(pkgPath)) {
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+  pkg.dependencies = pkg.dependencies || {};
+  pkg.dependencies['zugzbot-sdd'] = 'file:' + process.argv[1];
+  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+}
+" "${PLUGIN_DIR}"
+
+node -e "
+const fs = require('fs');
+const path = require('path');
+const configPath = path.join(process.env.HOME, '.config', 'opencode', 'opencode.jsonc');
+if (fs.existsSync(configPath)) {
+  let content = fs.readFileSync(configPath, 'utf8');
+  try {
+    const clean = content.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '');
+    const config = JSON.parse(clean);
+    config.plugin = config.plugin || [];
+    if (!config.plugin.includes('zugzbot-sdd')) {
+      config.plugin.push('zugzbot-sdd');
+    }
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
+  } catch (e) {
+    if (!content.includes('zugzbot-sdd')) {
+      content = content.replace('\"plugin\": [', '\"plugin\": [\"zugzbot-sdd\", ');
+      fs.writeFileSync(configPath, content);
+    }
+  }
+}
+"
+
+echo -e "  ${COLOR_MUTED}▪ Ejecutando vinculación de dependencias globales...${NC}"
+cd ~/.config/opencode
+npm install --legacy-peer-deps --quiet
+cd "${REPO_DIR}"
 
 echo -e "${COLOR_BORDER}┌──────────────────────────────────────────────────────────────┐${NC}"
 echo -e "${COLOR_BORDER}│${NC}  ${COLOR_SUCCESS}🎉 ¡PLUGIN INSTALADO CON ÉXITO!${NC}                             ${COLOR_BORDER}│${NC}"

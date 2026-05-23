@@ -3,6 +3,13 @@
   "version": "1.3.0",
   "description": "Especificaciones y herramientas para la metodología SDD de Zugzbot en OpenCode",
   "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./tui": "./sdd-sidebar.tsx"
+  },
+  "oc-plugin": [
+    "tui"
+  ],
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
