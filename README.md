@@ -251,10 +251,13 @@ El arnés incorpora un **plugin nativo para OpenCode TUI** que añade un **Monit
 
 Este monitor muestra el progreso de las fases de forma reactiva, una barra de carga ASCII premium y el subagente encargado actual sin tener que abrir navegadores externos.
 
-### ❓ ¿Por qué la carpeta `plugin/` está limpia de `node_modules`?
-Durante el desarrollo, la carpeta `plugin/` puede generar su propio `node_modules` local para resolver tipos y dar IntelliSense a tu editor (como Cursor o VS Code) o para validaciones de TypeScript (`npm run typecheck`). 
+### ❓ ¿Por qué la carpeta `plugin/` requiere un `node_modules`?
+Durante el desarrollo e instalación, la carpeta `plugin/` genera su propio `node_modules` local. Esto **es necesario en todo momento** por dos motivos clave:
+1. **IntelliSense y Autocompletado:** Para que tu editor (VS Code, Cursor, OpenCode, etc.) reconozca los tipos de `solid-js` y `@opencode-ai/plugin` y no marque errores de sintaxis en rojo.
+2. **Resolución en Caliente de Herramientas:** OpenCode compila las herramientas personalizadas (ubicadas en `plugin/tools/`) en tiempo de ejecución. Para resolver correctamente las importaciones (como `import { ... } from '@opencode-ai/plugin'`), Bun/Node requiere que las dependencias estén instaladas físicamente en la carpeta `plugin/node_modules/`.
 
-Sin embargo, para la instalación final, **este directorio se purga por completo**, ya que OpenCode resuelve e inyecta estas dependencias de SolidJS de forma interna e inteligente en tiempo de ejecución. Esto mantiene el plugin extremadamente ligero y listo para su distribución.
+> [!IMPORTANT]
+> **No te preocupes por el peso en tu repositorio Git:** Este directorio está convenientemente ignorado en el archivo `.gitignore` (`plugin/node_modules`), por lo que nunca se subirá a tu nube de GitHub.
 
 ---
 
@@ -289,45 +292,32 @@ tu-proyecto/
 
 ---
 
-## 📦 Instalación e Integración Global del Plugin
+## 📦 Instalación e Integración Global del Plugin (1 solo Comando)
 
 La instalación se realiza vinculando el contenido de tu directorio local `/Users/wavesbyte/Documents/zugzbot/plugin/` de manera directa a la configuración global de OpenCode. 
 
-Sigue estos sencillos pasos para activar los subagentes, sus comandos slash y el **Monitor TUI en Tiempo Real** de forma global en tu Mac (disponible para todos tus proyectos de OpenCode):
+Para facilitarte la vida, el repositorio incluye un script autoejecutable (`install-plugin.sh`) que realiza todo el proceso de forma automatizada y segura en un solo paso:
+1. Purgará limpiamente cualquier enlace simbólico previo para evitar conflictos de tipo `"File exists"`.
+2. Creará los directorios globales necesarios.
+3. Vinculará de forma transparente tu arnés de subagentes, herramientas, habilidades y comandos slash.
+4. Activará el **Monitor TUI en Tiempo Real** en tu panel lateral de OpenCode.
 
-### Paso 1: Clonar el Repositorio del Plugin
-Si estás instalando desde cero en un nuevo Mac:
+### 🚀 Instrucciones de Instalación
+
+Navega a la raíz del repositorio de Zugzbot y ejecuta el instalador:
 ```bash
-git clone --depth 1 -b plugin_opencode https://github.com/Danielisla96/zugzbot.git /Users/wavesbyte/Documents/zugzbot
+./install-plugin.sh
 ```
 
-### Paso 2: Crear el Directorio de Plugins de OpenCode
-Asegúrate de tener creadas las rutas de plugins en tu configuración de OpenCode:
-```bash
-mkdir -p ~/.config/opencode/plugins
-```
+¡Eso es todo! El script resolverá la ruta del repositorio dinámicamente y completará la configuración global en segundos.
 
-### Paso 3: Vincular el Arnés SDD (Agentes, Herramientas, Habilidades y Comandos)
-Enlaza simbólicamente los directorios correspondientes para activar las capacidades multi-agente globales:
-```bash
-ln -s /Users/wavesbyte/Documents/zugzbot/plugin/agents ~/.config/opencode/agents
-ln -s /Users/wavesbyte/Documents/zugzbot/plugin/commands ~/.config/opencode/commands
-ln -s /Users/wavesbyte/Documents/zugzbot/plugin/skills ~/.config/opencode/skills
-ln -s /Users/wavesbyte/Documents/zugzbot/plugin/tools ~/.config/opencode/tools
-```
+### 💻 Uso del Monitor y la Metodología
 
-### Paso 4: Vincular el Monitor TUI Lateral Reactivo
-Enlaza el archivo del componente de SolidJS para activar la visualización reactiva dentro del panel lateral de OpenCode:
-```bash
-ln -s /Users/wavesbyte/Documents/zugzbot/plugin/sdd-sidebar.tsx ~/.config/opencode/plugins/sdd-sidebar.tsx
-```
-
-### Paso 5: ¡Listo! Levantar OpenCode con Soporte LSP
 Abre tu editor OpenCode en cualquier proyecto donde desees trabajar con la metodología SDD activa:
 ```bash
 OPENCODE_EXPERIMENTAL=true opencode
 ```
-Una vez dentro de la TUI, presiona la tecla **`b`** y verás el **[SDD Monitor]** latiendo en tiempo real a medida que los agentes progresan de forma autónoma.
+Una vez dentro de la TUI, presiona la tecla **`b`** para abrir el panel lateral y verás el **[SDD Monitor]** latiendo en tiempo real a medida que los agentes progresan de forma autónoma.
 
 ---
 
