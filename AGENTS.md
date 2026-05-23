@@ -42,6 +42,18 @@ Para optimizar al máximo el consumo de cuotas y tokens en todas las sesiones, s
 
 ---
 
+## ⚡ PROTOCOLO DE CONCISIÓN Y PRECISIÓN OPERATIVA [CRÍTICO]
+
+Para optimizar los tiempos de ejecución, evitar la dispersión mental del swarm y reducir drásticamente el consumo de tokens:
+- **Respuesta de Alta Densidad**: Todos los agentes deben redactar respuestas cortas, directas y enfocadas únicamente en el valor técnico. Queda prohibida la verborrea redundante, los saludos largos o la repetición de contextos y directrices ya expresados en archivos.
+- **Orquestación Basada en Referencias**: `@zugzbot` no debe replicar el código de la aplicación o las instrucciones largas en los prompts de delegación. Su mensaje de delegación debe ser ultra-corto, limitándose a:
+  1. Mapear las rutas exactas de los archivos de `.openspec/` a leer.
+  2. Dictar la tarea específica y concreta sin rodeos.
+- **Artefactos "Justo y Necesario"**: El `@sdd-architect` debe diseñar especificaciones técnicas en `.openspec/` concisas, apoyándose en tablas, bullet points y escenarios BDD de pocas líneas. Los subagentes no deben generar documentación o reportes extensivos e innecesarios. Su misión es ejecutar y no escribir de más.
+- **Handoff Eficiente**: Cuando un agente transicione de fase, su mensaje final debe resumir su logro en no más de un párrafo corto e indicar explícitamente cuál es la siguiente acción.
+
+---
+
 ## 📂 Convenciones de la Base de Código
 
 1. **Higiene de Archivos**:
