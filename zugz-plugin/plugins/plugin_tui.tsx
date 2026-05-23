@@ -30,16 +30,16 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                     await traverse(childId)
                   }
                 }
-              } catch {}
+              } catch { }
             }
 
             await traverse(props.session_id)
-            
+
             // Solo actualizamos el signal si el conjunto de IDs cambió, para evitar re-renderizados innecesarios
             if (JSON.stringify(results) !== JSON.stringify(sessionIds())) {
               setSessionIds(results)
             }
-          } catch {}
+          } catch { }
         }
 
         function extractAgentName(messages: any[], sessionInfo: any, sessionId: string): string {
@@ -92,12 +92,12 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
             let messages: any[] = []
             try {
               messages = api.state.session.messages(sid) || []
-            } catch {}
+            } catch { }
 
             let sessionInfo: any = null
             try {
               sessionInfo = api.state.session.get?.(sid)
-            } catch {}
+            } catch { }
 
             const defaultAgentName = extractAgentName(messages, sessionInfo, sid)
 
@@ -167,7 +167,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
 
         // --- Estado reactivo y Polling ---
         const [metrics, setMetrics] = createSignal<TotalMetrics>(getMetrics([props.session_id]))
-        const [mascotFrame, setMascotFrame] = createSignal(0)
+        const [colorIndex, setColorIndex] = createSignal(0)
 
         // Actualizamos los IDs de las sesiones cada 2 segundos
         const idsInterval = setInterval(() => {
@@ -179,18 +179,32 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
           setMetrics(getMetrics(sessionIds()))
         }, 1000)
 
-        const mascotInterval = setInterval(() => {
-          setMascotFrame(1)
-          setTimeout(() => {
-            setMascotFrame(0)
-          }, 200)
-        }, 3000)
+        // Ticker lento para una animación de ola vertical suave
+        const colorInterval = setInterval(() => {
+          setColorIndex((prev) => (prev + 1) % 100)
+        }, 500)
 
-        const mascotAscii = () => {
-          return mascotFrame() === 0
-            ? ' (\\__/)\n  [o_o]\n (") (")'
-            : ' (\\__/)\n  [-_-]\n (") (")'
+        // Paleta premium de naranjas fuertes, ámbar y cobrizos
+        const orangePalette = [
+          "#E04F00", // Naranjo oscuro / Fuego
+          "#FF7300", // Naranjo brillante / Ámbar
+          "#B33600", // Siena tostado / Óxido
+          "#FF8C00", // Ámbar oscuro
+        ]
+
+        const getLineColor = (lineIdx: number) => {
+          const targetIndex = (colorIndex() + lineIdx) % orangePalette.length
+          return orangePalette[targetIndex]
         }
+
+        const logoLines = [
+          "███████╗██╗   ██╗ ██████╗ ███████╗",
+          "╚══███╔╝██║   ██║██╔════╝ ╚══███╔╝",
+          "  ███╔╝ ██║   ██║██║  ███╗  ███╔╝ ",
+          " ███╔╝  ██║   ██║██║   ██║ ███╔╝  ",
+          "███████╗╚██████╔╝╚██████╔╝███████╗",
+          "╚══════╝ ╚═════╝  ╚═════╝ ╚══════╝"
+        ]
 
         // Ejecutar inmediatamente al inicio
         updateSessionIds()
@@ -198,38 +212,33 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
         onCleanup(() => {
           clearInterval(idsInterval)
           clearInterval(metricsInterval)
-          clearInterval(mascotInterval)
+          clearInterval(colorInterval)
         })
 
         return (
           <box gap={0}>
-            {/* Mascota ASCII Animada */}
+            {/* Cabecera Logo ZUGZ con Efecto Ola Vertical Naranja */}
             <box gap={0} paddingTop={1} paddingLeft={1}>
-              <text fg={api.theme.current.accent}>
-                {mascotAscii()}
-              </text>
+              {logoLines.map((line, idx) => (
+                <text fg={getLineColor(idx)}>
+                  {line}
+                </text>
+              ))}
             </box>
 
-            {/* Monitor de Agentes Compacto */}
-            <box gap={0} paddingTop={1} paddingBottom={1}>
-              <text fg={api.theme.current.accent}>
-                <b>[Monitor de Agentes] 🤖</b>
-              </text>
-              <box gap={0} paddingLeft={1} paddingTop={1}>
-                {metrics().agents.map((agent) => (
-                  <text fg={agent.isSubagent ? api.theme.current.textMuted : api.theme.current.text}>
-                    {agent.isSubagent ? "  " : ""}<b>{agent.name}</b>: {formatCost(agent.cost)} ({formatTokens(agent.tokensInput)}/{formatTokens(agent.tokensOutput)})
-                  </text>
-                ))}
-              </box>
-              <text fg={api.theme.current.borderSubtle} paddingLeft={1}>
-                ─────────────────────────────────────
-              </text>
-              <box gap={0} paddingLeft={1} paddingTop={1}>
-                <text fg={api.theme.current.success}>
-                  <b>Total:</b> {formatCost(metrics().totalCost)} ({formatTokens(metrics().totalInput)}/{formatTokens(metrics().totalOutput)})
+            {/* Monitor de Agentes Compacto y Plano (Efecto Sándwich) */}
+            <box gap={0} paddingLeft={1} paddingTop={1} paddingBottom={0}>
+              {metrics().agents.map((agent) => (
+                <text fg={agent.isSubagent ? api.theme.current.textMuted : api.theme.current.text}>
+                  {agent.isSubagent ? "  " : ""}<b>{agent.name}</b>: {formatCost(agent.cost)} ({formatTokens(agent.tokensInput)}/{formatTokens(agent.tokensOutput)})
                 </text>
-              </box>
+              ))}
+              <text fg={api.theme.current.borderSubtle}>
+                ────────────────────────────────────
+              </text>
+              <text fg={api.theme.current.success}>
+                <b>Total:</b> {formatCost(metrics().totalCost)} ({formatTokens(metrics().totalInput)}/{formatTokens(metrics().totalOutput)})
+              </text>
             </box>
 
             {/* Chat original de OpenCode */}
