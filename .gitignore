@@ -36,3 +36,8 @@ Thumbs.db
 # No ignorar .env.example, solo el .env real
 !.env.example
 plugin/node_modules
+
+# --- .opencode Local Installation ---
+.opencode/
+tui.json
+opencode.json

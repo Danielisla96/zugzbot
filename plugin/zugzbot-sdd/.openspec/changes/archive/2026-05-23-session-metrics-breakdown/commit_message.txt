@@ -1,0 +1,14 @@
+feat(plugin-tui): add per-agent session metrics breakdown
+
+Extend SDDUsage component to show cost, input tokens, and output tokens
+broken down by each agent/subagent in the session.
+
+- Add AgentMetrics/MetricsBreakdown types
+- Implement calculateBreakdown() with collectSessionIds, extractAgentName, sumMetrics
+- Add AgentMetricsRow subcomponent with monospace alignment
+- Optimize polling with hasMetricsChanged cache
+- Conditional breakdown display (only when agentCount > 1)
+- Truncate long agent names to 20 chars
+- Handle edge cases: no children, empty sessions, API fallback
+
+Closes: session-metrics-breakdown

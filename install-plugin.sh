@@ -24,7 +24,7 @@ EOF
 echo -e "${NC}"
 
 echo -e "${COLOR_BORDER}┌──────────────────────────────────────────────────────────────┐${NC}"
-echo -e "${COLOR_BORDER}│${NC}  ${COLOR_HEADER}Zugzbot SDD Plugin Installer${NC}                            ${COLOR_BORDER}│${NC}"
+echo -e "${COLOR_BORDER}│${NC}  ${COLOR_HEADER}Zugzbot SDD Local Installer & Global Reset${NC}                 ${COLOR_BORDER}│${NC}"
 echo -e "${COLOR_BORDER}└──────────────────────────────────────────────────────────────┘${NC}"
 
 # 1. Obtener la ruta absoluta del repositorio
@@ -38,87 +38,114 @@ fi
 
 echo -e "  ${COLOR_MUTED}▪ Directorio detectado:${NC} ${COLOR_SUCCESS}${REPO_DIR}${NC}"
 
-# 2. Paso 0: Asegurar directorios y limpiar instalaciones previas
-echo -e "  ${COLOR_MUTED}▪ Asegurando directorios de configuración global...${NC}"
-mkdir -p ~/.config/opencode
-if [ ! -f ~/.config/opencode/package.json ]; then
-    echo '{"dependencies": {"@opencode-ai/plugin": "1.15.4"}}' > ~/.config/opencode/package.json
+# 2. Paso 1: Resetear Configuración Global (De Fábrica)
+echo -e "  ${COLOR_WARNING}▪ Reseteando configuración global a valores de fábrica...${NC}"
+rm -rf ~/.config/opencode
+rm -rf ~/.cache/opencode/packages
+
+# 3. Paso 2: Limpiar directorios locales del arnés previos
+echo -e "  ${COLOR_MUTED}▪ Limpiando directorios locales del arnés...${NC}"
+rm -rf "${REPO_DIR}/.opencode/agents"
+rm -rf "${REPO_DIR}/.opencode/commands"
+rm -rf "${REPO_DIR}/.opencode/skills"
+rm -rf "${REPO_DIR}/.opencode/tools"
+rm -rf "${REPO_DIR}/.opencode/plugins"
+
+# Asegurar directorios base
+mkdir -p "${REPO_DIR}/.opencode/plugins"
+
+# 4. Paso 3: Copiar Arnés SDD "En Duro" Localmente
+echo -e "  ${COLOR_MUTED}▪ Copiando componentes del arnés y plugins TUI físicamente a .opencode/...${NC}"
+cp -r "${PLUGIN_DIR}/agents" "${REPO_DIR}/.opencode/agents"
+cp -r "${PLUGIN_DIR}/commands" "${REPO_DIR}/.opencode/commands"
+cp -r "${PLUGIN_DIR}/skills" "${REPO_DIR}/.opencode/skills"
+cp -r "${PLUGIN_DIR}/tools" "${REPO_DIR}/.opencode/tools"
+cp -r "${PLUGIN_DIR}/plugins/." "${REPO_DIR}/.opencode/plugins/"
+
+# Asegurar registro de plugin TUI local en tui.json si no existe
+if [ ! -f "${REPO_DIR}/tui.json" ]; then
+    echo -e "  ${COLOR_MUTED}▪ Creando archivo tui.json local para registrar el plugin TUI...${NC}"
+    cat << 'EOF' > "${REPO_DIR}/tui.json"
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "plugin": [
+    "./.opencode/plugins/plugin_tui.tsx"
+  ]
+}
+EOF
 fi
-if [ ! -f ~/.config/opencode/opencode.jsonc ]; then
-    echo '{"$schema": "https://opencode.ai/config.json", "model": "opencode/deepseek-v4-flash-free", "plugin": []}' > ~/.config/opencode/opencode.jsonc
-fi
 
-echo -e "  ${COLOR_MUTED}▪ Limpiando enlaces simbólicos previos...${NC}"
-rm -rf ~/.config/opencode/agents
-rm -rf ~/.config/opencode/commands
-rm -rf ~/.config/opencode/skills
-rm -rf ~/.config/opencode/tools
-rm -rf ~/.config/opencode/plugins/plugin_tui.tsx
-
-
-echo -e "  ${COLOR_MUTED}▪ Removiendo dependencias obsoletas de opencode.jsonc y package.json...${NC}"
-node -e "
-const fs = require('fs');
-const path = require('path');
-
-// 1. Limpiar opencode.jsonc
-const configPath = path.join(process.env.HOME, '.config', 'opencode', 'opencode.jsonc');
-if (fs.existsSync(configPath)) {
-  let content = fs.readFileSync(configPath, 'utf8');
-  try {
-    const clean = content.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '');
-    const config = JSON.parse(clean);
-    if (config.plugin) {
-      config.plugin = config.plugin.filter(p => p !== 'zugzbot-sdd');
-      fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
-    }
-  } catch (e) {
-    // Si falla el parsing por comentarios complejos, removerlo por regex simple
-    if (content.includes('\"zugzbot-sdd\"')) {
-      content = content.replace(/\"zugzbot-sdd\",?\s*/g, '');
-      fs.writeFileSync(configPath, content);
+# Asegurar archivo opencode.json local si no existe
+if [ ! -f "${REPO_DIR}/opencode.json" ]; then
+    echo -e "  ${COLOR_MUTED}▪ Creando archivo opencode.json local con modelo por defecto...${NC}"
+    cat << 'EOF' > "${REPO_DIR}/opencode.json"
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "opencode/deepseek-v4-flash-free",
+  "permission": {
+    "question": "allow",
+    "lsp": "allow"
+  },
+  "agent": {
+    "zugzbot": {
+      "mode": "primary",
+      "model": "opencode/deepseek-v4-flash-free",
+      "permission": {
+        "task": {
+          "sdd-*": "allow",
+          "aux-*": "allow"
+        },
+        "question": "allow",
+        "lsp": "allow"
+      }
     }
   }
 }
+EOF
+fi
 
-// 2. Limpiar package.json
-const pkgPath = path.join(process.env.HOME, '.config', 'opencode', 'package.json');
-if (fs.existsSync(pkgPath)) {
-  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-  if (pkg.dependencies && pkg.dependencies['zugzbot-sdd']) {
-    delete pkg.dependencies['zugzbot-sdd'];
-    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+# Asegurar archivo .gitignore local y agregar exclusiones si no existen
+GITIGNORE_FILE="${REPO_DIR}/.gitignore"
+if [ ! -f "$GITIGNORE_FILE" ]; then
+    echo -e "  ${COLOR_MUTED}▪ Creando archivo .gitignore local...${NC}"
+    touch "$GITIGNORE_FILE"
+fi
+
+if ! grep -q "\.opencode/" "$GITIGNORE_FILE"; then
+    echo -e "  ${COLOR_MUTED}▪ Agregando exclusiones de OpenCode local a .gitignore...${NC}"
+    cat << 'EOF' >> "$GITIGNORE_FILE"
+
+# --- .opencode Local Installation ---
+.opencode/
+tui.json
+opencode.json
+EOF
+fi
+
+# 5. Paso 4: Crear y Sincronizar package.json en .opencode/
+echo -e "  ${COLOR_MUTED}▪ Generando dependencias locales en .opencode/package.json...${NC}"
+cat << 'EOF' > "${REPO_DIR}/.opencode/package.json"
+{
+  "name": "zugzbot-sdd-local",
+  "dependencies": {
+    "@opencode-ai/plugin": "1.15.4"
   }
 }
-"
+EOF
 
-# 3. Asegurar dependencias locales del plugin para el compilador de OpenCode
-echo -e "  ${COLOR_MUTED}▪ Asegurando dependencias de compilación del plugin (npm install)...${NC}"
-cd "${PLUGIN_DIR}"
-npm install --legacy-peer-deps --quiet
-cd "${REPO_DIR}"
-
-# 4. Vincular Arnés SDD
-echo -e "  ${COLOR_MUTED}▪ Creando enlaces simbólicos del arnés y plugin TUI...${NC}"
-ln -s "${PLUGIN_DIR}/agents" ~/.config/opencode/agents
-ln -s "${PLUGIN_DIR}/commands" ~/.config/opencode/commands
-ln -s "${PLUGIN_DIR}/skills" ~/.config/opencode/skills
-ln -s "${PLUGIN_DIR}/tools" ~/.config/opencode/tools
-
-# Vincular plugin TUI globalmente para que se cargue en todas las sesiones de opencode
-mkdir -p ~/.config/opencode/plugins
-ln -s "${REPO_DIR}/.opencode/plugins/plugin_tui.tsx" ~/.config/opencode/plugins/plugin_tui.tsx
-
-echo -e "  ${COLOR_MUTED}▪ Sincronizando dependencias de OpenCode global...${NC}"
-cd ~/.config/opencode
+echo -e "  ${COLOR_MUTED}▪ Instalando dependencias de compilación local en .opencode/...${NC}"
+cd "${REPO_DIR}/.opencode"
 npm install --legacy-peer-deps --quiet
 cd "${REPO_DIR}"
 
 echo -e "${COLOR_BORDER}┌──────────────────────────────────────────────────────────────┐${NC}"
-echo -e "${COLOR_BORDER}│${NC}  ${COLOR_SUCCESS}🎉 ¡PLUGIN INSTALADO CON ÉXITO!${NC}                             ${COLOR_BORDER}│${NC}"
+echo -e "${COLOR_BORDER}│${NC}  ${COLOR_SUCCESS}🎉 ¡INSTALACIÓN LOCAL COMPLETADA CON ÉXITO!${NC}                 ${COLOR_BORDER}│${NC}"
 echo -e "${COLOR_BORDER}├──────────────────────────────────────────────────────────────┤${NC}"
+echo -e "${COLOR_BORDER}│${NC}  1. Configuración global reseteada completamente.            ${COLOR_BORDER}│${NC}"
+echo -e "${COLOR_BORDER}│${NC}  2. Arnés SDD copiado en duro localmente.                     ${COLOR_BORDER}│${NC}"
+echo -e "${COLOR_BORDER}│${NC}  3. Dependencias de compilación instaladas localmente.        ${COLOR_BORDER}│${NC}"
+echo -e "${COLOR_BORDER}│${NC}                                                              ${COLOR_BORDER}│${NC}"
 echo -e "${COLOR_BORDER}│${NC}  Siguientes pasos recomendados:                              ${COLOR_BORDER}│${NC}"
-echo -e "${COLOR_BORDER}│${NC}  1. Abre tu proyecto favorito en la terminal.                ${COLOR_BORDER}│${NC}"
-echo -e "${COLOR_BORDER}│${NC}  2. Levanta tu entorno de OpenCode ejecutando:               ${COLOR_BORDER}│${NC}"
-echo -e "${COLOR_BORDER}│${NC}     ${COLOR_HEADER}opencode${NC}                                                    ${COLOR_BORDER}│${NC}"
+echo -e "${COLOR_BORDER}│${NC}  - Inicia tu entorno local de OpenCode:                      ${COLOR_BORDER}│${NC}"
+echo -e "${COLOR_BORDER}│${NC}    ${COLOR_HEADER}OPENCODE_EXPERIMENTAL=true opencode${NC}                       ${COLOR_BORDER}│${NC}"
 echo -e "${COLOR_BORDER}└──────────────────────────────────────────────────────────────┘${NC}"
