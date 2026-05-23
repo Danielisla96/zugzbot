@@ -849,29 +849,143 @@ show_interactive_menu() {
                 print_header
                 echo -e "  ${COLOR_HEADER}Uso no interactivo:${NC} ./sdd [comando] u oculto: ./.openspec/sdd [comando]"
                 echo ""
-                echo -e "  ${COLOR_HEADER}Comandos rápidos directos:${NC}"
+                echo -e "  ${COLOR_HEADER}Comandos r\u00e1pidos directos:${NC}"
                 echo -e "    ${COLOR_SUCCESS}status${NC}    - Muestra el progreso del ciclo agrupado en hitos directamente"
                 echo -e "    ${COLOR_SUCCESS}validate${NC}  - Audita estructuralmente las especificaciones"
                 echo -e "    ${COLOR_SUCCESS}test${NC}      - Corre las pruebas locales de forma automatizada"
-                echo -e "    ${COLOR_SUCCESS}lint${NC}      - Audita el linter de código local"
+                echo -e "    ${COLOR_SUCCESS}lint${NC}      - Audita el linter de c\u00f3digo local"
                 echo -e "    ${COLOR_SUCCESS}dashboard${NC} - Abre el dashboard interactivo en tu navegador"
                 echo -e "    ${COLOR_SUCCESS}rollback${NC}  - Descarta cambios Git locales no confirmados"
                 echo -e "    ${COLOR_SUCCESS}clean${NC}     - Puga logs, archivos temporales y resetea a Fase 0"
+                echo -e "    ${COLOR_SUCCESS}models${NC}    - Gestiona modelos de IA (apply/status/preset)"
                 echo -e "    ${COLOR_SUCCESS}help${NC}      - Muestra esta tarjeta de comandos"
                 echo ""
                 echo -ne "  ${COLOR_MUTED}Presiona [Enter] para continuar...${NC}"
                 read -r
                 ;;
             9)
-                echo -e "  ${COLOR_SUCCESS}¡Nos vemos! Éxito en tu ciclo de desarrollo. 🚀${NC}\n"
+                echo -e "  ${COLOR_SUCCESS}\u00a1Nos vemos! \u00c9xito en tu ciclo de desarrollo. \ud83d\ude80${NC}\n"
                 break
                 ;;
             *)
-                echo -e "  ${COLOR_ERROR}❌ Opción no válida. Inténtalo de nuevo.${NC}"
+                echo -e "  ${COLOR_ERROR}\u274c Opci\u00f3n no v\u00e1lida. Int\u00e9ntalo de nuevo.${NC}"
                 sleep 1
                 ;;
         esac
     done
+}
+
+manage_models() {
+    local subcommand="${1:-status}"
+    # Resolve models file — look in project root or script dir
+    local models_file="zugz-models.json"
+    if [ ! -f "$models_file" ]; then
+        models_file="$(dirname "$0")/../../zugz-models.json"
+    fi
+    if [ ! -f "$models_file" ]; then
+        echo -e "  ${COLOR_ERROR}\u274c No se encontr\u00f3 'zugz-models.json'.${NC}"
+        echo -e "  Crea uno en la ra\u00edz del proyecto con el template:\n"
+        echo -e '  {"agents":{"zugzbot":"opencode/deepseek-v4-flash-free","sdd-planner":"opencode/deepseek-v4-flash-free"}}'
+        exit 1
+    fi
+
+    # Resolve agents dir — prefer local .opencode, fallback to zugz-plugin
+    local agents_dir=".opencode/agents"
+    if [ ! -d "$agents_dir" ]; then
+        agents_dir="zugz-plugin/agents"
+    fi
+    if [ ! -d "$agents_dir" ]; then
+        echo -e "  ${COLOR_ERROR}\u274c No se encontr\u00f3 el directorio de agentes.${NC}"
+        exit 1
+    fi
+
+    case "$subcommand" in
+        apply)
+            echo -e "  ${COLOR_HEADER}\ud83e\udd16 Aplicando modelos desde ${models_file}...${NC}"
+            echo -e "  ${COLOR_BORDER}\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500${NC}"
+            local changed=0
+            # Read each agent key from JSON (portable, no jq needed)
+            while IFS= read -r line; do
+                # Match lines like: "agent-name": "model-value"
+                local agent_key model_val
+                agent_key=$(echo "$line" | grep -o '"[a-zA-Z0-9_-]*"[[:space:]]*:[[:space:]]*"[^"]*"' | head -n1 | cut -d'"' -f2)
+                model_val=$(echo "$line" | grep -o '"[a-zA-Z0-9_-]*"[[:space:]]*:[[:space:]]*"[^"]*"' | head -n1 | cut -d'"' -f4)
+                if [ -z "$agent_key" ] || [ -z "$model_val" ] || [[ "$agent_key" == _* ]]; then
+                    continue
+                fi
+                local agent_file="${agents_dir}/${agent_key}.md"
+                if [ -f "$agent_file" ]; then
+                    # Replace the 'model:' line in frontmatter (first occurrence only)
+                    if grep -q '^model:' "$agent_file"; then
+                        sed -i.bak "s|^model:.*|model: ${model_val}|" "$agent_file"
+                        rm -f "${agent_file}.bak"
+                        echo -e "  ${COLOR_SUCCESS}\u2713${NC} ${COLOR_MUTED}${agent_key}${NC} \u2192 ${COLOR_HEADER}${model_val}${NC}"
+                        changed=$((changed+1))
+                    else
+                        echo -e "  ${COLOR_WARNING}\u26a0 ${agent_key}.md no tiene campo 'model:' en frontmatter${NC}"
+                    fi
+                else
+                    echo -e "  ${COLOR_MUTED}\u25aa ${agent_key}.md no encontrado (saltando)${NC}"
+                fi
+            done < "$models_file"
+            echo -e "  ${COLOR_BORDER}\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500${NC}"
+            echo -e "  ${COLOR_SUCCESS}\u2713 ${changed} agente(s) actualizados correctamente.${NC}\n"
+            ;;
+        status)
+            echo -e "  ${COLOR_HEADER}\ud83d\udcca Modelos actuales por agente:${NC}"
+            echo -e "  ${COLOR_BORDER}\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500${NC}"
+            for f in "${agents_dir}"/*.md; do
+                local name model
+                name=$(basename "$f" .md)
+                model=$(grep '^model:' "$f" 2>/dev/null | head -n1 | sed 's/^model:[[:space:]]*//')
+                if [ -n "$model" ]; then
+                    printf "  ${COLOR_MUTED}%-20s${NC} ${COLOR_HEADER}%s${NC}\n" "$name" "$model"
+                fi
+            done
+            echo -e "  ${COLOR_BORDER}\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500${NC}"
+            echo -e "  ${COLOR_MUTED}Archivo de config:${NC} ${models_file}\n"
+            ;;
+        preset)
+            local preset_name="${2:-free}"
+            echo -e "  ${COLOR_HEADER}\ud83c\udfa8 Aplicando preset '${preset_name}' desde ${models_file}...${NC}"
+            # Extract the preset block from JSON and apply it
+            local in_preset=false
+            local brace_depth=0
+            local changed=0
+            while IFS= read -r line; do
+                if echo "$line" | grep -q "\"${preset_name}\""; then
+                    in_preset=true
+                fi
+                if [ "$in_preset" = true ]; then
+                    local opens closes
+                    opens=$(echo "$line" | tr -cd '{' | wc -c | tr -d ' ')
+                    closes=$(echo "$line" | tr -cd '}' | wc -c | tr -d ' ')
+                    brace_depth=$((brace_depth + opens - closes))
+                    local agent_key model_val
+                    agent_key=$(echo "$line" | grep -o '"[a-zA-Z0-9_-]*"[[:space:]]*:[[:space:]]*"[^"]*"' | head -n1 | cut -d'"' -f2)
+                    model_val=$(echo "$line" | grep -o '"[a-zA-Z0-9_-]*"[[:space:]]*:[[:space:]]*"[^"]*"' | head -n1 | cut -d'"' -f4)
+                    if [ -n "$agent_key" ] && [ -n "$model_val" ] && [[ "$agent_key" != _* ]]; then
+                        local agent_file="${agents_dir}/${agent_key}.md"
+                        if [ -f "$agent_file" ] && grep -q '^model:' "$agent_file"; then
+                            sed -i.bak "s|^model:.*|model: ${model_val}|" "$agent_file"
+                            rm -f "${agent_file}.bak"
+                            echo -e "  ${COLOR_SUCCESS}\u2713${NC} ${COLOR_MUTED}${agent_key}${NC} \u2192 ${COLOR_HEADER}${model_val}${NC}"
+                            changed=$((changed+1))
+                        fi
+                    fi
+                    if [ "$brace_depth" -le 0 ] && [ "$in_preset" = true ]; then
+                        break
+                    fi
+                fi
+            done < "$models_file"
+            echo -e "  ${COLOR_SUCCESS}\u2713 Preset '${preset_name}' aplicado en ${changed} agente(s).${NC}\n"
+            ;;
+        *)
+            echo -e "  ${COLOR_ERROR}\u274c Subcomando desconocido: '${subcommand}'${NC}"
+            echo -e "  Uso: ./sdd models [apply|status|preset <nombre>]\n"
+            exit 1
+            ;;
+    esac
 }
 
 # Entry point
@@ -912,19 +1026,26 @@ case "$1" in
         print_header
         generate_and_open_dashboard
         ;;
+    models)
+        print_header
+        manage_models "${2:-status}" "$3"
+        ;;
     help|--help|-h)
         print_header
         echo -e "  ${COLOR_HEADER}Uso:${NC} ./sdd [comando] o ./.openspec/sdd [comando]"
         echo ""
-        echo -e "  ${COLOR_HEADER}Comandos válidos:${NC}"
-        echo -e "    ${COLOR_SUCCESS}status${NC}      - Muestra la barra de progreso estelar agrupada en hitos (por defecto)"
-        echo -e "    ${COLOR_SUCCESS}validate${NC}    - Audita estructuralmente las especificaciones y archivos de cambio"
-        echo -e "    ${COLOR_SUCCESS}test${NC}        - Ejecuta de forma nativa la suite de pruebas del proyecto"
-        echo -e "    ${COLOR_SUCCESS}lint${NC}        - Ejecuta el linter o verificador estático de código local"
-        echo -e "    ${COLOR_SUCCESS}dashboard${NC}   - Abre el dashboard interactivo en tu navegador"
-        echo -e "    ${COLOR_SUCCESS}rollback${NC}    - Descarta de forma segura cambios Git locales no confirmados"
-        echo -e "    ${COLOR_SUCCESS}clean${NC}       - Purga logs de fallos, registros temporales y resetea a Fase 0"
-        echo -e "    ${COLOR_SUCCESS}help${NC}        - Muestra esta tarjeta informativa de comandos"
+        echo -e "  ${COLOR_HEADER}Comandos v\u00e1lidos:${NC}"
+        echo -e "    ${COLOR_SUCCESS}status${NC}           - Muestra la barra de progreso agrupada en hitos (por defecto)"
+        echo -e "    ${COLOR_SUCCESS}validate${NC}         - Audita estructuralmente las especificaciones y archivos de cambio"
+        echo -e "    ${COLOR_SUCCESS}test${NC}             - Ejecuta de forma nativa la suite de pruebas del proyecto"
+        echo -e "    ${COLOR_SUCCESS}lint${NC}             - Ejecuta el linter o verificador est\u00e1tico de c\u00f3digo local"
+        echo -e "    ${COLOR_SUCCESS}dashboard${NC}        - Abre el dashboard interactivo en tu navegador"
+        echo -e "    ${COLOR_SUCCESS}rollback${NC}         - Descarta de forma segura cambios Git locales no confirmados"
+        echo -e "    ${COLOR_SUCCESS}clean${NC}            - Purga logs de fallos, registros temporales y resetea a Fase 0"
+        echo -e "    ${COLOR_SUCCESS}models status${NC}    - Muestra el modelo activo de cada agente"
+        echo -e "    ${COLOR_SUCCESS}models apply${NC}     - Aplica los modelos de zugz-models.json a los agentes"
+        echo -e "    ${COLOR_SUCCESS}models preset X${NC}  - Aplica un preset (free / balanced / turbo)"
+        echo -e "    ${COLOR_SUCCESS}help${NC}             - Muestra esta tarjeta informativa de comandos"
         echo ""
         ;;
     *)
