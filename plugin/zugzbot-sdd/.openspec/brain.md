@@ -27,6 +27,18 @@
 
 ---
 
+### simplify-tui-monitor (2026-05-23)
+
+**Contexto:** El plugin TUI tenía componentes de métricas de sesión (`SDDUsage`, `AgentMetricsRow`) que añadían ~240 líneas adicionales y complejidad innecesaria para un monitor de estado.
+
+**Solución:** Se eliminó todo el subsistema de breakdown de sesión, dejando solo el monitor SDD puro. El código pasó de 424 → 186 líneas (−56%). Se reemplazó el flujo complejo (polling → breakdown → render anidado) por un flujo lineal directo: `loadLockfile → getActiveAgentData → SDDMonitor`.
+
+**Aprendizaje:** No todo lo que puede medirse debe mostrarse en la UI principal. Si una feature duplica la complejidad del archivo pero no es crítica para la experiencia core, debe separarse en un plugin independiente o eliminarse. Un monitor de pipeline debe ser ligero (<200 líneas) para mantenerse sostenible.
+
+**Archivo modificado:** `plugins/plugin_tui.tsx`
+
+---
+
 ### Convenciones
 
 - Los nombres de cambio siguen kebab-case

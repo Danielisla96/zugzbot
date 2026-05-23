@@ -1,6 +1,6 @@
 {
   "name": "zugzbot-sdd",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Especificaciones y herramientas para la metodología SDD de Zugzbot en OpenCode",
   "main": "index.js"
 }
