@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "./.openspec/prompt_base.md",
+    "./.openspec/brain.md"
+  ],
+  "permission": {
+    "task": {
+      "sdd-*": "allow",
+      "aux-*": "allow"
+    }
+  }
+}
