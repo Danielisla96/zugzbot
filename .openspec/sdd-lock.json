@@ -1,7 +1,7 @@
 {
   "change_name": "simplify-tui-monitor",
-  "active_phase": 0,
-  "active_subagent": "sdd-architect",
+  "active_phase": 8,
+  "active_subagent": "sdd-release-manager",
   "status": "completed",
   "auto_pilot": false,
   "iteration": 0,
