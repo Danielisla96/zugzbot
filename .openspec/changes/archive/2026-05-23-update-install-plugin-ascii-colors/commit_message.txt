@@ -1,6 +1,0 @@
-style(branding): update install-plugin.sh ASCII colors to red and yellow
-
-- Change top block color from cyan to red (COLOR_ERROR).
-- Change bottom block color from magenta to yellow (COLOR_WARNING).
-- Bump version to 1.3.2 in plugin/package.json.
-- Update CHANGELOG.md and brain.md.
