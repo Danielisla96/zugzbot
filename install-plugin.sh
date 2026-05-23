@@ -12,13 +12,13 @@ COLOR_MUTED="\033[0;90m"
 COLOR_BORDER="\033[0;34m"
 NC="\033[0m"
 
-echo -e "${COLOR_HEADER}"
+echo -e "${COLOR_ERROR}"
 cat << "EOF"
   ______  _    _  _____  ______ 
  |___  / | |  | |/ ____||___  / 
     / /  | |  | | |  __    / /  
 EOF
-echo -e "${COLOR_MAGENTA}"
+echo -e "${COLOR_WARNING}"
 cat << "EOF"
    / /   | |  | | | |_ |  / /   
   / /__  | |__| | |__| | / /__  

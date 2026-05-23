@@ -15,7 +15,7 @@ const tui: TuiPlugin = async (api) => {
     order: SLOT_ORDER_SIDEBAR,
     slots: {
       sidebar_content(_ctx: unknown, props: { session_id: string }) {
-        return h(SidebarPanel, { api: api, sessionID: props.session_id })
+        return h(SidebarPanel, { api: api, sessionID: props.session_id }) as any
       },
     },
   })
@@ -25,7 +25,7 @@ const tui: TuiPlugin = async (api) => {
     slots: {
       session_prompt(_ctx: unknown, props: { session_id: string }) {
         const res = useSddResource(api, props.session_id)
-        return h(CompactStatusLine, { compact: res.compact, theme: api.theme })
+        return h(CompactStatusLine, { compact: res.compact, theme: api.theme }) as any
       },
     },
   })
@@ -36,7 +36,7 @@ const tui: TuiPlugin = async (api) => {
       home_bottom() {
         // Create a minimal session context for home_bottom
         const res = useSddResource(api, '__home__')
-        return h(HomeBottomView, { compact: res.compact, theme: api.theme })
+        return h(HomeBottomView, { compact: res.compact, theme: api.theme }) as any
       },
     },
   })
