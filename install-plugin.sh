@@ -108,13 +108,17 @@ if [ -f "${REPO_DIR}/opencode.json" ] && [ "${REPO_DIR}/opencode.json" != "${TAR
 elif [ ! -f "${TARGET_DIR}/opencode.json" ]; then
     cat > "${TARGET_DIR}/opencode.json" << 'OPCODEEOF'
 {
-  "$schema": "https://opencode.ai/opencode.json",
-  "name": "zugzbot-harness",
-  "version": "2.0.0",
-  "agents": {
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "edit": "allow",
+    "bash": "allow",
+    "lsp": "allow"
+  },
+  "agent": {
     "zugzbot": {
-      "prompt": "./.opencode/agents/zugzbot.md",
-      "permissions": {
+      "mode": "primary",
+      "prompt": "{file:./.opencode/agents/zugzbot.md}",
+      "permission": {
         "task": {
           "sdd-*": "allow",
           "aux-*": "allow"
@@ -127,8 +131,9 @@ elif [ ! -f "${TARGET_DIR}/opencode.json" ]; then
       }
     },
     "sdd-explorer": {
-      "prompt": "./.opencode/agents/sdd-explorer.md",
-      "permissions": {
+      "mode": "subagent",
+      "prompt": "{file:./.opencode/agents/sdd-explorer.md}",
+      "permission": {
         "task": {
           "sdd-*": "allow"
         },
@@ -161,48 +166,54 @@ elif [ ! -f "${TARGET_DIR}/opencode.json" ]; then
       }
     },
     "sdd-planner": {
-      "prompt": "./.opencode/agents/sdd-planner.md",
-      "permissions": {
+      "mode": "subagent",
+      "prompt": "{file:./.opencode/agents/sdd-planner.md}",
+      "permission": {
         "edit": "allow",
         "bash": "ask",
         "lsp": "allow"
       }
     },
     "sdd-builder": {
-      "prompt": "./.opencode/agents/sdd-builder.md",
-      "permissions": {
+      "mode": "subagent",
+      "prompt": "{file:./.opencode/agents/sdd-builder.md}",
+      "permission": {
         "edit": "allow",
         "bash": "allow",
         "lsp": "allow"
       }
     },
     "sdd-tester": {
-      "prompt": "./.opencode/agents/sdd-tester.md",
-      "permissions": {
+      "mode": "subagent",
+      "prompt": "{file:./.opencode/agents/sdd-tester.md}",
+      "permission": {
         "edit": "allow",
         "bash": "allow",
         "lsp": "allow"
       }
     },
     "sdd-archiver": {
-      "prompt": "./.opencode/agents/sdd-archiver.md",
-      "permissions": {
+      "mode": "subagent",
+      "prompt": "{file:./.opencode/agents/sdd-archiver.md}",
+      "permission": {
         "edit": "allow",
         "bash": "allow",
         "lsp": "allow"
       }
     },
     "aux-handyman": {
-      "prompt": "./.opencode/agents/aux-handyman.md",
-      "permissions": {
+      "mode": "subagent",
+      "prompt": "{file:./.opencode/agents/aux-handyman.md}",
+      "permission": {
         "edit": "allow",
         "bash": "allow",
         "lsp": "allow"
       }
     },
     "aux-oracle": {
-      "prompt": "./.opencode/agents/aux-oracle.md",
-      "permissions": {
+      "mode": "subagent",
+      "prompt": "{file:./.opencode/agents/aux-oracle.md}",
+      "permission": {
         "edit": "deny",
         "bash": "deny",
         "lsp": "deny"

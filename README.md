@@ -138,7 +138,8 @@ El plugin sondea `.openspec/sdd-lock.json` cada 2 segundos para actualizar el es
 ### GitHub
 
 ```bash
-git clone --depth=1 --branch plugin_opencode_v4 https://github.com/Danielisla96/zugzbot.git /tmp/zugzbot \
+rm -rf /tmp/zugzbot \
+  && git clone --depth=1 --branch plugin_opencode_v4 https://github.com/Danielisla96/zugzbot.git /tmp/zugzbot \
   && /tmp/zugzbot/install-plugin.sh "$(pwd)" \
   && rm -rf /tmp/zugzbot
 ```
@@ -146,7 +147,8 @@ git clone --depth=1 --branch plugin_opencode_v4 https://github.com/Danielisla96/
 ### GitLab (si tienes mirror del repo)
 
 ```bash
-git clone --depth=1 --branch plugin_opencode_v4 https://gitlab.com/TU_NAMESPACE/zugzbot.git /tmp/zugzbot \
+rm -rf /tmp/zugzbot \
+  && git clone --depth=1 --branch plugin_opencode_v4 https://gitlab.com/TU_NAMESPACE/zugzbot.git /tmp/zugzbot \
   && /tmp/zugzbot/install-plugin.sh "$(pwd)" \
   && rm -rf /tmp/zugzbot
 ```
@@ -154,7 +156,8 @@ git clone --depth=1 --branch plugin_opencode_v4 https://gitlab.com/TU_NAMESPACE/
 > [!TIP]
 > Si tu repositorio de GitLab es privado, usa el token de acceso personal:
 > ```bash
-> git clone --depth=1 --branch plugin_opencode_v4 https://oauth2:TU_TOKEN@gitlab.com/TU_NAMESPACE/zugzbot.git /tmp/zugzbot \
+> rm -rf /tmp/zugzbot \
+>   && git clone --depth=1 --branch plugin_opencode_v4 https://oauth2:TU_TOKEN@gitlab.com/TU_NAMESPACE/zugzbot.git /tmp/zugzbot \
 >   && /tmp/zugzbot/install-plugin.sh "$(pwd)" \
 >   && rm -rf /tmp/zugzbot
 > ```
