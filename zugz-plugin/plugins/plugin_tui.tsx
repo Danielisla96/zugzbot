@@ -25,7 +25,6 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                 changeName: data.change_name || "Ninguno",
                 activePhase: typeof data.active_phase === "number" ? data.active_phase : 0,
                 status: data.status || "idle",
-                tasks: Array.isArray(data.tasks) ? data.tasks : [],
               }
             }
           } catch (e) { }
@@ -189,7 +188,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
 
         // --- Estado reactivo y Polling ---
         const [metrics, setMetrics] = createSignal<TotalMetrics>(getMetrics([props.session_id]))
-        const [sddProgress, setSddProgress] = createSignal<{ changeName: string; activePhase: number; status: string; tasks?: any[] } | null>(getSddProgress())
+        const [sddProgress, setSddProgress] = createSignal<{ changeName: string; activePhase: number; status: string } | null>(getSddProgress())
         const [colorIndex, setColorIndex] = createSignal(0)
 
         // Actualizamos los IDs de las sesiones cada 2 segundos
@@ -262,7 +261,8 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                     { id: 0, name: "Diagnóstico", agent: "@sdd-explorer" },
                     { id: 1, name: "Planificación", agent: "@sdd-planner" },
                     { id: 2, name: "Construcción", agent: "@sdd-builder" },
-                    { id: 3, name: "Cierre & Git", agent: "@sdd-archiver" }
+                    { id: 3, name: "Pruebas & Deploy", agent: "@sdd-tester" },
+                    { id: 4, name: "Cierre & Git", agent: "@sdd-archiver" }
                   ].map((ph) => {
                     const isActive = sddProgress()?.activePhase === ph.id
                     const isCompleted = (sddProgress()?.activePhase ?? 0) > ph.id
@@ -285,24 +285,6 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                     )
                   })}
                 </box>
-
-                {/* Listado dinámico de tareas activas de la especificación */}
-                {sddProgress()?.tasks && sddProgress()!.tasks.length > 0 && (
-                  <box gap={0} paddingTop={1}>
-                    <text fg="#FF8C00">{"  📋 Criterios de Aceptación / QA:"}</text>
-                    {sddProgress()!.tasks.map((task: any) => {
-                      const isDone = task.status === "completed"
-                      const prefix = isDone ? "    [✓] " : "    [ ] "
-                      const fgColor = isDone ? api.theme.current.textMuted : "#FF7300"
-                      return (
-                        <text fg={fgColor}>
-                          {`${prefix}${task.desc}`}
-                        </text>
-                      )
-                    })}
-                  </box>
-                )}
-
                 <text fg={api.theme.current.borderSubtle} paddingTop={1}>
                   {"────────────────────────────────────"}
                 </text>

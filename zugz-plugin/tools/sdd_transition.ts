@@ -100,8 +100,8 @@ export default tool({
       }
     }
 
-    // 2. Transición a Fase 3 (Cierre/Documentación): Validar regresiones de compilación, cobertura de requerimientos, cooldown y actualizar estado de tareas
-    if (args.nextPhase === 3 && args.status !== "corrective_loop") {
+    // 2. Transición a Fase 4 (Cierre/Documentación): Validar regresiones de compilación, cobertura de requerimientos, cooldown y actualizar estado de tareas
+    if (args.nextPhase === 4 && args.status !== "corrective_loop") {
       // Sincronizar checklist de tareas completadas desde el verification_report.md
       if (lockfile.tasks) {
         const reportPath = path.join(projectRoot, ".openspec/changes", activeChangeName, "verification_report.md");
@@ -200,7 +200,8 @@ export default tool({
       const subagentMapping: { [key: number]: string } = {
         1: "sdd-planner",
         2: "sdd-builder",
-        3: "sdd-archiver"
+        3: "sdd-tester",
+        4: "sdd-archiver"
       };
       lockfile.active_subagent = subagentMapping[args.nextPhase] || "sdd-planner";
     }

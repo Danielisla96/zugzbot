@@ -1,5 +1,5 @@
 ---
-description: Ejecutar documentación, archivación y cierre Git de Fase 3
+description: Ejecutar documentación, archivación y cierre Git de Fase 4
 agent: sdd-archiver
 subtask: true
 model: opencode/deepseek-v4-flash-free

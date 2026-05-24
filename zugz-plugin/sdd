@@ -86,15 +86,16 @@ show_status() {
     local status_upper=$(echo "${status:-idle}" | tr '[:lower:]' '[:upper:]')
     echo -e "  ${COLOR_MUTED}▪ Estado Actual:${NC}   ${COLOR_SUCCESS}${status_upper}${NC}\n"
 
-    echo -e "  ${COLOR_HEADER}📈 PROGRESO DE LOS 4 HITOS (SDD: F0 + 3 FASES):${NC}"
+    echo -e "  ${COLOR_HEADER}📈 PROGRESO DE LOS 5 HITOS (SDD: F0 + 4 FASES):${NC}"
     echo -e "  ${COLOR_BORDER}──────────────────────────────────────────────────────────────${NC}"
 
-    # Define phases mapping (index 0-3 → Fase 0 to Fase 3)
+    # Define phases mapping (index 0-4 → Fase 0 to Fase 4)
     local phases=(
         "F0: Diagnóstico e Indexación       (@sdd-explorer)"
-        "F1: Planificación e Interrogatorio  (@sdd-planner)"
-        "F2: Construcción y Despliegue      (@sdd-builder)"
-        "F3: Documentación y Cierre          (@sdd-archiver)"
+        "F1: Planificación e Interrogación  (@sdd-planner)"
+        "F2: Construcción Lógica/Estética   (@sdd-builder)"
+        "F3: Pruebas y Despliegue           (@sdd-tester)"
+        "F4: Documentación y Cierre          (@sdd-archiver)"
     )
 
     print_phase() {
@@ -129,24 +130,35 @@ show_status() {
     print_phase 1 "$phase_num"
     echo ""
 
-    # Hito B (Construcción y Despliegue)
+    # Hito B (Construcción Lógica/Estética)
     if [ "$phase_num" -eq 2 ]; then
-        echo -e "  ${COLOR_ACTIVE}➡️  ⚡ [Hito B: Construcción y Despliegue]${NC}"
+        echo -e "  ${COLOR_ACTIVE}➡️  ⚡ [Hito B: Construcción Lógica/Estética]${NC}"
     elif [ "$phase_num" -gt 2 ]; then
-        echo -e "    ${COLOR_SUCCESS}✓ [Hito B: Construcción y Despliegue]${NC}"
+        echo -e "    ${COLOR_SUCCESS}✓ [Hito B: Construcción Lógica/Estética]${NC}"
     else
-        echo -e "    ${COLOR_BORDER}▪ [Hito B: Construcción y Despliegue]${NC}"
+        echo -e "    ${COLOR_BORDER}▪ [Hito B: Construcción Lógica/Estética]${NC}"
     fi
     print_phase 2 "$phase_num"
     echo ""
 
-    # Hito C (Documentación y Cierre)
-    if [ "$phase_num" -ge 3 ]; then
-        echo -e "  ${COLOR_ACTIVE}➡️  ⚡ [Hito C: Documentación y Cierre]${NC}"
+    # Hito C (Pruebas y Despliegue)
+    if [ "$phase_num" -eq 3 ]; then
+        echo -e "  ${COLOR_ACTIVE}➡️  ⚡ [Hito C: Pruebas y Despliegue]${NC}"
+    elif [ "$phase_num" -gt 3 ]; then
+        echo -e "    ${COLOR_SUCCESS}✓ [Hito C: Pruebas y Despliegue]${NC}"
     else
-        echo -e "    ${COLOR_BORDER}▪ [Hito C: Documentación y Cierre]${NC}"
+        echo -e "    ${COLOR_BORDER}▪ [Hito C: Pruebas y Despliegue]${NC}"
     fi
     print_phase 3 "$phase_num"
+    echo ""
+
+    # Hito D (Documentación y Cierre)
+    if [ "$phase_num" -ge 4 ]; then
+        echo -e "  ${COLOR_ACTIVE}➡️  ⚡ [Hito D: Documentación y Cierre]${NC}"
+    else
+        echo -e "    ${COLOR_BORDER}▪ [Hito D: Documentación y Cierre]${NC}"
+    fi
+    print_phase 4 "$phase_num"
 
     echo -e "${COLOR_BORDER}  ──────────────────────────────────────────────────────────────${NC}\n"
 
