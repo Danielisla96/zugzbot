@@ -43,3 +43,5 @@ tui.json
 .openspec/*-lock.json
 *-lock.json
 zugz-models.json
+sdd
+package-lock.json
