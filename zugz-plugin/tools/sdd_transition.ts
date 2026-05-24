@@ -6,6 +6,7 @@ import specValidator from "./sdd_spec_validator"
 import regressionDetector from "./sdd_regression_detector"
 import secretScanner from "./sdd_secret_scanner"
 import requirementTracker from "./sdd_requirement_tracker"
+import checkDependencyCooldown from "./check_dependency_cooldown"
 
 export default tool({
   description: "Tránsiciona de fase en el ciclo Spec-Driven Development (SDD), actualizando el archivo de bloqueo lockfile .openspec/sdd-lock.json de forma segura, e integra control de cambios en Git de forma automática.",
@@ -68,7 +69,7 @@ export default tool({
       } catch (e) {}
     }
 
-    // 2. Transición a Fase 3 (Cierre/Documentación): Validar regresiones de compilación y cobertura de requerimientos
+    // 2. Transición a Fase 3 (Cierre/Documentación): Validar regresiones de compilación, cobertura de requerimientos y cooldown de dependencias
     if (args.nextPhase === 3 && args.status !== "corrective_loop") {
       // A. Validar regresiones de compilación
       const regressionResultStr = await regressionDetector.execute({ runCheck: true }, context);
@@ -87,6 +88,31 @@ export default tool({
           return `[SDD Transition Blocked] Transición rechazada por falta de cobertura de pruebas para los criterios de aceptación:\n\n${result.message}`;
         }
       } catch (e) {}
+
+      // C. Validar Cooldown de dependencias agregadas en package.json en caliente
+      if (fs.existsSync(path.join(projectRoot, "package.json")) && fs.existsSync(path.join(projectRoot, ".git"))) {
+        try {
+          const diffOutput = execSync("git diff HEAD package.json", { cwd: projectRoot, encoding: "utf-8" });
+          const addedLines = diffOutput.split("\n").filter(l => l.startsWith("+") && !l.startsWith("+++"));
+          const depRegex = /"([^"]+)"\s*:\s*"([^"]+)"/;
+          for (const line of addedLines) {
+            const match = line.match(depRegex);
+            if (match) {
+              const pkg = match[1];
+              const version = match[2].replace(/[\^~>=]/g, ""); // Limpiar rangos
+              if (pkg === "zugzbot-sdd" || pkg.startsWith("@opencode-ai/")) continue;
+
+              const cooldownResultStr = await checkDependencyCooldown.execute({ package: pkg, version }, context);
+              try {
+                const cooldownResult = JSON.parse(cooldownResultStr);
+                if (cooldownResult.status === "BLOCKED") {
+                  return `[SDD Transition Blocked] Transición rechazada por violación de la regla de Cooldown de Dependencias de Terceros:\n\n${cooldownResult.message}`;
+                }
+              } catch (e) {}
+            }
+          }
+        } catch (e) {}
+      }
     }
 
     // 3. Transición a Fase 0 / Cierre (Commit final): Escanear secretos

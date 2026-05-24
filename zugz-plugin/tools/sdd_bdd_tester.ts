@@ -84,12 +84,20 @@ export default tool({
 
       testFilePath = path.join(testsDir, `sdd_${changeName.replace(/-/g, "_")}.test.${testLanguage}`);
 
+      // Detectar framework de pruebas en package.json de forma inteligente
+      let testFrameworkImport = "";
+      try {
+        const pkgContent = fs.readFileSync(path.join(projectRoot, "package.json"), "utf-8");
+        if (pkgContent.includes('"vitest"')) {
+          testFrameworkImport = "import { describe, it } from 'vitest';\n";
+        }
+      } catch (e) {}
+
       generatedCode = `// ==============================================================================
 //  BDD LIVING SPECIFICATION AUTO-GENERATED TEST SUITE
 //  Generated for change: ${changeName}
 // ==============================================================================
-import { describe, it } from 'vitest'; // Autodetect: vitest/jest fallback
-
+${testFrameworkImport}
 describe('SDD Living Spec: ${changeName}', () => {
 ${scenarios.map(s => `  it('Escenario: ${s.title.replace(/'/g, "\\'")}', () => {
     // BDD Scenario Specification Steps:
@@ -127,7 +135,6 @@ if __name__ == '__main__':
     unittest.main()
 `;
     } else {
-      // Fallback genérico
       return `[BDD Tester Blocked] Error: No se pudo determinar el stack del proyecto (falta package.json o requirements.txt).`;
     }
 
@@ -137,7 +144,8 @@ if __name__ == '__main__':
     if (args.runTests) {
       try {
         if (testLanguage === "ts" || testLanguage === "js") {
-          if (fs.readFileSync(path.join(projectRoot, "package.json"), "utf-8").includes('"vitest"')) {
+          const pkgContent = fs.readFileSync(path.join(projectRoot, "package.json"), "utf-8");
+          if (pkgContent.includes('"vitest"')) {
             testExecutionOutput = execSync(`npx vitest run ${testFilePath}`, { encoding: "utf-8" });
           } else {
             testExecutionOutput = execSync(`npx jest ${testFilePath}`, { encoding: "utf-8" });

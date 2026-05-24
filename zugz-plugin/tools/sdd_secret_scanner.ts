@@ -3,6 +3,59 @@ import fs from "fs"
 import path from "path"
 import { execSync } from "child_process"
 
+function decodeGitPath(gitPath: string): string {
+  let cleaned = gitPath.replace(/^"|"$/g, "");
+  
+  if (cleaned.includes("\\")) {
+    try {
+      const bytes: number[] = []
+      let i = 0
+      while (i < cleaned.length) {
+        if (cleaned[i] === "\\" && i + 3 < cleaned.length && /^[0-7]{3}$/.test(cleaned.substring(i + 1, i + 4))) {
+          const octalVal = cleaned.substring(i + 1, i + 4)
+          bytes.push(parseInt(octalVal, 8))
+          i += 4
+        } else {
+          if (cleaned[i] === "\\" && i + 1 < cleaned.length) {
+            const next = cleaned[i + 1]
+            if (next === "n") { bytes.push(10); i += 2 }
+            else if (next === "t") { bytes.push(9); i += 2 }
+            else if (next === "\\") { bytes.push(92); i += 2 }
+            else if (next === "\"") { bytes.push(34); i += 2 }
+            else { bytes.push(cleaned.charCodeAt(i)); i++ }
+          } else {
+            const code = cleaned.charCodeAt(i)
+            if (code < 128) {
+              bytes.push(code)
+            } else {
+              const buf = Buffer.from(cleaned[i], "utf-8")
+              for (let b = 0; b < buf.length; b++) {
+                bytes.push(buf[b])
+              }
+            }
+            i++
+          }
+        }
+      }
+      return Buffer.from(bytes).toString("utf-8")
+    } catch (e) {
+      return cleaned.replace(/\\([0-7]{3})/g, (match, octal) => {
+        return String.fromCharCode(parseInt(octal, 8))
+      })
+    }
+  }
+  return cleaned
+}
+
+function sanitizeGitPath(line: string): string {
+  const content = line.substring(3).trim()
+  if (content.includes(" -> ")) {
+    const parts = content.split(" -> ")
+    return decodeGitPath(parts[1])
+  }
+  return decodeGitPath(content)
+}
+
 export default tool({
   description: "Escanea archivos modificados o listados en Git en busca de posibles fugas de secretos (tokens, llaves privadas, contraseñas en caliente) antes del commit de cierre de la Fase 3.",
   args: {
@@ -22,9 +75,14 @@ export default tool({
         const list = fs.readdirSync(dir);
         list.forEach(file => {
           const fullPath = path.join(dir, file);
-          const stat = fs.statSync(fullPath);
+          let stat;
+          try {
+            stat = fs.statSync(fullPath);
+          } catch (e) {
+            return;
+          }
           if (stat.isDirectory()) {
-            if (!["node_modules", ".git", ".openspec", ".opencode", "dist", "build", ".next"].includes(file)) {
+            if (!["node_modules", ".git", ".openspec", ".opencode", "dist", "build", ".next", "coverage"].includes(file)) {
               scanDirRecursive(fullPath);
             }
           } else {
@@ -37,20 +95,22 @@ export default tool({
       }
       scanDirRecursive(projectRoot);
     } else {
-      // Buscar solo archivos modificados o sin trackear usando Git
+      // Buscar solo archivos modificados o sin trackear usando Git de forma robusta
       if (fs.existsSync(path.join(projectRoot, ".git"))) {
         try {
           const gitOutput = execSync("git status --porcelain", { cwd: projectRoot, encoding: "utf-8" });
           gitOutput.split("\n").forEach(line => {
-            const trimmed = line.trim();
-            if (!trimmed) return;
-            // git status --porcelain retorna "M path/file.js" o "?? path/file.js"
-            const filePathRel = trimmed.substring(3).replace(/^"|"$/g, "");
+            if (!line || line.length < 4) return;
+            const filePathRel = sanitizeGitPath(line);
             const fullPath = path.join(projectRoot, filePathRel);
-            if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile()) {
-              const ext = path.extname(fullPath).toLowerCase();
-              if ([".ts", ".tsx", ".js", ".jsx", ".py", ".go", ".rs", ".json", ".env"].includes(ext)) {
-                filesToScan.push(fullPath);
+            if (fs.existsSync(fullPath)) {
+              let stat;
+              try { stat = fs.statSync(fullPath) } catch (e) { return }
+              if (stat.isFile()) {
+                const ext = path.extname(fullPath).toLowerCase();
+                if ([".ts", ".tsx", ".js", ".jsx", ".py", ".go", ".rs", ".json", ".env"].includes(ext)) {
+                  filesToScan.push(fullPath);
+                }
               }
             }
           });
@@ -89,9 +149,7 @@ export default tool({
       { type: "Generic High-Entropy Credential Assignment", regex: /(api_key|secret_key|client_secret|password|access_token|db_pass|auth_token)\s*[:=]\s*["'][a-zA-Z0-9_\-\.\/]{16,}["']/i }
     ];
 
-    // Ignorar falsos positivos comunes (ej. referencias a variables de entorno, o esquemas JSON)
     const ignoreFilter = (line: string): boolean => {
-      // Ignorar asignaciones de variables de entorno como process.env.API_KEY o {env:VAR}
       if (/process\.env/i.test(line)) return true;
       if (/\{env:/i.test(line)) return true;
       if (/\$env:/i.test(line)) return true;
@@ -111,7 +169,6 @@ export default tool({
             const match = line.match(pattern.regex);
             if (match) {
               const relPath = path.relative(projectRoot, file);
-              // Ocultar parcialmente el secreto en el reporte por seguridad
               const matchedStr = match[0];
               const redacted = matchedStr.length > 8 
                 ? matchedStr.substring(0, 4) + "..." + matchedStr.substring(matchedStr.length - 4)

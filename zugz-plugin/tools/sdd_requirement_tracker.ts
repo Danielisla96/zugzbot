@@ -73,22 +73,59 @@ export default tool({
       }, null, 2);
     }
 
-    // 4. Ubicar y leer archivos de prueba
+    // 4. Ubicar y leer archivos de prueba de forma recursiva y distribuida
     const testFiles: string[] = [];
-    const testsDir = path.join(projectRoot, "tests");
-    if (fs.existsSync(testsDir)) {
-      fs.readdirSync(testsDir).forEach(file => {
-        if (file.includes("sdd") || file.includes("test")) {
-          testFiles.push(path.join(testsDir, file));
+    const excludeDirs = [
+      "node_modules", ".git", ".openspec", ".opencode", "dist",
+      "build", ".next", "coverage"
+    ];
+
+    function findTestFilesRecursive(dir: string) {
+      if (!fs.existsSync(dir)) return;
+      let entries: string[] = [];
+      try {
+        entries = fs.readdirSync(dir);
+      } catch (e) {
+        return;
+      }
+
+      entries.forEach(entry => {
+        const fullPath = path.join(dir, entry);
+        let stat;
+        try {
+          stat = fs.statSync(fullPath);
+        } catch (e) {
+          return;
+        }
+
+        if (stat.isDirectory()) {
+          if (!excludeDirs.includes(entry)) {
+            findTestFilesRecursive(fullPath);
+          }
+        } else {
+          const lowerFile = entry.toLowerCase();
+          const ext = path.extname(entry).toLowerCase();
+          const isTestFile = 
+            lowerFile.includes(".test.") || 
+            lowerFile.includes(".spec.") || 
+            lowerFile.startsWith("test_") || 
+            lowerFile.endsWith("_test.go") || 
+            (dir.split(path.sep).some(p => p === "tests" || p === "test") && [".ts", ".tsx", ".js", ".jsx", ".py", ".go", ".rs"].includes(ext));
+
+          if (isTestFile) {
+            testFiles.push(fullPath);
+          }
         }
       });
     }
+
+    findTestFilesRecursive(projectRoot);
 
     if (testFiles.length === 0) {
       return JSON.stringify({
         status: "FAILED",
         criteriaCount: criteria.length,
-        message: "❌ RASTREADOR SEMÁNTICO: No se encontraron archivos de prueba en la carpeta '/tests/'. Asegúrate de que '@sdd-builder' o 'sdd_bdd_tester' hayan generado la suite de pruebas."
+        message: "❌ RASTREADOR SEMÁNTICO: No se encontraron archivos de prueba distribuidos en el proyecto. Asegúrate de que '@sdd-builder' o 'sdd_bdd_tester' hayan generado la suite de pruebas."
       }, null, 2);
     }
 
@@ -119,7 +156,7 @@ export default tool({
           const testContent = fs.readFileSync(testFile, "utf-8");
           const testLines = testContent.split("\n");
 
-          // Búsqueda aproximada: comprobar si el test contiene palabras clave clave del criterio
+          // Búsqueda aproximada: comprobar si el test contiene palabras clave del criterio
           for (let i = 0; i < testLines.length; i++) {
             const line = testLines[i].toLowerCase();
             // Si coincide con más del 60% de las palabras clave de un criterio en la misma línea
@@ -154,7 +191,7 @@ export default tool({
         criteriaCount: criteria.length,
         uncoveredCount,
         results: auditResults,
-        message: `❌ AUDITORÍA SEMÁNTICA FALLIDA: Se detectaron ${uncoveredCount} criterios de aceptación sin cobertura de pruebas en la suite '/tests/':\n\n${auditResults.map(r => r.covered ? `  - [✓] "${r.criterio}" (Cubierto por ${r.matchedInFile})` : `  - [ ] "${r.criterio}" (⚠️ ¡SIN PRUEBA DE COBERTURA EN LA SUITE!)`).join("\n")}\n\nPor favor, pide a @sdd-builder que añada casos de prueba para cubrir estos criterios de QA.`
+        message: `❌ AUDITORÍA SEMÁNTICA FALLIDA: Se detectaron ${uncoveredCount} criterios de aceptación sin cobertura de pruebas en la suite de pruebas detectada:\n\n${auditResults.map(r => r.covered ? `  - [✓] "${r.criterio}" (Cubierto por ${r.matchedInFile})` : `  - [ ] "${r.criterio}" (⚠️ ¡SIN PRUEBA DE COBERTURA EN LA SUITE!)`).join("\n")}\n\nPor favor, pide a @sdd-builder que añada casos de prueba para cubrir estos criterios de QA.`
       }, null, 2);
     }
 

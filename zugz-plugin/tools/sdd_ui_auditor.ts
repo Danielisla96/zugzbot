@@ -3,8 +3,60 @@ import fs from "fs"
 import path from "path"
 import { execSync } from "child_process"
 
+function decodeGitPath(gitPath: string): string {
+  let cleaned = gitPath.replace(/^"|"$/g, "")
+  if (cleaned.includes("\\")) {
+    try {
+      const bytes: number[] = []
+      let i = 0
+      while (i < cleaned.length) {
+        if (cleaned[i] === "\\" && i + 3 < cleaned.length && /^[0-7]{3}$/.test(cleaned.substring(i + 1, i + 4))) {
+          const octalVal = cleaned.substring(i + 1, i + 4)
+          bytes.push(parseInt(octalVal, 8))
+          i += 4
+        } else {
+          if (cleaned[i] === "\\" && i + 1 < cleaned.length) {
+            const next = cleaned[i + 1]
+            if (next === "n") { bytes.push(10); i += 2 }
+            else if (next === "t") { bytes.push(9); i += 2 }
+            else if (next === "\\") { bytes.push(92); i += 2 }
+            else if (next === "\"") { bytes.push(34); i += 2 }
+            else { bytes.push(cleaned.charCodeAt(i)); i++ }
+          } else {
+            const code = cleaned.charCodeAt(i)
+            if (code < 128) {
+              bytes.push(code)
+            } else {
+              const buf = Buffer.from(cleaned[i], "utf-8")
+              for (let b = 0; b < buf.length; b++) {
+                bytes.push(buf[b])
+              }
+            }
+            i++
+          }
+        }
+      }
+      return Buffer.from(bytes).toString("utf-8")
+    } catch (e) {
+      return cleaned.replace(/\\([0-7]{3})/g, (match, octal) => {
+        return String.fromCharCode(parseInt(octal, 8))
+      })
+    }
+  }
+  return cleaned
+}
+
+function sanitizeGitPath(line: string): string {
+  const content = line.substring(3).trim()
+  if (content.includes(" -> ")) {
+    const parts = content.split(" -> ")
+    return decodeGitPath(parts[1])
+  }
+  return decodeGitPath(content)
+}
+
 export default tool({
-  description: "Audita la estética de la interfaz de usuario en busca de colores genéricos, fuentes predeterminadas del navegador y verifica el cumplimiento de las directrices visuales premium (sdd-ux-premium).",
+  description: "Audita la estética de la interfaz de usuario en busca de colores genéricos, fuentes predeterminadas del navegador y verifica el cumplimiento de las directrices visuales premium (sdd-ux-premium) de forma localizada.",
   args: {
     changeName: tool.schema.string().optional().describe("El nombre del cambio activo en kebab-case. Si no se provee, se detectará automáticamente."),
     localPort: tool.schema.number().optional().describe("Puerto del servidor de desarrollo local (ej: 3000) para intentar capturar screenshot opcional.")
@@ -39,13 +91,47 @@ export default tool({
 
     const reportPath = path.join(reportDir, "ui_report.md");
 
-    // 2. Escaneo Estático
+    // 2. Recopilar archivos a auditar de forma localizada (Regla de Impacto Localizado)
+    const filesToAudit = new Set<string>();
+
+    // A. Buscar archivos modificados en Git que sean de UI
+    if (fs.existsSync(path.join(projectRoot, ".git"))) {
+      try {
+        const gitOutput = execSync("git status --porcelain", { cwd: projectRoot, encoding: "utf-8" });
+        gitOutput.split("\n").forEach(line => {
+          if (!line || line.length < 4) return;
+          const filePathRel = sanitizeGitPath(line);
+          const ext = path.extname(filePathRel).toLowerCase();
+          if ([".css", ".tsx", ".jsx", ".html"].includes(ext)) {
+            filesToAudit.add(filePathRel);
+          }
+        });
+      } catch (e) {}
+    }
+
+    // B. Buscar archivos listados en el spec.md activo
+    const specPath = path.join(projectRoot, ".openspec/changes", changeName, "specs/spec.md");
+    if (fs.existsSync(specPath)) {
+      try {
+        const specContent = fs.readFileSync(specPath, "utf-8");
+        const fileRegex = /[`']([^`']+\.(css|tsx|jsx|html))[`']/gi;
+        let match;
+        while ((match = fileRegex.exec(specContent)) !== null) {
+          const matchedFile = match[1].trim();
+          if (fs.existsSync(path.join(projectRoot, matchedFile))) {
+            filesToAudit.add(matchedFile);
+          }
+        }
+      } catch (e) {}
+    }
+
+    // 3. Escaneo de las clases y estilos UI
     const nonPremiumColors = [
       /\b(red|blue|green|yellow|black|white|purple|orange|pink|gray|grey)\b/i,
       /#(ff0000|0000ff|00ff00|ffff00|000000|ffffff)\b/i
     ];
 
-    const premiumFonts = ["Inter", "Outfit", "Roboto", "Outfit", "Sans-Serif", "system-ui", "sans-serif"];
+    const premiumFonts = ["Inter", "Outfit", "Roboto", "Sans-Serif", "system-ui", "sans-serif"];
 
     interface FileFinding {
       file: string;
@@ -55,72 +141,55 @@ export default tool({
     }
 
     const findings: FileFinding[] = [];
-    
-    function scanDir(dir: string, depth = 0) {
-      if (depth > 6) return;
-      if (!fs.existsSync(dir)) return;
-      const files = fs.readdirSync(dir);
-      for (const file of files) {
-        const fullPath = path.join(dir, file);
-        const stat = fs.statSync(fullPath);
-        if (stat.isDirectory()) {
-          if (file !== "node_modules" && file !== ".git" && file !== ".openspec" && file !== ".opencode" && file !== "dist" && file !== ".next" && file !== "build") {
-            scanDir(fullPath, depth + 1);
+
+    filesToAudit.forEach(fileRel => {
+      const fullPath = path.join(projectRoot, fileRel);
+      if (!fs.existsSync(fullPath)) return;
+      try {
+        const content = fs.readFileSync(fullPath, "utf-8");
+        const colorIssues: string[] = [];
+        const fontIssues: string[] = [];
+        let hasTransitions = false;
+
+        // Analizar líneas
+        const lines = content.split("\n");
+        lines.forEach((line, index) => {
+          // Chequear colores
+          if (line.includes("color") || line.includes("bg-") || line.includes("background") || line.includes("border")) {
+            nonPremiumColors.forEach(reg => {
+              const match = line.match(reg);
+              if (match) {
+                colorIssues.push(`Línea ${index + 1}: ${line.trim()} (Detectado color genérico '${match[0]}')`);
+              }
+            });
           }
-        } else {
-          const ext = path.extname(file).toLowerCase();
-          if ([".css", ".tsx", ".jsx", ".html"].includes(ext)) {
-            try {
-              const content = fs.readFileSync(fullPath, "utf-8");
-              const relPath = path.relative(projectRoot, fullPath);
-              const colorIssues: string[] = [];
-              const fontIssues: string[] = [];
-              let hasTransitions = false;
+          
+          // Chequear transiciones
+          if (line.includes("transition") || line.includes("cubic-bezier") || line.includes("animate-")) {
+            hasTransitions = true;
+          }
+        });
 
-              // Analizar líneas
-              const lines = content.split("\n");
-              lines.forEach((line, index) => {
-                // Chequear colores
-                if (line.includes("color") || line.includes("bg-") || line.includes("background") || line.includes("border")) {
-                  nonPremiumColors.forEach(reg => {
-                    const match = line.match(reg);
-                    if (match) {
-                      colorIssues.push(`Línea ${index + 1}: ${line.trim()} (Detectado color genérico '${match[0]}')`);
-                    }
-                  });
-                }
-                
-                // Chequear transiciones
-                if (line.includes("transition") || line.includes("cubic-bezier") || line.includes("animate-")) {
-                  hasTransitions = true;
-                }
-              });
-
-              // Chequear fuentes
-              if (content.includes("font-family")) {
-                const hasPremium = premiumFonts.some(f => content.includes(f));
-                if (!hasPremium) {
-                  fontIssues.push("Define 'font-family' pero no incluye fuentes premium recomendadas (Inter, Outfit, etc.).");
-                }
-              }
-
-              if (colorIssues.length > 0 || fontIssues.length > 0 || !hasTransitions) {
-                findings.push({
-                  file: relPath,
-                  colorIssues: colorIssues.slice(0, 5), // Limitar a 5 issues por archivo
-                  fontIssues,
-                  hasTransitions
-                });
-              }
-            } catch (e) {}
+        // Chequear fuentes
+        if (content.includes("font-family")) {
+          const hasPremium = premiumFonts.some(f => content.includes(f));
+          if (!hasPremium) {
+            fontIssues.push("Define 'font-family' pero no incluye fuentes premium recomendadas (Inter, Outfit, etc.).");
           }
         }
-      }
-    }
 
-    scanDir(projectRoot);
+        if (colorIssues.length > 0 || fontIssues.length > 0 || !hasTransitions) {
+          findings.push({
+            file: fileRel,
+            colorIssues: colorIssues.slice(0, 5), // Limitar a 5 por archivo
+            fontIssues,
+            hasTransitions
+          });
+        }
+      } catch (e) {}
+    });
 
-    // 3. Intento de Screenshot Headless (Opcional si provee puerto)
+    // 4. Intento de Screenshot Headless (Opcional si provee puerto)
     let screenshotStatus = "No ejecutado (Puerto no provisto o dev server inactivo)";
     let screenshotPathRel = "";
     if (args.localPort) {
@@ -136,25 +205,25 @@ export default tool({
       }
     }
 
-    // 4. Escribir reporte markdown premium
+    // 5. Escribir reporte markdown premium
     let totalIssues = 0;
     findings.forEach(f => totalIssues += f.colorIssues.length + f.fontIssues.length + (f.hasTransitions ? 0 : 1));
 
     const markdown = `# 🎨 Reporte de Auditoría Estética UI/UX: ${changeName}
 
-Este reporte ha sido autogenerado por la herramienta premium **sdd_ui_auditor** para auditar el cumplimiento estricto de las directrices de percepción visual **sdd-ux-premium**.
+Este reporte ha sido autogenerado por la herramienta premium **sdd_ui_auditor** para auditar el cumplimiento estricto de las directrices de percepción visual **sdd-ux-premium** de manera focalizada.
 
 > [!NOTE]
-> **Resumen del Diagnóstico Estético:**
+> **Resumen del Diagnóstico Estético (Impacto Localizado):**
 > - **Total de Errores/Advertencias:** ${totalIssues}
-> - **Archivos Auditados con Observaciones:** ${findings.length}
+> - **Archivos de UI Auditados con Observaciones:** ${findings.length}
 > - **Captura de Pantalla Visual:** ${screenshotStatus}
 
 ${screenshotPathRel ? `### 📸 Captura de Pantalla Realizada\n![UI Realtime Live](${screenshotPathRel})\n` : ""}
 
 ## 📊 Detalle de Archivos Escaneados
 
-${findings.length === 0 ? "### ¡Felicidades! 🎉 No se encontraron problemas estéticos. La interfaz sigue las directrices premium al 100%." : findings.map(f => `
+${findings.length === 0 ? "### ¡Felicidades! 🎉 No se encontraron problemas estéticos en los archivos modificados. Tu UI sigue las directrices premium al 100%." : findings.map(f => `
 ### 📁 Archivo: \`${f.file}\`
 - **Micro-animaciones / Transiciones:** ${f.hasTransitions ? "🟢 Detectadas" : "🟡 **FALTAN TRANSICIONES SUAVES** (Agrega cubic-bezier o transition)"}
 ${f.colorIssues.length > 0 ? `- **Colores Genéricos Detectados:**\n${f.colorIssues.map(c => `  - ${c}`).join("\n")}` : "🟢 Colores correctos"}

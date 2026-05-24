@@ -3,6 +3,58 @@ import fs from "fs"
 import path from "path"
 import { execSync } from "child_process"
 
+function decodeGitPath(gitPath: string): string {
+  let cleaned = gitPath.replace(/^"|"$/g, "")
+  if (cleaned.includes("\\")) {
+    try {
+      const bytes: number[] = []
+      let i = 0
+      while (i < cleaned.length) {
+        if (cleaned[i] === "\\" && i + 3 < cleaned.length && /^[0-7]{3}$/.test(cleaned.substring(i + 1, i + 4))) {
+          const octalVal = cleaned.substring(i + 1, i + 4)
+          bytes.push(parseInt(octalVal, 8))
+          i += 4
+        } else {
+          if (cleaned[i] === "\\" && i + 1 < cleaned.length) {
+            const next = cleaned[i + 1]
+            if (next === "n") { bytes.push(10); i += 2 }
+            else if (next === "t") { bytes.push(9); i += 2 }
+            else if (next === "\\") { bytes.push(92); i += 2 }
+            else if (next === "\"") { bytes.push(34); i += 2 }
+            else { bytes.push(cleaned.charCodeAt(i)); i++ }
+          } else {
+            const code = cleaned.charCodeAt(i)
+            if (code < 128) {
+              bytes.push(code)
+            } else {
+              const buf = Buffer.from(cleaned[i], "utf-8")
+              for (let b = 0; b < buf.length; b++) {
+                bytes.push(buf[b])
+              }
+            }
+            i++
+          }
+        }
+      }
+      return Buffer.from(bytes).toString("utf-8")
+    } catch (e) {
+      return cleaned.replace(/\\([0-7]{3})/g, (match, octal) => {
+        return String.fromCharCode(parseInt(octal, 8))
+      })
+    }
+  }
+  return cleaned
+}
+
+function sanitizeGitPath(line: string): string {
+  const content = line.substring(3).trim()
+  if (content.includes(" -> ")) {
+    const parts = content.split(" -> ")
+    return decodeGitPath(parts[1])
+  }
+  return decodeGitPath(content)
+}
+
 export default tool({
   description: "Analiza el espacio de trabajo completo usando compilación estática o verificadores de tipos (ej: tsc --noEmit) para detectar errores introducidos fuera de los archivos directamente modificados.",
   args: {
@@ -18,17 +70,15 @@ export default tool({
       });
     }
 
-    // 1. Identificar archivos modificados en Git para contrastar
+    // 1. Identificar archivos modificados en Git para contrastar de forma robusta
     const modifiedFiles = new Set<string>();
     if (fs.existsSync(path.join(projectRoot, ".git"))) {
       try {
         const gitOutput = execSync("git status --porcelain", { cwd: projectRoot, encoding: "utf-8" });
         gitOutput.split("\n").forEach(line => {
-          const trimmed = line.trim();
-          if (trimmed) {
-            const filePathRel = trimmed.substring(3).replace(/^"|"$/g, "");
-            modifiedFiles.add(filePathRel);
-          }
+          if (!line || line.length < 4) return;
+          const filePathRel = sanitizeGitPath(line);
+          modifiedFiles.add(filePathRel);
         });
       } catch (e) {}
     }
@@ -41,7 +91,6 @@ export default tool({
       command = "npx tsc --noEmit --pretty false";
       languageLabel = "TypeScript (tsc)";
     } else if (fs.existsSync(path.join(projectRoot, "package.json"))) {
-      // Intentar correr el script de lint o compile si existe en package.json
       try {
         const pkg = JSON.parse(fs.readFileSync(path.join(projectRoot, "package.json"), "utf-8"));
         if (pkg.scripts?.build) {
@@ -80,7 +129,6 @@ export default tool({
       // Analizar si los errores pertenecen a archivos no modificados por nosotros (regresión)
       const regressions: string[] = [];
       lines.forEach((line: string) => {
-        // Intentar detectar si la línea menciona un archivo que NO está en modifiedFiles
         const fileMatch = line.match(/^([a-zA-Z0-9_\-\.\/]+)\(/) || line.match(/^([a-zA-Z0-9_\-\.\/]+):\d+/) || line.match(/in\s+([a-zA-Z0-9_\-\.\/]+\.py)/);
         if (fileMatch) {
           const filePath = fileMatch[1];
@@ -95,12 +143,11 @@ export default tool({
           status: "FAILED",
           checker: languageLabel,
           regressionCount: regressions.length,
-          regressions: regressions.slice(0, 10), // Mostrar primeras 10
+          regressions: regressions.slice(0, 10),
           message: `❌ DETECTOR DE REGRESIONES FALLIDO: Se han introducido errores de tipado o compilación en módulos externos que no modificaste directamente:\n\n${regressions.slice(0, 5).map(r => `  - ⚠️ ${r}`).join("\n")}${regressions.length > 5 ? `\n  ... y ${regressions.length - 5} regresiones más.` : ""}\n\nPor favor, revisa tus modificaciones en las firmas de funciones, clases o exportaciones para no romper otras partes del proyecto.`
         }, null, 2);
       }
 
-      // Si falló pero los errores son puramente en los archivos modificados
       return JSON.stringify({
         status: "FAILED_LOCAL",
         checker: languageLabel,
