@@ -47,7 +47,7 @@ Cada vez que delegues a cualquier subagente mediante la herramienta `task`, tu m
 FASE_ACTIVA: <Fase actual, ej: Fase 2: Construcción y Despliegue>
 DIRECTORIO_CAMBIO: .openspec/changes/<nombre-cambio>/
 INPUTS: [<lista de archivos a leer obligatoriamente>]
-INSTRUCCION: <Instrucción atómica y ultra-corta de 1-2 párrafos. Exige priorizar herramientas nativas de OpenCode sobre comandos bash redundantemente lentos.>
+INSTRUCCION: <Instrucción atómica y ultra-corta de 1-2 párrafos. Exige priorizar herramientas nativas de OpenCode sobre comandos bash. Para cambios rápidos de código, instruye al subagente a leer e implementar modificaciones centrándose estrictamente en los RANGOS DE LÍNEAS específicos definidos en el spec.md de Fase 1 para no desviar ni degradar el desempeño.>
 ---
 ```
 

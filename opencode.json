@@ -28,7 +28,15 @@
   "formatter": {
     "prettier-openspec": {
       "command": ["npx", "prettier", "--write", "$FILE"],
-      "extensions": [".md", ".json"]
+      "extensions": [
+        ".md",
+        ".json",
+        ".ts",
+        ".tsx",
+        ".js",
+        ".jsx",
+        ".css"
+      ]
     }
   },
   "agent": {
