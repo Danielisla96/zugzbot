@@ -101,7 +101,120 @@ copy_root_file() {
 }
 
 copy_root_file "${REPO_DIR}/AGENTS.md"         "${TARGET_DIR}/AGENTS.md"         "AGENTS.md"
-copy_root_file "${REPO_DIR}/opencode.json"     "${TARGET_DIR}/opencode.json"     "opencode.json"
+
+# opencode.json: si existe en origen se copia; si no, se genera de forma dinámica con permisos de los 5 agentes
+if [ -f "${REPO_DIR}/opencode.json" ] && [ "${REPO_DIR}/opencode.json" != "${TARGET_DIR}/opencode.json" ]; then
+    copy_root_file "${REPO_DIR}/opencode.json" "${TARGET_DIR}/opencode.json" "opencode.json"
+elif [ ! -f "${TARGET_DIR}/opencode.json" ]; then
+    cat > "${TARGET_DIR}/opencode.json" << 'OPCODEEOF'
+{
+  "$schema": "https://opencode.ai/opencode.json",
+  "name": "zugzbot-harness",
+  "version": "2.0.0",
+  "agents": {
+    "zugzbot": {
+      "prompt": "./.opencode/agents/zugzbot.md",
+      "permissions": {
+        "task": {
+          "sdd-*": "allow",
+          "aux-*": "allow"
+        },
+        "question": "allow",
+        "lsp": "allow",
+        "edit": {
+          ".openspec/sdd-lock.json": "allow"
+        }
+      }
+    },
+    "sdd-explorer": {
+      "prompt": "./.opencode/agents/sdd-explorer.md",
+      "permissions": {
+        "task": {
+          "sdd-*": "allow"
+        },
+        "bash": {
+          "ls": "allow",
+          "ls *": "allow",
+          "ls -la *": "allow",
+          "find *": "allow",
+          "cat *": "allow",
+          "grep *": "allow",
+          "wc *": "allow",
+          "mkdir *": "allow",
+          "mkdir -p *": "allow",
+          "cp *": "allow",
+          "mv *": "allow",
+          "node --version": "allow",
+          "node -v": "allow",
+          "npm --version": "allow",
+          "npm -v": "allow",
+          "python --version": "allow",
+          "python3 --version": "allow",
+          "go version": "allow",
+          "cargo --version": "allow",
+          "git log *": "allow",
+          "git status": "allow",
+          "git status *": "allow",
+          "git branch": "allow",
+          "git branch *": "allow"
+        }
+      }
+    },
+    "sdd-planner": {
+      "prompt": "./.opencode/agents/sdd-planner.md",
+      "permissions": {
+        "edit": "allow",
+        "bash": "ask",
+        "lsp": "allow"
+      }
+    },
+    "sdd-builder": {
+      "prompt": "./.opencode/agents/sdd-builder.md",
+      "permissions": {
+        "edit": "allow",
+        "bash": "allow",
+        "lsp": "allow"
+      }
+    },
+    "sdd-tester": {
+      "prompt": "./.opencode/agents/sdd-tester.md",
+      "permissions": {
+        "edit": "allow",
+        "bash": "allow",
+        "lsp": "allow"
+      }
+    },
+    "sdd-archiver": {
+      "prompt": "./.opencode/agents/sdd-archiver.md",
+      "permissions": {
+        "edit": "allow",
+        "bash": "allow",
+        "lsp": "allow"
+      }
+    },
+    "aux-handyman": {
+      "prompt": "./.opencode/agents/aux-handyman.md",
+      "permissions": {
+        "edit": "allow",
+        "bash": "allow",
+        "lsp": "allow"
+      }
+    },
+    "aux-oracle": {
+      "prompt": "./.opencode/agents/aux-oracle.md",
+      "permissions": {
+        "edit": "deny",
+        "bash": "deny",
+        "lsp": "deny"
+      }
+    }
+  }
+}
+OPCODEEOF
+    echo -e "    ${COLOR_SUCCESS}✓${NC} opencode.json (generado automáticamente)"
+else
+    echo -e "    ${COLOR_SUCCESS}✓${NC} opencode.json (preservado/idéntico)"
+fi
 
 # zugz-models.json: si el destino ya tiene uno, lo preservamos; si no, copiamos el del repo
 if [ -f "${TARGET_DIR}/zugz-models.json" ]; then

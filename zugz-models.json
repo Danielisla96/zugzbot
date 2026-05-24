@@ -1,12 +1,24 @@
 {
   "presets": {
+    "default": {
+      "zugzbot": "google/gemini-3.5-flash",
+      "sdd-explorer": "google/gemini-3.5-flash",
+      "sdd-planner": "google/gemini-3.5-flash",
+      "sdd-builder": "deepseek/deepseek-v4-pro",
+      "sdd-tester": "google/gemini-3.5-flash",
+      "sdd-archiver": "google/gemini-3.5-flash",
+      "aux-handyman": "google/gemini-3.5-flash",
+      "aux-oracle": "google/gemini-3.5-flash"
+    },
     "free": {
       "zugzbot": "opencode/deepseek-v4-flash-free",
       "sdd-explorer": "opencode/deepseek-v4-flash-free",
       "sdd-planner": "opencode/deepseek-v4-flash-free",
       "sdd-builder": "opencode/deepseek-v4-flash-free",
       "sdd-tester": "opencode/deepseek-v4-flash-free",
-      "sdd-archiver": "opencode/deepseek-v4-flash-free"
+      "sdd-archiver": "opencode/deepseek-v4-flash-free",
+      "aux-handyman": "opencode/deepseek-v4-flash-free",
+      "aux-oracle": "opencode/deepseek-v4-flash-free"
     },
     "balanced": {
       "zugzbot": "google/gemini-3.5-flash",
@@ -14,7 +26,9 @@
       "sdd-planner": "google/gemini-3.5-flash",
       "sdd-builder": "deepseek/deepseek-v4-pro",
       "sdd-tester": "google/gemini-3.5-flash",
-      "sdd-archiver": "google/gemini-3.5-flash"
+      "sdd-archiver": "google/gemini-3.5-flash",
+      "aux-handyman": "google/gemini-3.5-flash",
+      "aux-oracle": "google/gemini-3.5-flash"
     },
     "turbo": {
       "zugzbot": "anthropic/claude-3.5-sonnet",
@@ -22,7 +36,9 @@
       "sdd-planner": "anthropic/claude-3.5-sonnet",
       "sdd-builder": "anthropic/claude-3.5-sonnet",
       "sdd-tester": "google/gemini-3.5-flash",
-      "sdd-archiver": "google/gemini-3.5-flash"
+      "sdd-archiver": "google/gemini-3.5-flash",
+      "aux-handyman": "google/gemini-3.5-flash",
+      "aux-oracle": "google/gemini-3.5-flash"
     }
   }
 }
