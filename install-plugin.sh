@@ -101,6 +101,7 @@ copy_root_file() {
 }
 
 copy_root_file "${REPO_DIR}/AGENTS.md"         "${TARGET_DIR}/AGENTS.md"         "AGENTS.md"
+copy_root_file "${REPO_DIR}/ZUGZ.md"           "${TARGET_DIR}/ZUGZ.md"           "ZUGZ.md"
 
 # opencode.json: si existe en origen se copia; si no, se genera de forma dinámica con permisos de los 5 agentes
 if [ -f "${REPO_DIR}/opencode.json" ] && [ "${REPO_DIR}/opencode.json" != "${TARGET_DIR}/opencode.json" ]; then
@@ -232,46 +233,34 @@ else
     echo -e "    ${COLOR_SUCCESS}✓${NC} opencode.json (preservado/idéntico)"
 fi
 
-# zugz-models.json: si el destino ya tiene uno, lo preservamos; si no, copiamos el del repo
-if [ -f "${TARGET_DIR}/zugz-models.json" ]; then
-    echo -e "    ${COLOR_SUCCESS}✓${NC} zugz-models.json ${COLOR_MUTED}(preservado — ya existe en destino)${NC}"
-else
-    copy_root_file "${REPO_DIR}/zugz-models.json" "${TARGET_DIR}/zugz-models.json" "zugz-models.json (plantilla inicial)"
-fi
+# ── 6. Asegurar reglas en .gitignore ──────────────────────────────────────────
+ensure_gitignore() {
+    local gitignore_file="${TARGET_DIR}/.gitignore"
+    touch "$gitignore_file"
+    
+    local needs_update=false
+    for pattern in ".opencode/" "tui.json" ".openspec/*-lock.json" "*-lock.json"; do
+        if ! grep -Fq "$pattern" "$gitignore_file"; then
+            needs_update=true
+        fi
+    done
 
-# ── 6. Aplicar modelos de zugz-models.json a los agentes recién copiados ───────
-DEST_AGENTS_DIR="${TARGET_DIR}/.opencode/agents"
-MODELS_FILE="${TARGET_DIR}/zugz-models.json"
+    if [ "$needs_update" = true ]; then
+        echo -e "  ${COLOR_MUTED}▪ Configurando reglas locales en .gitignore...${NC}"
+        echo "" >> "$gitignore_file"
+        echo "# --- Zugzbot SDD Harness (Locals) ---" >> "$gitignore_file"
+        for pattern in ".opencode/" "tui.json" ".openspec/*-lock.json" "*-lock.json"; do
+            if ! grep -Fq "$pattern" "$gitignore_file"; then
+                echo "$pattern" >> "$gitignore_file"
+                echo -e "    ${COLOR_SUCCESS}✓${NC} Agregado $pattern a .gitignore"
+            fi
+        done
+    else
+        echo -e "  ${COLOR_SUCCESS}✓${NC} .gitignore ya está configurado con las reglas del arnés"
+    fi
+}
 
-if [ -f "$MODELS_FILE" ] && [ -d "$DEST_AGENTS_DIR" ]; then
-    echo -e "  ${COLOR_MUTED}▪ Aplicando modelos de zugz-models.json a los agentes...${NC}"
-    node -e '
-      const fs = require("fs");
-      const path = require("path");
-      const modelsFile = "'"$MODELS_FILE"'";
-      const destAgentsDir = "'"$DEST_AGENTS_DIR"'";
-      try {
-        const data = JSON.parse(fs.readFileSync(modelsFile, "utf-8"));
-        const models = data.presets?.default || data.presets?.balanced || data.agents || {};
-        let changed = 0;
-        Object.entries(models).forEach(([agentKey, modelVal]) => {
-          const agentFile = path.join(destAgentsDir, `${agentKey}.md`);
-          if (fs.existsSync(agentFile)) {
-            let content = fs.readFileSync(agentFile, "utf-8");
-            if (content.match(/^model:/m)) {
-              content = content.replace(/^model:.*/m, `model: ${modelVal}`);
-              fs.writeFileSync(agentFile, content, "utf-8");
-              console.log(`    \x1b[32m✓\x1b[0m \x1b[90m${agentKey}\x1b[0m → \x1b[1;36m${modelVal}\x1b[0m`);
-              changed++;
-            }
-          }
-        });
-        console.log(`    \x1b[90mTotal:\x1b[0m \x1b[32m${changed} agente(s) con modelos actualizados\x1b[0m`);
-      } catch (e) {
-        console.log(`    \x1b[31m⚠ Error aplicando modelos: ${e.message}\x1b[0m`);
-      }
-    '
-fi
+ensure_gitignore
 
 # tui.json — inline (sin depender de un archivo fuente)
 cat > "${TARGET_DIR}/tui.json" << 'TUIEOF'
@@ -284,7 +273,7 @@ cat > "${TARGET_DIR}/tui.json" << 'TUIEOF'
 TUIEOF
 echo -e "    ${COLOR_SUCCESS}✓${NC} tui.json"
 
-# ── 6. package.json en .opencode/ y dependencias ──────────────────────────────
+# ── 7. package.json en .opencode/ y dependencias ──────────────────────────────
 echo -e "  ${COLOR_MUTED}▪ Generando .opencode/package.json...${NC}"
 cat > "${TARGET_DIR}/.opencode/package.json" << 'PKGEOF'
 {
@@ -304,10 +293,11 @@ else
 fi
 cd "${REPO_DIR}"
 
-# ── 6.5. package.json y tsconfig.json en raíz del proyecto (para activar LSPs) ──
-if [ ! -f "${TARGET_DIR}/package.json" ]; then
-    echo -e "  ${COLOR_MUTED}▪ Generando package.json en la raíz del proyecto para habilitar LSPs...${NC}"
-    cat > "${TARGET_DIR}/package.json" << 'ROOTPKGEOF'
+# ── 8. package.json y tsconfig.json de raíz (SOLO EN MODO DESARROLLO) ─────────
+if [ "$TARGET_DIR" = "$REPO_DIR" ]; then
+    if [ ! -f "${TARGET_DIR}/package.json" ]; then
+        echo -e "  ${COLOR_MUTED}▪ Generando package.json en la raíz (Modo Desarrollo)...${NC}"
+        cat > "${TARGET_DIR}/package.json" << 'ROOTPKGEOF'
 {
   "name": "project-sdd-workspace",
   "private": true,
@@ -323,39 +313,38 @@ if [ ! -f "${TARGET_DIR}/package.json" ]; then
   }
 }
 ROOTPKGEOF
-    echo -e "    ${COLOR_SUCCESS}✓${NC} package.json creado"
-else
-    # Si ya existe, nos aseguramos de que tenga typescript, eslint y tipo modulo agregados de forma segura con un script node rápido
-    echo -e "  ${COLOR_MUTED}▪ Asegurando dependencias de TypeScript/ESLint en package.json de raíz...${NC}"
-    node -e '
-      const fs = require("fs");
-      const path = require("path");
-      const pkgPath = path.join("'"$TARGET_DIR"'", "package.json");
-      try {
-        const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
-        pkg.devDependencies = pkg.devDependencies || {};
-        let changed = false;
-        if (!pkg.type || pkg.type !== "module") { pkg.type = "module"; changed = true; }
-        if (!pkg.devDependencies.typescript) { pkg.devDependencies.typescript = "^5.4.5"; changed = true; }
-        if (!pkg.devDependencies.eslint) { pkg.devDependencies.eslint = "^9.3.0"; changed = true; }
-        if (!pkg.devDependencies["@eslint/js"]) { pkg.devDependencies["@eslint/js"] = "^9.3.0"; changed = true; }
-        if (!pkg.devDependencies["eslint-plugin-html"]) { pkg.devDependencies["eslint-plugin-html"] = "^8.1.1"; changed = true; }
-        if (!pkg.devDependencies["@opencode-ai/plugin"]) { pkg.devDependencies["@opencode-ai/plugin"] = "1.15.4"; changed = true; }
-        if (changed) {
-          fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
-          console.log("    \x1b[32m✓\x1b[0m package.json actualizado con dependencias LSP");
-        } else {
-          console.log("    \x1b[32m✓\x1b[0m package.json ya cuenta con dependencias LSP");
-        }
-      } catch (e) {
-        console.log("    \x1b[31m⚠ Error actualizando package.json:\x1b[0m", e.message);
-      }
-    '
-fi
+        echo -e "    ${COLOR_SUCCESS}✓${NC} package.json creado"
+    else
+        echo -e "  ${COLOR_MUTED}▪ Asegurando dependencias de TypeScript/ESLint en package.json de raíz...${NC}"
+        node -e '
+          const fs = require("fs");
+          const path = require("path");
+          const pkgPath = path.join("'"$TARGET_DIR"'", "package.json");
+          try {
+            const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+            pkg.devDependencies = pkg.devDependencies || {};
+            let changed = false;
+            if (!pkg.type || pkg.type !== "module") { pkg.type = "module"; changed = true; }
+            if (!pkg.devDependencies.typescript) { pkg.devDependencies.typescript = "^5.4.5"; changed = true; }
+            if (!pkg.devDependencies.eslint) { pkg.devDependencies.eslint = "^9.3.0"; changed = true; }
+            if (!pkg.devDependencies["@eslint/js"]) { pkg.devDependencies["@eslint/js"] = "^9.3.0"; changed = true; }
+            if (!pkg.devDependencies["eslint-plugin-html"]) { pkg.devDependencies["eslint-plugin-html"] = "^8.1.1"; changed = true; }
+            if (!pkg.devDependencies["@opencode-ai/plugin"]) { pkg.devDependencies["@opencode-ai/plugin"] = "1.15.4"; changed = true; }
+            if (changed) {
+              fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
+              console.log("    \x1b[32m✓\x1b[0m package.json actualizado con dependencias LSP");
+            } else {
+              console.log("    \x1b[32m✓\x1b[0m package.json ya cuenta con dependencias LSP");
+            }
+          } catch (e) {
+            console.log("    \x1b[31m⚠ Error actualizando package.json:\x1b[0m", e.message);
+          }
+        '
+    fi
 
-if [ ! -f "${TARGET_DIR}/tsconfig.json" ]; then
-    echo -e "  ${COLOR_MUTED}▪ Generando tsconfig.json en la raíz del proyecto para habilitar LSP...${NC}"
-    cat > "${TARGET_DIR}/tsconfig.json" << 'ROOTTSCONFIGEOF'
+    if [ ! -f "${TARGET_DIR}/tsconfig.json" ]; then
+        echo -e "  ${COLOR_MUTED}▪ Generando tsconfig.json en la raíz (Modo Desarrollo)...${NC}"
+        cat > "${TARGET_DIR}/tsconfig.json" << 'ROOTTSCONFIGEOF'
 {
   "compilerOptions": {
     "target": "ES2022",
@@ -376,19 +365,20 @@ if [ ! -f "${TARGET_DIR}/tsconfig.json" ]; then
   ]
 }
 ROOTTSCONFIGEOF
-    echo -e "    ${COLOR_SUCCESS}✓${NC} tsconfig.json creado"
+        echo -e "    ${COLOR_SUCCESS}✓${NC} tsconfig.json creado"
+    fi
+
+    echo -e "  ${COLOR_MUTED}▪ Instalando dependencias de raíz (Modo Desarrollo)...${NC}"
+    cd "${TARGET_DIR}"
+    if command -v bun &> /dev/null; then
+        bun install --quiet
+    else
+        npm install --legacy-peer-deps --quiet
+    fi
+    cd "${REPO_DIR}"
 fi
 
-echo -e "  ${COLOR_MUTED}▪ Instalando dependencias de raíz (TypeScript/ESLint para LSPs)...${NC}"
-cd "${TARGET_DIR}"
-if command -v bun &> /dev/null; then
-    bun install --quiet
-else
-    npm install --legacy-peer-deps --quiet
-fi
-cd "${REPO_DIR}"
-
-# ── 7. Inicializar .openspec/ si no existe ────────────────────────────────────
+# ── 9. Inicializar .openspec/ si no existe ────────────────────────────────────
 if [ ! -d "${TARGET_DIR}/.openspec" ]; then
     echo -e "  ${COLOR_MUTED}▪ Inicializando .openspec/...${NC}"
     mkdir -p "${TARGET_DIR}/.openspec/changes"
@@ -429,7 +419,5 @@ echo -e "  ${COLOR_BORDER}──────────────────
 echo -e "  ${COLOR_SUCCESS}🎉 ¡INSTALACIÓN COMPLETADA CON ÉXITO!${NC}"
 echo ""
 echo -e "  ${COLOR_WARNING}Siguientes pasos:${NC}"
-echo -e "    ${COLOR_MUTED}1.${NC} Edita ${COLOR_HEADER}zugz-models.json${NC} para configurar los modelos."
-echo -e "    ${COLOR_MUTED}2.${NC} Aplica los modelos:  ${COLOR_HEADER}.opencode/tools/../sdd models apply${NC}"
-echo -e "    ${COLOR_MUTED}3.${NC} Abre OpenCode:       ${COLOR_HEADER}opencode${NC}"
-echo -e "    ${COLOR_MUTED}4.${NC} Habla con ${COLOR_HEADER}@zugzbot${NC} para iniciar un ciclo SDD."
+echo -e "    ${COLOR_MUTED}1.${NC} Abre OpenCode:       ${COLOR_HEADER}opencode${NC}"
+echo -e "    ${COLOR_MUTED}2.${NC} Habla con ${COLOR_HEADER}@zugzbot${NC} para iniciar un ciclo SDD."

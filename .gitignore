@@ -40,3 +40,5 @@ bun.lock
 zugz-plugin/node_modules
 .opencode/
 tui.json
+.openspec/*-lock.json
+*-lock.json
