@@ -553,6 +553,12 @@ PROMPTEOF
     echo -e "    ${COLOR_SUCCESS}✓${NC} .openspec/ inicializado correctamente"
 fi
 
+# ── Aplicación de Modelos de IA Personalizados ────────────────────────────────
+if [ -f "${TARGET_DIR}/zugz-models.json" ] && [ -f "${TARGET_DIR}/sdd" ]; then
+    echo -e "\n  ${COLOR_HEADER}🤖 Aplicando modelos de IA personalizados a los agentes...${NC}"
+    bash "${TARGET_DIR}/sdd" models apply
+fi
+
 # ── Resultado final ────────────────────────────────────────────────────────────
 echo -e "\n  ${COLOR_MUTED}─────────────────────────────────────────────────────────────────${NC}"
 echo -e "  ${COLOR_SUCCESS}🎉 ¡ZUGZBOT SDD INSTALADO CON ÉXITO!${NC}"
