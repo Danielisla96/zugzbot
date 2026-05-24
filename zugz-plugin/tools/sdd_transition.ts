@@ -15,7 +15,8 @@ export default tool({
     reason: tool.schema.string().describe("La justificación o explicación resumida de los cambios logrados en esta fase"),
     activeSubagent: tool.schema.string().optional().describe("El subagente activo opcional (ej: 'sdd-planner', 'sdd-builder')"),
     iteration: tool.schema.number().optional().describe("El número de iteración correctiva opcional"),
-    changeName: tool.schema.string().optional().describe("El nombre del cambio de desarrollo activo opcional")
+    changeName: tool.schema.string().optional().describe("El nombre del cambio de desarrollo activo opcional"),
+    complexity: tool.schema.enum(["low", "high"]).optional().default("high").describe("La complejidad del cambio de desarrollo activo (low o high)")
   },
   async execute(args, context) {
     const projectRoot = context.worktree || context.directory;
@@ -122,6 +123,10 @@ export default tool({
 
     if (args.changeName) {
       lockfile.change_name = args.changeName;
+    }
+
+    if (args.complexity !== undefined) {
+      lockfile.complexity = args.complexity;
     }
 
     // Escribir los cambios

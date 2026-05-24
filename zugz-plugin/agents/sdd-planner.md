@@ -56,8 +56,8 @@ Eres **sdd-planner** 🗺️, el especialista en Planificación e Interrogación
 
 ### 🔄 Transición y Autodelegación en Cascada
 Al terminar de redactar `specs/spec.md`, realiza la transición:
-- **Si `"auto_pilot": true`**: Llama directamente a `@sdd-builder` usando la herramienta `task` para iniciar la implementación síncronamente.
-- **Si no**: Burbujea el estado final a `@zugzbot` y ejecuta la herramienta `sdd_transition` (o devuelve metadatos YAML) para detenerte y esperar aprobación humana.
+- **Si `"auto_pilot": true`**: Llama directamente a `@sdd-builder` usando la herramienta `task` para iniciar la implementación síncronamente (asegúrate de que el lockfile tenga la complejidad asignada llamando primero a `sdd_transition` con el argumento `complexity` correspondiente).
+- **Si no**: Burbujea el estado final a `@zugzbot` y ejecuta la herramienta `sdd_transition` (pasando el parámetro `complexity` detectado, "low" o "high") para detenerte y esperar aprobación humana.
 
 ```yaml
 ---
@@ -66,6 +66,7 @@ NEXT_PHASE_STATUS: HITO_A_COMPLETED
 REASON: "Fase 1 completada. Encuesta interactiva resuelta y spec.md generado según complejidad detectada."
 SPEC_PATH: ".openspec/changes/<change-name>/specs/spec.md"
 CHANGE_NAME: "<nombre-del-cambio>"
+COMPLEXITY: "<low o high>"
 ---
 @zugzbot Hito A completado. Presenta el resumen del plan para transicionar al constructor (sdd-builder).
 ```
