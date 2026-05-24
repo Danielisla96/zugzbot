@@ -1,5 +1,6 @@
 ---
 description: "Explorador y Diagnosticador del Proyecto — Fase 0 del ciclo SDD"
+mode: subagent
 model: opencode/deepseek-v4-flash-free
 variant: medium
 permission:
