@@ -2,6 +2,7 @@ import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
 import { execSync } from "child_process"
+import sddInstallAutoskills from "./sdd_install_autoskills"
 
 // Estructuras de brain.md idénticas a sdd_brain_sync
 interface BrainEntry {
@@ -228,6 +229,20 @@ export default tool({
       } catch (e: any) {
         report.push(`⚠️ Error sincronizando cerebro: ${e.message}`)
       }
+    }
+
+    // 3.5. Sincronizar habilidades de IA (Autoskills) de forma automática
+    try {
+      report.push("▶ Buscando y sincronizando habilidades de IA nuevas en base a tus cambios...")
+      const skillsOutput = await sddInstallAutoskills.execute({ dryRun: false }, context)
+      const shortSkillsOutput = skillsOutput
+        .split("\n")
+        .filter(l => l.trim() && !l.startsWith("▶") && !l.startsWith("━━━"))
+        .map(l => `  ${l}`)
+        .join("\n")
+      report.push(`✓ Sincronización de Habilidades Finalizada:\n${shortSkillsOutput || "  No se encontraron nuevas habilidades que instalar."}`)
+    } catch (e: any) {
+      report.push(`⚠️ Sincronización automática de habilidades fallida o no disponible: ${e.message || e}`)
     }
 
     // 4. Escribir commit_message.txt
