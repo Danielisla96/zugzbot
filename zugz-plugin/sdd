@@ -953,39 +953,41 @@ manage_models() {
 
     case "$subcommand" in
         apply)
-            echo -e "  ${COLOR_HEADER}\ud83e\udd16 Aplicando modelos desde ${models_file}...${NC}"
-            echo -e "  ${COLOR_BORDER}\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500${NC}"
-            local changed=0
-            # Read each agent key from JSON (portable, no jq needed)
-            while IFS= read -r line; do
-                # Match lines like: "agent-name": "model-value"
-                local agent_key model_val
-                agent_key=$(echo "$line" | grep -o '"[a-zA-Z0-9_-]*"[[:space:]]*:[[:space:]]*"[^"]*"' | head -n1 | cut -d'"' -f2)
-                model_val=$(echo "$line" | grep -o '"[a-zA-Z0-9_-]*"[[:space:]]*:[[:space:]]*"[^"]*"' | head -n1 | cut -d'"' -f4)
-                if [ -z "$agent_key" ] || [ -z "$model_val" ] || [[ "$agent_key" == _* ]]; then
-                    continue
-                fi
-                local agent_file="${agents_dir}/${agent_key}.md"
-                if [ -f "$agent_file" ]; then
-                    # Replace the 'model:' line in frontmatter (first occurrence only)
-                    if grep -q '^model:' "$agent_file"; then
-                        sed -i.bak "s|^model:.*|model: ${model_val}|" "$agent_file"
-                        rm -f "${agent_file}.bak"
-                        echo -e "  ${COLOR_SUCCESS}\u2713${NC} ${COLOR_MUTED}${agent_key}${NC} \u2192 ${COLOR_HEADER}${model_val}${NC}"
-                        changed=$((changed+1))
-                    else
-                        echo -e "  ${COLOR_WARNING}\u26a0 ${agent_key}.md no tiene campo 'model:' en frontmatter${NC}"
-                    fi
-                else
-                    echo -e "  ${COLOR_MUTED}\u25aa ${agent_key}.md no encontrado (saltando)${NC}"
-                fi
-            done < "$models_file"
-            echo -e "  ${COLOR_BORDER}\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500${NC}"
-            echo -e "  ${COLOR_SUCCESS}\u2713 ${changed} agente(s) actualizados correctamente.${NC}\n"
+            echo -e "  ${COLOR_HEADER}🤖 Aplicando modelos desde ${models_file}...${NC}"
+            echo -e "  ${COLOR_BORDER}──────────────────────────────────────────────────────────────${NC}"
+            node -e '
+              const fs = require("fs");
+              const path = require("path");
+              const modelsFile = "'"$models_file"'";
+              const destAgentsDir = "'"$agents_dir"'";
+              try {
+                const data = JSON.parse(fs.readFileSync(modelsFile, "utf-8"));
+                const models = data.presets?.default || data.presets?.balanced || data.agents || {};
+                let changed = 0;
+                Object.entries(models).forEach(([agentKey, modelVal]) => {
+                  const agentFile = path.join(destAgentsDir, `${agentKey}.md`);
+                  if (fs.existsSync(agentFile)) {
+                    let content = fs.readFileSync(agentFile, "utf-8");
+                    if (content.match(/^model:/m)) {
+                      content = content.replace(/^model:.*/m, `model: ${modelVal}`);
+                      fs.writeFileSync(agentFile, content, "utf-8");
+                      console.log(`  \x1b[32m✓\x1b[0m \x1b[90m${agentKey}\x1b[0m \x1b[34m→\x1b[0m \x1b[1;36m${modelVal}\x1b[0m`);
+                      changed++;
+                    }
+                  } else {
+                    console.log(`  \x1b[90m▪ ${agentKey}.md no encontrado (saltando)\x1b[0m`);
+                  }
+                });
+                console.log("  \x1b[38;5;239m──────────────────────────────────────────────────────────────\x1b[0m");
+                console.log(`  \x1b[32m✓ ${changed} agente(s) actualizados correctamente.\x1b[0m\n`);
+              } catch (e) {
+                console.log(`  \x1b[31m⚠ Error aplicando modelos: ${e.message}\x1b[0m`);
+              }
+            '
             ;;
         status)
-            echo -e "  ${COLOR_HEADER}\ud83d\udcca Modelos actuales por agente:${NC}"
-            echo -e "  ${COLOR_BORDER}\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500${NC}"
+            echo -e "  ${COLOR_HEADER}📊 Modelos actuales por agente:${NC}"
+            echo -e "  ${COLOR_BORDER}──────────────────────────────────────────────────────────────${NC}"
             for f in "${agents_dir}"/*.md; do
                 local name model
                 name=$(basename "$f" .md)
@@ -994,34 +996,47 @@ manage_models() {
                     printf "  ${COLOR_MUTED}%-20s${NC} ${COLOR_HEADER}%s${NC}\n" "$name" "$model"
                 fi
             done
-            echo -e "  ${COLOR_BORDER}\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500${NC}"
+            echo -e "  ${COLOR_BORDER}──────────────────────────────────────────────────────────────${NC}"
             echo -e "  ${COLOR_MUTED}Archivo de config:${NC} ${models_file}\n"
             ;;
         preset)
-            local preset_name="${2:-free}"
-            echo -e "  ${COLOR_HEADER}\ud83c\udfa8 Aplicando preset '${preset_name}' desde ${models_file}...${NC}"
-            # Extract the preset block from JSON and apply it
-            local in_preset=false
-            local brace_depth=0
-            local changed=0
-            while IFS= read -r line; do
-                if echo "$line" | grep -q "\"${preset_name}\""; then
-                    in_preset=true
-                fi
-                if [ "$in_preset" = true ]; then
-                    local opens closes
-                    opens=$(echo "$line" | tr -cd '{' | wc -c | tr -d ' ')
-                    closes=$(echo "$line" | tr -cd '}' | wc -c | tr -d ' ')
-                    brace_depth=$((brace_depth + opens - closes))
-                    local agent_key model_val
-                    agent_key=$(echo "$line" | grep -o '"[a-zA-Z0-9_-]*"[[:space:]]*:[[:space:]]*"[^"]*"' | head -n1 | cut -d'"' -f2)
-                    model_val=$(echo "$line" | grep -o '"[a-zA-Z0-9_-]*"[[:space:]]*:[[:space:]]*"[^"]*"' | head -n1 | cut -d'"' -f4)
-                    if [ -n "$agent_key" ] && [ -n "$model_val" ] && [[ "$agent_key" != _* ]]; then
-                        local agent_file="${agents_dir}/${agent_key}.md"
-                        if [ -f "$agent_file" ] && grep -q '^model:' "$agent_file"; then
-                            sed -i.bak "s|^model:.*|model: ${model_val}|" "$agent_file"
-                            rm -f "${agent_file}.bak"
-                            echo -e "  ${COLOR_SUCCESS}\u2713${NC} ${COLOR_MUTED}${agent_key}${NC} \u2192 ${COLOR_HEADER}${model_val}${NC}"
+            local preset_name="${2:-default}"
+            echo -e "  ${COLOR_HEADER}🎨 Aplicando preset '${preset_name}' desde ${models_file}...${NC}"
+            echo -e "  ${COLOR_BORDER}──────────────────────────────────────────────────────────────${NC}"
+            node -e '
+              const fs = require("fs");
+              const path = require("path");
+              const modelsFile = "'"$models_file"'";
+              const destAgentsDir = "'"$agents_dir"'";
+              const presetName = "'"$preset_name"'";
+              try {
+                const data = JSON.parse(fs.readFileSync(modelsFile, "utf-8"));
+                const models = data.presets?.[presetName] || {};
+                if (Object.keys(models).length === 0) {
+                  throw new Error(`Preset "${presetName}" no encontrado en el archivo de modelos.`);
+                }
+                let changed = 0;
+                Object.entries(models).forEach(([agentKey, modelVal]) => {
+                  const agentFile = path.join(destAgentsDir, `${agentKey}.md`);
+                  if (fs.existsSync(agentFile)) {
+                    let content = fs.readFileSync(agentFile, "utf-8");
+                    if (content.match(/^model:/m)) {
+                      content = content.replace(/^model:.*/m, `model: ${modelVal}`);
+                      fs.writeFileSync(agentFile, content, "utf-8");
+                      console.log(`  \x1b[32m✓\x1b[0m \x1b[90m${agentKey}\x1b[0m \x1b[34m→\x1b[0m \x1b[1;36m${modelVal}\x1b[0m`);
+                      changed++;
+                    }
+                  } else {
+                    console.log(`  \x1b[90m▪ ${agentKey}.md no encontrado (saltando)\x1b[0m`);
+                  }
+                });
+                console.log("  \x1b[38;5;239m──────────────────────────────────────────────────────────────\x1b[0m");
+                console.log(`  \x1b[32m✓ Preset "${presetName}" aplicado correctamente en ${changed} agente(s).\x1b[0m\n`);
+              } catch (e) {
+                console.log(`  \x1b[31m⚠ Error aplicando preset: ${e.message}\x1b[0m`);
+              }
+            '
+            ;;
                             changed=$((changed+1))
                         fi
                     fi
