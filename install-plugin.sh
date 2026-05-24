@@ -23,9 +23,9 @@ cat << "EOF"
 EOF
 echo -e "${NC}"
 
-echo -e "${COLOR_BORDER}┌──────────────────────────────────────────────────────────────┐${NC}"
-echo -e "${COLOR_BORDER}│${NC}  ${COLOR_HEADER}Zugzbot SDD Plugin Installer v2${NC}                         ${COLOR_BORDER}│${NC}"
-echo -e "${COLOR_BORDER}└──────────────────────────────────────────────────────────────┘${NC}"
+echo ""
+echo -e "  ${COLOR_HEADER}Zugzbot SDD Plugin Installer v2${NC}"
+echo -e "  ${COLOR_BORDER}────────────────────────────────${NC}"
 
 # ── 1. Paths ──────────────────────────────────────────────────────────────────
 REPO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -204,12 +204,11 @@ fi
 
 # ── Resultado final ────────────────────────────────────────────────────────────
 echo ""
-echo -e "${COLOR_BORDER}┌──────────────────────────────────────────────────────────────┐${NC}"
-echo -e "${COLOR_BORDER}│${NC}  ${COLOR_SUCCESS}🎉 ¡INSTALACIÓN COMPLETADA CON ÉXITO!${NC}                      ${COLOR_BORDER}│${NC}"
-echo -e "${COLOR_BORDER}├──────────────────────────────────────────────────────────────┤${NC}"
-echo -e "${COLOR_BORDER}│${NC}  Siguientes pasos:                                           ${COLOR_BORDER}│${NC}"
-echo -e "${COLOR_BORDER}│${NC}  1. Edita ${COLOR_HEADER}zugz-models.json${NC} para configurar los modelos.   ${COLOR_BORDER}│${NC}"
-echo -e "${COLOR_BORDER}│${NC}  2. Aplica los modelos:  ${COLOR_HEADER}.opencode/tools/../sdd models apply${NC} ${COLOR_BORDER}│${NC}"
-echo -e "${COLOR_BORDER}│${NC}  3. Abre OpenCode:       ${COLOR_HEADER}opencode${NC}                            ${COLOR_BORDER}│${NC}"
-echo -e "${COLOR_BORDER}│${NC}  4. Habla con ${COLOR_HEADER}@zugzbot${NC} para iniciar un ciclo SDD.          ${COLOR_BORDER}│${NC}"
-echo -e "${COLOR_BORDER}└──────────────────────────────────────────────────────────────┘${NC}"
+echo -e "  ${COLOR_BORDER}────────────────────────────────${NC}"
+echo -e "  ${COLOR_SUCCESS}🎉 ¡INSTALACIÓN COMPLETADA CON ÉXITO!${NC}"
+echo ""
+echo -e "  ${COLOR_WARNING}Siguientes pasos:${NC}"
+echo -e "    ${COLOR_MUTED}1.${NC} Edita ${COLOR_HEADER}zugz-models.json${NC} para configurar los modelos."
+echo -e "    ${COLOR_MUTED}2.${NC} Aplica los modelos:  ${COLOR_HEADER}.opencode/tools/../sdd models apply${NC}"
+echo -e "    ${COLOR_MUTED}3.${NC} Abre OpenCode:       ${COLOR_HEADER}opencode${NC}"
+echo -e "    ${COLOR_MUTED}4.${NC} Habla con ${COLOR_HEADER}@zugzbot${NC} para iniciar un ciclo SDD."
