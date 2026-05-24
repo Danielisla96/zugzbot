@@ -82,7 +82,6 @@ else
 fi
 
 # ── 5. Archivos raíz — SIEMPRE se reemplazan ──────────────────────────────────
-# Estos archivos son parte del arnés y deben estar siempre actualizados.
 echo -e "  ${COLOR_MUTED}▪ Actualizando archivos de raíz del proyecto...${NC}"
 
 copy_root_file() {
@@ -99,7 +98,43 @@ copy_root_file() {
 
 copy_root_file "${REPO_DIR}/AGENTS.md"         "${TARGET_DIR}/AGENTS.md"         "AGENTS.md"
 copy_root_file "${REPO_DIR}/opencode.json"     "${TARGET_DIR}/opencode.json"     "opencode.json"
-copy_root_file "${REPO_DIR}/zugz-models.json"  "${TARGET_DIR}/zugz-models.json"  "zugz-models.json"
+
+# zugz-models.json: si el destino ya tiene uno, lo preservamos; si no, copiamos el del repo
+if [ -f "${TARGET_DIR}/zugz-models.json" ]; then
+    echo -e "    ${COLOR_SUCCESS}✓${NC} zugz-models.json ${COLOR_MUTED}(preservado — ya existe en destino)${NC}"
+else
+    copy_root_file "${REPO_DIR}/zugz-models.json" "${TARGET_DIR}/zugz-models.json" "zugz-models.json (plantilla inicial)"
+fi
+
+# ── 6. Aplicar modelos de zugz-models.json a los agentes recién copiados ───────
+DEST_AGENTS_DIR="${TARGET_DIR}/.opencode/agents"
+MODELS_FILE="${TARGET_DIR}/zugz-models.json"
+
+if [ -f "$MODELS_FILE" ] && [ -d "$DEST_AGENTS_DIR" ]; then
+    echo -e "  ${COLOR_MUTED}▪ Aplicando modelos de zugz-models.json a los agentes...${NC}"
+    local_changed=0
+    # Extraer SOLO el bloque "agents" usando awk (portable macOS/Linux)
+    agents_block=$(awk '
+        /"agents"[[:space:]]*:/{in_agents=1; next}
+        in_agents && /^[[:space:]]*\}/{exit}
+        in_agents && /^[[:space:]]*"[a-zA-Z0-9][a-zA-Z0-9_-]+"[[:space:]]*:/{print}
+    ' "$MODELS_FILE" | grep -v '"_')
+    while IFS= read -r line; do
+        agent_key=$(echo "$line" | sed 's/.*"\([a-zA-Z0-9_-]*\)"[[:space:]]*:[[:space:]]*".*/\1/')
+        model_val=$(echo "$line"  | sed 's/.*"[a-zA-Z0-9_-]*"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+        if [ -z "$agent_key" ] || [ -z "$model_val" ] || [ "$agent_key" = "$model_val" ]; then
+            continue
+        fi
+        agent_file="${DEST_AGENTS_DIR}/${agent_key}.md"
+        if [ -f "$agent_file" ] && grep -q '^model:' "$agent_file"; then
+            sed -i.bak "s|^model:.*|model: ${model_val}|" "$agent_file"
+            rm -f "${agent_file}.bak"
+            echo -e "    ${COLOR_SUCCESS}✓${NC} ${COLOR_MUTED}${agent_key}${NC} → ${COLOR_HEADER}${model_val}${NC}"
+            local_changed=$((local_changed + 1))
+        fi
+    done <<< "$agents_block"
+    echo -e "    ${COLOR_MUTED}Total:${NC} ${COLOR_SUCCESS}${local_changed} agente(s) con modelos actualizados${NC}"
+fi
 
 # tui.json — inline (sin depender de un archivo fuente)
 cat > "${TARGET_DIR}/tui.json" << 'TUIEOF'
