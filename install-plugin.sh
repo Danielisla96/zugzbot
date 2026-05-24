@@ -2,32 +2,80 @@
 
 set -euo pipefail
 
-# Colores premium
-COLOR_HEADER="\033[1;36m"
-COLOR_SUCCESS="\033[1;32m"
-COLOR_WARNING="\033[1;33m"
-COLOR_ERROR="\033[1;31m"
-COLOR_MUTED="\033[0;90m"
-COLOR_BORDER="\033[0;34m"
-COLOR_ORANGE="\033[38;5;166m"
-NC="\033[0m"
+# ── Paleta de Colores Premium & Minimalista ──────────────────────────────────
+COLOR_HEADER="\033[1;36m"     # Cyan brillante para títulos principales
+COLOR_SUCCESS="\033[1;32m"    # Verde brillante para checkmarks exitosos
+COLOR_WARNING="\033[1;33m"    # Amarillo para advertencias/tips
+COLOR_ERROR="\033[1;31m"      # Rojo para errores fatales
+COLOR_MUTED="\033[0;90m"      # Gris oscuro para detalles y versiones
+COLOR_ORANGE="\033[38;5;208m" # Naranja para logos e hitos clave
+NC="\033[0m"                  # Reset de color
 
-echo -e "${COLOR_ORANGE}"
-cat << "EOF"
-███████╗██╗   ██╗ ██████╗ ███████╗
-╚══███╔╝██║   ██║██╔════╝ ╚══███╔╝
-  ███╔╝ ██║   ██║██║  ███╗  ███╔╝ 
- ███╔╝  ██║   ██║██║   ██║ ███╔╝  
-███████╗╚██████╔╝╚██████╔╝███████╗
-╚══════╝ ╚═════╝  ╚═════╝ ╚══════╝
-EOF
-echo -e "${NC}"
-
+# ── Banner de Presentación Premium ──────────────────────────────────────────
 echo ""
-echo -e "  ${COLOR_HEADER}Zugzbot SDD Plugin Installer v2${NC}"
-echo -e "  ${COLOR_BORDER}────────────────────────────────${NC}"
+echo -e "  ${COLOR_ORANGE}⚡ ZUGZBOT${NC}  ${COLOR_MUTED}•${NC}  ${COLOR_HEADER}Spec-Driven Development (SDD) Swarm Harness v2.0${NC}"
+echo -e "  ${COLOR_MUTED}─────────────────────────────────────────────────────────────────${NC}"
 
-# ── 1. Paths ──────────────────────────────────────────────────────────────────
+# ── 1. Validación de Entorno (Dependency Checks) ─────────────────────────────
+echo -e "  ${COLOR_HEADER}🔍 Validando requisitos del sistema...${NC}"
+
+HAS_ERRORS=0
+
+check_dependency() {
+    local cmd="$1"
+    local label="$2"
+    local required="$3"
+
+    if command -v "$cmd" &>/dev/null; then
+        local version=""
+        if [ "$cmd" = "node" ]; then
+            version="($(node -v))"
+        elif [ "$cmd" = "git" ]; then
+            version="($(git --version | awk '{print $3}'))"
+        elif [ "$cmd" = "bun" ]; then
+            version="($(bun -v))"
+        elif [ "$cmd" = "npm" ]; then
+            version="(v$(npm -v))"
+        elif [ "$cmd" = "opencode" ]; then
+            version="(Detectado)"
+        fi
+        echo -e "    ${COLOR_SUCCESS}✓${NC} ${label} ${COLOR_MUTED}${version}${NC}"
+        return 0
+    else
+        if [ "$required" = "true" ]; then
+            echo -e "    ${COLOR_ERROR}✗${NC} ${label} ${COLOR_ERROR}(No encontrado — REQUERIDO)${NC}"
+            return 1
+        else
+            echo -e "    ${COLOR_MUTED}○${NC} ${label} ${COLOR_MUTED}(No instalado — Opcional)${NC}"
+            return 0
+        fi
+    fi
+}
+
+check_dependency "git" "Git" "true" || HAS_ERRORS=1
+check_dependency "node" "Node.js" "true" || HAS_ERRORS=1
+
+# Validación de manejador de paquetes (Bun o NPM)
+if command -v bun &>/dev/null; then
+    check_dependency "bun" "Bun" "false"
+elif command -v npm &>/dev/null; then
+    check_dependency "npm" "NPM" "false"
+else
+    echo -e "    ${COLOR_ERROR}✗ Package Manager (Instale Bun o NPM para continuar)${NC}"
+    HAS_ERRORS=1
+fi
+
+check_dependency "opencode" "OpenCode CLI" "false"
+
+if [ "$HAS_ERRORS" -eq 1 ]; then
+    echo -e "\n  ${COLOR_ERROR}❌ Error: No se cumplen los requisitos mínimos de instalación.${NC}"
+    echo -e "  Por favor, instala los componentes requeridos señalados arriba e intenta de nuevo.\n"
+    exit 1
+fi
+
+echo -e "  ${COLOR_SUCCESS}✓ Entorno compatible y listo para instalar.${NC}"
+
+# ── 2. Resolución de Directorios ─────────────────────────────────────────────
 REPO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PLUGIN_DIR="${REPO_DIR}/zugz-plugin"
 
@@ -40,27 +88,27 @@ TARGET_DIR="${1:-$REPO_DIR}"
 mkdir -p "$TARGET_DIR"
 TARGET_DIR="$(cd "$TARGET_DIR" && pwd)"
 
-echo -e "  ${COLOR_MUTED}▪ Origen:${NC}  ${COLOR_SUCCESS}${REPO_DIR}${NC}"
-echo -e "  ${COLOR_MUTED}▪ Destino:${NC} ${COLOR_SUCCESS}${TARGET_DIR}${NC}"
-echo ""
+echo -e "\n  ${COLOR_HEADER}📂 Configuración de Directorios:${NC}"
+echo -e "    ${COLOR_MUTED}▪ Origen (Arnés):${NC}  ${REPO_DIR}"
+echo -e "    ${COLOR_MUTED}▪ Destino (Proyecto):${NC} ${TARGET_DIR}"
 
-# ── 2. Limpiar plugin TUI global previo ───────────────────────────────────────
-echo -e "  ${COLOR_MUTED}▪ Limpiando plugin TUI global previo...${NC}"
-rm -f ~/.config/opencode/plugins/plugin_tui.js
-rm -f ~/.config/opencode/plugins/plugin_tui.tsx
+# ── 3. Limpieza de Instalaciones Previas ──────────────────────────────────────
+# Limpiar plugin TUI global silenciosamente si existía
+rm -f ~/.config/opencode/plugins/plugin_tui.js &>/dev/null
+rm -f ~/.config/opencode/plugins/plugin_tui.tsx &>/dev/null
 
-# ── 3. Limpiar directorios locales del arnés previos ──────────────────────────
-echo -e "  ${COLOR_MUTED}▪ Limpiando arnés anterior en .opencode/...${NC}"
+# Limpiar directorios previos locales de agentes del arnés
 rm -rf "${TARGET_DIR}/.opencode/agents"
 rm -rf "${TARGET_DIR}/.opencode/commands"
 rm -rf "${TARGET_DIR}/.opencode/skills"
 rm -rf "${TARGET_DIR}/.opencode/tools"
 rm -rf "${TARGET_DIR}/.opencode/plugins"
 
-# ── 4. Copiar o Vincular arnés SDD ────────────────────────────────────────────
+# ── 4. Copiar o Vincular Arnés SDD ───────────────────────────────────────────
+echo -e "\n  ${COLOR_HEADER}⚙️  Instalando Motor de Agentes...${NC}"
+
 if [ "$TARGET_DIR" = "$REPO_DIR" ]; then
-    # ── MODO DESARROLLO: symlinks ──
-    echo -e "  ${COLOR_MUTED}▪ Vinculando arnés (Modo Desarrollo)...${NC}"
+    echo -e "    ${COLOR_MUTED}▪ Vinculando arnés local (Modo Desarrollo)...${NC}"
     mkdir -p "${TARGET_DIR}/.opencode"
     ln -sf "${PLUGIN_DIR}/agents"   "${TARGET_DIR}/.opencode/agents"
     ln -sf "${PLUGIN_DIR}/commands" "${TARGET_DIR}/.opencode/commands"
@@ -71,8 +119,7 @@ if [ "$TARGET_DIR" = "$REPO_DIR" ]; then
     rm -rf "${PLUGIN_DIR}/node_modules"
     ln -sf "${TARGET_DIR}/.opencode/node_modules" "${PLUGIN_DIR}/node_modules"
 else
-    # ── MODO INSTALACIÓN: copia completa ──
-    echo -e "  ${COLOR_MUTED}▪ Instalando arnés SDD en .opencode/...${NC}"
+    echo -e "    ${COLOR_MUTED}▪ Copiando agentes y herramientas a .opencode/...${NC}"
     mkdir -p "${TARGET_DIR}/.opencode"
     cp -rf "${PLUGIN_DIR}/agents"   "${TARGET_DIR}/.opencode/agents"
     cp -rf "${PLUGIN_DIR}/commands" "${TARGET_DIR}/.opencode/commands"
@@ -80,30 +127,31 @@ else
     cp -rf "${PLUGIN_DIR}/tools"    "${TARGET_DIR}/.opencode/tools"
     cp -rf "${PLUGIN_DIR}/plugins"  "${TARGET_DIR}/.opencode/plugins"
 fi
+echo -e "    ${COLOR_SUCCESS}✓${NC} Motor de agentes configurado correctamente"
 
-# ── 5. Archivos raíz — SIEMPRE se reemplazan ──────────────────────────────────
-echo -e "  ${COLOR_MUTED}▪ Actualizando archivos de raíz del proyecto...${NC}"
+# ── 5. Actualización de Archivos Raíz ─────────────────────────────────────────
+echo -e "\n  ${COLOR_HEADER}📄 Actualizando archivos en la raíz del proyecto...${NC}"
 
 copy_root_file() {
     local src="$1"
     local dst="$2"
     local label="$3"
     if [ "$src" = "$dst" ]; then
-        echo -e "    ${COLOR_SUCCESS}✓${NC} ${label} (idéntico)"
+        echo -e "    ${COLOR_SUCCESS}✓${NC} ${label} ${COLOR_MUTED}(preservado)${NC}"
         return 0
     fi
     if [ -f "$src" ]; then
         cp "$src" "$dst"
         echo -e "    ${COLOR_SUCCESS}✓${NC} ${label}"
     else
-        echo -e "    ${COLOR_WARNING}⚠ No encontrado en origen: ${src}${NC}"
+        echo -e "    ${COLOR_WARNING}⚠ ${label} no encontrado en origen: ${src}${NC}"
     fi
 }
 
 copy_root_file "${REPO_DIR}/AGENTS.md"         "${TARGET_DIR}/AGENTS.md"         "AGENTS.md"
 copy_root_file "${REPO_DIR}/ZUGZ.md"           "${TARGET_DIR}/ZUGZ.md"           "ZUGZ.md"
 
-# opencode.json: si existe en origen se copia; si no, se genera de forma dinámica con permisos de los 5 agentes
+# opencode.json: se copia o se genera dinámicamente si no existe
 if [ -f "${REPO_DIR}/opencode.json" ] && [ "${REPO_DIR}/opencode.json" != "${TARGET_DIR}/opencode.json" ]; then
     copy_root_file "${REPO_DIR}/opencode.json" "${TARGET_DIR}/opencode.json" "opencode.json"
 elif [ ! -f "${TARGET_DIR}/opencode.json" ]; then
@@ -246,17 +294,17 @@ ensure_gitignore() {
     done
 
     if [ "$needs_update" = true ]; then
-        echo -e "  ${COLOR_MUTED}▪ Configurando reglas locales en .gitignore...${NC}"
+        echo -e "    ${COLOR_MUTED}▪ Configurando reglas de exclusión en .gitignore...${NC}"
         echo "" >> "$gitignore_file"
         echo "# --- Zugzbot SDD Harness (Locals) ---" >> "$gitignore_file"
         for pattern in ".opencode/" "tui.json" ".openspec/*-lock.json" "*-lock.json"; do
             if ! grep -Fq "$pattern" "$gitignore_file"; then
                 echo "$pattern" >> "$gitignore_file"
-                echo -e "    ${COLOR_SUCCESS}✓${NC} Agregado $pattern a .gitignore"
+                echo -e "      ${COLOR_SUCCESS}✓${NC} Ignorando: $pattern"
             fi
         done
     else
-        echo -e "  ${COLOR_SUCCESS}✓${NC} .gitignore ya está configurado con las reglas del arnés"
+        echo -e "    ${COLOR_SUCCESS}✓${NC} .gitignore ya está configurado correctamente"
     fi
 }
 
@@ -271,10 +319,10 @@ cat > "${TARGET_DIR}/tui.json" << 'TUIEOF'
   ]
 }
 TUIEOF
-echo -e "    ${COLOR_SUCCESS}✓${NC} tui.json"
+echo -e "    ${COLOR_SUCCESS}✓${NC} tui.json (cargador de plugin visual)"
 
 # ── 7. package.json en .opencode/ y dependencias ──────────────────────────────
-echo -e "  ${COLOR_MUTED}▪ Generando .opencode/package.json...${NC}"
+echo -e "\n  ${COLOR_HEADER}📦 Instalando dependencias internas de los agentes...${NC}"
 cat > "${TARGET_DIR}/.opencode/package.json" << 'PKGEOF'
 {
   "name": "zugzbot-sdd-local",
@@ -284,19 +332,22 @@ cat > "${TARGET_DIR}/.opencode/package.json" << 'PKGEOF'
 }
 PKGEOF
 
-echo -e "  ${COLOR_MUTED}▪ Instalando dependencias en .opencode/...${NC}"
 cd "${TARGET_DIR}/.opencode"
 if command -v bun &> /dev/null; then
+    echo -e "    ${COLOR_MUTED}▪ Corriendo bun install en .opencode/...${NC}"
     bun install --quiet
 else
+    echo -e "    ${COLOR_MUTED}▪ Corriendo npm install en .opencode/...${NC}"
     npm install --legacy-peer-deps --quiet
 fi
 cd "${REPO_DIR}"
+echo -e "    ${COLOR_SUCCESS}✓${NC} Dependencias internas listas."
 
 # ── 8. package.json y tsconfig.json de raíz (SOLO EN MODO DESARROLLO) ─────────
 if [ "$TARGET_DIR" = "$REPO_DIR" ]; then
+    echo -e "\n  ${COLOR_HEADER}🛠️  Configurando Entorno de Desarrollo (Modo Dev)...${NC}"
     if [ ! -f "${TARGET_DIR}/package.json" ]; then
-        echo -e "  ${COLOR_MUTED}▪ Generando package.json en la raíz (Modo Desarrollo)...${NC}"
+        echo -e "    ${COLOR_MUTED}▪ Generando package.json en la raíz...${NC}"
         cat > "${TARGET_DIR}/package.json" << 'ROOTPKGEOF'
 {
   "name": "project-sdd-workspace",
@@ -313,9 +364,9 @@ if [ "$TARGET_DIR" = "$REPO_DIR" ]; then
   }
 }
 ROOTPKGEOF
-        echo -e "    ${COLOR_SUCCESS}✓${NC} package.json creado"
+        echo -e "      ${COLOR_SUCCESS}✓${NC} package.json creado"
     else
-        echo -e "  ${COLOR_MUTED}▪ Asegurando dependencias de TypeScript/ESLint en package.json de raíz...${NC}"
+        echo -e "    ${COLOR_MUTED}▪ Asegurando dependencias de TypeScript/ESLint en package.json de raíz...${NC}"
         node -e '
           const fs = require("fs");
           const path = require("path");
@@ -332,18 +383,18 @@ ROOTPKGEOF
             if (!pkg.devDependencies["@opencode-ai/plugin"]) { pkg.devDependencies["@opencode-ai/plugin"] = "1.15.4"; changed = true; }
             if (changed) {
               fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
-              console.log("    \x1b[32m✓\x1b[0m package.json actualizado con dependencias LSP");
+              console.log("      \x1b[32m✓\x1b[0m package.json actualizado con dependencias LSP");
             } else {
-              console.log("    \x1b[32m✓\x1b[0m package.json ya cuenta con dependencias LSP");
+              console.log("      \x1b[32m✓\x1b[0m package.json ya cuenta con dependencias LSP");
             }
           } catch (e) {
-            console.log("    \x1b[31m⚠ Error actualizando package.json:\x1b[0m", e.message);
+            console.log("      \x1b[31m⚠ Error actualizando package.json:\x1b[0m", e.message);
           }
         '
     fi
 
     if [ ! -f "${TARGET_DIR}/tsconfig.json" ]; then
-        echo -e "  ${COLOR_MUTED}▪ Generando tsconfig.json en la raíz (Modo Desarrollo)...${NC}"
+        echo -e "    ${COLOR_MUTED}▪ Generando tsconfig.json en la raíz...${NC}"
         cat > "${TARGET_DIR}/tsconfig.json" << 'ROOTTSCONFIGEOF'
 {
   "compilerOptions": {
@@ -365,10 +416,10 @@ ROOTPKGEOF
   ]
 }
 ROOTTSCONFIGEOF
-        echo -e "    ${COLOR_SUCCESS}✓${NC} tsconfig.json creado"
+        echo -e "      ${COLOR_SUCCESS}✓${NC} tsconfig.json creado"
     fi
 
-    echo -e "  ${COLOR_MUTED}▪ Instalando dependencias de raíz (Modo Desarrollo)...${NC}"
+    echo -e "    ${COLOR_MUTED}▪ Instalando dependencias de raíz (Modo Dev)...${NC}"
     cd "${TARGET_DIR}"
     if command -v bun &> /dev/null; then
         bun install --quiet
@@ -380,7 +431,7 @@ fi
 
 # ── 9. Inicializar .openspec/ si no existe ────────────────────────────────────
 if [ ! -d "${TARGET_DIR}/.openspec" ]; then
-    echo -e "  ${COLOR_MUTED}▪ Inicializando .openspec/...${NC}"
+    echo -e "\n  ${COLOR_HEADER}🧠 Inicializando Memoria Técnica (.openspec/)...${NC}"
     mkdir -p "${TARGET_DIR}/.openspec/changes"
     cat > "${TARGET_DIR}/.openspec/sdd-lock.json" << 'LOCKEOF'
 {
@@ -410,14 +461,15 @@ Eres parte del equipo de desarrollo de este proyecto. Operas bajo las reglas de 
 - Aplica la metodología SDD Simplificada de 4 fases.
 - Usa Lazy Loading: carga archivos solo bajo demanda.
 PROMPTEOF
-    echo -e "    ${COLOR_SUCCESS}✓${NC} .openspec/ inicializado"
+    echo -e "    ${COLOR_SUCCESS}✓${NC} .openspec/ inicializado correctamente"
 fi
 
 # ── Resultado final ────────────────────────────────────────────────────────────
+echo -e "\n  ${COLOR_MUTED}─────────────────────────────────────────────────────────────────${NC}"
+echo -e "  ${COLOR_SUCCESS}🎉 ¡ZUGZBOT SDD INSTALADO CON ÉXITO!${NC}"
+echo -e "  ${COLOR_MUTED}─────────────────────────────────────────────────────────────────${NC}"
 echo ""
-echo -e "  ${COLOR_BORDER}────────────────────────────────${NC}"
-echo -e "  ${COLOR_SUCCESS}🎉 ¡INSTALACIÓN COMPLETADA CON ÉXITO!${NC}"
-echo ""
-echo -e "  ${COLOR_WARNING}Siguientes pasos:${NC}"
-echo -e "    ${COLOR_MUTED}1.${NC} Abre OpenCode:       ${COLOR_HEADER}opencode${NC}"
-echo -e "    ${COLOR_MUTED}2.${NC} Habla con ${COLOR_HEADER}@zugzbot${NC} para iniciar un ciclo SDD."
+echo -e "  ${COLOR_WARNING}Siguientes pasos recomendados:${NC}"
+echo -e "    ${COLOR_MUTED}1.${NC} Revisa la guía en:    ${COLOR_HEADER}ZUGZ.md${NC}"
+echo -e "    ${COLOR_MUTED}2.${NC} Abre la terminal IA:  ${COLOR_HEADER}opencode${NC}"
+echo -e "    ${COLOR_MUTED}3.${NC} Saluda al Orquestador: ${COLOR_HEADER}@zugzbot hola${NC}\n"
