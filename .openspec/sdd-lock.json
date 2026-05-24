@@ -1,7 +1,7 @@
 {
   "change_name": "fix-installer-linters",
   "active_phase": 3,
-  "active_subagent": "sdd-tester",
+  "active_subagent": "sdd-archiver",
   "status": "in_progress",
   "auto_pilot": false,
   "last_updated": "2026-05-24",
