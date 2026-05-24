@@ -5,6 +5,7 @@ import { execSync } from "child_process"
 import specValidator from "./sdd_spec_validator"
 import regressionDetector from "./sdd_regression_detector"
 import secretScanner from "./sdd_secret_scanner"
+import requirementTracker from "./sdd_requirement_tracker"
 
 export default tool({
   description: "Tránsiciona de fase en el ciclo Spec-Driven Development (SDD), actualizando el archivo de bloqueo lockfile .openspec/sdd-lock.json de forma segura, e integra control de cambios en Git de forma automática.",
@@ -66,13 +67,23 @@ export default tool({
       } catch (e) {}
     }
 
-    // 2. Transición a Fase 3 (Cierre/Documentación): Validar regresiones de compilación
+    // 2. Transición a Fase 3 (Cierre/Documentación): Validar regresiones de compilación y cobertura de requerimientos
     if (args.nextPhase === 3 && args.status !== "corrective_loop") {
+      // A. Validar regresiones de compilación
       const regressionResultStr = await regressionDetector.execute({ runCheck: true }, context);
       try {
         const result = JSON.parse(regressionResultStr);
         if (result.status && result.status.startsWith("FAILED")) {
           return `[SDD Transition Blocked] Transición rechazada por detección de errores o regresiones de compilación:\n\n${result.message}`;
+        }
+      } catch (e) {}
+
+      // B. Validar cobertura semántica de criterios de aceptación (Requerimientos)
+      const requirementResultStr = await requirementTracker.execute({ changeName: activeChangeName }, context);
+      try {
+        const result = JSON.parse(requirementResultStr);
+        if (result.status === "FAILED") {
+          return `[SDD Transition Blocked] Transición rechazada por falta de cobertura de pruebas para los criterios de aceptación:\n\n${result.message}`;
         }
       } catch (e) {}
     }
@@ -121,13 +132,51 @@ export default tool({
       const changeDir = path.join(projectRoot, ".openspec/changes", lockfile.change_name);
       if (fs.existsSync(changeDir)) {
         const historyPath = path.join(changeDir, "phase_history.jsonl");
+
+        // Obtener analíticas de tokens y costos de la sesión desde el servidor OpenCode
+        const port = process.env.OPENCODE_PORT || "4096";
+        let tokenStats = { cost: 0, input: 0, output: 0 };
+        const modelsUsed = new Set<string>();
+        try {
+          const url = `http://127.0.0.1:${port}/session/${context.sessionID}/message`;
+          const response = await fetch(url);
+          if (response.ok) {
+            const messages: any = await response.json();
+            const list = Array.isArray(messages) ? messages : (messages?.data || []);
+            list.forEach((msg: any) => {
+              const info = msg.info || msg;
+              if (info && info.role === "assistant") {
+                const cost = typeof info.cost === "number" && Number.isFinite(info.cost) ? info.cost : 0;
+                const input = info.tokens?.input ?? 0;
+                const output = info.tokens?.output ?? 0;
+                tokenStats.cost += cost;
+                tokenStats.input += input;
+                tokenStats.output += output;
+
+                // Extraer identificador de modelo de IA usado
+                const modelVal = info.modelID || (info.model && typeof info.model === "object" ? info.model.modelID : info.model);
+                if (modelVal) {
+                  modelsUsed.add(String(modelVal));
+                }
+              }
+            });
+          }
+        } catch (e) {}
+
         const logEntry = {
           timestamp: new Date().toISOString(),
           phase: args.nextPhase,
           subagent: lockfile.active_subagent,
           status: args.status,
           reason: args.reason,
-          iteration: lockfile.iteration || 0
+          iteration: lockfile.iteration || 0,
+          analytics: {
+            session_id: context.sessionID,
+            models_used: Array.from(modelsUsed),
+            cumulative_cost_usd: tokenStats.cost,
+            cumulative_tokens_input: tokenStats.input,
+            cumulative_tokens_output: tokenStats.output
+          }
         };
         fs.appendFileSync(historyPath, JSON.stringify(logEntry) + "\n", "utf-8");
       }
