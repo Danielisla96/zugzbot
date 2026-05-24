@@ -59,7 +59,8 @@
           "awk *": "allow",
           "read *": "allow",
           "echo *": "allow",
-          "head *": "allow"
+          "head *": "allow",
+          "uniq *": "allow"
         }
       }
     },
@@ -79,6 +80,7 @@
           "read *": "allow",
           "echo *": "allow",
           "head *": "allow",
+          "uniq *": "allow",
           "git status": "allow",
           "git status *": "allow"
         }
@@ -100,6 +102,7 @@
           "read *": "allow",
           "echo *": "allow",
           "head *": "allow",
+          "uniq *": "allow",
           "git status": "allow",
           "git status *": "allow",
           "npm test": "allow",
@@ -129,6 +132,7 @@
           "read *": "allow",
           "echo *": "allow",
           "head *": "allow",
+          "uniq *": "allow",
           "git status": "allow",
           "git status *": "allow",
           "git add *": "allow",
