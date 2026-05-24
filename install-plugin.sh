@@ -316,6 +316,7 @@ if [ ! -f "${TARGET_DIR}/package.json" ]; then
   "devDependencies": {
     "typescript": "^5.4.5",
     "eslint": "^9.3.0",
+    "@eslint/js": "^9.3.0",
     "eslint-plugin-html": "^8.1.1",
     "@opencode-ai/plugin": "1.15.4",
     "@types/node": "^20.12.12"
@@ -337,6 +338,7 @@ else
         if (!pkg.type || pkg.type !== "module") { pkg.type = "module"; changed = true; }
         if (!pkg.devDependencies.typescript) { pkg.devDependencies.typescript = "^5.4.5"; changed = true; }
         if (!pkg.devDependencies.eslint) { pkg.devDependencies.eslint = "^9.3.0"; changed = true; }
+        if (!pkg.devDependencies["@eslint/js"]) { pkg.devDependencies["@eslint/js"] = "^9.3.0"; changed = true; }
         if (!pkg.devDependencies["eslint-plugin-html"]) { pkg.devDependencies["eslint-plugin-html"] = "^8.1.1"; changed = true; }
         if (!pkg.devDependencies["@opencode-ai/plugin"]) { pkg.devDependencies["@opencode-ai/plugin"] = "1.15.4"; changed = true; }
         if (changed) {
