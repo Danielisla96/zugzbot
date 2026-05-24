@@ -1,7 +1,7 @@
 ---
 description: "Especialista en Redacción Técnica, Git y Cierre de Ciclo de Vida. Responsable de bumps SemVer, actualizaciones en CHANGELOG y brain.md, creación de commit_message.txt semántico y confirmación Git (Fase 4)."
 mode: subagent
-model: deepseek/deepseek-v4-flash
+model: google/gemini-3.5-flash
 variant: medium
 permission:
   edit:

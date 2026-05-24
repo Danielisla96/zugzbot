@@ -10,20 +10,33 @@ export default tool({
   async execute(args, context) {
     const projectRoot = context.worktree || context.directory;
     let changeName = args.changeName;
+    let isManualQa = false;
 
-    // 1. Detectar cambio activo
-    if (!changeName) {
-      const lockfilePath = path.join(projectRoot, ".openspec/sdd-lock.json");
-      const altLockPath = path.join(projectRoot, "openspec/sdd-lock.json");
-      const activeLockPath = fs.existsSync(lockfilePath) ? lockfilePath : (fs.existsSync(altLockPath) ? altLockPath : null);
-      if (activeLockPath) {
-        try {
-          const lockObj = JSON.parse(fs.readFileSync(activeLockPath, "utf-8"));
-          if (lockObj.change_name && lockObj.change_name !== "nuevo-cambio") {
-            changeName = lockObj.change_name;
-          }
-        } catch (e) {}
-      }
+    // 1. Detectar cambio activo y verificar si hay QA manual configurado en el lockfile
+    const lockfilePath = path.join(projectRoot, ".openspec/sdd-lock.json");
+    const altLockPath = path.join(projectRoot, "openspec/sdd-lock.json");
+    const activeLockPath = fs.existsSync(lockfilePath) ? lockfilePath : (fs.existsSync(altLockPath) ? altLockPath : null);
+    if (activeLockPath) {
+      try {
+        const lockObj = JSON.parse(fs.readFileSync(activeLockPath, "utf-8"));
+        if (!changeName && lockObj.change_name && lockObj.change_name !== "nuevo-cambio") {
+          changeName = lockObj.change_name;
+        }
+        if (lockObj.qa_manual === true || lockObj.manual_qa === true) {
+          isManualQa = true;
+        }
+      } catch (e) {}
+    }
+
+    // Verificar si hay QA manual configurado en opencode.json
+    const opencodeJsonPath = path.join(projectRoot, "opencode.json");
+    if (fs.existsSync(opencodeJsonPath)) {
+      try {
+        const config = JSON.parse(fs.readFileSync(opencodeJsonPath, "utf-8"));
+        if (config.sdd?.qa_manual === true || config.sdd?.manual_qa === true) {
+          isManualQa = true;
+        }
+      } catch (e) {}
     }
 
     if (!changeName || changeName === "nuevo-cambio") {
@@ -70,6 +83,14 @@ export default tool({
         status: "WARNING",
         criteriaCount: 0,
         message: "⚠️ RASTREADOR SEMÁNTICO: No se encontraron criterios de aceptación con casillas '- [ ]' en la sección '## 5. Criterios de Aceptación' de tu spec.md."
+      }, null, 2);
+    }
+
+    if (isManualQa) {
+      return JSON.stringify({
+        status: "APPROVED",
+        criteriaCount: criteria.length,
+        message: `✅ VALIDACIÓN MANUAL (QA MANUAL) ACTIVA: Conforme al reglamento de AGENTS.md y la configuración del proyecto, se aprueba la transición sin requerir cobertura de pruebas automatizadas. Todos los ${criteria.length} criterios de aceptación deben validarse empíricamente en el entorno en caliente.`
       }, null, 2);
     }
 

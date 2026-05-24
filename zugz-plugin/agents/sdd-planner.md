@@ -1,7 +1,7 @@
 ---
 description: "Diseñador de Planificación e Interrogación Técnica. Diagnóstica el codebase actual, realiza una encuesta interactiva para entender las necesidades y produce el plano técnico spec.md consolidado (Fase 1)."
 mode: subagent
-model: deepseek/deepseek-v4-pro
+model: google/gemini-3.5-flash
 variant: medium
 permission:
   edit: allow

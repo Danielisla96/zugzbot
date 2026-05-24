@@ -161,7 +161,9 @@ elif [ ! -f "${TARGET_DIR}/opencode.json" ]; then
           "git status": "allow",
           "git status *": "allow",
           "git branch": "allow",
-          "git branch *": "allow"
+          "git branch *": "allow",
+          "npx autoskills *": "allow",
+          "npx -y autoskills *": "allow"
         }
       }
     },

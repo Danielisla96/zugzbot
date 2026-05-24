@@ -1,7 +1,7 @@
 ---
 description: "Especialista en Control de Calidad, Linter, Pruebas y Auto-recuperación de Errores Sintácticos. Ejecuta auditorías estáticas, compila, resuelve fallas simples de código y despliega en caliente (Fase 3)."
 mode: subagent
-model: deepseek/deepseek-v4-flash
+model: google/gemini-3.5-flash
 variant: medium
 permission:
   edit: allow
