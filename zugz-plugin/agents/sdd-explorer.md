@@ -81,22 +81,21 @@ Lee (solo bajo demanda y si existen) los siguientes archivos para extraer depend
 - `package.json` (solo las secciones `name`, `version`, `scripts`, `dependencies`, `devDependencies`)
 - `README.md` (solo las primeras 100 líneas)
 
-#### PASO 3 — Ejecutar `npx autoskills`
+#### PASO 3 — Instalar skills vía `sdd_install_autoskills`
 
-```bash
-npx -y autoskills --yes 2>&1 | head -n 80
-```
+Ejecuta la tool **`sdd_install_autoskills()`** (sin argumentos). Ella se encarga de:
+- Ejecutar `npx -y autoskills --yes`
+- Migrar automáticamente los skills de `.agents/skills/` a `.opencode/skills`
+- Limpiar `.agents/skills/` si queda vacío
+- Reportar qué skills se instalaron y movieron
 
-- **Captura la salida completa**.
-- Identifica qué skills sugiere/instala para este stack.
-- Si `autoskills` instala archivos de skills en el directorio por defecto (normalmente `.autoskills/` o `skills/`), **muévelos a `zugz-plugin/skills/`** para integrarlos al arnés:
-  ```bash
-  # Si existen archivos generados por autoskills fuera de zugz-plugin/skills/:
-  find . -maxdepth 2 -name "*.md" -path "*autoskills*" | grep -v node_modules
-  # Mover si es necesario
-  mkdir -p zugz-plugin/skills/
-  # mv <origen-autoskills>/*.md zugz-plugin/skills/
-  ```
+> **Fallback manual** si la tool no está disponible:
+> ```bash
+> npx -y autoskills --yes 2>&1 | head -n 80
+> find . -maxdepth 2 -name "*.md" -path "*autoskills*" | grep -v node_modules
+> mkdir -p .opencode/skills/
+> # mv <origen-autoskills>/*.md .opencode/skills/
+> ```
 
 #### PASO 4 — Generar `diagnostics.md`
 
