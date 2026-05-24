@@ -153,3 +153,10 @@ Feature: [Breve descripción de la funcionalidad]
 
 2. **🛡️ Cooldown de Dependencias**:
    - Cualquier dependencia agregada debe tener al menos **3 días de publicada** en el registro oficial. Carga la habilidad `sdd-dependency-cooldown` para verificar su antigüedad antes de cualquier importación.
+
+3. **🔬 Estructura Estándar de Testing Agnóstico**:
+   - Todo proyecto gestionado por el arnés debe estructurar su carpeta de pruebas `tests/` en tres subdirectorios específicos:
+     * `tests/unit/`: Para pruebas unitarias de funciones aisladas.
+     * `tests/static/`: Para validadores estáticos universales y agnósticos (ej: balance de etiquetas HTML en `tag_balance.js`, detección de IDs duplicados en `dom_structure.js`).
+     * `tests/integration/`: Para pruebas de flujo de pantallas e integración.
+   - Estos validadores se ejecutan de forma autónoma antes de cualquier despliegue.

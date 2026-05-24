@@ -266,6 +266,17 @@ validate_schemas() {
 run_test() {
     echo -e "  ${COLOR_HEADER}🧪 Ejecutando Suite de Pruebas...${NC}"
     echo -e "  ${COLOR_BORDER}──────────────────────────────────────────────────────────────${NC}"
+    
+    # Ejecutar validadores estáticos universales si existen
+    if [ -f "tests/static/tag_balance.js" ]; then
+        echo -e "  ${COLOR_MUTED}▪ [Estático] Ejecutando tests/static/tag_balance.js...${NC}"
+        node tests/static/tag_balance.js
+    fi
+    if [ -f "tests/static/dom_structure.js" ]; then
+        echo -e "  ${COLOR_MUTED}▪ [Estático] Ejecutando tests/static/dom_structure.js...${NC}"
+        node tests/static/dom_structure.js
+    fi
+
     if [ -f "package.json" ]; then
         if grep -q '"test"' package.json; then
             npm run test
@@ -299,6 +310,17 @@ run_test() {
 run_lint() {
     echo -e "  ${COLOR_HEADER}🔍 Ejecutando Auditoría Estática (Linter)...${NC}"
     echo -e "  ${COLOR_BORDER}──────────────────────────────────────────────────────────────${NC}"
+    
+    # Ejecutar validadores estáticos de balance de etiquetas e IDs duplicados si existen
+    if [ -f "tests/static/tag_balance.js" ]; then
+        echo -e "  ${COLOR_MUTED}▪ [Estático] Ejecutando tests/static/tag_balance.js...${NC}"
+        node tests/static/tag_balance.js
+    fi
+    if [ -f "tests/static/dom_structure.js" ]; then
+        echo -e "  ${COLOR_MUTED}▪ [Estático] Ejecutando tests/static/dom_structure.js...${NC}"
+        node tests/static/dom_structure.js
+    fi
+
     if [ -f "package.json" ]; then
         if grep -q '"lint"' package.json; then
             npm run lint
