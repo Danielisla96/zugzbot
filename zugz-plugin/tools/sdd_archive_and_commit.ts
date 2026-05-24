@@ -267,19 +267,7 @@ export default tool({
       return `[SDD Archive Error] Error crítico archivando carpetas: ${e.message}`
     }
 
-    // 6. Confirmación Git Atómica
-    if (fs.existsSync(path.join(projectRoot, ".git"))) {
-      try {
-        execSync("git add .", { cwd: projectRoot, stdio: "ignore" })
-        const archiveCommitMsgPath = path.join(archiveDir, "commit_message.txt")
-        execSync(`git commit -F "${archiveCommitMsgPath}"`, { cwd: projectRoot, stdio: "ignore" })
-        report.push(`✓ Commit de Git ejecutado usando el mensaje semántico de la carpeta archivada`)
-      } catch (e: any) {
-        report.push(`⚠️ Git Commit falló o no había cambios pendientes de código: ${e.message}`)
-      }
-    }
-
-    // 7. Resetear el lockfile a idle
+    // 6. Resetear el lockfile a idle (Se hace ANTES del commit para incluirlo en el cierre)
     const lockfilePath = path.join(projectRoot, ".openspec/sdd-lock.json")
     if (fs.existsSync(lockfilePath)) {
       try {
@@ -292,6 +280,18 @@ export default tool({
         report.push(`✓ Lockfile .openspec/sdd-lock.json restablecido a 'idle'`)
       } catch (e: any) {
         report.push(`⚠️ No se pudo restablecer el lockfile: ${e.message}`)
+      }
+    }
+
+    // 7. Confirmación Git Atómica (Incluye el lockfile reseteado)
+    if (fs.existsSync(path.join(projectRoot, ".git"))) {
+      try {
+        execSync("git add .", { cwd: projectRoot, stdio: "ignore" })
+        const archiveCommitMsgPath = path.join(archiveDir, "commit_message.txt")
+        execSync(`git commit -F "${archiveCommitMsgPath}"`, { cwd: projectRoot, stdio: "ignore" })
+        report.push(`✓ Commit de Git ejecutado usando el mensaje semántico de la carpeta archivada`)
+      } catch (e: any) {
+        report.push(`⚠️ Git Commit falló o no había cambios pendientes de código: ${e.message}`)
       }
     }
 
