@@ -145,8 +145,11 @@ elif [ ! -f "${TARGET_DIR}/opencode.json" ]; then
           "cat *": "allow",
           "grep *": "allow",
           "wc *": "allow",
+          "mkdir": "allow",
           "mkdir *": "allow",
           "mkdir -p *": "allow",
+          "echo": "allow",
+          "echo *": "allow",
           "cp *": "allow",
           "mv *": "allow",
           "node --version": "allow",
@@ -308,17 +311,20 @@ if [ ! -f "${TARGET_DIR}/package.json" ]; then
 {
   "name": "project-sdd-workspace",
   "private": true,
+  "type": "module",
   "version": "1.0.0",
   "devDependencies": {
     "typescript": "^5.4.5",
     "eslint": "^9.3.0",
+    "eslint-plugin-html": "^8.1.1",
+    "@opencode-ai/plugin": "1.15.4",
     "@types/node": "^20.12.12"
   }
 }
 ROOTPKGEOF
     echo -e "    ${COLOR_SUCCESS}✓${NC} package.json creado"
 else
-    # Si ya existe, nos aseguramos de que tenga typescript y eslint agregados de forma segura con un script node rápido
+    # Si ya existe, nos aseguramos de que tenga typescript, eslint y tipo modulo agregados de forma segura con un script node rápido
     echo -e "  ${COLOR_MUTED}▪ Asegurando dependencias de TypeScript/ESLint en package.json de raíz...${NC}"
     node -e '
       const fs = require("fs");
@@ -328,8 +334,11 @@ else
         const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
         pkg.devDependencies = pkg.devDependencies || {};
         let changed = false;
+        if (!pkg.type || pkg.type !== "module") { pkg.type = "module"; changed = true; }
         if (!pkg.devDependencies.typescript) { pkg.devDependencies.typescript = "^5.4.5"; changed = true; }
         if (!pkg.devDependencies.eslint) { pkg.devDependencies.eslint = "^9.3.0"; changed = true; }
+        if (!pkg.devDependencies["eslint-plugin-html"]) { pkg.devDependencies["eslint-plugin-html"] = "^8.1.1"; changed = true; }
+        if (!pkg.devDependencies["@opencode-ai/plugin"]) { pkg.devDependencies["@opencode-ai/plugin"] = "1.15.4"; changed = true; }
         if (changed) {
           fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
           console.log("    \x1b[32m✓\x1b[0m package.json actualizado con dependencias LSP");
@@ -348,8 +357,8 @@ if [ ! -f "${TARGET_DIR}/tsconfig.json" ]; then
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "strict": true,
     "skipLibCheck": true,

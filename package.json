@@ -1,11 +1,14 @@
 {
   "name": "zugzbot-swarm-dev",
   "private": true,
+  "type": "module",
   "version": "1.0.0",
   "description": "SDD Swarm Repository for Local development & OpenCode LSPs",
   "devDependencies": {
     "typescript": "^5.4.5",
     "eslint": "^9.3.0",
+    "eslint-plugin-html": "^8.1.1",
+    "@opencode-ai/plugin": "1.15.4",
     "@types/node": "^20.12.12"
   }
 }
