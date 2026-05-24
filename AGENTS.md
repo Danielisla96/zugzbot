@@ -21,7 +21,7 @@ Queda terminantemente prohibido para cualquier agente del swarm (incluyendo al O
 ## 🔍 PROTOCOLO DE PLANIFICACIÓN E INTERROGACIÓN [CRÍTICO]
 
 Para optimizar el uso de tokens y dotar al swarm de memoria técnica persistente sin amnesia de sesión:
-- **Indexación y Encuesta (Fase 1)**: El `@sdd-planner` realiza una exploración incremental del repositorio para mapear archivos directamente afectados. Formula una **encuesta interactiva de 3 a 5 preguntas concretas** al usuario para afinar los requisitos reales.
+- **Indexación y Encuesta Consolidada (Fase 1)**: El `@sdd-planner` realiza una exploración incremental del repositorio para mapear archivos directamente afectados. Formula una **encuesta interactiva de 3 a 5 preguntas concretas** al usuario para afinar los requisitos reales. **Queda estrictamente prohibido realizar preguntas por goteo o en turnos separados; todas las preguntas deben ser consolidadas y presentadas al tiro en un solo mensaje y utilizando una única llamada a la herramienta `question`.** En caso de existir dependencias lógicas complejas entre preguntas, el planificador propondrá una recomendación fuerte por defecto y continuará el flujo asincrónicamente para no demorar la pega.
 - **Carga Perezosa (Lazy Loading)**: En fases posteriores, los agentes tienen estrictamente prohibido volver a barrer el proyecto completo. Deben leer con la herramienta `read` únicamente los archivos indicados en los `INPUTS` de la delegación (como `specs/spec.md` o `verification_report.md`).
 
 ---
@@ -47,6 +47,24 @@ Para optimizar los tiempos de ejecución, evitar la dispersión mental del swarm
   2. Dictar la tarea específica y concreta sin rodeos.
 - **Artefactos "Justo y Necesario"**: Las especificaciones técnicas en `.openspec/` deben ser concisas, apoyándose en tablas, bullet points y escenarios BDD de pocas líneas. Los subagentes no deben generar documentación o reportes extensivos e innecesarios. Su misión es ejecutar, no escribir de más.
 - **Handoff Eficiente**: Cuando un agente transicione de fase, su mensaje final debe resumir su logro en no más de un párrafo corto e indicar explícitamente cuál es la siguiente acción.
+
+---
+
+## ⚡ REGLA DE FAST-TRACK PARA CAMBIOS VISUALES Y UI [CRÍTICO]
+
+Para que avancemos rápido y no nos quedemos pegados en burocracia técnica cuando el cambio es mayoritariamente estético, CSS, ordenamiento de UI o retoques visuales que no alteran la lógica de datos compleja ni APIs del backend:
+- **Enfoque en Maquetación**: El `@sdd-planner` debe simplificar el plano técnico `spec.md` al mínimo, centrando los criterios de aceptación en la experiencia visual, la responsividad y el diseño estético premium.
+- **Omitir Tests No Relacionados**: El `@sdd-builder` tiene estrictamente prohibido intentar correr suites de pruebas unitarias o de integración automatizadas (como de backend/runtime) si el cambio es puramente cosmético de frontend, especialmente si estas van a fallar por falta de entorno emulado (como pasa con Google Apps Script). Priorizamos la agilidad y simulación manual ágil de cara al usuario.
+
+---
+
+## 🚦 PROTOCOLO DE VALIDACIÓN EN VIVO (HUMAN-IN-THE-LOOP) [CRÍTICO]
+
+Queda estrictamente prohibido que el Swarm transicione de Fase 2 (Construcción) a Fase 3 (Cierre) ni archive/consolide cambios de manera automática bajo autopilot sin que el usuario haya hecho una revisión manual y conforme del despliegue en vivo:
+1. **Despliegue y Pausa**: Una vez que el `@sdd-builder` realiza el despliegue de la solución (vía `clasp push` o deploy correspondiente), debe detenerse y congelar la autodelegación.
+2. **Instrucciones de Prueba**: El builder debe proporcionarle de inmediato al usuario instrucciones directas para probar (ej: *"Ya desplegué los cambios. Por favor, refresca la Web App o corre clasp open para validar"*).
+3. **Visto Bueno Obligatorio**: El builder debe esperar el feedback o confirmación del usuario en el chat. Si se detecta cualquier pifia visual o bug, se resuelve directamente en la misma Fase 2.
+4. **Handoff al Cierre**: Solo con el visto bueno explícito del usuario, se autoriza la transición a la Fase 3 (`@sdd-archiver`) para realizar el bump de versión, consolidar el CHANGELOG, hacer el commit Git y archivar la carpeta del cambio.
 
 ---
 
