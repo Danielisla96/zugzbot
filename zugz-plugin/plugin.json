@@ -1,0 +1,10 @@
+{
+  "name": "zugzbot-sdd",
+  "displayName": "Zugzbot Spec-Driven Development",
+  "description": "Metodología premium Spec-Driven Development (SDD) orquestada por subagentes autónomos de alto rendimiento.",
+  "version": "1.4.0",
+  "publisher": "Danielisla96",
+  "engines": {
+    "opencode": "^1.0.0"
+  }
+}

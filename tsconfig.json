@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowJs": true
+  },
+  "include": [
+    "zugz-plugin/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "zugz-plugin/plugins/plugin_tui.tsx"
+  ]
+}
