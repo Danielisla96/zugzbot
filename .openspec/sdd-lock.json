@@ -1,10 +1,37 @@
 {
   "change_name": "fix-installer-linters",
-  "active_phase": 1,
-  "active_subagent": "sdd-planner",
+  "active_phase": 2,
+  "active_subagent": "sdd-builder",
   "status": "in_progress",
   "auto_pilot": false,
   "last_updated": "2026-05-24",
   "iteration": 1,
-  "complexity": "low"
+  "complexity": "low",
+  "tasks": [
+    {
+      "id": 1,
+      "desc": "El script `install-plugin.sh` se ejecuta sin errores.",
+      "status": "pending"
+    },
+    {
+      "id": 2,
+      "desc": "`zugz-models.json` está presente en la raíz del proyecto destino tras la instalación.",
+      "status": "pending"
+    },
+    {
+      "id": 3,
+      "desc": "El script `sdd` está presente en la raíz del proyecto destino y es ejecutable (`./sdd`).",
+      "status": "pending"
+    },
+    {
+      "id": 4,
+      "desc": "El archivo `package.json` de la raíz del proyecto destino tiene registradas e instaladas las dependencias de linter.",
+      "status": "pending"
+    },
+    {
+      "id": 5,
+      "desc": "El archivo `eslint.config.js` está creado y es estructuralmente válido.",
+      "status": "pending"
+    }
+  ]
 }
