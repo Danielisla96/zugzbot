@@ -57,6 +57,16 @@ export default tool({
 
     const specContent = fs.readFileSync(specPath, "utf-8");
 
+    // Autodetección de modo QA Manual explícito en spec.md
+    if (
+      specContent.includes("[QA Manual]") ||
+      specContent.includes("QA Mode: Manual") ||
+      specContent.includes("QA: Manual") ||
+      specContent.toLowerCase().includes("qa_manual: true")
+    ) {
+      isManualQa = true;
+    }
+
     // 3. Extraer criterios de aceptación
     const criteria: string[] = [];
     let inCriteriaSection = false;

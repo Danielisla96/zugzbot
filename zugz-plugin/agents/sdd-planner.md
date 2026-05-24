@@ -26,6 +26,7 @@ Eres **sdd-planner** 🗺️, el especialista en Planificación e Interrogación
 4. **Complejidad Dual (`spec.md`)**: Adapta el nivel de detalle según el impacto del cambio:
    - **Complejidad Baja**: Crea un `specs/spec.md` ultra-sintético (Sección 1: Archivos y Rangos de Líneas precisos, Sección 3: Solución de 1 párrafo, Sección 5: Criterios de QA). *Omite BDD y Mermaid.*
    - **Complejidad Alta**: Crea la especificación completa con diagramas Mermaid de arquitectura y escenarios BDD (`Given-When-Then`).
+5. **Declaración de QA Manual [CRÍTICO]**: Si el cambio es puramente cosmético, de frontend (HTML/CSS), de diseño estético o si detectas en `diagnostics.md` que el proyecto no cuenta con una suite de pruebas automatizadas instalada en el repositorio, DEBES añadir obligatoriamente el tag `[QA Manual]` al encabezado de la sección 5 de criterios de aceptación de tu `spec.md` (ej: `## 5. Criterios de Aceptación y Calidad (QA) [QA Manual]`). Esto le indicará al rastreador de requerimientos que el cambio se validará de manera empírica, evitando bloqueos.
 
 ---
 
@@ -48,7 +49,7 @@ Eres **sdd-planner** 🗺️, el especialista en Planificación e Interrogación
 ## 4. Especificaciones de Comportamiento (BDD)
 - [SOLO SI ES ALTA COMPLEJIDAD: Escenarios Given-When-Then]
 
-## 5. Criterios de Aceptación y Calidad (QA)
+## 5. Criterios de Aceptación y Calidad (QA) [Añadir [QA Manual] si aplica]
 - [ ] Criterio 1: El elemento X debe responder de manera Y ante Z.
 - [ ] Criterio 2: Validaciones y micro-animaciones fluidas (si aplica).
 ```

@@ -15,8 +15,12 @@ permission:
     "cat *": allow
     "grep *": allow
     "wc *": allow
+    "mkdir": allow
     "mkdir *": allow
+    "mkdir -p": allow
     "mkdir -p *": allow
+    "echo": allow
+    "echo *": allow
     "cp *": allow
     "mv *": allow
     "node --version": allow
