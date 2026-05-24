@@ -240,28 +240,32 @@ MODELS_FILE="${TARGET_DIR}/zugz-models.json"
 
 if [ -f "$MODELS_FILE" ] && [ -d "$DEST_AGENTS_DIR" ]; then
     echo -e "  ${COLOR_MUTED}▪ Aplicando modelos de zugz-models.json a los agentes...${NC}"
-    local_changed=0
-    # Extraer SOLO el bloque "agents" usando awk (portable macOS/Linux)
-    agents_block=$(awk '
-        /"agents"[[:space:]]*:/{in_agents=1; next}
-        in_agents && /^[[:space:]]*\}/{exit}
-        in_agents && /^[[:space:]]*"[a-zA-Z0-9][a-zA-Z0-9_-]+"[[:space:]]*:/{print}
-    ' "$MODELS_FILE" | grep -v '"_')
-    while IFS= read -r line; do
-        agent_key=$(echo "$line" | sed 's/.*"\([a-zA-Z0-9_-]*\)"[[:space:]]*:[[:space:]]*".*/\1/')
-        model_val=$(echo "$line"  | sed 's/.*"[a-zA-Z0-9_-]*"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
-        if [ -z "$agent_key" ] || [ -z "$model_val" ] || [ "$agent_key" = "$model_val" ]; then
-            continue
-        fi
-        agent_file="${DEST_AGENTS_DIR}/${agent_key}.md"
-        if [ -f "$agent_file" ] && grep -q '^model:' "$agent_file"; then
-            sed -i.bak "s|^model:.*|model: ${model_val}|" "$agent_file"
-            rm -f "${agent_file}.bak"
-            echo -e "    ${COLOR_SUCCESS}✓${NC} ${COLOR_MUTED}${agent_key}${NC} → ${COLOR_HEADER}${model_val}${NC}"
-            local_changed=$((local_changed + 1))
-        fi
-    done <<< "$agents_block"
-    echo -e "    ${COLOR_MUTED}Total:${NC} ${COLOR_SUCCESS}${local_changed} agente(s) con modelos actualizados${NC}"
+    node -e '
+      const fs = require("fs");
+      const path = require("path");
+      const modelsFile = "'"$MODELS_FILE"'";
+      const destAgentsDir = "'"$DEST_AGENTS_DIR"'";
+      try {
+        const data = JSON.parse(fs.readFileSync(modelsFile, "utf-8"));
+        const models = data.presets?.default || data.presets?.balanced || data.agents || {};
+        let changed = 0;
+        Object.entries(models).forEach(([agentKey, modelVal]) => {
+          const agentFile = path.join(destAgentsDir, `${agentKey}.md`);
+          if (fs.existsSync(agentFile)) {
+            let content = fs.readFileSync(agentFile, "utf-8");
+            if (content.match(/^model:/m)) {
+              content = content.replace(/^model:.*/m, `model: ${modelVal}`);
+              fs.writeFileSync(agentFile, content, "utf-8");
+              console.log(`    \x1b[32m✓\x1b[0m \x1b[90m${agentKey}\x1b[0m → \x1b[1;36m${modelVal}\x1b[0m`);
+              changed++;
+            }
+          }
+        });
+        console.log(`    \x1b[90mTotal:\x1b[0m \x1b[32m${changed} agente(s) con modelos actualizados\x1b[0m`);
+      } catch (e) {
+        console.log(`    \x1b[31m⚠ Error aplicando modelos: ${e.message}\x1b[0m`);
+      }
+    '
 fi
 
 # tui.json — inline (sin depender de un archivo fuente)
