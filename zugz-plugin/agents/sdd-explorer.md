@@ -58,14 +58,18 @@ Eres **@sdd-explorer** 🔭, el Agente de Diagnóstico e Indexación (Fase 0). T
 2. **Generación de Árbol Nativo**: Ejecuta la herramienta personalizada **`sdd_generate_tree`** para obtener la estructura de directorios del proyecto en milisegundos con costo 0 de tokens.
 3. **Instalación de Skills [CRÍTICO Y MANDATORIO]**: Llama y ejecuta obligatoriamente la herramienta personalizada **`sdd_install_autoskills`** (sin argumentos) para instalar y migrar skills a `.opencode/skills/`. ¡NO omitas este paso ni hagas un dry-run a menos que se te indique explícitamente!
 4. **Estructura Estándar de Testing & Linter [CRÍTICO]**:
-   - Diagnostica si hay un linter configurado; si no, redacta y sugiere un archivo de configuración básico (ej: `.eslintrc.json`, `pyproject.toml` o similar).
+   - Diagnostica si hay un linter configurado; si no, redacta y sugiere un archivo de configuración básico. Para proyectos que usan ESLint v9/v10+, prefiere y genera el nuevo formato Flat Config (`eslint.config.js`) en lugar del formato obsoleto `.eslintrc.json`.
    - Verifica físicamente si existe la carpeta `tests/`. Si no existe o está incompleta, crea la estructura estándar de 3 subcarpetas para un control de QA agnóstico de primer nivel:
      * `tests/unit/` (para pruebas unitarias).
      * `tests/static/` (para validadores estáticos universales).
      * `tests/integration/` (para pruebas de integración/pantallas).
-   - Escribe físicamente (usando la herramienta `write`) los siguientes dos validadores estáticos de Node.js en `tests/static/`. Deben llamarse exactamente con la extensión `.test.js` para ser autoejecutables por Vitest/Jest, y deben usar exactamente los siguientes códigos blindados y funcionales:
+   - **Generación Condicional de Validadores Estáticos [CRÍTICO Y AGNOSTICO]**:
+     Debes evaluar el stack tecnológico predominante del proyecto en caliente y escribir físicamente en `tests/static/` el validador estático correspondiente (¡NO instales o escribas tests de JavaScript si el proyecto no es Web o de Node!):
 
-     * **`tests/static/tag_balance.test.js`**:
+     * **A. Si el proyecto tiene frontend / marcado Web / Google Apps Script** (contiene archivos `.html`, `.htm`, `.tsx`, `.jsx`, `.svelte`, `.vue`):
+       Escribe físicamente usando la herramienta `write` los validadores de Node.js en `tests/static/` con extensión `.test.js`. Usa exactamente estos códigos funcionales y blindados:
+
+       * **`tests/static/tag_balance.test.js`**:
 ```javascript
 import { describe, test, expect } from 'vitest';
 import fs from 'fs';
@@ -91,7 +95,10 @@ function getFilesRecursively(dir, extensions) {
 
 function checkTagBalance(content) {
   // Remover comentarios HTML (<!-- ... -->)
-  const cleaned = content.replace(/<!--[\s\S]*?-->/g, '');
+  let cleaned = content.replace(/<!--[\s\S]*?-->/g, '');
+  
+  // Remover bloques de script (<script>...</script>) para evitar falsos positivos con HTML en strings de JS
+  cleaned = cleaned.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
   
   // Buscar tags: <tag ...> o </tag>
   const tagRegex = /<(\/?[a-zA-Z0-9:-]+)(?:\s+[^>]*?)?>/g;
@@ -148,7 +155,7 @@ describe('Tag Balance Validator', () => {
 });
 ```
 
-     * **`tests/static/dom_structure.test.js`**:
+       * **`tests/static/dom_structure.test.js`**:
 ```javascript
 import { describe, test, expect } from 'vitest';
 import fs from 'fs';
@@ -211,6 +218,58 @@ describe('DOM Structure Validator', () => {
   });
 });
 ```
+
+     * **B. Si el proyecto es Python puro o Backend (FastAPI / Django)** (contiene archivos `.py` y no tiene frontend Node preponderante):
+       Escribe físicamente usando la herramienta `write` el validador estático nativo de Python en **`tests/static/test_code_quality.py`** (utiliza únicamente la librería estándar, compatible out-of-the-box con `unittest` o `pytest` sin requerir dependencias de terceros):
+```python
+import os
+import unittest
+
+class TestCodeQuality(unittest.TestCase):
+    def get_python_files(self):
+        py_files = []
+        search_dirs = ['src', 'app', 'tests', 'apps']
+        search_dirs = [d for d in search_dirs if os.path.exists(d)]
+        if not search_dirs:
+            # Fallback a raíz si no hay carpetas estructurales, omitiendo directorios virtuales
+            for root, dirs, files in os.walk('.'):
+                dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ['node_modules', 'venv', '.venv', 'env', 'build', 'dist']]
+                for f in files:
+                    if f.endswith('.py'):
+                        py_files.append(os.path.join(root, f))
+        else:
+            for s_dir in search_dirs:
+                for root, dirs, files in os.walk(s_dir):
+                    dirs[:] = [d for d in dirs if not d.startswith('.')]
+                    for f in files:
+                        if f.endswith('.py'):
+                            py_files.append(os.path.join(root, f))
+        return py_files
+
+    def test_no_trailing_whitespace(self):
+        files = self.get_python_files()
+        for filepath in files:
+            with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                lines = f.readlines()
+            for idx, line in enumerate(lines):
+                stripped = line[:-2] if line.endswith('\r\n') else (line[:-1] if line.endswith('\n') else line)
+                if stripped and stripped != stripped.rstrip():
+                    self.fail(f"Trailing whitespace found in {filepath} at line {idx+1}")
+
+    def test_ends_with_newline(self):
+        files = self.get_python_files()
+        for filepath in files:
+            with open(filepath, 'rb') as f:
+                content = f.read()
+            if content:
+                self.assertTrue(content.endswith(b'\n') or content.endswith(b'\r'), f"File {filepath} must end with a newline.")
+
+if __name__ == '__main__':
+    unittest.main()
+```
+
+     * **C. Si el proyecto es C/C++ / PlatformIO / Arduino / ESP32** (contiene `platformio.ini`, `CMakeLists.txt` o archivos `.cpp`/`.ino`):
+       Sugiere o escribe físicamente una configuración de formato de estilos `.clang-format` estándar o un script de estilos utilitario en la carpeta `tests/static/`.
 
 5. **Darle Vida al Diagnóstico (`.openspec/diagnostics.md`) [CRÍTICO]**:
    - Inserta el árbol obtenido de `sdd_generate_tree`.

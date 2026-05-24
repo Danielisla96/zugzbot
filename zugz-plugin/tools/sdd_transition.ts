@@ -60,7 +60,8 @@ export default tool({
     // ── SALVAGUARDAS AUTOMÁTICAS DE METODOLOGÍA SDD ──
     // 1. Transición a Fase 2 (Construcción): Validar spec.md y parsear la checklist de tareas
     if (args.nextPhase === 2 && args.status !== "corrective_loop") {
-      const specValidationResultStr = await specValidator.execute({ changeName: activeChangeName }, context);
+      const specValidationResultObj: any = await specValidator.execute({ changeName: activeChangeName }, context);
+      const specValidationResultStr = typeof specValidationResultObj === "string" ? specValidationResultObj : (specValidationResultObj?.output || "");
       try {
         const result = JSON.parse(specValidationResultStr);
         if (result.status === "FAILED") {
@@ -134,7 +135,8 @@ export default tool({
       }
 
       // A. Validar regresiones de compilación
-      const regressionResultStr = await regressionDetector.execute({ runCheck: true }, context);
+      const regressionResultObj: any = await regressionDetector.execute({ runCheck: true }, context);
+      const regressionResultStr = typeof regressionResultObj === "string" ? regressionResultObj : (regressionResultObj?.output || "");
       try {
         const result = JSON.parse(regressionResultStr);
         if (result.status && result.status.startsWith("FAILED")) {
@@ -143,7 +145,8 @@ export default tool({
       } catch (e) {}
 
       // B. Validar cobertura semántica de criterios de aceptación (Requerimientos)
-      const requirementResultStr = await requirementTracker.execute({ changeName: activeChangeName }, context);
+      const requirementResultObj: any = await requirementTracker.execute({ changeName: activeChangeName }, context);
+      const requirementResultStr = typeof requirementResultObj === "string" ? requirementResultObj : (requirementResultObj?.output || "");
       try {
         const result = JSON.parse(requirementResultStr);
         if (result.status === "FAILED") {
@@ -164,7 +167,8 @@ export default tool({
               const version = match[2].replace(/[\^~>=]/g, ""); // Limpiar rangos
               if (pkg === "zugzbot-sdd" || pkg.startsWith("@opencode-ai/")) continue;
 
-              const cooldownResultStr = await checkDependencyCooldown.execute({ package: pkg, version }, context);
+              const cooldownResultObj: any = await checkDependencyCooldown.execute({ package: pkg, version }, context);
+              const cooldownResultStr = typeof cooldownResultObj === "string" ? cooldownResultObj : (cooldownResultObj?.output || "");
               try {
                 const cooldownResult = JSON.parse(cooldownResultStr);
                 if (cooldownResult.status === "BLOCKED") {
@@ -179,7 +183,8 @@ export default tool({
 
     // 3. Transición a Fase 0 / Cierre (Commit final): Escanear secretos
     if (args.nextPhase === 0) {
-      const secretScanResultStr = await secretScanner.execute({ scanAll: false }, context);
+      const secretScanResultObj: any = await secretScanner.execute({ scanAll: false }, context);
+      const secretScanResultStr = typeof secretScanResultObj === "string" ? secretScanResultObj : (secretScanResultObj?.output || "");
       try {
         const result = JSON.parse(secretScanResultStr);
         if (result.status === "FAILED") {

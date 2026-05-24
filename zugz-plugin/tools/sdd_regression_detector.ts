@@ -106,6 +106,18 @@ export default tool({
     if (fs.existsSync(path.join(projectRoot, "tsconfig.json"))) {
       command = "npx tsc --noEmit --pretty false";
       languageLabel = "TypeScript (tsc)";
+    } else if (fs.existsSync(path.join(projectRoot, "platformio.ini"))) {
+      command = "pio run";
+      languageLabel = "PlatformIO (C++)";
+    } else if (fs.existsSync(path.join(projectRoot, "Cargo.toml"))) {
+      command = "cargo check";
+      languageLabel = "Rust (cargo check)";
+    } else if (fs.existsSync(path.join(projectRoot, "build.gradle"))) {
+      command = "./gradlew compileJava";
+      languageLabel = "Java (Gradle)";
+    } else if (fs.existsSync(path.join(projectRoot, "pom.xml"))) {
+      command = "mvn compile";
+      languageLabel = "Java (Maven)";
     } else if (fs.existsSync(path.join(projectRoot, "package.json"))) {
       try {
         const pkg = JSON.parse(fs.readFileSync(path.join(projectRoot, "package.json"), "utf-8"));

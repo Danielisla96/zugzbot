@@ -301,6 +301,82 @@ else
 fi
 cd "${REPO_DIR}"
 
+# ── 6.5. package.json y tsconfig.json en raíz del proyecto (para activar LSPs) ──
+if [ ! -f "${TARGET_DIR}/package.json" ]; then
+    echo -e "  ${COLOR_MUTED}▪ Generando package.json en la raíz del proyecto para habilitar LSPs...${NC}"
+    cat > "${TARGET_DIR}/package.json" << 'ROOTPKGEOF'
+{
+  "name": "project-sdd-workspace",
+  "private": true,
+  "version": "1.0.0",
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "eslint": "^9.3.0",
+    "@types/node": "^20.12.12"
+  }
+}
+ROOTPKGEOF
+    echo -e "    ${COLOR_SUCCESS}✓${NC} package.json creado"
+else
+    # Si ya existe, nos aseguramos de que tenga typescript y eslint agregados de forma segura con un script node rápido
+    echo -e "  ${COLOR_MUTED}▪ Asegurando dependencias de TypeScript/ESLint en package.json de raíz...${NC}"
+    node -e '
+      const fs = require("fs");
+      const path = require("path");
+      const pkgPath = path.join("'"$TARGET_DIR"'", "package.json");
+      try {
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+        pkg.devDependencies = pkg.devDependencies || {};
+        let changed = false;
+        if (!pkg.devDependencies.typescript) { pkg.devDependencies.typescript = "^5.4.5"; changed = true; }
+        if (!pkg.devDependencies.eslint) { pkg.devDependencies.eslint = "^9.3.0"; changed = true; }
+        if (changed) {
+          fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
+          console.log("    \x1b[32m✓\x1b[0m package.json actualizado con dependencias LSP");
+        } else {
+          console.log("    \x1b[32m✓\x1b[0m package.json ya cuenta con dependencias LSP");
+        }
+      } catch (e) {
+        console.log("    \x1b[31m⚠ Error actualizando package.json:\x1b[0m", e.message);
+      }
+    '
+fi
+
+if [ ! -f "${TARGET_DIR}/tsconfig.json" ]; then
+    echo -e "  ${COLOR_MUTED}▪ Generando tsconfig.json en la raíz del proyecto para habilitar LSP...${NC}"
+    cat > "${TARGET_DIR}/tsconfig.json" << 'ROOTTSCONFIGEOF'
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowJs": true
+  },
+  "include": [
+    "zugz-plugin/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "zugz-plugin/plugins/plugin_tui.tsx"
+  ]
+}
+ROOTTSCONFIGEOF
+    echo -e "    ${COLOR_SUCCESS}✓${NC} tsconfig.json creado"
+fi
+
+echo -e "  ${COLOR_MUTED}▪ Instalando dependencias de raíz (TypeScript/ESLint para LSPs)...${NC}"
+cd "${TARGET_DIR}"
+if command -v bun &> /dev/null; then
+    bun install --quiet
+else
+    npm install --legacy-peer-deps --quiet
+fi
+cd "${REPO_DIR}"
+
 # ── 7. Inicializar .openspec/ si no existe ────────────────────────────────────
 if [ ! -d "${TARGET_DIR}/.openspec" ]; then
     echo -e "  ${COLOR_MUTED}▪ Inicializando .openspec/...${NC}"

@@ -234,11 +234,12 @@ export default tool({
     // 3.5. Sincronizar habilidades de IA (Autoskills) de forma automática
     try {
       report.push("▶ Buscando y sincronizando habilidades de IA nuevas en base a tus cambios...")
-      const skillsOutput = await sddInstallAutoskills.execute({ dryRun: false }, context)
-      const shortSkillsOutput = skillsOutput
+      const skillsOutputObj: any = await sddInstallAutoskills.execute({ dryRun: false }, context)
+      const skillsOutputStr = typeof skillsOutputObj === "string" ? skillsOutputObj : (skillsOutputObj?.output || "")
+      const shortSkillsOutput = skillsOutputStr
         .split("\n")
-        .filter(l => l.trim() && !l.startsWith("▶") && !l.startsWith("━━━"))
-        .map(l => `  ${l}`)
+        .filter((l: string) => l.trim() && !l.startsWith("▶") && !l.startsWith("━━━"))
+        .map((l: string) => `  ${l}`)
         .join("\n")
       report.push(`✓ Sincronización de Habilidades Finalizada:\n${shortSkillsOutput || "  No se encontraron nuevas habilidades que instalar."}`)
     } catch (e: any) {
