@@ -556,7 +556,9 @@ fi
 # ── Aplicación de Modelos de IA Personalizados ────────────────────────────────
 if [ -f "${TARGET_DIR}/zugz-models.json" ] && [ -f "${TARGET_DIR}/sdd" ]; then
     echo -e "\n  ${COLOR_HEADER}🤖 Aplicando modelos de IA personalizados a los agentes...${NC}"
-    bash "${TARGET_DIR}/sdd" models apply
+    cd "${TARGET_DIR}"
+    bash "./sdd" models apply
+    cd "${REPO_DIR}"
 fi
 
 # ── Resultado final ────────────────────────────────────────────────────────────
