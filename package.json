@@ -2,7 +2,7 @@
   "name": "zugzbot-swarm-dev",
   "private": true,
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SDD Swarm Repository for Local development & OpenCode LSPs",
   "devDependencies": {
     "typescript": "^5.4.5",
