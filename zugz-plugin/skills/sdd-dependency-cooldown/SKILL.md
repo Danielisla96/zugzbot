@@ -5,7 +5,7 @@ description: Protocolo mandatorio de auditoria y cooldown para nuevas dependenci
 
 # Protocolo Mandatorio de Cooldown de Dependencias (4320 Minutos / 3 Días)
 
-Este protocolo es obligatorio para todos los agentes (`sdd-architect`, `sdd-implementer`, `aux-handyman`) antes de proponer, instalar o importar cualquier biblioteca de terceros en este proyecto.
+Este protocolo es obligatorio para todos los agentes (`sdd-builder`, `aux-handyman`) antes de proponer, instalar o importar cualquier biblioteca de terceros en este proyecto.
 
 ## 🛡️ Regla Crítica del Cooldown
 

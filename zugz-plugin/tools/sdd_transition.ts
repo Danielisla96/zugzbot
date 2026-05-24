@@ -2,6 +2,9 @@ import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
 import { execSync } from "child_process"
+import specValidator from "./sdd_spec_validator"
+import regressionDetector from "./sdd_regression_detector"
+import secretScanner from "./sdd_secret_scanner"
 
 export default tool({
   description: "Tránsiciona de fase en el ciclo Spec-Driven Development (SDD), actualizando el archivo de bloqueo lockfile .openspec/sdd-lock.json de forma segura, e integra control de cambios en Git de forma automática.",
@@ -47,6 +50,42 @@ export default tool({
       } catch (e) {
         // Fallback a valores por defecto si está corrupto
       }
+    }
+
+    const activeChangeName = args.changeName || lockfile.change_name;
+
+    // ── SALVAGUARDAS AUTOMÁTICAS DE METODOLOGÍA SDD ──
+    // 1. Transición a Fase 2 (Construcción): Validar spec.md
+    if (args.nextPhase === 2 && args.status !== "corrective_loop") {
+      const specValidationResultStr = await specValidator.execute({ changeName: activeChangeName }, context);
+      try {
+        const result = JSON.parse(specValidationResultStr);
+        if (result.status === "FAILED") {
+          return `[SDD Transition Blocked] Transición rechazada por falla de calidad del Plano Técnico:\n\n${result.message}`;
+        }
+      } catch (e) {}
+    }
+
+    // 2. Transición a Fase 3 (Cierre/Documentación): Validar regresiones de compilación
+    if (args.nextPhase === 3 && args.status !== "corrective_loop") {
+      const regressionResultStr = await regressionDetector.execute({ runCheck: true }, context);
+      try {
+        const result = JSON.parse(regressionResultStr);
+        if (result.status && result.status.startsWith("FAILED")) {
+          return `[SDD Transition Blocked] Transición rechazada por detección de errores o regresiones de compilación:\n\n${result.message}`;
+        }
+      } catch (e) {}
+    }
+
+    // 3. Transición a Fase 0 / Cierre (Commit final): Escanear secretos
+    if (args.nextPhase === 0) {
+      const secretScanResultStr = await secretScanner.execute({ scanAll: false }, context);
+      try {
+        const result = JSON.parse(secretScanResultStr);
+        if (result.status === "FAILED") {
+          return `[SDD Transition Blocked] Transición y Git Commit cancelados por advertencia de seguridad (Se encontraron secretos expuestos):\n\n${result.message}`;
+        }
+      } catch (e) {}
     }
 
     // Actualizar campos

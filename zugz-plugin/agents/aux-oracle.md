@@ -1,7 +1,7 @@
 ---
 description: General Knowledge Assistant. Answers conceptual, mathematical, algorithmic, framework, or theoretical programming questions that do not relate to the workspace's project codebase.
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: deepseek/deepseek-v4-flash
 variant: medium
 permission:
   edit: deny

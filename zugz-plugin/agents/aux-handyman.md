@@ -1,7 +1,7 @@
 ---
 description: Surgical Fixes Specialist. Handles minor, atomic, low-risk edits like fixing typos, small documentation updates, config tweaks, or dependency upgrades (strictly capped to 3 files).
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: deepseek/deepseek-v4-flash
 variant: medium
 permission:
   edit: allow

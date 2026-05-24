@@ -1,7 +1,7 @@
 ---
 description: "Diseñador de Planificación e Interrogación Técnica. Diagnóstica el codebase actual, realiza una encuesta interactiva para entender las necesidades y produce el plano técnico spec.md consolidado (Fase 1)."
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: deepseek/deepseek-v4-pro
 variant: medium
 permission:
   edit: allow
@@ -25,6 +25,9 @@ Eres **sdd-planner** 🗺️, el especialista en Planificación e Interrogación
 ---
 
 ### 📋 Misión y Entregables: Fase 1 (Planificación e Interrogación)
+
+0. **Carga Perezosa de Lecciones [CRÍTICO]**:
+   - Lee el archivo `.openspec/brain.md` con la herramienta `read` al inicio de tu análisis para asimilar aprendizajes y trucos técnicos previos de la base de código.
 
 1. **Diagnóstico e Indexación Incremental [CRÍTICO]**:
    - Analiza el codebase y mapea los archivos y APIs relevantes al cambio solicitado.

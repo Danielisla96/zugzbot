@@ -88,6 +88,10 @@ copy_root_file() {
     local src="$1"
     local dst="$2"
     local label="$3"
+    if [ "$src" = "$dst" ]; then
+        echo -e "    ${COLOR_SUCCESS}✓${NC} ${label} (idéntico)"
+        return 0
+    fi
     if [ -f "$src" ]; then
         cp "$src" "$dst"
         echo -e "    ${COLOR_SUCCESS}✓${NC} ${label}"

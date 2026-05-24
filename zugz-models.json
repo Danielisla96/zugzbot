@@ -4,10 +4,9 @@
   "agents": {
     "zugzbot": "deepseek/deepseek-v4-pro",
     "sdd-explorer": "deepseek/deepseek-v4-flash",
-    "sdd-planner": "deepseek/deepseek-v4-flash",
+    "sdd-planner": "deepseek/deepseek-v4-pro",
     "sdd-builder": "deepseek/deepseek-v4-pro",
     "sdd-archiver": "deepseek/deepseek-v4-flash",
-    "sdd-implementer": "deepseek/deepseek-v4-pro",
     "aux-oracle": "deepseek/deepseek-v4-flash",
     "aux-handyman": "deepseek/deepseek-v4-flash"
   },
@@ -23,13 +22,12 @@
       "sdd-builder": "deepseek/deepseek-v4-pro"
     },
     "free": {
-      "_comment": "Todo gratis con DeepSeek",
+      "comment": "Todo gratis con DeepSeek",
       "zugzbot": "opencode/deepseek-v4-flash-free",
       "sdd-explorer": "opencode/deepseek-v4-flash-free",
       "sdd-planner": "opencode/deepseek-v4-flash-free",
       "sdd-builder": "opencode/deepseek-v4-flash-free",
       "sdd-archiver": "opencode/deepseek-v4-flash-free",
-      "sdd-implementer": "opencode/deepseek-v4-flash-free",
       "aux-oracle": "opencode/deepseek-v4-flash-free",
       "aux-handyman": "opencode/deepseek-v4-flash-free"
     }

@@ -66,9 +66,8 @@ tu-proyecto/
 │   │   ├── zugzbot.md           # Orquestador Maestro
 │   │   ├── sdd-explorer.md      # Fase 0: Diagnóstico e Indexación
 │   │   ├── sdd-planner.md       # Fase 1: Planificación e Interrogatorio
-│   │   ├── sdd-builder.md       # Fase 2: Construcción y Despliegue
+│   │   ├── sdd-builder.md       # Fase 2: Construcción Lógica/Estética
 │   │   ├── sdd-archiver.md      # Fase 3: Documentación y Cierre
-│   │   ├── sdd-implementer.md   # Implementador de bajo nivel (aux)
 │   │   ├── aux-oracle.md        # Consultor sin side-effects
 │   │   └── aux-handyman.md      # Parches rápidos < 3 archivos
 │   ├── commands/                # Comandos slash de OpenCode

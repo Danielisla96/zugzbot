@@ -1,7 +1,7 @@
 ---
 description: "Explorador y Diagnosticador del Proyecto — Fase 0 del ciclo SDD"
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: deepseek/deepseek-v4-flash
 variant: medium
 permission:
   task:
@@ -54,6 +54,9 @@ Producir **dos entregables en `.openspec/`**:
 ---
 
 ### 📋 PROTOCOLO DE EJECUCIÓN (Secuencia Obligatoria)
+
+> [!TIP]
+> **Optimización de Velocidad**: Ejecuta los comandos del PASO 1 de forma paralela en una única llamada bash o combinándolos para ahorrar latencia de ida y vuelta.
 
 Ejecuta los siguientes pasos **en orden estricto**, sin saltarte ninguno:
 

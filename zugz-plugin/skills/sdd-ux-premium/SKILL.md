@@ -5,7 +5,7 @@ description: Directrices mandatarias para el diseño visual premium y UI/UX flui
 
 # Directrices de Diseño Visual Premium y Experiencia de Usuario (UI/UX)
 
-Este conjunto de directrices es obligatorio para el subagente `sdd-implementer` durante la ejecución de la **Fase 4: Percepción y Diseño Visual Premium**.
+Este conjunto de directrices es obligatorio para el subagente `sdd-builder` durante la ejecución de la **Fase 2: Construcción Lógica y Estética Premium**.
 
 ## 🎨 Principios de Estética Excepcional
 

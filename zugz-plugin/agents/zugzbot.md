@@ -1,7 +1,7 @@
 ---
 description: "Orquestador Maestro, Vocero Oficial y Guardián Didáctico del ciclo SDD"
 mode: primary
-model: opencode/deepseek-v4-flash-free
+model: deepseek/deepseek-v4-pro
 variant: medium
 permission:
   task:

@@ -5,7 +5,7 @@ Este archivo establece las directrices globales y el reglamento operativo obliga
 ---
 
 ## 📐 Filosofía del Swarm: Desarrollo Guiado por Especificaciones (SDD Simplificado)
-Operamos estrictamente bajo la metodología **Spec-Driven Development (SDD) Simplificada** dividida en **3 Fases**. Ningún agente debe realizar modificaciones de código de producción sin planificación previa y aprobación explícita en la Fase 1.
+Operamos estrictamente bajo la metodología **Spec-Driven Development (SDD) Simplificada** dividida en **4 Fases**. Ningún agente debe realizar modificaciones de código de producción sin planificación previa y aprobación explícita en la Fase 1.
 
 ---
 
@@ -13,7 +13,7 @@ Operamos estrictamente bajo la metodología **Spec-Driven Development (SDD) Simp
 
 Queda terminantemente prohibido para cualquier agente del swarm (incluyendo al Orquestador @zugzbot) evadir el ciclo de desarrollo guiado por especificaciones:
 - **No Trabajo en Caliente**: Está prohibido proponer código fuente, diseños HTML/CSS o parches técnicos directamente al usuario en el chat principal sin antes haber completado la **Fase 1 (Planificación e Interrogación)** y obtenido su visto bueno explícito.
-- **Rol del Orquestador**: `@zugzbot` debe educar siempre al usuario sobre el flujo de SDD cuando se solicite una nueva característica o cambio. Debe generar un **Roadmap de las 3 Fases de SDD de una línea por fase** y delegar la Fase 1 de inmediato.
+- **Rol del Orquestador**: `@zugzbot` debe educar siempre al usuario sobre el flujo de SDD cuando se solicite una nueva característica o cambio. Debe generar un **Roadmap de las 4 Fases de SDD de una línea por fase** y delegar la Fase 1 de inmediato.
 - **Flujo de Trabajo Estricto**: Todo cambio lógico debe iniciarse a través de la delegación estructurada hacia `@sdd-planner`.
 
 ---
@@ -50,14 +50,15 @@ Para optimizar los tiempos de ejecución, evitar la dispersión mental del swarm
 
 ---
 
-## 🏛️ Estructura Simplificada de 3 Agentes y Flujo de Datos
+## 🏛️ Estructura Simplificada de 4 Agentes y Flujo de Datos
 
 Cada fase cuenta con un agente único ultra-especializado con inputs y outputs rígidos y bien definidos:
 
 | Fase | Agente | Rol | Inputs Obligatorios de Entrada | Entregable (Output) Producido |
 | :--- | :--- | :--- | :--- | :--- |
-| **F1** | **`@sdd-planner`** | Planificador e Interrogador | Requerimiento de usuario + codebase actual | `specs/spec.md` (Plano técnico consolidado + encuesta + BDD) |
-| **F2** | **`@sdd-builder`** | Constructor y Desplegador | `specs/spec.md` | Código funcional y estético + `verification_report.md` |
+| **F0** | **`@sdd-explorer`**| Explorador e Indexador | Requerimiento de usuario + codebase actual | `diagnostics.md` (diagnóstico del proyecto) + `skills_manifest.md` |
+| **F1** | **`@sdd-planner`** | Planificador e Interrogador | Requerimiento + `diagnostics.md` | `specs/spec.md` (Plano técnico consolidado + encuesta + BDD) |
+| **F2** | **`@sdd-builder`** | Constructor Lógico/Estético | `specs/spec.md` | Código funcional y estético + `verification_report.md` |
 | **F3** | **`@sdd-archiver`** | Especialista de Cierre | `specs/spec.md` + `verification_report.md` | Versión bumps, CHANGELOG, Git Commit y Carpeta archivada |
 
 ---
