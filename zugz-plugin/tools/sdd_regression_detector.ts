@@ -55,8 +55,23 @@ function sanitizeGitPath(line: string): string {
   return decodeGitPath(content)
 }
 
+// Analiza los errores de una salida de compilador y los mapea de forma limpia
+function parseCompilerErrors(errorOutput: string): Set<string> {
+  const errors = new Set<string>();
+  const lines = errorOutput.split("\n").filter(l => l.trim());
+  lines.forEach(line => {
+    // Captura líneas que parezcan errores de compilador (archivo con número de línea y mensaje)
+    const fileMatch = line.match(/^([a-zA-Z0-9_\-\.\/]+)\(/) || line.match(/^([a-zA-Z0-9_\-\.\/]+):\d+/) || line.match(/in\s+([a-zA-Z0-9_\-\.\/]+\.py)/);
+    if (fileMatch) {
+      // Normalizar simplificando detalles variables de error
+      errors.add(line.trim());
+    }
+  });
+  return errors;
+}
+
 export default tool({
-  description: "Analiza el espacio de trabajo completo usando compilación estática o verificadores de tipos (ej: tsc --noEmit) para detectar errores introducidos fuera de los archivos directamente modificados.",
+  description: "Analiza el espacio de trabajo de forma diferencial usando compilación estática (ej: tsc) para detectar ÚNICAMENTE nuevos errores introducidos en esta fase de desarrollo, ignorando fallas de compilación o linter preexistentes.",
   args: {
     runCheck: tool.schema.boolean().optional().default(true).describe("Si es true, ejecuta la validación global de regresiones.")
   },
@@ -70,9 +85,10 @@ export default tool({
       });
     }
 
-    // 1. Identificar archivos modificados en Git para contrastar de forma robusta
+    // 1. Identificar archivos modificados de forma robusta
     const modifiedFiles = new Set<string>();
-    if (fs.existsSync(path.join(projectRoot, ".git"))) {
+    const hasGit = fs.existsSync(path.join(projectRoot, ".git"));
+    if (hasGit) {
       try {
         const gitOutput = execSync("git status --porcelain", { cwd: projectRoot, encoding: "utf-8" });
         gitOutput.split("\n").forEach(line => {
@@ -83,7 +99,7 @@ export default tool({
       } catch (e) {}
     }
 
-    // 2. Determinar stack y ejecutar comando de compilación estática / análisis estricto
+    // 2. Determinar stack de compilación estática
     let command = "";
     let languageLabel = "";
 
@@ -109,49 +125,104 @@ export default tool({
     if (!command) {
       return JSON.stringify({
         status: "APPROVED",
-        reason: "No se encontró un verificador estático compatible (tsconfig.json, scripts de linter, o python). Se asume conforme."
+        reason: "No se encontró un verificador estático compatible. Se asume conforme."
       }, null, 2);
     }
 
-    // 3. Ejecutar comando y capturar salida
+    // 3. OBTENER LECTURA BASELINE (Errores preexistentes) vía Stash Temporal si hay cambios en Git
+    const preExistingErrors = new Set<string>();
+    let stashCreated = false;
+
+    if (hasGit && modifiedFiles.size > 0) {
+      try {
+        // Crear un stash temporal de los cambios en caliente
+        execSync("git stash push --keep-index --include-untracked -m 'sdd_temp_baseline'", { cwd: projectRoot, stdio: "ignore" });
+        stashCreated = true;
+
+        // Ejecutar compilador en la versión limpia para ver fallos preexistentes
+        try {
+          execSync(command, { cwd: projectRoot, stdio: "pipe" });
+        } catch (e: any) {
+          const rawBaselineOutput = e.stdout?.toString() || e.stderr?.toString() || "";
+          parseCompilerErrors(rawBaselineOutput).forEach(err => preExistingErrors.add(err));
+        }
+      } catch (e) {
+        // Fallback si falla el stasheo (ej. sin commits previos)
+      } finally {
+        // Restaurar cambios sí o sí
+        if (stashCreated) {
+          try {
+            execSync("git stash pop", { cwd: projectRoot, stdio: "ignore" });
+          } catch (e) {}
+        }
+      }
+    }
+
+    // 4. EJECUTAR COMPILACIÓN FINAL (Con cambios en caliente activos)
     try {
       execSync(command, { cwd: projectRoot, stdio: "pipe" });
       
       return JSON.stringify({
         status: "APPROVED",
         checker: languageLabel,
+        preExistingBypassedCount: preExistingErrors.size,
         message: `✅ DETECTOR DE REGRESIONES: La validación estática de tipo '${languageLabel}' pasó de manera impecable. No se encontraron discrepancias de compilación en el espacio de trabajo.`
       }, null, 2);
     } catch (e: any) {
       const errorOutput = e.stdout?.toString() || e.stderr?.toString() || e.message || "";
-      const lines = errorOutput.split("\n").filter((l: string) => l.trim());
+      const currentErrors = parseCompilerErrors(errorOutput);
 
-      // Analizar si los errores pertenecen a archivos no modificados por nosotros (regresión)
-      const regressions: string[] = [];
-      lines.forEach((line: string) => {
-        const fileMatch = line.match(/^([a-zA-Z0-9_\-\.\/]+)\(/) || line.match(/^([a-zA-Z0-9_\-\.\/]+):\d+/) || line.match(/in\s+([a-zA-Z0-9_\-\.\/]+\.py)/);
-        if (fileMatch) {
-          const filePath = fileMatch[1];
-          if (!modifiedFiles.has(filePath) && !filePath.includes("node_modules") && !filePath.includes(".openspec") && !filePath.includes(".opencode")) {
-            regressions.push(line);
+      // Calcular errores nuevos de forma diferencial
+      const newErrors: string[] = [];
+      const localNewErrors: string[] = [];
+
+      currentErrors.forEach(err => {
+        // Si el error NO existía previamente
+        if (!preExistingErrors.has(err)) {
+          // Detectar si pertenece a un archivo que modificamos (error local) o a otro módulo (regresión)
+          const fileMatch = err.match(/^([a-zA-Z0-9_\-\.\/]+)\(/) || err.match(/^([a-zA-Z0-9_\-\.\/]+):\d+/) || err.match(/in\s+([a-zA-Z0-9_\-\.\/]+\.py)/);
+          if (fileMatch) {
+            const filePath = fileMatch[1];
+            if (modifiedFiles.has(filePath)) {
+              localNewErrors.push(err);
+            } else if (!filePath.includes("node_modules") && !filePath.includes(".openspec") && !filePath.includes(".opencode")) {
+              newErrors.push(err);
+            }
+          } else {
+            // Error genérico sin archivo directo
+            newErrors.push(err);
           }
         }
       });
 
-      if (regressions.length > 0) {
+      // Si hay verdaderas regresiones (nuevos errores en módulos que NO modificamos)
+      if (newErrors.length > 0) {
         return JSON.stringify({
           status: "FAILED",
           checker: languageLabel,
-          regressionCount: regressions.length,
-          regressions: regressions.slice(0, 10),
-          message: `❌ DETECTOR DE REGRESIONES FALLIDO: Se han introducido errores de tipado o compilación en módulos externos que no modificaste directamente:\n\n${regressions.slice(0, 5).map(r => `  - ⚠️ ${r}`).join("\n")}${regressions.length > 5 ? `\n  ... y ${regressions.length - 5} regresiones más.` : ""}\n\nPor favor, revisa tus modificaciones en las firmas de funciones, clases o exportaciones para no romper otras partes del proyecto.`
+          regressionCount: newErrors.length,
+          preExistingIgnoredCount: preExistingErrors.size,
+          regressions: newErrors.slice(0, 10),
+          message: `❌ DETECTOR DE REGRESIONES FALLIDO: Se han introducido errores de tipado o compilación en módulos externos que no modificaste directamente:\n\n${newErrors.slice(0, 5).map(r => `  - ⚠️ ${r}`).join("\n")}${newErrors.length > 5 ? `\n  ... y ${newErrors.length - 5} regresiones más.` : ""}\n\nNota: Se detectaron y omitieron de forma segura ${preExistingErrors.size} errores de compilación preexistentes para no bloquear tu desarrollo.`
         }, null, 2);
       }
 
+      // Si los nuevos errores son puramente en tus archivos modificados (error local de tu cambio)
+      if (localNewErrors.length > 0) {
+        return JSON.stringify({
+          status: "FAILED_LOCAL",
+          checker: languageLabel,
+          preExistingIgnoredCount: preExistingErrors.size,
+          message: `⚠️ VERIFICACIÓN DE CÓDIGO FALLIDA: Se detectaron errores de tipado/compilación locales en tus archivos modificados. Corrígelos antes de avanzar.\n\nSalida del compilador (Errores nuevos):\n${localNewErrors.slice(0, 10).map(e => `  - ${e}`).join("\n")}\n\nNota: Se omitieron de forma segura ${preExistingErrors.size} errores preexistentes.`
+        }, null, 2);
+      }
+
+      // Si el compilador falló pero todos los errores resultaron ser preexistentes, ¡Damos luz verde!
       return JSON.stringify({
-        status: "FAILED_LOCAL",
+        status: "APPROVED",
         checker: languageLabel,
-        message: `⚠️ VERIFICACIÓN DE CÓDIGO FALLIDA: Se detectaron errores de tipado/compilación locales en tus archivos modificados. Corrígelos antes de avanzar.\n\nSalida del compilador:\n${lines.slice(0, 10).join("\n")}`
+        preExistingBypassedCount: preExistingErrors.size,
+        message: `✅ DETECTOR DE REGRESIONES APROBADO: El compilador detectó ${preExistingErrors.size} errores de compilación, pero todos son preexistentes en la base de código. Se aprueba la transición para no bloquear tu cambio.`
       }, null, 2);
     }
   }
