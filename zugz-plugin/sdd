@@ -935,9 +935,9 @@ manage_models() {
         models_file="$(dirname "$0")/../../zugz-models.json"
     fi
     if [ ! -f "$models_file" ]; then
-        echo -e "  ${COLOR_ERROR}\u274c No se encontr\u00f3 'zugz-models.json'.${NC}"
-        echo -e "  Crea uno en la ra\u00edz del proyecto con el template:\n"
-        echo -e '  {"agents":{"zugzbot":"opencode/deepseek-v4-flash-free","sdd-planner":"opencode/deepseek-v4-flash-free"}}'
+        echo -e "  ${COLOR_ERROR}\u274c No se encontró 'zugz-models.json'.${NC}"
+        echo -e "  Crea uno en la raíz del proyecto con el template de 5 agentes:\n"
+        echo -e '  {\n    "presets": {\n      "free": {\n        "zugzbot": "opencode/deepseek-v4-flash-free",\n        "sdd-explorer": "opencode/deepseek-v4-flash-free",\n        "sdd-planner": "opencode/deepseek-v4-flash-free",\n        "sdd-builder": "opencode/deepseek-v4-flash-free",\n        "sdd-tester": "opencode/deepseek-v4-flash-free",\n        "sdd-archiver": "opencode/deepseek-v4-flash-free"\n      },\n      "balanced": {\n        "zugzbot": "google/gemini-3.5-flash",\n        "sdd-explorer": "google/gemini-3.5-flash",\n        "sdd-planner": "google/gemini-3.5-flash",\n        "sdd-builder": "deepseek/deepseek-v4-pro",\n        "sdd-tester": "google/gemini-3.5-flash",\n        "sdd-archiver": "google/gemini-3.5-flash"\n      },\n      "turbo": {\n        "zugzbot": "anthropic/claude-3.5-sonnet",\n        "sdd-explorer": "anthropic/claude-3.5-sonnet",\n        "sdd-planner": "anthropic/claude-3.5-sonnet",\n        "sdd-builder": "anthropic/claude-3.5-sonnet",\n        "sdd-tester": "google/gemini-3.5-flash",\n        "sdd-archiver": "google/gemini-3.5-flash"\n      }\n    }\n  }'
         exit 1
     fi
 
