@@ -150,7 +150,59 @@ copy_root_file() {
 
 copy_root_file "${REPO_DIR}/AGENTS.md"         "${TARGET_DIR}/AGENTS.md"         "AGENTS.md"
 copy_root_file "${REPO_DIR}/ZUGZ.md"           "${TARGET_DIR}/ZUGZ.md"           "ZUGZ.md"
-copy_root_file "${REPO_DIR}/zugz-models.json"   "${TARGET_DIR}/zugz-models.json"   "zugz-models.json"
+
+# zugz-models.json: se copia o se genera dinámicamente si no existe
+if [ -f "${REPO_DIR}/zugz-models.json" ] && [ "${REPO_DIR}/zugz-models.json" != "${TARGET_DIR}/zugz-models.json" ]; then
+    copy_root_file "${REPO_DIR}/zugz-models.json" "${TARGET_DIR}/zugz-models.json" "zugz-models.json"
+elif [ ! -f "${TARGET_DIR}/zugz-models.json" ]; then
+    cat > "${TARGET_DIR}/zugz-models.json" << 'MODELSEOF'
+{
+  "presets": {
+    "default": {
+      "zugzbot": "google/gemini-3.5-flash",
+      "sdd-explorer": "google/gemini-3.5-flash",
+      "sdd-planner": "google/gemini-3.5-flash",
+      "sdd-builder": "deepseek/deepseek-v4-pro",
+      "sdd-tester": "google/gemini-3.5-flash",
+      "sdd-archiver": "google/gemini-3.5-flash",
+      "aux-handyman": "google/gemini-3.5-flash",
+      "aux-oracle": "google/gemini-3.5-flash"
+    },
+    "free": {
+      "zugzbot": "opencode/deepseek-v4-flash-free",
+      "sdd-explorer": "opencode/deepseek-v4-flash-free",
+      "sdd-planner": "opencode/deepseek-v4-flash-free",
+      "sdd-builder": "opencode/deepseek-v4-flash-free",
+      "sdd-tester": "opencode/deepseek-v4-flash-free",
+      "sdd-archiver": "opencode/deepseek-v4-flash-free",
+      "aux-handyman": "opencode/deepseek-v4-flash-free",
+      "aux-oracle": "opencode/deepseek-v4-flash-free"
+    },
+    "balanced": {
+      "zugzbot": "google/gemini-3.5-flash",
+      "sdd-explorer": "google/gemini-3.5-flash",
+      "sdd-planner": "google/gemini-3.5-flash",
+      "sdd-builder": "deepseek/deepseek-v4-pro",
+      "sdd-tester": "google/gemini-3.5-flash",
+      "sdd-archiver": "google/gemini-3.5-flash",
+      "aux-handyman": "google/gemini-3.5-flash",
+      "aux-oracle": "google/gemini-3.5-flash"
+    },
+    "turbo": {
+      "zugzbot": "anthropic/claude-3.5-sonnet",
+      "sdd-explorer": "anthropic/claude-3.5-sonnet",
+      "sdd-planner": "anthropic/claude-3.5-sonnet",
+      "sdd-builder": "anthropic/claude-3.5-sonnet",
+      "sdd-tester": "google/gemini-3.5-flash",
+      "sdd-archiver": "google/gemini-3.5-flash",
+      "aux-handyman": "google/gemini-3.5-flash",
+      "aux-oracle": "google/gemini-3.5-flash"
+    }
+  }
+}
+MODELSEOF
+    echo -e "    ${COLOR_SUCCESS}✓${NC} zugz-models.json (generado automáticamente)"
+fi
 
 # sdd script local de control
 if [ "$TARGET_DIR" = "$REPO_DIR" ]; then
