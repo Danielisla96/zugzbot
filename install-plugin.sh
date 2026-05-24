@@ -151,10 +151,13 @@ copy_root_file() {
 copy_root_file "${REPO_DIR}/AGENTS.md"         "${TARGET_DIR}/AGENTS.md"         "AGENTS.md"
 copy_root_file "${REPO_DIR}/ZUGZ.md"           "${TARGET_DIR}/ZUGZ.md"           "ZUGZ.md"
 
-# zugz-models.json: se copia o se genera dinámicamente si no existe
-if [ -f "${REPO_DIR}/zugz-models.json" ] && [ "${REPO_DIR}/zugz-models.json" != "${TARGET_DIR}/zugz-models.json" ]; then
-    copy_root_file "${REPO_DIR}/zugz-models.json" "${TARGET_DIR}/zugz-models.json" "zugz-models.json"
-elif [ ! -f "${TARGET_DIR}/zugz-models.json" ]; then
+# zugz-models.json: se copia o se genera dinámicamente si no existe (preserva personalizaciones del usuario)
+if [ -f "${TARGET_DIR}/zugz-models.json" ]; then
+    echo -e "    ${COLOR_SUCCESS}✓${NC} zugz-models.json ${COLOR_MUTED}(preservado)${NC}"
+elif [ -f "${REPO_DIR}/zugz-models.json" ]; then
+    cp "${REPO_DIR}/zugz-models.json" "${TARGET_DIR}/zugz-models.json"
+    echo -e "    ${COLOR_SUCCESS}✓${NC} zugz-models.json (copiado del origen)"
+else
     cat > "${TARGET_DIR}/zugz-models.json" << 'MODELSEOF'
 {
   "presets": {
