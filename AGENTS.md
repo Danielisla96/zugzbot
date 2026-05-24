@@ -50,11 +50,12 @@ Para optimizar los tiempos de ejecución, evitar la dispersión mental del swarm
 
 ---
 
-## ⚡ REGLA DE FAST-TRACK PARA CAMBIOS VISUALES Y UI [CRÍTICO]
+## ⚡ REGLA DE AGNOSTICISMO Y QA MANUAL (HUMAN-IN-THE-LOOP FIRST) [CRÍTICO]
 
-Para que avancemos rápido y no nos quedemos pegados en burocracia técnica cuando el cambio es mayoritariamente estético, CSS, ordenamiento de UI o retoques visuales que no alteran la lógica de datos compleja ni APIs del backend:
-- **Enfoque en Maquetación**: El `@sdd-planner` debe simplificar el plano técnico `spec.md` al mínimo, centrando los criterios de aceptación en la experiencia visual, la responsividad y el diseño estético premium.
-- **Omitir Tests No Relacionados**: El `@sdd-builder` tiene estrictamente prohibido intentar correr suites de pruebas unitarias o de integración automatizadas (como de backend/runtime) si el cambio es puramente cosmético de frontend, especialmente si estas van a fallar por falta de entorno emulado (como pasa con Google Apps Script). Priorizamos la agilidad y simulación manual ágil de cara al usuario.
+Para optimizar al máximo el tiempo de desarrollo, reducir la latencia y evitar falsos positivos creados por aserciones artificiales de IA:
+- **Prohibición de Creación de Tests Mocks**: El `@sdd-builder` tiene estrictamente prohibido escribir o autogenerar suites de pruebas unitarias o de integración desde cero. Muchas interfaces y entornos lógicos (como Google Apps Script) son extremadamente difíciles de simular y el código resultante solo induce a engaños lógicos (falsos positivos).
+- **Validación Manual como Prioridad**: Una vez realizada la implementación y el despliegue automático de prueba, el builder pausará de inmediato el flujo. No se correrán pruebas automáticas de regresión de forma obligatoria aquí; el usuario realizará el QA manual empírico en caliente basándose en el checklist de criterios de aceptación.
+- **Tests de Regresión al Cierre (Fase 3)**: Las pruebas automatizadas ya preexistentes en el repositorio (de linter o de regresión lógica general, como `npm run test`, `npm run lint`, `pytest`, etc.) se ejecutarán únicamente de forma opcional por el `@sdd-archiver` en la Fase 3, justo antes de sellar el cambio, actuando como red de seguridad preventiva de Git.
 
 ---
 
@@ -125,11 +126,7 @@ Feature: [Breve descripción de la funcionalidad]
 - **Estado**: [PASÓ | ADVERTENCIAS | ERRORES CORREGIDOS]
 - **Logs relevantes**: [Resumen limpio del linter]
 
-## 2. Pruebas Automatizadas (Tests)
-- **Estado**: [PASARON | NO CONFIGURADOS | FALLIDOS]
-- **Logs relevantes**: [Resumen de tests corridos y tiempos de ejecución]
-
-## 3. Estado de Despliegue y Simulación
+## 2. Estado de Despliegue y Simulación
 - **Entorno en Caliente**: [ACTIVO | ERROR EN DESPLIEGUE]
 - **Dirección Local/Despliegue**: `http://localhost:XXXX` o URL de visualización.
 - **Detalle de UX e Interacción**: Confirmación de la correcta aplicación del diseño responsive y micro-animaciones.
