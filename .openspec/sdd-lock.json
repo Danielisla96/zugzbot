@@ -1,8 +1,10 @@
 {
-  "change_name": "nuevo-cambio",
-  "active_phase": 0,
-  "active_subagent": "sdd-explorer",
-  "status": "idle",
+  "change_name": "fix-installer-linters",
+  "active_phase": 1,
+  "active_subagent": "sdd-planner",
+  "status": "in_progress",
   "auto_pilot": false,
-  "last_updated": ""
+  "last_updated": "2026-05-24",
+  "iteration": 1,
+  "complexity": "low"
 }
