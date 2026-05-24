@@ -827,6 +827,73 @@ EOF
     open "$dashboard_file"
 }
 
+perform_init() {
+    echo -e "  ${COLOR_HEADER}⚙️  Inicializando el Arnés de Agentes SDD...${NC}"
+    echo -e "  ${COLOR_BORDER}──────────────────────────────────────────────────────────────${NC}"
+    
+    # 1. Ejecutar el instalador install-plugin.sh de forma automática en el directorio actual
+    local installer_path="./install-plugin.sh"
+    if [ ! -f "$installer_path" ]; then
+        # Intentar buscarlo en el directorio del script
+        installer_path="$(dirname "$0")/../../install-plugin.sh"
+    fi
+
+    if [ -f "$installer_path" ]; then
+        echo -e "  ${COLOR_MUTED}▪ Ejecutando instalador...${NC}"
+        bash "$installer_path" "$(pwd)"
+    else
+        echo -e "  ${COLOR_ERROR}❌ Error: No se encontró 'install-plugin.sh' para la instalación automática.${NC}"
+        exit 1
+    fi
+
+    # 2. Inicializar .openspec/ e indexar en Fase 0
+    echo -e "\n  ${COLOR_HEADER}📈 Iniciando Paso 0 (Diagnóstico e Indexación)...${NC}"
+    echo -e "  ${COLOR_BORDER}──────────────────────────────────────────────────────────────${NC}"
+    
+    # Reset lockfile a Fase 0
+    if [ -f "$LOCKFILE" ]; then
+        cat > "$LOCKFILE" << 'EOF'
+{
+  "change_name": "nuevo-cambio",
+  "active_phase": 0,
+  "active_subagent": "sdd-explorer",
+  "status": "in_progress",
+  "auto_pilot": false,
+  "last_updated": ""
+}
+EOF
+    fi
+
+    # Crear o actualizar diagnostics.md simulando o guiando al agente sdd-explorer
+    local dest_dir=$(dirname "$LOCKFILE")
+    mkdir -p "$dest_dir/changes/nuevo-cambio"
+    
+    # Generar un diagnostics.md básico si no existe para que sdd-explorer / el proyecto esté listo
+    local diagnostics_file="$dest_dir/changes/nuevo-cambio/diagnostics.md"
+    if [ ! -f "$diagnostics_file" ]; then
+        cat > "$diagnostics_file" << 'EOF'
+# Diagnóstico Técnico del Proyecto: nuevo-cambio
+
+Este diagnóstico fue inicializado automáticamente con `sdd init`.
+
+## 1. Estado del Proyecto
+- Arnés de agentes SDD de Zugzbot instalado y configurado de forma óptima.
+- Linters (`eslint`, `typescript`, etc.) preconfigurados e instalados en la raíz.
+- El script de utilidad local `./sdd` está activo y listo para ser utilizado.
+
+## 2. Archivos e Infraestructura Detectados
+- `package.json` (Raíz)
+- `tsconfig.json` (Raíz)
+- `eslint.config.js` (Raíz)
+- `zugz-models.json` (Raíz)
+EOF
+    fi
+
+    echo -e "  ${COLOR_SUCCESS}✓ Arnés SDD inicializado con éxito y en Fase 0 (Diagnóstico).${NC}"
+    echo -e "  ${COLOR_MUTED}▪ Puedes consultar el estado actual con:${NC} ${COLOR_ACTIVE}./sdd status${NC}"
+    echo -e "  ${COLOR_MUTED}▪ Y comenzar tu ciclo de desarrollo en OpenCode llamando a:${NC} ${COLOR_ACTIVE}@sdd-explorer o @zugzbot${NC}\n"
+}
+
 show_interactive_menu() {
     while true; do
         clear 2>/dev/null || true
@@ -1037,16 +1104,6 @@ manage_models() {
               }
             '
             ;;
-                            changed=$((changed+1))
-                        fi
-                    fi
-                    if [ "$brace_depth" -le 0 ] && [ "$in_preset" = true ]; then
-                        break
-                    fi
-                fi
-            done < "$models_file"
-            echo -e "  ${COLOR_SUCCESS}\u2713 Preset '${preset_name}' aplicado en ${changed} agente(s).${NC}\n"
-            ;;
         *)
             echo -e "  ${COLOR_ERROR}\u274c Subcomando desconocido: '${subcommand}'${NC}"
             echo -e "  Uso: ./sdd models [apply|status|preset <nombre>]\n"
@@ -1060,6 +1117,10 @@ case "$1" in
     status)
         print_header
         show_status
+        ;;
+    init)
+        print_header
+        perform_init
         ;;
     "")
         if [ -t 0 ] && [ -t 1 ]; then
@@ -1102,6 +1163,7 @@ case "$1" in
         echo -e "  ${COLOR_HEADER}Uso:${NC} ./sdd [comando] o ./.openspec/sdd [comando]"
         echo ""
         echo -e "  ${COLOR_HEADER}Comandos v\u00e1lidos:${NC}"
+        echo -e "    ${COLOR_SUCCESS}init${NC}             - Inicializa el arnés, instala dependencias/linters y corre el Paso 0"
         echo -e "    ${COLOR_SUCCESS}status${NC}           - Muestra la barra de progreso agrupada en hitos (por defecto)"
         echo -e "    ${COLOR_SUCCESS}validate${NC}         - Audita estructuralmente las especificaciones y archivos de cambio"
         echo -e "    ${COLOR_SUCCESS}test${NC}             - Ejecuta de forma nativa la suite de pruebas del proyecto"

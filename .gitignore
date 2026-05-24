@@ -42,3 +42,4 @@ zugz-plugin/node_modules
 tui.json
 .openspec/*-lock.json
 *-lock.json
+zugz-models.json

@@ -1,0 +1,5 @@
+feat(installer): add automatic linter and model setup with sdd init
+
+- Instala zugz-models.json y sdd script con permisos de ejecución
+- Configura e instala eslint/typescript de raíz en cualquier destino
+- Añade el comando 'sdd init' para inicializar y correr el Paso 0 de forma automatizada

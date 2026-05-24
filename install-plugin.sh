@@ -151,6 +151,71 @@ copy_root_file() {
 copy_root_file "${REPO_DIR}/AGENTS.md"         "${TARGET_DIR}/AGENTS.md"         "AGENTS.md"
 copy_root_file "${REPO_DIR}/ZUGZ.md"           "${TARGET_DIR}/ZUGZ.md"           "ZUGZ.md"
 
+# zugz-models.json: se copia o se genera dinámicamente si no existe
+if [ -f "${REPO_DIR}/zugz-models.json" ] && [ "${REPO_DIR}/zugz-models.json" != "${TARGET_DIR}/zugz-models.json" ]; then
+    copy_root_file "${REPO_DIR}/zugz-models.json" "${TARGET_DIR}/zugz-models.json" "zugz-models.json"
+elif [ ! -f "${TARGET_DIR}/zugz-models.json" ]; then
+    cat > "${TARGET_DIR}/zugz-models.json" << 'MODELSEOF'
+{
+  "presets": {
+    "default": {
+      "zugzbot": "google/gemini-3.5-flash",
+      "sdd-explorer": "google/gemini-3.5-flash",
+      "sdd-planner": "google/gemini-3.5-flash",
+      "sdd-builder": "deepseek/deepseek-v4-pro",
+      "sdd-tester": "google/gemini-3.5-flash",
+      "sdd-archiver": "google/gemini-3.5-flash",
+      "aux-handyman": "google/gemini-3.5-flash",
+      "aux-oracle": "google/gemini-3.5-flash"
+    },
+    "free": {
+      "zugzbot": "opencode/deepseek-v4-flash-free",
+      "sdd-explorer": "opencode/deepseek-v4-flash-free",
+      "sdd-planner": "opencode/deepseek-v4-flash-free",
+      "sdd-builder": "opencode/deepseek-v4-flash-free",
+      "sdd-tester": "opencode/deepseek-v4-flash-free",
+      "sdd-archiver": "opencode/deepseek-v4-flash-free",
+      "aux-handyman": "opencode/deepseek-v4-flash-free",
+      "aux-oracle": "opencode/deepseek-v4-flash-free"
+    },
+    "balanced": {
+      "zugzbot": "google/gemini-3.5-flash",
+      "sdd-explorer": "google/gemini-3.5-flash",
+      "sdd-planner": "google/gemini-3.5-flash",
+      "sdd-builder": "deepseek/deepseek-v4-pro",
+      "sdd-tester": "google/gemini-3.5-flash",
+      "sdd-archiver": "google/gemini-3.5-flash",
+      "aux-handyman": "google/gemini-3.5-flash",
+      "aux-oracle": "google/gemini-3.5-flash"
+    },
+    "turbo": {
+      "zugzbot": "anthropic/claude-3.5-sonnet",
+      "sdd-explorer": "anthropic/claude-3.5-sonnet",
+      "sdd-planner": "anthropic/claude-3.5-sonnet",
+      "sdd-builder": "anthropic/claude-3.5-sonnet",
+      "sdd-tester": "google/gemini-3.5-flash",
+      "sdd-archiver": "google/gemini-3.5-flash",
+      "aux-handyman": "google/gemini-3.5-flash",
+      "aux-oracle": "google/gemini-3.5-flash"
+    }
+  }
+}
+MODELSEOF
+    echo -e "    ${COLOR_SUCCESS}✓${NC} zugz-models.json (generado automáticamente)"
+fi
+
+# sdd script local de control
+if [ "$TARGET_DIR" = "$REPO_DIR" ]; then
+    echo -e "    ${COLOR_MUTED}▪ Vinculando script sdd local...${NC}"
+    ln -sf "${PLUGIN_DIR}/sdd" "${TARGET_DIR}/sdd"
+    echo -e "    ${COLOR_SUCCESS}✓${NC} sdd (vinculado)"
+else
+    echo -e "    ${COLOR_MUTED}▪ Copiando script sdd de control local...${NC}"
+    cp -f "${PLUGIN_DIR}/sdd" "${TARGET_DIR}/sdd"
+    chmod +x "${TARGET_DIR}/sdd"
+    echo -e "    ${COLOR_SUCCESS}✓${NC} sdd (copiado con permisos de ejecución)"
+fi
+
 # opencode.json: se copia o se genera dinámicamente si no existe
 if [ -f "${REPO_DIR}/opencode.json" ] && [ "${REPO_DIR}/opencode.json" != "${TARGET_DIR}/opencode.json" ]; then
     copy_root_file "${REPO_DIR}/opencode.json" "${TARGET_DIR}/opencode.json" "opencode.json"
@@ -287,7 +352,7 @@ ensure_gitignore() {
     touch "$gitignore_file"
     
     local needs_update=false
-    for pattern in ".opencode/" "tui.json" ".openspec/*-lock.json" "*-lock.json"; do
+    for pattern in ".opencode/" "tui.json" ".openspec/*-lock.json" "*-lock.json" "zugz-models.json"; do
         if ! grep -Fq "$pattern" "$gitignore_file"; then
             needs_update=true
         fi
@@ -297,7 +362,7 @@ ensure_gitignore() {
         echo -e "    ${COLOR_MUTED}▪ Configurando reglas de exclusión en .gitignore...${NC}"
         echo "" >> "$gitignore_file"
         echo "# --- Zugzbot SDD Harness (Locals) ---" >> "$gitignore_file"
-        for pattern in ".opencode/" "tui.json" ".openspec/*-lock.json" "*-lock.json"; do
+        for pattern in ".opencode/" "tui.json" ".openspec/*-lock.json" "*-lock.json" "zugz-models.json"; do
             if ! grep -Fq "$pattern" "$gitignore_file"; then
                 echo "$pattern" >> "$gitignore_file"
                 echo -e "      ${COLOR_SUCCESS}✓${NC} Ignorando: $pattern"
@@ -343,12 +408,11 @@ fi
 cd "${REPO_DIR}"
 echo -e "    ${COLOR_SUCCESS}✓${NC} Dependencias internas listas."
 
-# ── 8. package.json y tsconfig.json de raíz (SOLO EN MODO DESARROLLO) ─────────
-if [ "$TARGET_DIR" = "$REPO_DIR" ]; then
-    echo -e "\n  ${COLOR_HEADER}🛠️  Configurando Entorno de Desarrollo (Modo Dev)...${NC}"
-    if [ ! -f "${TARGET_DIR}/package.json" ]; then
-        echo -e "    ${COLOR_MUTED}▪ Generando package.json en la raíz...${NC}"
-        cat > "${TARGET_DIR}/package.json" << 'ROOTPKGEOF'
+# ── 8. package.json y tsconfig.json de raíz ───────────────────────────────────
+echo -e "\n  ${COLOR_HEADER}🛠️  Configurando Entorno del Proyecto...${NC}"
+if [ ! -f "${TARGET_DIR}/package.json" ]; then
+    echo -e "    ${COLOR_MUTED}▪ Generando package.json en la raíz...${NC}"
+    cat > "${TARGET_DIR}/package.json" << 'ROOTPKGEOF'
 {
   "name": "project-sdd-workspace",
   "private": true,
@@ -364,38 +428,38 @@ if [ "$TARGET_DIR" = "$REPO_DIR" ]; then
   }
 }
 ROOTPKGEOF
-        echo -e "      ${COLOR_SUCCESS}✓${NC} package.json creado"
-    else
-        echo -e "    ${COLOR_MUTED}▪ Asegurando dependencias de TypeScript/ESLint en package.json de raíz...${NC}"
-        node -e '
-          const fs = require("fs");
-          const path = require("path");
-          const pkgPath = path.join("'"$TARGET_DIR"'", "package.json");
-          try {
-            const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
-            pkg.devDependencies = pkg.devDependencies || {};
-            let changed = false;
-            if (!pkg.type || pkg.type !== "module") { pkg.type = "module"; changed = true; }
-            if (!pkg.devDependencies.typescript) { pkg.devDependencies.typescript = "^5.4.5"; changed = true; }
-            if (!pkg.devDependencies.eslint) { pkg.devDependencies.eslint = "^9.3.0"; changed = true; }
-            if (!pkg.devDependencies["@eslint/js"]) { pkg.devDependencies["@eslint/js"] = "^9.3.0"; changed = true; }
-            if (!pkg.devDependencies["eslint-plugin-html"]) { pkg.devDependencies["eslint-plugin-html"] = "^8.1.1"; changed = true; }
-            if (!pkg.devDependencies["@opencode-ai/plugin"]) { pkg.devDependencies["@opencode-ai/plugin"] = "1.15.4"; changed = true; }
-            if (changed) {
-              fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
-              console.log("      \x1b[32m✓\x1b[0m package.json actualizado con dependencias LSP");
-            } else {
-              console.log("      \x1b[32m✓\x1b[0m package.json ya cuenta con dependencias LSP");
-            }
-          } catch (e) {
-            console.log("      \x1b[31m⚠ Error actualizando package.json:\x1b[0m", e.message);
-          }
-        '
-    fi
+    echo -e "      ${COLOR_SUCCESS}✓${NC} package.json creado"
+else
+    echo -e "    ${COLOR_MUTED}▪ Asegurando dependencias de TypeScript/ESLint en package.json de raíz...${NC}"
+    node -e '
+      const fs = require("fs");
+      const path = require("path");
+      const pkgPath = path.join("'"$TARGET_DIR"'", "package.json");
+      try {
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+        pkg.devDependencies = pkg.devDependencies || {};
+        let changed = false;
+        if (!pkg.type || pkg.type !== "module") { pkg.type = "module"; changed = true; }
+        if (!pkg.devDependencies.typescript) { pkg.devDependencies.typescript = "^5.4.5"; changed = true; }
+        if (!pkg.devDependencies.eslint) { pkg.devDependencies.eslint = "^9.3.0"; changed = true; }
+        if (!pkg.devDependencies["@eslint/js"]) { pkg.devDependencies["@eslint/js"] = "^9.3.0"; changed = true; }
+        if (!pkg.devDependencies["eslint-plugin-html"]) { pkg.devDependencies["eslint-plugin-html"] = "^8.1.1"; changed = true; }
+        if (!pkg.devDependencies["@opencode-ai/plugin"]) { pkg.devDependencies["@opencode-ai/plugin"] = "1.15.4"; changed = true; }
+        if (changed) {
+          fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
+          console.log("      \x1b[32m✓\x1b[0m package.json actualizado con dependencias LSP");
+        } else {
+          console.log("      \x1b[32m✓\x1b[0m package.json ya cuenta con dependencias LSP");
+        }
+      } catch (e) {
+        console.log("      \x1b[31m⚠ Error actualizando package.json:\x1b[0m", e.message);
+      }
+    '
+fi
 
-    if [ ! -f "${TARGET_DIR}/tsconfig.json" ]; then
-        echo -e "    ${COLOR_MUTED}▪ Generando tsconfig.json en la raíz...${NC}"
-        cat > "${TARGET_DIR}/tsconfig.json" << 'ROOTTSCONFIGEOF'
+if [ ! -f "${TARGET_DIR}/tsconfig.json" ]; then
+    echo -e "    ${COLOR_MUTED}▪ Generando tsconfig.json en la raíz...${NC}"
+    cat > "${TARGET_DIR}/tsconfig.json" << 'ROOTTSCONFIGEOF'
 {
   "compilerOptions": {
     "target": "ES2022",
@@ -416,18 +480,40 @@ ROOTPKGEOF
   ]
 }
 ROOTTSCONFIGEOF
-        echo -e "      ${COLOR_SUCCESS}✓${NC} tsconfig.json creado"
-    fi
-
-    echo -e "    ${COLOR_MUTED}▪ Instalando dependencias de raíz (Modo Dev)...${NC}"
-    cd "${TARGET_DIR}"
-    if command -v bun &> /dev/null; then
-        bun install --quiet
-    else
-        npm install --legacy-peer-deps --quiet
-    fi
-    cd "${REPO_DIR}"
+    echo -e "      ${COLOR_SUCCESS}✓${NC} tsconfig.json creado"
 fi
+
+# Generar un archivo eslint.config.js si no existe ningún archivo de configuración de ESLint en el proyecto destino
+if [ ! -f "${TARGET_DIR}/eslint.config.js" ] && [ ! -f "${TARGET_DIR}/.eslintrc.json" ] && [ ! -f "${TARGET_DIR}/.eslintrc.js" ] && [ ! -f "${TARGET_DIR}/.eslintrc" ]; then
+    echo -e "    ${COLOR_MUTED}▪ Generando eslint.config.js por defecto (Flat Config)...${NC}"
+    cat > "${TARGET_DIR}/eslint.config.js" << 'ROOTESLINTEOF'
+import js from "@eslint/js";
+import html from "eslint-plugin-html";
+
+export default [
+  js.configs.recommended,
+  {
+    plugins: {
+      html
+    },
+    rules: {
+      "no-unused-vars": "warn",
+      "no-console": "off"
+    }
+  }
+];
+ROOTESLINTEOF
+    echo -e "      ${COLOR_SUCCESS}✓${NC} eslint.config.js creado"
+fi
+
+echo -e "    ${COLOR_MUTED}▪ Instalando dependencias de raíz...${NC}"
+cd "${TARGET_DIR}"
+if command -v bun &> /dev/null; then
+    bun install --quiet
+else
+    npm install --legacy-peer-deps --quiet
+fi
+cd "${REPO_DIR}"
 
 # ── 9. Inicializar .openspec/ si no existe ────────────────────────────────────
 if [ ! -d "${TARGET_DIR}/.openspec" ]; then
