@@ -23,10 +23,13 @@ Ejecuta el instalador apuntando a la raíz de este proyecto. Puedes hacerlo de d
   ```bash
   /ruta/a/tu/zugzbot/install-plugin.sh .
   ```
-* **Opción B (Mediante descarga directa rápida):**
-  *(Si el script está publicado en la red interna o GitHub)*
+* **Opción B (Mediante descarga directa rápida desde GitHub):**
+  Puedes descargar y ejecutar el instalador directamente desde la rama principal (`main`):
   ```bash
-  curl -fsSL https://raw.githubusercontent.com/usuario/zugzbot/main/install-plugin.sh | bash
+  rm -rf /tmp/zugzbot \
+    && git clone --depth=1 --branch main https://github.com/Danielisla96/zugzbot.git /tmp/zugzbot \
+    && /tmp/zugzbot/install-plugin.sh "$(pwd)" \
+    && rm -rf /tmp/zugzbot
   ```
 
 Este comando:
