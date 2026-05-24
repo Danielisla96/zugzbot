@@ -300,7 +300,7 @@ ensure_gitignore() {
     touch "$gitignore_file"
     
     local needs_update=false
-    for pattern in ".opencode/" "tui.json" ".openspec/*-lock.json" "*-lock.json"; do
+    for pattern in ".opencode/" "tui.json" ".openspec/*-lock.json" "*-lock.json" "zugz-models.json"; do
         if ! grep -Fq "$pattern" "$gitignore_file"; then
             needs_update=true
         fi
@@ -310,7 +310,7 @@ ensure_gitignore() {
         echo -e "    ${COLOR_MUTED}▪ Configurando reglas de exclusión en .gitignore...${NC}"
         echo "" >> "$gitignore_file"
         echo "# --- Zugzbot SDD Harness (Locals) ---" >> "$gitignore_file"
-        for pattern in ".opencode/" "tui.json" ".openspec/*-lock.json" "*-lock.json"; do
+        for pattern in ".opencode/" "tui.json" ".openspec/*-lock.json" "*-lock.json" "zugz-models.json"; do
             if ! grep -Fq "$pattern" "$gitignore_file"; then
                 echo "$pattern" >> "$gitignore_file"
                 echo -e "      ${COLOR_SUCCESS}✓${NC} Ignorando: $pattern"
