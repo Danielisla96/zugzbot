@@ -58,7 +58,7 @@ export default tool({
     const activeChangeName = args.changeName || lockfile.change_name;
 
     // ── SALVAGUARDAS AUTOMÁTICAS DE METODOLOGÍA SDD ──
-    // 1. Transición a Fase 2 (Construcción): Validar spec.md
+    // 1. Transición a Fase 2 (Construcción): Validar spec.md y parsear la checklist de tareas
     if (args.nextPhase === 2 && args.status !== "corrective_loop") {
       const specValidationResultStr = await specValidator.execute({ changeName: activeChangeName }, context);
       try {
@@ -67,10 +67,72 @@ export default tool({
           return `[SDD Transition Blocked] Transición rechazada por falla de calidad del Plano Técnico:\n\n${result.message}`;
         }
       } catch (e) {}
+
+      // Extracción de checklist de tareas desde spec.md para el monitor de estados
+      const specPath = path.join(projectRoot, ".openspec/changes", activeChangeName, "specs/spec.md");
+      if (fs.existsSync(specPath)) {
+        try {
+          const specContent = fs.readFileSync(specPath, "utf-8");
+          const qaSectionIndex = specContent.indexOf("## 5. Criterios de Aceptación");
+          if (qaSectionIndex !== -1) {
+            const qaContent = specContent.substring(qaSectionIndex);
+            const lines = qaContent.split("\n");
+            const parsedTasks: any[] = [];
+            let taskId = 1;
+            for (const line of lines) {
+              if (line.startsWith("##") && !line.includes("## 5.")) {
+                break;
+              }
+              const match = line.match(/^\s*-\s*\[\s*\]\s*(.+)$/i);
+              if (match) {
+                parsedTasks.push({
+                  id: taskId++,
+                  desc: match[1].trim(),
+                  status: "pending"
+                });
+              }
+            }
+            if (parsedTasks.length > 0) {
+              lockfile.tasks = parsedTasks;
+            }
+          }
+        } catch (e) {}
+      }
     }
 
-    // 2. Transición a Fase 3 (Cierre/Documentación): Validar regresiones de compilación, cobertura de requerimientos y cooldown de dependencias
+    // 2. Transición a Fase 3 (Cierre/Documentación): Validar regresiones de compilación, cobertura de requerimientos, cooldown y actualizar estado de tareas
     if (args.nextPhase === 3 && args.status !== "corrective_loop") {
+      // Sincronizar checklist de tareas completadas desde el verification_report.md
+      if (lockfile.tasks) {
+        const reportPath = path.join(projectRoot, ".openspec/changes", activeChangeName, "verification_report.md");
+        if (fs.existsSync(reportPath)) {
+          try {
+            const reportContent = fs.readFileSync(reportPath, "utf-8");
+            const qaSectionIndex = reportContent.indexOf("## 3. Correspondencia de Criterios");
+            if (qaSectionIndex !== -1) {
+              const qaContent = reportContent.substring(qaSectionIndex);
+              const lines = qaContent.split("\n");
+              for (const line of lines) {
+                if (line.startsWith("##") && !line.includes("## 3.")) {
+                  break;
+                }
+                const match = line.match(/^\s*-\s*\[(x|\s)\]\s*(.+)$/i);
+                if (match) {
+                  const isCompleted = match[1].toLowerCase() === "x";
+                  const descClean = match[2].replace(/\*/g, "").trim().toLowerCase();
+                  for (const t of lockfile.tasks) {
+                    const taskClean = t.desc.toLowerCase();
+                    if (descClean.includes(taskClean) || taskClean.includes(descClean)) {
+                      t.status = isCompleted ? "completed" : "pending";
+                    }
+                  }
+                }
+              }
+            }
+          } catch (e) {}
+        }
+      }
+
       // A. Validar regresiones de compilación
       const regressionResultStr = await regressionDetector.execute({ runCheck: true }, context);
       try {
