@@ -55,6 +55,49 @@ function sanitizeGitPath(line: string): string {
   return decodeGitPath(content)
 }
 
+function checkHtmlTagBalance(filePath: string, content: string): string[] {
+  const ext = path.extname(filePath).toLowerCase();
+  if (![".html", ".tsx", ".jsx", ".ts", ".js"].includes(ext)) {
+    return [];
+  }
+
+  const issues: string[] = [];
+  const tagsToCheck = ["div", "span", "section", "p", "button", "main", "header", "footer", "a", "ul", "ol", "li"];
+  
+  let cleaned = content;
+  if (ext === ".html") {
+    cleaned = content.replace(/<!--[\s\S]*?-->/g, "");
+    cleaned = cleaned.replace(/<script[\s\S]*?<\/script>/gi, "");
+    cleaned = cleaned.replace(/<style[\s\S]*?<\/style>/gi, "");
+  } else {
+    cleaned = content.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, ""); // JS/TS comments
+  }
+
+  for (const tag of tagsToCheck) {
+    const openRegex = new RegExp(`<${tag}\\b[^>]*[^/]>`, "gi");
+    const closeRegex = new RegExp(`</${tag}\\s*>`, "gi");
+
+    let openCount = 0;
+    let closeCount = 0;
+
+    let match;
+    while ((match = openRegex.exec(cleaned)) !== null) {
+      openCount++;
+    }
+    while ((match = closeRegex.exec(cleaned)) !== null) {
+      closeCount++;
+    }
+
+    if (openCount !== closeCount) {
+      issues.push(
+        `Desbalance en etiquetas '<${tag}>': Encontradas ${openCount} de apertura y ${closeCount} de cierre. Esto puede quebrar el DOM global de la aplicación.`
+      );
+    }
+  }
+
+  return issues;
+}
+
 export default tool({
   description: "Audita la estética de la interfaz de usuario en busca de colores genéricos, fuentes predeterminadas del navegador y verifica el cumplimiento de las directrices visuales premium (sdd-ux-premium) de forma localizada.",
   args: {
@@ -138,6 +181,7 @@ export default tool({
       colorIssues: string[];
       fontIssues: string[];
       hasTransitions: boolean;
+      structuralIssues: string[];
     }
 
     const findings: FileFinding[] = [];
@@ -178,12 +222,16 @@ export default tool({
           }
         }
 
-        if (colorIssues.length > 0 || fontIssues.length > 0 || !hasTransitions) {
+        // Chequear balance estructural HTML/DOM
+        const structuralIssues = checkHtmlTagBalance(fileRel, content);
+
+        if (colorIssues.length > 0 || fontIssues.length > 0 || !hasTransitions || structuralIssues.length > 0) {
           findings.push({
             file: fileRel,
             colorIssues: colorIssues.slice(0, 5), // Limitar a 5 por archivo
             fontIssues,
-            hasTransitions
+            hasTransitions,
+            structuralIssues
           });
         }
       } catch (e) {}
@@ -207,14 +255,14 @@ export default tool({
 
     // 5. Escribir reporte markdown premium
     let totalIssues = 0;
-    findings.forEach(f => totalIssues += f.colorIssues.length + f.fontIssues.length + (f.hasTransitions ? 0 : 1));
+    findings.forEach(f => totalIssues += f.colorIssues.length + f.fontIssues.length + f.structuralIssues.length + (f.hasTransitions ? 0 : 1));
 
-    const markdown = `# 🎨 Reporte de Auditoría Estética UI/UX: ${changeName}
+    const markdown = `# 🎨 Reporte de Auditoría Estética y Estructural UI/UX: ${changeName}
 
-Este reporte ha sido autogenerado por la herramienta premium **sdd_ui_auditor** para auditar el cumplimiento estricto de las directrices de percepción visual **sdd-ux-premium** de manera focalizada.
+Este reporte ha sido autogenerado por la herramienta premium **sdd_ui_auditor** para auditar el cumplimiento estricto de las directrices de percepción visual **sdd-ux-premium** y balance estructural de marcado de manera focalizada.
 
 > [!NOTE]
-> **Resumen del Diagnóstico Estético (Impacto Localizado):**
+> **Resumen del Diagnóstico Estético y Estructural (Impacto Localizado):**
 > - **Total de Errores/Advertencias:** ${totalIssues}
 > - **Archivos de UI Auditados con Observaciones:** ${findings.length}
 > - **Captura de Pantalla Visual:** ${screenshotStatus}
@@ -223,9 +271,10 @@ ${screenshotPathRel ? `### 📸 Captura de Pantalla Realizada\n![UI Realtime Liv
 
 ## 📊 Detalle de Archivos Escaneados
 
-${findings.length === 0 ? "### ¡Felicidades! 🎉 No se encontraron problemas estéticos en los archivos modificados. Tu UI sigue las directrices premium al 100%." : findings.map(f => `
+${findings.length === 0 ? "### ¡Felicidades! 🎉 No se encontraron problemas estéticos ni de marcado en los archivos modificados. Tu UI sigue las directrices premium al 100%." : findings.map(f => `
 ### 📁 Archivo: \`${f.file}\`
 - **Micro-animaciones / Transiciones:** ${f.hasTransitions ? "🟢 Detectadas" : "🟡 **FALTAN TRANSICIONES SUAVES** (Agrega cubic-bezier o transition)"}
+${f.structuralIssues.length > 0 ? `- **Errores de Marcado Estructural (DOM):**\n${f.structuralIssues.map(s => `  - 🔴 ${s}`).join("\n")}` : "🟢 Balance de etiquetas HTML correcto"}
 ${f.colorIssues.length > 0 ? `- **Colores Genéricos Detectados:**\n${f.colorIssues.map(c => `  - ${c}`).join("\n")}` : "🟢 Colores correctos"}
 ${f.fontIssues.length > 0 ? `- **Estilo Tipográfico:**\n${f.fontIssues.map(fi => `  - ${fi}`).join("\n")}` : "🟢 Tipografía correcta o heredada correctamente"}
 `).join("\n---\n")}
