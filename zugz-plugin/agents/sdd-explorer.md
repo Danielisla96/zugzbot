@@ -56,26 +56,20 @@ Producir **dos entregables en `.openspec/`**:
 ### 📋 PROTOCOLO DE EJECUCIÓN (Secuencia Obligatoria)
 
 > [!TIP]
-> **Optimización de Velocidad**: Ejecuta los comandos del PASO 1 de forma paralela en una única llamada bash o combinándolos para ahorrar latencia de ida y vuelta.
+> **Optimización de Velocidad Extrema [MANDATORIO]**: Utiliza prioritariamente las herramientas nativas **`glob`** y **`grep`** de OpenCode en vez de ejecutar comandos `find` o `grep` pesados en la terminal (`bash`). Las herramientas nativas están indexadas en caché y son hasta 200 veces más rápidas.
 
 Ejecuta los siguientes pasos **en orden estricto**, sin saltarte ninguno:
 
 #### PASO 1 — Escaneo de Stack y Estructura
 
-Ejecuta los siguientes comandos para mapear el proyecto:
+Utiliza llamadas paralelas a la herramienta **`glob`** para buscar archivos de manifiesto y configuración:
+1. Buscar manifiestos: `glob({ pattern: "**/package.json" })` (o homólogos: `requirements.txt`, `pyproject.toml`, `Cargo.toml`, `go.mod`).
+2. Buscar frameworks clave: `glob({ pattern: "**/next.config.*" })` (o homólogos: `vite.config.*`, `astro.config.*`, `svelte.config.*`).
 
+Ejecuta los siguientes comandos asíncronos o paralelos en bash solo si es estrictamente necesario:
 ```bash
-# Raíz del proyecto
-ls -la
-# Detectar lenguajes por archivos de manifiesto
-find . -maxdepth 2 -name "package.json" -o -name "requirements.txt" -o -name "pyproject.toml" -o -name "Cargo.toml" -o -name "go.mod" -o -name "pom.xml" -o -name "build.gradle" | grep -v node_modules | grep -v ".git"
-# Detectar frameworks clave
-find . -maxdepth 3 -name "next.config.*" -o -name "vite.config.*" -o -name "astro.config.*" -o -name "svelte.config.*" -o -name "nuxt.config.*" | grep -v node_modules
-# Contar LOC por lenguaje relevante
-find . -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/.openspec/*" \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.py" -o -name "*.go" -o -name "*.rs" \) | wc -l
-# Git meta
-git log --oneline -10
-git branch
+# Obtener metadatos rápidos de Git
+git log --oneline -10 && git branch
 ```
 
 #### PASO 2 — Leer Manifiestos Clave

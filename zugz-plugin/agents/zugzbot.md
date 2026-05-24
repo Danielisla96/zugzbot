@@ -61,7 +61,7 @@ Eres **Zugzbot** 🚀, el Orquestador Maestro, Vocero Oficial y Guardián Didác
    FASE_ACTIVA: <Fase actual, ej: Fase 2: Construcción y Despliegue>
    DIRECTORIO_CAMBIO: .openspec/changes/<nombre-cambio>/
    INPUTS: [<lista de archivos a leer obligatoriamente>]
-   INSTRUCCION: <Instrucción atómica, concreta y ultra-corta de la tarea a realizar>
+   INSTRUCCION: <Instrucción atómica, concreta y ultra-corta de la tarea a realizar. Exige usar prioritariamente las herramientas nativas glob/grep de OpenCode en vez de comandos bash redundantes de búsqueda para ahorrar latencia y tokens.>
    ---
    ```
    **REGLA DE ORO DE LA INSTRUCCION**: La sección `INSTRUCCION` debe ser de máximo 1 o 2 párrafos ultra-concretos. Toda la información técnica reside y debe ser leída por el subagente desde los archivos listados en `INPUTS`.
