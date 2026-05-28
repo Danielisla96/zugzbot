@@ -7,17 +7,43 @@ import regressionDetector from "./sdd_regression_detector"
 import secretScanner from "./sdd_secret_scanner"
 import requirementTracker from "./sdd_requirement_tracker"
 import checkDependencyCooldown from "./check_dependency_cooldown"
+import sddCheckpoint from "./sdd_checkpoint"
+
+const SUBAGENT_MAPPING: { [key: number]: string } = {
+  0: "sdd-explorer",
+  1: "sdd-planner",
+  2: "sdd-builder",
+  3: "sdd-tester",
+  4: "sdd-archiver"
+}
+
+const DEFAULT_LOCKFILE = {
+  change_name: "nuevo-cambio",
+  active_phase: 0,
+  active_subagent: "sdd-explorer",
+  status: "idle",
+  auto_pilot: false,
+  iteration: 0,
+  last_updated: "",
+  orchestrator_mode: "delegation_only",
+  direction: "forward" as "forward" | "backward" | "repeat",
+  last_successful_phase: 0,
+  retry_count: 0,
+  corrective_loop_active: false,
+  checkpoints: []
+}
 
 export default tool({
   description: "Tránsiciona de fase en el ciclo Spec-Driven Development (SDD), actualizando el archivo de bloqueo lockfile .openspec/sdd-lock.json de forma segura, e integra control de cambios en Git de forma automática.",
   args: {
-    nextPhase: tool.schema.number().describe("El número de la siguiente fase del ciclo SDD (1-3)"),
-    status: tool.schema.string().describe("El nuevo estado del ciclo (ej: 'idle', 'in_progress', 'corrective_loop')"),
+    nextPhase: tool.schema.number().describe("El número de la siguiente fase del ciclo SDD (0-4)"),
+    status: tool.schema.string().describe("El nuevo estado del ciclo (ej: 'idle', 'in_progress', 'corrective_loop', 'restored')"),
     reason: tool.schema.string().describe("La justificación o explicación resumida de los cambios logrados en esta fase"),
     activeSubagent: tool.schema.string().optional().describe("El subagente activo opcional (ej: 'sdd-planner', 'sdd-builder')"),
     iteration: tool.schema.number().optional().describe("El número de iteración correctiva opcional"),
     changeName: tool.schema.string().optional().describe("El nombre del cambio de desarrollo activo opcional"),
-    complexity: tool.schema.enum(["low", "high"]).optional().default("high").describe("La complejidad del cambio de desarrollo activo (low o high)")
+    complexity: tool.schema.enum(["low", "high"]).optional().default("high").describe("La complejidad del cambio de desarrollo activo (low o high)"),
+    direction: tool.schema.enum(["forward", "backward", "repeat"]).optional().default("forward").describe("Dirección de la transición: forward (normal), backward (retroceder a fase anterior), repeat (repetir fase actual)")
   },
   async execute(args, context) {
     const projectRoot = context.worktree || context.directory;
@@ -50,8 +76,33 @@ export default tool({
     if (fs.existsSync(lockfilePath)) {
       try {
         lockfile = JSON.parse(fs.readFileSync(lockfilePath, "utf-8"));
+        lockfile.orchestrator_mode = lockfile.orchestrator_mode || "delegation_only";
+        lockfile.direction = lockfile.direction || "forward";
+        lockfile.last_successful_phase = lockfile.last_successful_phase || 0;
+        lockfile.retry_count = lockfile.retry_count || 0;
+        lockfile.corrective_loop_active = lockfile.corrective_loop_active || false;
+        lockfile.checkpoints = lockfile.checkpoints || [];
       } catch (e) {
-        // Fallback a valores por defecto si está corrupto
+        lockfile = { ...DEFAULT_LOCKFILE };
+      }
+    } else {
+      lockfile = { ...DEFAULT_LOCKFILE };
+    }
+
+    const direction = args.direction || lockfile.direction || "forward";
+
+    if (direction === "backward") {
+      const previousPhase = Math.max(0, (args.nextPhase || lockfile.active_phase) - 1);
+      lockfile.last_successful_phase = previousPhase;
+      lockfile.corrective_loop_active = true;
+      lockfile.retry_count = 0;
+    }
+
+    if (direction === "repeat") {
+      lockfile.retry_count = (lockfile.retry_count || 0) + 1;
+      lockfile.corrective_loop_active = true;
+      if (lockfile.retry_count > 3) {
+        return `[SDD Transition Blocked] Se excedió el límite de 3 reintentos para esta fase. Escalando a revisión humana.`;
       }
     }
 
@@ -59,7 +110,7 @@ export default tool({
 
     // ── SALVAGUARDAS AUTOMÁTICAS DE METODOLOGÍA SDD ──
     // 1. Transición a Fase 2 (Construcción): Validar spec.md y parsear la checklist de tareas
-    if (args.nextPhase === 2 && args.status !== "corrective_loop") {
+    if (args.nextPhase === 2 && args.status !== "corrective_loop" && direction === "forward") {
       const specValidationResultObj: any = await specValidator.execute({ changeName: activeChangeName }, context);
       const specValidationResultStr = typeof specValidationResultObj === "string" ? specValidationResultObj : (specValidationResultObj?.output || "");
       try {
@@ -194,6 +245,7 @@ export default tool({
     }
 
     // Actualizar campos
+    lockfile.direction = direction;
     lockfile.active_phase = args.nextPhase;
     lockfile.status = args.status;
     lockfile.last_updated = new Date().toISOString().split('T')[0];
@@ -201,14 +253,7 @@ export default tool({
     if (args.activeSubagent) {
       lockfile.active_subagent = args.activeSubagent;
     } else {
-      // Autocompletado del subagente según la fase
-      const subagentMapping: { [key: number]: string } = {
-        1: "sdd-planner",
-        2: "sdd-builder",
-        3: "sdd-tester",
-        4: "sdd-archiver"
-      };
-      lockfile.active_subagent = subagentMapping[args.nextPhase] || "sdd-planner";
+      lockfile.active_subagent = SUBAGENT_MAPPING[args.nextPhase] || "sdd-planner";
     }
 
     if (args.iteration !== undefined) {
