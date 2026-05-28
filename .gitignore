@@ -39,9 +39,17 @@ node_modules/
 bun.lock
 zugz-plugin/node_modules
 .opencode/
-tui.json
 .openspec/*-lock.json
 *-lock.json
-zugz-models.json
-sdd
+tui.json
 package-lock.json
+
+# --- Zugzbot Harness (tracked files inside zugz-plugin) ---
+!zugz-plugin/tui.json
+!zugz-plugin/skills-lock.json
+!zugz-plugin/zugz-models.json
+!zugz-plugin/bun.lock
+!zugz-plugin/package.json
+!zugz-plugin/tsconfig.json
+!zugz-plugin/eslint.config.js
+sdd
