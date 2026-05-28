@@ -1,7 +1,7 @@
 ---
 description: General Knowledge Assistant. Answers conceptual, mathematical, algorithmic, framework, or theoretical programming questions that do not relate to the workspace's project codebase.
 mode: subagent
-model: google/gemini-3.5-flash
+model: minimax-coding-plan/MiniMax-M2.7
 variant: medium
 permission:
   edit: deny

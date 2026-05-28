@@ -61,21 +61,22 @@ flowchart TD
 
 ## 📂 Anatomía de Archivos (Compartidos vs Locales)
 
-Para garantizar un espacio de trabajo limpio, los archivos están estructurados de forma estricta:
-
 ```
 tu-proyecto/
-├── .gitignore             # (Configurado automáticamente para excluir archivos locales)
-├── AGENTS.md              # 🟢 Compartido: Reglamento y convenciones globales de IA para el equipo
-├── opencode.json          # 🟢 Compartido: Declaración de agentes y permisos generales de OpenCode
-├── ZUGZ.md                # 🟢 Compartido: Manual de inducción rápida e instrucciones del arnés
-├── tui.json               # 🔴 Local: Cargador visual que conecta el plugin TUI del sidebar (Ignorado)
-├── .opencode/             # 🔴 Local: Todo el motor del arnés, herramientas, habilidades y dependencias (Ignorado)
+├── .gitignore             # Archivos locales ignorados
+├── AGENTS.md              # 🟢 Compartido: Reglamento y convenciones globales
+├── ZUGZ.md                # 🟢 Compartido: Manual de inducción rápida
+├── opencode.json          # 🟢 Compartido: Declaración de agentes y permisos
+├── tui.json               # 🔴 Local: Cargador visual del plugin TUI
+├── .opencode/             # 🔴 Local: Motor del arnés, herramientas, skills
+│   ├── tools/            # Herramientas CLI del arnés
+│   ├── plugins/          # Plugins del arnés
+│   └── agents/           # Prompts de agentes
 └── .openspec/
-    ├── brain.md           # 🟢 Compartido: Base de conocimiento técnico a largo plazo del proyecto
-    ├── prompt_base.md     # 🟢 Compartido: Directrices de comportamiento común del swarm
-    ├── sdd-lock.json      # 🔴 Local: Estado y fase activa del ciclo en desarrollo (Ignorado)
-    └── changes/           # 🟢 Compartido: Historial de especificaciones y reportes técnicos por cambio
+    ├── brain.md           # 🟢 Compartido: Base de conocimiento técnico
+    ├── prompt_base.md     # 🟢 Compartido: Directrices de comportamiento
+    ├── sdd-lock.json      # 🔴 Local: Estado y fase activa del ciclo
+    └── changes/           # 🟢 Compartido: Historial de especificaciones
         └── <change-name>/
             ├── specs/spec.md
             └── verification_report.md
@@ -85,37 +86,26 @@ tu-proyecto/
 
 ## 🛠️ Utilidad CLI Local (`sdd`)
 
-El arnés incorpora una potente utilidad CLI de control local ubicada en `./.opencode/tools/` (enlazada opcionalmente en tu raíz como `./sdd` para acceso rápido). Ofrece comandos para monitorear y gestionar todo el ciclo:
-
 ```bash
-# Ver el estado del ciclo activo, la fase en curso y la lista de criterios de aceptación
+# Ver el estado del ciclo activo
 ./sdd status
 
-# Abrir el Dashboard Web Premium de control local en tu navegador por defecto
-./sdd dashboard
-
-# Auditar estructuralmente que las especificaciones BDD y propuestas de cambio estén correctas
+# Auditar estructuralmente las especificaciones BDD
 ./sdd validate
 
-# Ejecutar de forma automática las suites de tests del proyecto según el stack detectado (Vitest/Jest/PyTest/Go/Cargo)
+# Ejecutar suites de tests del proyecto
 ./sdd test
 
-# Auditar la sintaxis del linter nativo del proyecto y ejecutar auditorías de etiquetas HTML balanceadas
+# Auditar sintaxis del linter y auditoria HTML
 ./sdd lint
 
-# Limpiar logs de fallos y reiniciar de forma segura la máquina de estados local a la Fase 0
+# Limpiar logs y reiniciar el ciclo a Fase 0
 ./sdd clean
 
-# Descartar de forma segura modificaciones locales no guardadas y regresar al checkpoint limpio del ciclo
+# Descartar modificaciones locales y regresar al checkpoint
 ./sdd rollback
 
-# Mostrar los modelos activos de cada uno de los agentes del swarm
-./sdd models status
-
-# Aplicar los modelos por defecto o personalizados a los agentes locales
-./sdd models apply
-
-# Cambiar el perfil de modelos usando presets optimizados (free / balanced / turbo)
+# Cambiar perfil de modelos (free / balanced / turbo)
 ./sdd models preset turbo
 ```
 
@@ -132,8 +122,6 @@ El plugin `plugin_tui.tsx` inyecta un panel reactivo en el sidebar lateral de Op
 
 ## 📦 Instalación en tu Proyecto (One-Step Setup)
 
-Para equipar cualquier repositorio de Git con este arnés multi-agente, simplemente abre la raíz de tu proyecto en la terminal y ejecuta el siguiente comando:
-
 ```bash
 rm -rf /tmp/zugzbot \
   && git clone --depth=1 --branch main https://github.com/Danielisla96/zugzbot.git /tmp/zugzbot \
@@ -141,25 +129,52 @@ rm -rf /tmp/zugzbot \
   && rm -rf /tmp/zugzbot
 ```
 
-### ¿Qué hace el instalador por debajo?
-1. Realiza una validación de entorno asegurando que tengas **Node.js**, **Git** y un manejador de paquetes (**Bun** o **NPM**).
-2. Clona el arnés de forma efímera y copia de forma aislada el motor de agentes en `.opencode/`.
-3. Crea y actualiza de manera no intrusiva los archivos compartidos de equipo (`AGENTS.md`, `ZUGZ.md` y `opencode.json`).
-4. **Modifica tu `.gitignore`** inyectando de forma automática las reglas de exclusión para ocultar todos los archivos locales basura de tu repositorio.
-5. Instala las dependencias internas de forma completamente aislada dentro de `.opencode/`.
+### ¿Qué hace el instalador?
+1. Valida entorno (Node.js, Git, Bun/NPM).
+2. Copia el motor de agentes en `.opencode/`.
+3. Crea archivos compartidos (`AGENTS.md`, `ZUGZ.md`, `opencode.json`).
+4. Inyecta reglas en `.gitignore` para archivos locales.
+5. Instala dependencias aisladas.
 
 ---
 
 ## 🤝 Contribuir al Arnés (Modo Desarrollo)
 
-Si deseas modificar o colaborar en el desarrollo del propio motor de agentes de Zugzbot:
-
-1. Realiza un fork de este repositorio.
-2. Clona tu fork localmente.
-3. Ejecuta el instalador en modo desarrollo dentro del mismo directorio:
+1. Haz fork de este repositorio.
+2. Clona tu fork y ejecuta:
    ```bash
    ./zugz-plugin/install-plugin.sh
    ```
-   *Esto creará enlaces simbólicos en lugar de copiar archivos, permitiendo que tus cambios en `zugz-plugin/` se reflejen en OpenCode en tiempo real.*
-4. Asegúrate de que las dependencias estáticas de TypeScript y ESLint para LSPs queden instaladas ejecutando `bun install` o `npm install` en la raíz.
-5. Envía un Pull Request adjuntando la especificación del cambio correspondiente.
+   *Esto crea symlinks en lugar de copiar, permitiendo desarrollo en tiempo real.*
+3. Corre `bun install` o `npm install` en la raíz.
+4. Envía un Pull Request con la especificación del cambio.
+
+---
+
+## ⚙️ Modelo Oficial
+
+El modelo oficial del arnés es **`minimax-coding-plan/MiniMax-M2.7`**.
+
+Para cambiar modelos, edita el campo `model` en cada archivo de agente en `.opencode/agents/` o usa los presets en `zugz-models.json`.
+
+| Preset | Descripción |
+|:---|:---|
+| **default** | MiniMax-M2.7 para todos los agentes |
+| **free** | DeepSeek V4 Flash gratuito |
+| **balanced** | Gemini 3.5 Flash |
+| **turbo** | Claude 3.5 Sonnet para builder, Gemini para el resto |
+
+---
+
+## 📋 Convenciones de Desarrollo
+
+1. **Fase 0 solo una vez**: El diagnóstico se realiza cuando `.openspec/diagnostics.md` no existe.
+2. **Carga perezosa**: Los agentes leen archivos solo bajo demanda (on a need-to-know basis).
+3. **QA Manual primero**: El usuario valida en caliente antes del cierre automático.
+4. **Tests de regresión**: Solo se ejecutan si existen en el proyecto (no se crean mocks).
+
+---
+
+## 📄 Licencia
+
+MIT © Danielisla96

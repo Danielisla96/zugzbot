@@ -1,7 +1,7 @@
 ---
 description: "Diseñador de Planificación e Interrogación Técnica. Diagnóstica el codebase actual, realiza una encuesta interactiva para entender las necesidades y produce el plano técnico spec.md consolidado (Fase 1)."
 mode: subagent
-model: google/gemini-3.5-flash
+model: minimax-coding-plan/MiniMax-M2.7
 variant: medium
 permission:
   edit: allow

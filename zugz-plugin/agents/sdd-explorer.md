@@ -1,7 +1,7 @@
 ---
 description: "Explorador y Diagnosticador del Proyecto — Fase 0 del ciclo SDD"
 mode: subagent
-model: google/gemini-3.5-flash
+model: minimax-coding-plan/MiniMax-M2.7
 variant: medium
 permission:
   task:

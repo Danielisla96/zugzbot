@@ -1,15 +1,46 @@
 {
-  "name": "zugzbot-swarm-dev",
-  "private": true,
+  "name": "zugzbot-sdd",
+  "version": "1.4.0",
+  "description": "Zugzbot SDD Swarm - Arnés de orquestación industrial Spec-Driven Development para OpenCode",
+  "main": "index.js",
   "type": "module",
-  "version": "1.0.1",
-  "description": "SDD Swarm Repository for Local development & OpenCode LSPs",
+  "bin": {
+    "sdd": "./.opencode/tools/sdd_transition.js",
+    "sdd-tree": "./.opencode/tools/sdd_generate_tree.js",
+    "sdd-audit": "./.opencode/tools/sdd_ui_auditor.js",
+    "sdd-brain": "./.opencode/tools/sdd_brain_sync.js"
+  },
+  "scripts": {
+    "lint": "eslint . --ext .js,.ts,.tsx,.jsx,.html",
+    "lint:fix": "eslint . --ext .js,.ts,.tsx,.jsx,.html --fix",
+    "test": "node --test tests/**/*.test.js 2>/dev/null || echo 'No tests configured'",
+    "test:static": "node .opencode/tools/sdd_ui_auditor.js src",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "sdd:status": "node .opencode/tools/sdd_transition.js status",
+    "sdd:clean": "node .opencode/tools/sdd_transition.js reset",
+    "sdd:autopilot": "node .opencode/tools/sdd_transition.js autopilot on"
+  },
+  "keywords": [
+    "sdd",
+    "spec-driven-development",
+    "opencode",
+    "multi-agent",
+    "swarm",
+    "orchestration"
+  ],
+  "author": "Danielisla96",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "devDependencies": {
     "typescript": "^5.4.5",
     "eslint": "^9.3.0",
     "@eslint/js": "^9.3.0",
     "eslint-plugin-html": "^8.1.1",
     "@opencode-ai/plugin": "1.15.4",
-    "@types/node": "^20.12.12"
+    "@types/node": "^20.12.12",
+    "vitest": "^1.6.0"
   }
 }

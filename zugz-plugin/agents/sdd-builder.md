@@ -1,7 +1,7 @@
 ---
 description: "Constructor Técnico y Diseñador Estético UI/UX. Implementa lógica, estilos CSS, micro-animaciones y valida quirúrgicamente el código mediante herramientas LSP nativas (Fase 2)."
 mode: subagent
-model: deepseek/deepseek-v4-pro
+model: minimax-coding-plan/MiniMax-M2.7
 variant: medium
 permission:
   edit: allow

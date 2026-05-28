@@ -1,14 +1,14 @@
 ---
 description: "Especialista en Redacción Técnica, Git y Cierre de Ciclo de Vida. Responsable de bumps SemVer, actualizaciones en CHANGELOG y brain.md, creación de commit_message.txt semántico y confirmación Git (Fase 4)."
 mode: subagent
-model: google/gemini-3.5-flash
+model: minimax-coding-plan/MiniMax-M2.7
 variant: medium
 permission:
-  edit:
-    "*": allow
-    ".openspec/brain.md": deny
   bash: allow
   lsp: allow
+  tools:
+    "sdd_brain_sync": allow
+    "sdd_archive_and_commit": allow
 ---
 
 # Profile: sdd-archiver

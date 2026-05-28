@@ -75,13 +75,13 @@ Queda estrictamente prohibido que el Swarm transicione de Fase 2 (Construcción)
 
 Cada fase cuenta con un agente único ultra-especializado con inputs y outputs rígidos y bien definidos:
 
-| Fase | Agente | Rol | Inputs Obligatorios de Entrada | Entregable (Output) Producido |
+| Fase | Agente | Rol | Inputs | Entregable |
 | :--- | :--- | :--- | :--- | :--- |
-| **F0** | **`@sdd-explorer`**| Explorador e Indexador | Requerimiento de usuario + codebase actual | `diagnostics.md` (diagnóstico del proyecto) + `skills_manifest.md` |
-| **F1** | **`@sdd-planner`** | Planificador e Interrogador | Requerimiento + `diagnostics.md` | `specs/spec.md` (Plano técnico consolidado + encuesta + BDD) |
-| **F2** | **`@sdd-builder`** | Constructor Lógico/Estético | `specs/spec.md` | Código funcional y estético modificado quirúrgicamente |
-| **F3** | **`@sdd-tester`** | Control de Calidad y Despliegue | Código modificado + `specs/spec.md` | `verification_report.md` + Código compilado/desplegado |
-| **F4** | **`@sdd-archiver`** | Especialista de Cierre | `specs/spec.md` + `verification_report.md` | Versión bumps, CHANGELOG, Git Commit y Carpeta archivada |
+| **F0** | **`@sdd-explorer`**| Explorador e Indexador | codebase actual | `diagnostics.md` + `skills_manifest.md` |
+| **F1** | **`@sdd-planner`** | Planificador e Interrogador | requerimiento + `diagnostics.md` | `specs/spec.md` (Plano + encuesta + BDD) |
+| **F2** | **`@sdd-builder`** | Constructor Lógico/Estético | `specs/spec.md` | Código funcional modificado |
+| **F3** | **`@sdd-tester`** | Control de Calidad y Despliegue | código + `specs/spec.md` | `verification_report.md` + deploy |
+| **F4** | **`@sdd-archiver`** | Especialista de Cierre | `specs/spec.md` + `verification_report.md` | bump, CHANGELOG, Git Commit |
 
 ---
 
