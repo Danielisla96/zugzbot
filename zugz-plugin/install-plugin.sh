@@ -152,9 +152,10 @@ copy_root_file "${PLUGIN_DIR}/AGENTS.md"         "${TARGET_DIR}/AGENTS.md"      
 copy_root_file "${PLUGIN_DIR}/ZUGZ.md"           "${TARGET_DIR}/ZUGZ.md"           "ZUGZ.md"
 copy_root_file "${PLUGIN_DIR}/tui.json"          "${TARGET_DIR}/tui.json"          "tui.json"
 copy_root_file "${PLUGIN_DIR}/zugz-models.json"  "${TARGET_DIR}/zugz-models.json"  "zugz-models.json"
-copy_root_file "${PLUGIN_DIR}/skills-lock.json"   "${TARGET_DIR}/skills-lock.json"  "skills-lock.json"
-copy_root_file "${PLUGIN_DIR}/tsconfig.json"    "${TARGET_DIR}/tsconfig.json"     "tsconfig.json"
+copy_root_file "${PLUGIN_DIR}/skills-lock.json"  "${TARGET_DIR}/skills-lock.json"  "skills-lock.json"
+copy_root_file "${PLUGIN_DIR}/tsconfig.json"     "${TARGET_DIR}/tsconfig.json"     "tsconfig.json"
 copy_root_file "${PLUGIN_DIR}/eslint.config.js"  "${TARGET_DIR}/eslint.config.js"  "eslint.config.js"
+copy_root_file "${PLUGIN_DIR}/opencode.json"     "${TARGET_DIR}/opencode.json"     "opencode.json"
 
 #zugz-models.json: se copia del plugin directory (preserva personalizaciones del usuario)
 if [ -f "${TARGET_DIR}/zugz-models.json" ]; then
@@ -224,134 +225,6 @@ else
     echo -e "    ${COLOR_SUCCESS}✓${NC} sdd (copiado con permisos de ejecución)"
 fi
 
-# opencode.json: se copia o se genera dinámicamente si no existe
-if [ -f "${REPO_DIR}/opencode.json" ] && [ "${REPO_DIR}/opencode.json" != "${TARGET_DIR}/opencode.json" ]; then
-    copy_root_file "${REPO_DIR}/opencode.json" "${TARGET_DIR}/opencode.json" "opencode.json"
-elif [ ! -f "${TARGET_DIR}/opencode.json" ]; then
-    cat > "${TARGET_DIR}/opencode.json" << 'OPCODEEOF'
-{
-  "$schema": "https://opencode.ai/config.json",
-  "permission": {
-    "edit": "allow",
-    "bash": "allow",
-    "lsp": "allow"
-  },
-  "agent": {
-    "zugzbot": {
-      "mode": "primary",
-      "prompt": "{file:./.opencode/agents/zugzbot.md}",
-      "permission": {
-        "task": {
-          "sdd-*": "allow",
-          "aux-*": "allow"
-        },
-        "question": "allow",
-        "lsp": "allow",
-        "edit": {
-          ".openspec/sdd-lock.json": "allow"
-        }
-      }
-    },
-    "sdd-explorer": {
-      "mode": "subagent",
-      "prompt": "{file:./.opencode/agents/sdd-explorer.md}",
-      "permission": {
-        "task": {
-          "sdd-*": "allow"
-        },
-        "bash": {
-          "ls": "allow",
-          "ls *": "allow",
-          "ls -la *": "allow",
-          "find *": "allow",
-          "cat *": "allow",
-          "grep *": "allow",
-          "wc *": "allow",
-          "mkdir": "allow",
-          "mkdir *": "allow",
-          "mkdir -p *": "allow",
-          "echo": "allow",
-          "echo *": "allow",
-          "cp *": "allow",
-          "mv *": "allow",
-          "node --version": "allow",
-          "node -v": "allow",
-          "npm --version": "allow",
-          "npm -v": "allow",
-          "python --version": "allow",
-          "python3 --version": "allow",
-          "go version": "allow",
-          "cargo --version": "allow",
-          "git log *": "allow",
-          "git status": "allow",
-          "git status *": "allow",
-          "git branch": "allow",
-          "git branch *": "allow",
-          "npx autoskills *": "allow",
-          "npx -y autoskills *": "allow"
-        }
-      }
-    },
-    "sdd-planner": {
-      "mode": "subagent",
-      "prompt": "{file:./.opencode/agents/sdd-planner.md}",
-      "permission": {
-        "edit": "allow",
-        "bash": "ask",
-        "lsp": "allow"
-      }
-    },
-    "sdd-builder": {
-      "mode": "subagent",
-      "prompt": "{file:./.opencode/agents/sdd-builder.md}",
-      "permission": {
-        "edit": "allow",
-        "bash": "allow",
-        "lsp": "allow"
-      }
-    },
-    "sdd-tester": {
-      "mode": "subagent",
-      "prompt": "{file:./.opencode/agents/sdd-tester.md}",
-      "permission": {
-        "edit": "allow",
-        "bash": "allow",
-        "lsp": "allow"
-      }
-    },
-    "sdd-archiver": {
-      "mode": "subagent",
-      "prompt": "{file:./.opencode/agents/sdd-archiver.md}",
-      "permission": {
-        "edit": "allow",
-        "bash": "allow",
-        "lsp": "allow"
-      }
-    },
-    "aux-handyman": {
-      "mode": "subagent",
-      "prompt": "{file:./.opencode/agents/aux-handyman.md}",
-      "permission": {
-        "edit": "allow",
-        "bash": "allow",
-        "lsp": "allow"
-      }
-    },
-    "aux-oracle": {
-      "mode": "subagent",
-      "prompt": "{file:./.opencode/agents/aux-oracle.md}",
-      "permission": {
-        "edit": "deny",
-        "bash": "deny",
-        "lsp": "deny"
-      }
-    }
-  }
-}
-OPCODEEOF
-    echo -e "    ${COLOR_SUCCESS}✓${NC} opencode.json (generado automáticamente)"
-else
-    echo -e "    ${COLOR_SUCCESS}✓${NC} opencode.json (preservado/idéntico)"
 fi
 
 # ── 6. Asegurar reglas en .gitignore ──────────────────────────────────────────
