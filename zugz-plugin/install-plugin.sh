@@ -152,7 +152,9 @@ copy_root_file "${PLUGIN_DIR}/AGENTS.md"         "${TARGET_DIR}/AGENTS.md"      
 copy_root_file "${PLUGIN_DIR}/ZUGZ.md"           "${TARGET_DIR}/ZUGZ.md"           "ZUGZ.md"
 copy_root_file "${PLUGIN_DIR}/tui.json"          "${TARGET_DIR}/tui.json"          "tui.json"
 copy_root_file "${PLUGIN_DIR}/zugz-models.json"  "${TARGET_DIR}/zugz-models.json"  "zugz-models.json"
-copy_root_file "${PLUGIN_DIR}/skills-lock.json"  "${TARGET_DIR}/skills-lock.json"  "skills-lock.json"
+copy_root_file "${PLUGIN_DIR}/skills-lock.json"   "${TARGET_DIR}/skills-lock.json"  "skills-lock.json"
+copy_root_file "${PLUGIN_DIR}/tsconfig.json"    "${TARGET_DIR}/tsconfig.json"     "tsconfig.json"
+copy_root_file "${PLUGIN_DIR}/eslint.config.js"  "${TARGET_DIR}/eslint.config.js"  "eslint.config.js"
 
 #zugz-models.json: se copia del plugin directory (preserva personalizaciones del usuario)
 if [ -f "${TARGET_DIR}/zugz-models.json" ]; then
