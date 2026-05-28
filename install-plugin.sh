@@ -150,12 +150,15 @@ copy_root_file() {
 
 copy_root_file "${PLUGIN_DIR}/AGENTS.md"         "${TARGET_DIR}/AGENTS.md"         "AGENTS.md"
 copy_root_file "${PLUGIN_DIR}/ZUGZ.md"           "${TARGET_DIR}/ZUGZ.md"           "ZUGZ.md"
+copy_root_file "${PLUGIN_DIR}/tui.json"          "${TARGET_DIR}/tui.json"          "tui.json"
+copy_root_file "${PLUGIN_DIR}/zugz-models.json"  "${TARGET_DIR}/zugz-models.json"  "zugz-models.json"
+copy_root_file "${PLUGIN_DIR}/skills-lock.json"  "${TARGET_DIR}/skills-lock.json"  "skills-lock.json"
 
-# zugz-models.json: se copia o se genera dinámicamente si no existe (preserva personalizaciones del usuario)
+#zugz-models.json: se copia del plugin directory (preserva personalizaciones del usuario)
 if [ -f "${TARGET_DIR}/zugz-models.json" ]; then
     echo -e "    ${COLOR_SUCCESS}✓${NC} zugz-models.json ${COLOR_MUTED}(preservado)${NC}"
-elif [ -f "${REPO_DIR}/zugz-models.json" ]; then
-    cp "${REPO_DIR}/zugz-models.json" "${TARGET_DIR}/zugz-models.json"
+elif [ -f "${PLUGIN_DIR}/zugz-models.json" ]; then
+    cp "${PLUGIN_DIR}/zugz-models.json" "${TARGET_DIR}/zugz-models.json"
     echo -e "    ${COLOR_SUCCESS}✓${NC} zugz-models.json (copiado del origen)"
 else
     cat > "${TARGET_DIR}/zugz-models.json" << 'MODELSEOF'
@@ -377,17 +380,6 @@ ensure_gitignore() {
 }
 
 ensure_gitignore
-
-# tui.json — inline (sin depender de un archivo fuente)
-cat > "${TARGET_DIR}/tui.json" << 'TUIEOF'
-{
-  "$schema": "https://opencode.ai/tui.json",
-  "plugin": [
-    "./.opencode/plugins/plugin_tui.tsx"
-  ]
-}
-TUIEOF
-echo -e "    ${COLOR_SUCCESS}✓${NC} tui.json (cargador de plugin visual)"
 
 # ── 7. package.json en .opencode/ y dependencias ──────────────────────────────
 echo -e "\n  ${COLOR_HEADER}📦 Instalando dependencias internas de los agentes...${NC}"
