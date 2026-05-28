@@ -225,8 +225,6 @@ else
     echo -e "    ${COLOR_SUCCESS}✓${NC} sdd (copiado con permisos de ejecución)"
 fi
 
-fi
-
 # ── 6. Asegurar reglas en .gitignore ──────────────────────────────────────────
 ensure_gitignore() {
     local gitignore_file="${TARGET_DIR}/.gitignore"
