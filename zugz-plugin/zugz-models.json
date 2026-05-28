@@ -1,14 +1,14 @@
 {
   "presets": {
     "default": {
-      "zugzbot": "google/gemini-3.5-flash",
-      "sdd-explorer": "google/gemini-3.5-flash",
-      "sdd-planner": "google/gemini-3.5-flash",
-      "sdd-builder": "google/gemini-3.5-flash",
-      "sdd-tester": "google/gemini-3.5-flash",
-      "sdd-archiver": "google/gemini-3.5-flash",
-      "aux-handyman": "google/gemini-3.5-flash",
-      "aux-oracle": "google/gemini-3.5-flash"
+      "zugzbot": "minimax-coding-plan/MiniMax-M2.7",
+      "sdd-explorer": "minimax-coding-plan/MiniMax-M2.7",
+      "sdd-planner": "minimax-coding-plan/MiniMax-M2.7",
+      "sdd-builder": "minimax-coding-plan/MiniMax-M2.7",
+      "sdd-tester": "minimax-coding-plan/MiniMax-M2.7",
+      "sdd-archiver": "minimax-coding-plan/MiniMax-M2.7",
+      "aux-handyman": "minimax-coding-plan/MiniMax-M2.7",
+      "aux-oracle": "minimax-coding-plan/MiniMax-M2.7"
     },
     "free": {
       "zugzbot": "opencode/deepseek-v4-flash-free",
