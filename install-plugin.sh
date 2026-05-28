@@ -148,8 +148,8 @@ copy_root_file() {
     fi
 }
 
-copy_root_file "${REPO_DIR}/AGENTS.md"         "${TARGET_DIR}/AGENTS.md"         "AGENTS.md"
-copy_root_file "${REPO_DIR}/ZUGZ.md"           "${TARGET_DIR}/ZUGZ.md"           "ZUGZ.md"
+copy_root_file "${PLUGIN_DIR}/AGENTS.md"         "${TARGET_DIR}/AGENTS.md"         "AGENTS.md"
+copy_root_file "${PLUGIN_DIR}/ZUGZ.md"           "${TARGET_DIR}/ZUGZ.md"           "ZUGZ.md"
 
 # zugz-models.json: se copia o se genera dinámicamente si no existe (preserva personalizaciones del usuario)
 if [ -f "${TARGET_DIR}/zugz-models.json" ]; then
