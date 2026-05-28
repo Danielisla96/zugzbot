@@ -21,14 +21,14 @@ Ejecuta el instalador apuntando a la raíz de este proyecto. Puedes hacerlo de d
 
 * **Opción A (Desde tu repositorio local de Zugzbot):**
   ```bash
-  /ruta/a/tu/zugzbot/install-plugin.sh .
+  /ruta/a/tu/zugzbot/zugz-plugin/install-plugin.sh .
   ```
 * **Opción B (Mediante descarga directa rápida desde GitHub):**
   Puedes descargar y ejecutar el instalador directamente desde la rama principal (`main`):
   ```bash
   rm -rf /tmp/zugzbot \
     && git clone --depth=1 --branch main https://github.com/Danielisla96/zugzbot.git /tmp/zugzbot \
-    && /tmp/zugzbot/install-plugin.sh "$(pwd)" \
+    && /tmp/zugzbot/zugz-plugin/install-plugin.sh "$(pwd)" \
     && rm -rf /tmp/zugzbot
   ```
 

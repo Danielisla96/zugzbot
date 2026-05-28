@@ -76,11 +76,11 @@ fi
 echo -e "  ${COLOR_SUCCESS}✓ Entorno compatible y listo para instalar.${NC}"
 
 # ── 2. Resolución de Directorios ─────────────────────────────────────────────
-REPO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PLUGIN_DIR="${REPO_DIR}/zugz-plugin"
+PLUGIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+REPO_DIR="$(dirname "$PLUGIN_DIR")"
 
-if [ ! -d "$PLUGIN_DIR" ]; then
-    echo -e "  ${COLOR_ERROR}❌ Error: No se encuentra 'zugz-plugin/' en ${REPO_DIR}.${NC}"
+if [ ! -d "${PLUGIN_DIR}/agents" ]; then
+    echo -e "  ${COLOR_ERROR}❌ Error: No se encuentra 'agents/' en ${PLUGIN_DIR}.${NC}"
     exit 1
 fi
 

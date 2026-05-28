@@ -137,7 +137,7 @@ Para equipar cualquier repositorio de Git con este arnés multi-agente, simpleme
 ```bash
 rm -rf /tmp/zugzbot \
   && git clone --depth=1 --branch main https://github.com/Danielisla96/zugzbot.git /tmp/zugzbot \
-  && /tmp/zugzbot/install-plugin.sh "$(pwd)" \
+  && /tmp/zugzbot/zugz-plugin/install-plugin.sh "$(pwd)" \
   && rm -rf /tmp/zugzbot
 ```
 
@@ -158,7 +158,7 @@ Si deseas modificar o colaborar en el desarrollo del propio motor de agentes de 
 2. Clona tu fork localmente.
 3. Ejecuta el instalador en modo desarrollo dentro del mismo directorio:
    ```bash
-   ./install-plugin.sh
+   ./zugz-plugin/install-plugin.sh
    ```
    *Esto creará enlaces simbólicos en lugar de copiar archivos, permitiendo que tus cambios en `zugz-plugin/` se reflejen en OpenCode en tiempo real.*
 4. Asegúrate de que las dependencias estáticas de TypeScript y ESLint para LSPs queden instaladas ejecutando `bun install` o `npm install` en la raíz.
