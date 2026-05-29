@@ -12,8 +12,8 @@ Sistema multi-agente de 6 fases (Explorador → Planner → Builder → Tester �
 # 1. Instala el paquete:
 npm install zugzbot-sdd
 
-# 2. Ejecuta el postinstall para crear los archivos de configuración:
-node node_modules/zugzbot-sdd/bin/zugzbot.js
+# 2. Ejecuta el init:
+npx zugzbot-sdd
 
 # 3. Inicia opencode:
 opencode
@@ -21,8 +21,6 @@ opencode
 # 4. Invoca al orquestador:
 @zugzbot
 ```
-
-> El postinstall debería ejecutarse automáticamente, pero si no lo hace, usa el paso 2.
 
 ---
 
