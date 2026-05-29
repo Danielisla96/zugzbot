@@ -254,15 +254,16 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
             {sddProgress() && sddProgress()?.changeName !== "nuevo-cambio" && sddProgress()?.changeName !== "Ninguno" && (
               <box gap={0} paddingLeft={1} paddingTop={1} paddingBottom={0}>
                 <text fg="#FF7300">
-                  {`🌱 SDD: ${sddProgress()?.changeName ?? ""}`}
+                  {`SDD: ${sddProgress()?.changeName ?? ""}`}
                 </text>
                 <box gap={0} paddingTop={1}>
                   {[
-                    { id: 0, name: "Diagnóstico", agent: "@sdd-explorer" },
-                    { id: 1, name: "Planificación", agent: "@sdd-planner" },
-                    { id: 2, name: "Construcción", agent: "@sdd-builder" },
-                    { id: 3, name: "Pruebas & Deploy", agent: "@sdd-tester" },
-                    { id: 4, name: "Cierre & Git", agent: "@sdd-archiver" }
+                    { id: 0, name: "F0 Exploración", agent: "@sdd-explorer" },
+                    { id: 1, name: "F1 Planificación", agent: "@sdd-planner" },
+                    { id: 2, name: "F2 Construcción", agent: "@sdd-builder" },
+                    { id: 3, name: "F3 Pruebas", agent: "@sdd-tester" },
+                    { id: 4, name: "F4 Deploy", agent: "@sdd-deployer" },
+                    { id: 5, name: "F5 Cierre", agent: "@sdd-archiver" }
                   ].map((ph) => {
                     const isActive = sddProgress()?.activePhase === ph.id
                     const isCompleted = (sddProgress()?.activePhase ?? 0) > ph.id
