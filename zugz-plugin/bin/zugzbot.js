@@ -197,6 +197,13 @@ function init() {
     yellow("brain.md ya existe, preservado")
   }
 
+  const modelsPath = path.join(INSTALL_DIR, "zugz-models.json")
+  const templateModelsPath = path.join(PKG_ROOT, "zugz-models.json")
+  if (!fs.existsSync(modelsPath) && fs.existsSync(templateModelsPath)) {
+    fs.copyFileSync(templateModelsPath, modelsPath)
+    green("zugz-models.json copiado")
+  }
+
   const gitignorePath = path.join(INSTALL_DIR, ".gitignore")
   if (fs.existsSync(gitignorePath)) {
     const content = fs.readFileSync(gitignorePath, "utf-8")

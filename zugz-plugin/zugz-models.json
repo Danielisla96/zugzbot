@@ -1,23 +1,14 @@
 {
-  "official": "minimax-coding-plan/MiniMax-M2.7",
-  "presets": {
-    "default": {
-      "all": "minimax-coding-plan/MiniMax-M2.7"
-    },
-    "free": {
-      "all": "opencode/deepseek-v4-flash-free"
-    },
-    "balanced": {
-      "all": "google/gemini-3.5-flash"
-    },
-    "turbo": {
-      "zugzbot": "anthropic/claude-3.5-sonnet",
-      "sdd-builder": "anthropic/claude-3.5-sonnet",
-      "default": "google/gemini-3.5-flash"
-    }
+  "agents": {
+    "zugzbot": "deepseek/deepseek-v4-pro",
+    "sdd-explorer": "deepseek/deepseek-v4-flash",
+    "sdd-planner": "deepseek/deepseek-v4-pro",
+    "sdd-builder": "minimax-coding-plan/MiniMax-M2.7",
+    "sdd-tester": "minimax-coding-plan/MiniMax-M2.7-highspeed",
+    "sdd-deployer": "minimax-coding-plan/MiniMax-M2.7-highspeed",
+    "sdd-archiver": "deepseek/deepseek-v4-flash",
+    "aux-handyman": "deepseek/deepseek-v4-flash",
+    "aux-oracle": "deepseek/deepseek-v4-flash"
   },
-  "notes": {
-    "official": "Modelo oficial del arnés Zugzbot SDD",
-    "turbo_builder": "Solo el builder usa Sonnet en preset turbo para mayor capacidad de codificación"
-  }
+  "default": "deepseek/deepseek-v4-flash"
 }
