@@ -9,7 +9,8 @@
   "agent": {
     "zugzbot": {
       "mode": "primary",
-      "prompt": "{file:./agents/zugzbot.md}",
+      "model": "deepseek/deepseek-v4-pro",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/zugzbot.md}",
       "permission": {
         "task": {
           "sdd-*": "allow",
@@ -24,7 +25,8 @@
     },
     "sdd-explorer": {
       "mode": "subagent",
-      "prompt": "{file:./agents/sdd-explorer.md}",
+      "model": "deepseek/deepseek-v4-flash",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-explorer.md}",
       "permission": {
         "bash": "allow",
         "lsp": "allow",
@@ -36,7 +38,8 @@
     },
     "sdd-planner": {
       "mode": "subagent",
-      "prompt": "{file:./agents/sdd-planner.md}",
+      "model": "deepseek/deepseek-v4-pro",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-planner.md}",
       "permission": {
         "edit": "allow",
         "bash": "ask",
@@ -49,7 +52,8 @@
     },
     "sdd-builder": {
       "mode": "subagent",
-      "prompt": "{file:./agents/sdd-builder.md}",
+      "model": "minimax-coding-plan/MiniMax-M2.7",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-builder.md}",
       "permission": {
         "edit": "allow",
         "bash": "allow",
@@ -62,7 +66,8 @@
     },
     "sdd-tester": {
       "mode": "subagent",
-      "prompt": "{file:./agents/sdd-tester.md}",
+      "model": "minimax-coding-plan/MiniMax-M2.7-highspeed",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-tester.md}",
       "permission": {
         "edit": "allow",
         "bash": "allow",
@@ -76,7 +81,8 @@
     },
     "sdd-archiver": {
       "mode": "subagent",
-      "prompt": "{file:./agents/sdd-archiver.md}",
+      "model": "deepseek/deepseek-v4-flash",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-archiver.md}",
       "permission": {
         "edit": "allow",
         "bash": "allow",
@@ -91,7 +97,8 @@
     },
     "sdd-deployer": {
       "mode": "subagent",
-      "prompt": "{file:./agents/sdd-deployer.md}",
+      "model": "minimax-coding-plan/MiniMax-M2.7-highspeed",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-deployer.md}",
       "permission": {
         "bash": "allow",
         "tools": {
@@ -101,7 +108,8 @@
     },
     "aux-handyman": {
       "mode": "subagent",
-      "prompt": "{file:./agents/aux-handyman.md}",
+      "model": "deepseek/deepseek-v4-flash",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-handyman.md}",
       "permission": {
         "edit": "allow",
         "bash": "allow",
@@ -110,7 +118,8 @@
     },
     "aux-oracle": {
       "mode": "subagent",
-      "prompt": "{file:./agents/aux-oracle.md}",
+      "model": "deepseek/deepseek-v4-flash",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-oracle.md}",
       "permission": {
         "edit": "deny",
         "bash": "deny",

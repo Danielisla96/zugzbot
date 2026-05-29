@@ -10,103 +10,6 @@ const PKG_ROOT = path.resolve(__dirname, "..")
 
 const INSTALL_DIR = process.cwd()
 
-const TEMPLATE_OPENCODE_JSON = {
-  "$schema": "https://opencode.ai/config.json",
-  "lsp": true,
-  "permission": {
-    "edit": "allow",
-    "bash": "allow",
-    "lsp": "allow"
-  },
-  "agent": {
-    "zugzbot": {
-      "mode": "primary",
-      "prompt": "{file:./node_modules/zugzbot-sdd/agents/zugzbot.md}",
-      "permission": {
-        "task": { "sdd-*": "allow", "aux-*": "allow" },
-        "question": "allow",
-        "lsp": "allow",
-        "edit": { ".openspec/sdd-lock.json": "allow" }
-      }
-    },
-    "sdd-explorer": {
-      "mode": "subagent",
-      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-explorer.md}",
-      "permission": {
-        "bash": "allow",
-        "lsp": "allow",
-        "tools": { "sdd_transition": "allow", "sdd_generate_tree": "allow" }
-      }
-    },
-    "sdd-planner": {
-      "mode": "subagent",
-      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-planner.md}",
-      "permission": {
-        "edit": "allow",
-        "bash": "ask",
-        "lsp": "allow",
-        "tools": { "sdd_transition": "allow", "sdd_brain_sync": "allow" }
-      }
-    },
-    "sdd-builder": {
-      "mode": "subagent",
-      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-builder.md}",
-      "permission": {
-        "edit": "allow",
-        "bash": "allow",
-        "lsp": "allow",
-        "tools": { "sdd_transition": "allow", "sdd_ui_auditor": "allow" }
-      }
-    },
-    "sdd-tester": {
-      "mode": "subagent",
-      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-tester.md}",
-      "permission": {
-        "edit": "allow",
-        "bash": "allow",
-        "lsp": "allow",
-        "tools": { "sdd_transition": "allow", "sdd_ui_auditor": "allow", "sdd_spec_validator": "allow" }
-      }
-    },
-    "sdd-archiver": {
-      "mode": "subagent",
-      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-archiver.md}",
-      "permission": {
-        "edit": "allow",
-        "bash": "allow",
-        "lsp": "allow",
-        "tools": { "sdd_archive_and_commit": "allow", "sdd_transition": "allow", "sdd_brain_sync": "allow", "sdd_install_autoskills": "allow" }
-      }
-    },
-    "sdd-deployer": {
-      "mode": "subagent",
-      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-deployer.md}",
-      "permission": {
-        "bash": "allow",
-        "tools": { "sdd_transition": "allow" }
-      }
-    },
-    "aux-handyman": {
-      "mode": "subagent",
-      "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-handyman.md}",
-      "permission": {
-        "edit": "allow",
-        "bash": "allow",
-        "lsp": "allow"
-      }
-    },
-    "aux-oracle": {
-      "mode": "subagent",
-      "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-oracle.md}",
-      "permission": {
-        "edit": "deny",
-        "bash": "deny",
-        "lsp": "deny"
-      }
-    }
-  }
-}
-
 const TEMPLATE_SDD_LOCK = {
   change_name: "nuevo-cambio",
   active_phase: 0,
@@ -145,6 +48,129 @@ const BRAIN_TEMPLATE = `# 🧠 Brain del Proyecto
 - Proyecto inicializado con Zugzbot SDD Plugin v1.0.0
 `
 
+function getTemplateModels() {
+  const templateModelsPath = path.join(PKG_ROOT, "zugz-models.json")
+  if (fs.existsSync(templateModelsPath)) {
+    try {
+      return JSON.parse(fs.readFileSync(templateModelsPath, "utf-8"))
+    } catch (e) {
+      return null
+    }
+  }
+  return null
+}
+
+function buildOpencodeJson(models) {
+  const defaultModel = models?.default || "minimax-coding-plan/MiniMax-M2.7"
+  const agents = models?.agents || {}
+
+  return {
+    "$schema": "https://opencode.ai/config.json",
+    "lsp": true,
+    "permission": {
+      "edit": "allow",
+      "bash": "allow",
+      "lsp": "allow"
+    },
+    "agent": {
+      "zugzbot": {
+        "mode": "primary",
+        "model": agents.zugzbot || defaultModel,
+        "prompt": "{file:./node_modules/zugzbot-sdd/agents/zugzbot.md}",
+        "permission": {
+          "task": { "sdd-*": "allow", "aux-*": "allow" },
+          "question": "allow",
+          "lsp": "allow",
+          "edit": { ".openspec/sdd-lock.json": "allow" }
+        }
+      },
+      "sdd-explorer": {
+        "mode": "subagent",
+        "model": agents["sdd-explorer"] || defaultModel,
+        "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-explorer.md}",
+        "permission": {
+          "bash": "allow",
+          "lsp": "allow",
+          "tools": { "sdd_transition": "allow", "sdd_generate_tree": "allow" }
+        }
+      },
+      "sdd-planner": {
+        "mode": "subagent",
+        "model": agents["sdd-planner"] || defaultModel,
+        "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-planner.md}",
+        "permission": {
+          "edit": "allow",
+          "bash": "ask",
+          "lsp": "allow",
+          "tools": { "sdd_transition": "allow", "sdd_brain_sync": "allow" }
+        }
+      },
+      "sdd-builder": {
+        "mode": "subagent",
+        "model": agents["sdd-builder"] || defaultModel,
+        "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-builder.md}",
+        "permission": {
+          "edit": "allow",
+          "bash": "allow",
+          "lsp": "allow",
+          "tools": { "sdd_transition": "allow", "sdd_ui_auditor": "allow" }
+        }
+      },
+      "sdd-tester": {
+        "mode": "subagent",
+        "model": agents["sdd-tester"] || defaultModel,
+        "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-tester.md}",
+        "permission": {
+          "edit": "allow",
+          "bash": "allow",
+          "lsp": "allow",
+          "tools": { "sdd_transition": "allow", "sdd_ui_auditor": "allow", "sdd_spec_validator": "allow" }
+        }
+      },
+      "sdd-archiver": {
+        "mode": "subagent",
+        "model": agents["sdd-archiver"] || defaultModel,
+        "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-archiver.md}",
+        "permission": {
+          "edit": "allow",
+          "bash": "allow",
+          "lsp": "allow",
+          "tools": { "sdd_archive_and_commit": "allow", "sdd_transition": "allow", "sdd_brain_sync": "allow", "sdd_install_autoskills": "allow" }
+        }
+      },
+      "sdd-deployer": {
+        "mode": "subagent",
+        "model": agents["sdd-deployer"] || defaultModel,
+        "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-deployer.md}",
+        "permission": {
+          "bash": "allow",
+          "tools": { "sdd_transition": "allow" }
+        }
+      },
+      "aux-handyman": {
+        "mode": "subagent",
+        "model": agents["aux-handyman"] || defaultModel,
+        "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-handyman.md}",
+        "permission": {
+          "edit": "allow",
+          "bash": "allow",
+          "lsp": "allow"
+        }
+      },
+      "aux-oracle": {
+        "mode": "subagent",
+        "model": agents["aux-oracle"] || defaultModel,
+        "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-oracle.md}",
+        "permission": {
+          "edit": "deny",
+          "bash": "deny",
+          "lsp": "deny"
+        }
+      }
+    }
+  }
+}
+
 function green(msg) { console.log(`  \x1b[32m✓\x1b[0m ${msg}`) }
 function yellow(msg) { console.log(`  \x1b[33m⚠\x1b[0m ${msg}`) }
 function header(msg) { console.log(`\n\x1b[1m${msg}\x1b[0m`) }
@@ -165,13 +191,12 @@ function init() {
 
   header("📝 Creando archivos de configuración...")
 
+  const models = getTemplateModels()
+  const opencodeJson = buildOpencodeJson(models)
+
   const opencodePath = path.join(INSTALL_DIR, "opencode.json")
-  if (!fs.existsSync(opencodePath)) {
-    fs.writeFileSync(opencodePath, JSON.stringify(TEMPLATE_OPENCODE_JSON, null, 2), "utf-8")
-    green("opencode.json creado")
-  } else {
-    yellow("opencode.json ya existe, preservado")
-  }
+  fs.writeFileSync(opencodePath, JSON.stringify(opencodeJson, null, 2), "utf-8")
+  green("opencode.json creado (modelos aplicados desde zugz-models.json)")
 
   const tuiPath = path.join(INSTALL_DIR, "tui.json")
   if (!fs.existsSync(tuiPath)) {
