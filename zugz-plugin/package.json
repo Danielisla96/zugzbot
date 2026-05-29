@@ -1,6 +1,6 @@
 {
   "name": "zugzbot-sdd",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "description": "Zugzbot SDD Swarm - Spec-Driven Development Harness for OpenCode",
   "main": "index.js",
   "type": "module",
