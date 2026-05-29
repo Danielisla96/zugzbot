@@ -9,15 +9,11 @@ Sistema multi-agente de 6 fases (Explorador → Planner → Builder → Tester �
 ## Instalación Rápida
 
 ```bash
-# 1. En tu proyecto, instala el paquete:
+# 1. Instala el paquete:
 npm install zugzbot-sdd
 
-# 2. Listo! El postinstall crea automáticamente:
-#    - opencode.json (configuración de agentes)
-#    - tui.json (configuración de interfaz)
-#    - .openspec/ (estado del ciclo SDD)
-#    - .opencode/plugins/ (plugins de opencode)
-#    - ./sdd (comando local para ver status)
+# 2. Ejecuta el postinstall para crear los archivos de configuración:
+node node_modules/zugzbot-sdd/bin/zugzbot.js
 
 # 3. Inicia opencode:
 opencode
@@ -25,6 +21,8 @@ opencode
 # 4. Invoca al orquestador:
 @zugzbot
 ```
+
+> El postinstall debería ejecutarse automáticamente, pero si no lo hace, usa el paso 2.
 
 ---
 
