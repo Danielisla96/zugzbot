@@ -26,8 +26,9 @@ check_dependencies() {
 create_opencode_structure() {
     echo "📁 Creando estructura de herramientas..."
     
+    mkdir -p "$INSTALL_DIR/.opencode/agents"
+    mkdir -p "$INSTALL_DIR/.opencode/plugins"
     mkdir -p "$INSTALL_DIR/tools"
-    mkdir -p "$INSTALL_DIR/agents"
     mkdir -p "$INSTALL_DIR/plugins"
     mkdir -p "$INSTALL_DIR/skills"
     
@@ -49,11 +50,11 @@ copy_plugin_files() {
     fi
     
     if [ -d "$PLUGIN_DIR/agents" ]; then
-        if ! cp "$PLUGIN_DIR/agents/"*.md "$INSTALL_DIR/agents/" 2>&1; then
+        if ! cp "$PLUGIN_DIR/agents/"*.md "$INSTALL_DIR/.opencode/agents/" 2>&1; then
             echo "   ⚠ ADVERTENCIA: Fallo al copiar agents/"
             copy_failed=1
         else
-            echo "   ✓ Prompts de agentes (agents/) copiados"
+            echo "   ✓ Prompts de agentes (.opencode/agents/) copiados"
         fi
     fi
     
