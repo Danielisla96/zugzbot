@@ -1,14 +1,12 @@
 {
   "name": "zugzbot-sdd",
-  "version": "1.4.0",
-  "description": "Zugzbot SDD Swarm - Arnés de orquestación industrial Spec-Driven Development para OpenCode",
+  "version": "1.5.0",
+  "description": "Zugzbot SDD Swarm - Spec-Driven Development Harness for OpenCode",
   "main": "index.js",
   "type": "module",
   "bin": {
-    "sdd": "./sdd",
-    "sdd-tree": "./tools/sdd_generate_tree.ts",
-    "sdd-audit": "./tools/sdd_ui_auditor.ts",
-    "sdd-brain": "./tools/sdd_brain_sync.ts"
+    "zugzbot": "./bin/zugzbot.js",
+    "sdd": "./sdd"
   },
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx,.jsx,.html",
@@ -19,7 +17,8 @@
     "typecheck": "tsc --noEmit",
     "sdd:status": "node sdd status",
     "sdd:clean": "node sdd reset",
-    "sdd:autopilot": "node sdd autopilot on"
+    "sdd:autopilot": "node sdd autopilot on",
+    "postinstall": "node bin/zugzbot.js"
   },
   "keywords": [
     "sdd",

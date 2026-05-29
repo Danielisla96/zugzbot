@@ -26,10 +26,13 @@ Thumbs.db
 *.swo
 *~
 
-# Zugzbot SDD Plugin - Local files
+# Zugzbot SDD Plugin - Local project files
 .opencode/
 tui.json
 .openspec/
+
+# Internal docs (not for npm package)
+docs_opencode/
 
 # Temporary
 tmp/
