@@ -9,7 +9,7 @@
   "agent": {
     "zugzbot": {
       "mode": "primary",
-      "prompt": "{file:./.opencode/agents/zugzbot.md}",
+      "prompt": "{file:./agents/zugzbot.md}",
       "permission": {
         "task": {
           "sdd-*": "allow",
@@ -24,83 +24,84 @@
     },
     "sdd-explorer": {
       "mode": "subagent",
-      "prompt": "{file:./.opencode/agents/sdd-explorer.md}",
+      "prompt": "{file:./agents/sdd-explorer.md}",
       "permission": {
-        "task": {
-          "sdd-*": "allow"
-        },
-        "bash": {
-          "ls": "allow",
-          "ls *": "allow",
-          "ls -la *": "allow",
-          "find *": "allow",
-          "cat *": "allow",
-          "grep *": "allow",
-          "wc *": "allow",
-          "mkdir": "allow",
-          "mkdir *": "allow",
-          "mkdir -p *": "allow",
-          "echo": "allow",
-          "echo *": "allow",
-          "cp *": "allow",
-          "mv *": "allow",
-          "node --version": "allow",
-          "node -v": "allow",
-          "npm --version": "allow",
-          "npm -v": "allow",
-          "python --version": "allow",
-          "python3 --version": "allow",
-          "go version": "allow",
-          "cargo --version": "allow",
-          "git log *": "allow",
-          "git status": "allow",
-          "git status *": "allow",
-          "git branch": "allow",
-          "git branch *": "allow",
-          "npx autoskills *": "allow",
-          "npx -y autoskills *": "allow"
+        "bash": "allow",
+        "lsp": "allow",
+        "tools": {
+          "sdd_transition": "allow",
+          "sdd_generate_tree": "allow"
         }
       }
     },
     "sdd-planner": {
       "mode": "subagent",
-      "prompt": "{file:./.opencode/agents/sdd-planner.md}",
+      "prompt": "{file:./agents/sdd-planner.md}",
       "permission": {
         "edit": "allow",
         "bash": "ask",
-        "lsp": "allow"
+        "lsp": "allow",
+        "tools": {
+          "sdd_transition": "allow",
+          "sdd_brain_sync": "allow"
+        }
       }
     },
     "sdd-builder": {
       "mode": "subagent",
-      "prompt": "{file:./.opencode/agents/sdd-builder.md}",
+      "prompt": "{file:./agents/sdd-builder.md}",
       "permission": {
         "edit": "allow",
         "bash": "allow",
-        "lsp": "allow"
+        "lsp": "allow",
+        "tools": {
+          "sdd_transition": "allow",
+          "sdd_ui_auditor": "allow"
+        }
       }
     },
     "sdd-tester": {
       "mode": "subagent",
-      "prompt": "{file:./.opencode/agents/sdd-tester.md}",
+      "prompt": "{file:./agents/sdd-tester.md}",
       "permission": {
         "edit": "allow",
         "bash": "allow",
-        "lsp": "allow"
+        "lsp": "allow",
+        "tools": {
+          "sdd_transition": "allow",
+          "sdd_ui_auditor": "allow",
+          "sdd_spec_validator": "allow"
+        }
       }
     },
     "sdd-archiver": {
       "mode": "subagent",
-      "prompt": "{file:./.opencode/agents/sdd-archiver.md}",
+      "prompt": "{file:./agents/sdd-archiver.md}",
       "permission": {
         "edit": "allow",
         "bash": "allow",
-        "lsp": "allow"
+        "lsp": "allow",
+        "tools": {
+          "sdd_archive_and_commit": "allow",
+          "sdd_transition": "allow",
+          "sdd_brain_sync": "allow",
+          "sdd_install_autoskills": "allow"
+        }
+      }
+    },
+    "sdd-deployer": {
+      "mode": "subagent",
+      "prompt": "{file:./agents/sdd-deployer.md}",
+      "permission": {
+        "bash": "allow",
+        "tools": {
+          "sdd_transition": "allow"
+        }
       }
     },
     "aux-handyman": {
       "mode": "subagent",
-      "prompt": "{file:./.opencode/agents/aux-handyman.md}",
+      "prompt": "{file:./agents/aux-handyman.md}",
       "permission": {
         "edit": "allow",
         "bash": "allow",
@@ -109,7 +110,7 @@
     },
     "aux-oracle": {
       "mode": "subagent",
-      "prompt": "{file:./.opencode/agents/aux-oracle.md}",
+      "prompt": "{file:./agents/aux-oracle.md}",
       "permission": {
         "edit": "deny",
         "bash": "deny",

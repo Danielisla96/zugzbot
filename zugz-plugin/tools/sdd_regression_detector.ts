@@ -61,7 +61,7 @@ function parseCompilerErrors(errorOutput: string): Set<string> {
   const lines = errorOutput.split("\n").filter(l => l.trim());
   lines.forEach(line => {
     // Captura líneas que parezcan errores de compilador (archivo con número de línea y mensaje)
-    const fileMatch = line.match(/^([a-zA-Z0-9_\-\.\/]+)\(/) || line.match(/^([a-zA-Z0-9_\-\.\/]+):\d+/) || line.match(/in\s+([a-zA-Z0-9_\-\.\/]+\.py)/);
+    const fileMatch = line.match(/^([a-zA-Z0-9_\-./]+)\(/) || line.match(/^([a-zA-Z0-9_\-./]+):\d+/) || line.match(/in\s+([a-zA-Z0-9_\-./]+\.py)/);
     if (fileMatch) {
       // Normalizar simplificando detalles variables de error
       errors.add(line.trim());
@@ -192,7 +192,7 @@ export default tool({
         // Si el error NO existía previamente
         if (!preExistingErrors.has(err)) {
           // Detectar si pertenece a un archivo que modificamos (error local) o a otro módulo (regresión)
-          const fileMatch = err.match(/^([a-zA-Z0-9_\-\.\/]+)\(/) || err.match(/^([a-zA-Z0-9_\-\.\/]+):\d+/) || err.match(/in\s+([a-zA-Z0-9_\-\.\/]+\.py)/);
+          const fileMatch = err.match(/^([a-zA-Z0-9_\-./]+)\(/) || err.match(/^([a-zA-Z0-9_\-./]+):\d+/) || err.match(/in\s+([a-zA-Z0-9_\-./]+\.py)/);
           if (fileMatch) {
             const filePath = fileMatch[1];
             if (modifiedFiles.has(filePath)) {

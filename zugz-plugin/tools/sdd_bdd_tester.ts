@@ -116,15 +116,15 @@ ${s.steps.map(step => `    // - ${step}`).join("\n")}
       }
       testFilePath = path.join(testsDir, `test_sdd_${changeName.replace(/-/g, "_")}.py`);
 
-      generatedCode = `\"\"\"
+      generatedCode = `"""
 BDD LIVING SPECIFICATION AUTO-GENERATED TEST SUITE
 Generated for change: ${changeName}
-\"\"\"
+"""
 import unittest
 
 class TestSdd${changeName.replace(/-/g, "").toUpperCase()}(unittest.TestCase):
 ${scenarios.map((s, idx) => `    def test_scenario_${idx + 1}(self):
-        \"\"\"Escenario: ${s.title}\"\"\"
+        """Escenario: ${s.title}"""
         # BDD Steps:
 ${s.steps.map(step => `        # - ${step}`).join("\n")}
         

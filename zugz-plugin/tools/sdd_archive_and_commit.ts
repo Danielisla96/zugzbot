@@ -3,106 +3,7 @@ import fs from "fs"
 import path from "path"
 import { execSync } from "child_process"
 import sddInstallAutoskills from "./sdd_install_autoskills"
-
-// Estructuras de brain.md idénticas a sdd_brain_sync
-interface BrainEntry {
-  id: string
-  category: string
-  tag: string
-  problem: string
-  solution: string
-  date: string
-}
-
-function today(): string {
-  return new Date().toISOString().split("T")[0]
-}
-
-function nextId(entries: BrainEntry[]): string {
-  let max = 0
-  for (const e of entries) {
-    const num = parseInt(e.id.substring(1), 10)
-    if (!isNaN(num) && num > max) max = num
-  }
-  return `L${String(max + 1).padStart(3, "0")}`
-}
-
-function parseEntries(content: string): BrainEntry[] {
-  const entries: BrainEntry[] = []
-  const blocks = content.split("\n### ")
-  for (const block of blocks) {
-    if (!block.trim()) continue
-    const lines = block.split("\n")
-    const header = lines[0].trim()
-    const colonIdx = header.indexOf(": ")
-    if (colonIdx === -1) continue
-    const id = header.substring(0, colonIdx).trim()
-    if (!id || !/^L\d{3}$/.test(id)) continue
-    const tag = header.substring(colonIdx + 2).trim()
-    if (!tag) continue
-
-    let category = ""
-    let problem = ""
-    let solution = ""
-    let date = ""
-
-    for (const line of lines) {
-      const t = line.trim()
-      if (t.startsWith("- **Tags**:")) {
-        const m = t.match(/#(\w+)/)
-        if (m) category = m[1]
-      } else if (t.startsWith("- **Problema**:")) {
-        problem = t.substring("- **Problema**: ".length).trim()
-      } else if (t.startsWith("- **Solución**:")) {
-        solution = t.substring("- **Solución**: ".length).trim()
-      } else if (t.startsWith("- **Fecha**:")) {
-        date = t.substring("- **Fecha**: ".length).trim()
-      }
-    }
-
-    if (id && problem) {
-      entries.push({ id, category, tag, problem, solution, date: date || today() })
-    }
-  }
-  return entries
-}
-
-function buildIndex(entries: BrainEntry[]): string {
-  if (entries.length === 0) return "_No hay lecciones registradas todavía._"
-  const header = "| ID | Categoría | Tag | Problema |\n| :--- | :--- | :--- | :--- |\n"
-  const rows = entries.map(e => {
-    const problemTrunc = e.problem.length > 55 ? e.problem.slice(0, 52) + "..." : e.problem
-    return `| ${e.id} | ${e.category || "-"} | ${e.tag} | ${problemTrunc} |`
-  }).join("\n")
-  return header + rows
-}
-
-function buildEntryBlock(e: BrainEntry): string {
-  const tags = `#${e.category || "general"} #${e.tag.replace(/[-\s]/g, "_")}`
-  return [
-    `### ${e.id}: ${e.tag}`,
-    `- **Tags**: ${tags}`,
-    `- **Problema**: ${e.problem}`,
-    `- **Solución**: ${e.solution}`,
-    `- **Fecha**: ${e.date}`,
-  ].join("\n") + "\n"
-}
-
-function buildFullBrain(entries: BrainEntry[]): string {
-  return [
-    "# 🧠 Cerebro del Proyecto",
-    "",
-    "> Base de conocimiento técnico a largo plazo. Solo registra aprendizajes de alto valor y no triviales.",
-    "",
-    "## Índice",
-    "",
-    buildIndex(entries),
-    "",
-    "## Lecciones",
-    "",
-    ...entries.map(buildEntryBlock)
-  ].join("\n")
-}
+import { BrainEntry, parseEntries, today, nextId, buildFullBrain, buildIndex, buildEntryBlock, readBrainFile } from "./brain-utils.js"
 
 function bumpVersion(version: string, type: "major" | "minor" | "patch"): string {
   const parts = version.split(".").map(x => parseInt(x, 10))
@@ -209,10 +110,8 @@ export default tool({
       try {
         let entries: BrainEntry[] = []
         if (fs.existsSync(brainPath)) {
-          const content = fs.readFileSync(brainPath, "utf-8")
-          const leccionesIdx = content.indexOf("## Lecciones")
-          const leccionesContent = leccionesIdx >= 0 ? content.substring(leccionesIdx) : content
-          entries = parseEntries(leccionesContent)
+          const brainData = readBrainFile(brainPath)
+          entries = brainData.entries
         }
 
         const newEntry: BrainEntry = {
@@ -246,29 +145,16 @@ export default tool({
       report.push(`⚠️ Sincronización automática de habilidades fallida o no disponible: ${e.message || e}`)
     }
 
-    // 4. Escribir commit_message.txt
-    const commitMsgPath = path.join(changeDir, "commit_message.txt")
+    // 4. Escribir commit_message.txt en location TEMPORAL antes de archivar
+    const tempCommitMsgPath = path.join(projectRoot, ".openspec", `commit_msg_${args.changeName}.txt`)
     try {
-      fs.writeFileSync(commitMsgPath, args.commitMessage + "\n", "utf-8")
-      report.push(`✓ Archivo commit_message.txt generado`)
+      fs.writeFileSync(tempCommitMsgPath, args.commitMessage + "\n", "utf-8")
+      report.push(`✓ Archivo commit_message.txt generado en location temporal`)
     } catch (e: any) {
       report.push(`⚠️ Error escribiendo commit_message.txt: ${e.message}`)
     }
 
-    // 5. Archivar la carpeta físicamente
-    const archiveDir = path.join(projectRoot, ".openspec/changes/archive", `${dateStr}-${args.changeName}`)
-    try {
-      if (fs.existsSync(archiveDir)) {
-        fs.rmSync(archiveDir, { recursive: true, force: true })
-      }
-      fs.mkdirSync(path.dirname(archiveDir), { recursive: true })
-      moveRecursive(changeDir, archiveDir)
-      report.push(`✓ Carpeta archivada en: .openspec/changes/archive/${dateStr}-${args.changeName}/`)
-    } catch (e: any) {
-      return `[SDD Archive Error] Error crítico archivando carpetas: ${e.message}`
-    }
-
-    // 6. Resetear el lockfile a idle (Se hace ANTES del commit para incluirlo en el cierre)
+    // 5. Resetear el lockfile a idle (ANTES del commit para incluirlo en el cierre)
     const lockfilePath = path.join(projectRoot, ".openspec/sdd-lock.json")
     if (fs.existsSync(lockfilePath)) {
       try {
@@ -284,17 +170,36 @@ export default tool({
       }
     }
 
-    // 7. Confirmación Git Atómica (Incluye el lockfile reseteado)
+    // 6. Confirmación Git Atómica (usa temp commit msg, antes de archivar)
     if (fs.existsSync(path.join(projectRoot, ".git"))) {
       try {
         execSync("git add .", { cwd: projectRoot, stdio: "ignore" })
-        const archiveCommitMsgPath = path.join(archiveDir, "commit_message.txt")
-        execSync(`git commit -F "${archiveCommitMsgPath}"`, { cwd: projectRoot, stdio: "ignore" })
-        report.push(`✓ Commit de Git ejecutado usando el mensaje semántico de la carpeta archivada`)
+        execSync(`git commit -F "${tempCommitMsgPath}"`, { cwd: projectRoot, stdio: "ignore" })
+        report.push(`✓ Commit de Git ejecutado usando el mensaje semántico`)
       } catch (e: any) {
         report.push(`⚠️ Git Commit falló o no había cambios pendientes de código: ${e.message}`)
       }
     }
+
+    // 8. Archivar la carpeta físicamente (DESPUÉS del commit)
+    const archiveDir = path.join(projectRoot, ".openspec/changes/archive", `${dateStr}-${args.changeName}`)
+    try {
+      if (fs.existsSync(archiveDir)) {
+        fs.rmSync(archiveDir, { recursive: true, force: true })
+      }
+      fs.mkdirSync(path.dirname(archiveDir), { recursive: true })
+      moveRecursive(changeDir, archiveDir)
+      report.push(`✓ Carpeta archivada en: .openspec/changes/archive/${dateStr}-${args.changeName}/`)
+    } catch (e: any) {
+      return `[SDD Archive Error] Error crítico archivando carpetas: ${e.message}`
+    }
+
+    // 9. Limpiar archivo temporal de commit message
+    try {
+      if (fs.existsSync(tempCommitMsgPath)) {
+        fs.unlinkSync(tempCommitMsgPath)
+      }
+    } catch (e: any) {}
 
     report.push("━━━ finalizado con éxito absoluto ━━━")
     return report.join("\n")

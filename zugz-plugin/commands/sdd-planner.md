@@ -1,11 +1,11 @@
 ---
-description: Ejecutar planificación e interrogatorio de Fase 1
+description: Planificar requerimiento y realizar encuesta. Fase 1 del ciclo SDD.
 agent: sdd-planner
 subtask: true
-model: opencode/deepseek-v4-flash-free
+model: minimax-coding-plan/MiniMax-M2.7
 ---
 
-Inicia o reingresa al ciclo de planificación e interrogatorio para el cambio: $ARGUMENTS
-- Ejecuta el diagnóstico de entorno en la Fase 1.
-- Abre la encuesta interactiva en el chat con preguntas clave.
-- Diseña el plano técnico y especificaciones consolidado en specs/spec.md.
+Planifica el requerimiento: $ARGUMENTS
+- Lee diagnostics.md
+- Genera spec.md
+- Al terminar: llama sdd_transition con nextPhase=2

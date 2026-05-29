@@ -1,13 +1,12 @@
 ---
-description: Ejecutar control de calidad, linter, tag balance, autocuración y despliegue de Fase 3
+description: Ejecutar control de calidad y validación (linter, auditorías). Fase 3 del ciclo SDD.
 agent: sdd-tester
 subtask: true
-model: opencode/deepseek-v4-flash-free
+model: minimax-coding-plan/MiniMax-M2.7
 ---
 
-Ejecuta el control de calidad, linter, balance de etiquetas HTML, autocuración de sintaxis simple y despliegue en caliente para el cambio activo: $ARGUMENTS
-- Lee las especificaciones en specs/spec.md.
-- Corre linter, compiladores globales y auditores estáticos de UI.
-- Corrige de forma automática y autónoma errores sintácticos simples (mismatched tags, parenthesis).
-- Realiza el deploy en caliente (clasp push o dev-deploy).
-- Genera el informe de validación (verification_report.md) y solicita aprobación de conformidad.
+Ejecuta validación de código para el cambio activo: $ARGUMENTS
+- Lee spec.md
+- Corre linter, auditores estáticos de UI
+- Genera validation_report.md
+- Al terminar: llama sdd_transition con nextPhase=4

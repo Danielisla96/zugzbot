@@ -5,7 +5,7 @@ Este archivo establece las directrices globales y el reglamento operativo obliga
 ---
 
 ## 📐 Filosofía del Swarm: Desarrollo Guiado por Especificaciones (SDD Simplificado)
-Operamos estrictamente bajo la metodología **Spec-Driven Development (SDD) Simplificada** dividida en **4 Fases**. Ningún agente debe realizar modificaciones de código de producción sin planificación previa y aprobación explícita en la Fase 1.
+Operamos estrictamente bajo la metodología **Spec-Driven Development (SDD) Simplificada** dividida en **6 Fases**. Ningún agente debe realizar modificaciones de código de producción sin planificación previa y aprobación explícita en la Fase 1.
 
 ---
 
@@ -13,7 +13,7 @@ Operamos estrictamente bajo la metodología **Spec-Driven Development (SDD) Simp
 
 Queda terminantemente prohibido para cualquier agente del swarm (incluyendo al Orquestador @zugzbot) evadir el ciclo de desarrollo guiado por especificaciones:
 - **No Trabajo en Caliente**: Está prohibido proponer código fuente, diseños HTML/CSS o parches técnicos directamente al usuario en el chat principal sin antes haber completado la **Fase 1 (Planificación e Interrogación)** y obtenido su visto bueno explícito.
-- **Rol del Orquestador**: `@zugzbot` debe educar siempre al usuario sobre el flujo de SDD cuando se solicite una nueva característica o cambio. Debe generar un **Roadmap de las 4 Fases de SDD de una línea por fase** y delegar la Fase 1 de inmediato.
+- **Rol del Orquestador**: `@zugzbot` debe educar siempre al usuario sobre el flujo de SDD cuando se solicite una nueva característica o cambio. Debe generar un **Roadmap de las 6 Fases de SDD de una línea por fase** y delegar la Fase 1 de inmediato.
 - **Flujo de Trabajo Estricto**: Todo cambio lógico debe iniciarse a través de la delegación estructurada hacia `@sdd-planner`.
 
 ---
@@ -47,6 +47,7 @@ Para optimizar los tiempos de ejecución, evitar la dispersión mental del swarm
   2. Dictar la tarea específica y concreta sin rodeos.
 - **Artefactos "Justo y Necesario"**: Las especificaciones técnicas en `.openspec/` deben ser concisas, apoyándose en tablas, bullet points y escenarios BDD de pocas líneas. Los subagentes no deben generar documentación o reportes extensivos e innecesarios. Su misión es ejecutar, no escribir de más.
 - **Handoff Eficiente**: Cuando un agente transicione de fase, su mensaje final debe resumir su logro en no más de un párrafo corto e indicar explícitamente cuál es la siguiente acción.
+- **Output Exclusivamente Texto, Sin Estructuras Internas [CRÍTICO]**: Los agentes deben devolver **SOLO texto descriptivo** de sus resultados. **NUNCA deben retornar estructuras JSON internas de tasks** (como `task_id`, `invoke task`, etc.). Cuando un agente necesita invocar otro agente via `task`, debe esperar el resultado y luego retornar un **RESUMEN EN TEXTO PLANO** del resultado, no el output raw del tool.
 
 ---
 
@@ -57,31 +58,49 @@ Para optimizar al máximo el tiempo de desarrollo, reducir la latencia y evitar 
 - **Validación Manual como Prioridad**: Una vez realizada la implementación y el despliegue automático de prueba, el builder pausará de inmediato el flujo. No se correrán pruebas automáticas de regresión de forma obligatoria aquí; el usuario realizará el QA manual empírico en caliente basándose en el checklist de criterios de aceptación.
 - **Prevención de HTML Desbalanceado**: Al editar plantillas de marcado (HTML, JSX, TSX), el `@sdd-builder` debe garantizar con absoluto rigor que todas las etiquetas (como `<div>`, `<span>`, etc.) estén perfectamente cerradas y balanceadas. El arnés invocará la herramienta `sdd_ui_auditor` para auditar la balance de tags y alertar tempranamente si hay desajustes estructurales que puedan quebrar el DOM global (común en SPAs monolíticas).
 - **Subagentes "Lienzo en Blanco" (Aislamiento de Contexto)**: Para evitar la degradación de memoria por historial acumulado en el LLM, el Orquestador y las llamadas de subagentes deben iniciar hilos de conversación limpios (Fresh Task Sessions) con contexto delimitado. Queda prohibido arrastrar historiales de compilaciones fallidas o parches interminables en un mismo hilo; si se requiere una corrección mayor, se creará un subagente con un hilo de chat limpio de cero (lienzo en blanco).
-- **Tests de Regresión al Cierre (Fase 3)**: Las pruebas automatizadas ya preexistentes en el repositorio (de linter o de regresión lógica general, como `npm run test`, `npm run lint`, `pytest`, etc.) se ejecutarán únicamente de forma opcional por el `@sdd-archiver` en la Fase 3, justo antes de sellar el cambio, actuando como red de seguridad preventiva de Git.
+- **Tests de Regresión al Cierre (Fase 5)**: Las pruebas automatizadas ya preexistentes en el repositorio (de linter o de regresión lógica general, como `npm run test`, `npm run lint`, `pytest`, etc.) se ejecutarán únicamente de forma opcional por el `@sdd-archiver` en la Fase 5, justo antes de sellar el cambio, actuando como red de seguridad preventiva de Git.
 
 ---
 
 ## 🚦 PROTOCOLO DE VALIDACIÓN EN VIVO (HUMAN-IN-THE-LOOP) [CRÍTICO]
 
-Queda estrictamente prohibido que el Swarm transicione de Fase 2 (Construcción) a Fase 3 (Cierre) ni archive/consolide cambios de manera automática bajo autopilot sin que el usuario haya hecho una revisión manual y conforme del despliegue en vivo:
-1. **Despliegue y Pausa**: Una vez que el `@sdd-builder` realiza el despliegue de la solución (vía `clasp push` o deploy correspondiente), debe detenerse y congelar la autodelegación.
-2. **Instrucciones de Prueba**: El builder debe proporcionarle de inmediato al usuario instrucciones directas para probar (ej: *"Ya desplegué los cambios. Por favor, refresca la Web App o corre clasp open para validar"*).
-3. **Visto Bueno Obligatorio**: El builder debe esperar el feedback o confirmación del usuario en el chat. Si se detecta cualquier pifia visual o bug, se resuelve directamente en la misma Fase 2.
-4. **Handoff al Cierre**: Solo con el visto bueno explícito del usuario, se autoriza la transición a la Fase 3 (`@sdd-archiver`) para realizar el bump de versión, consolidar el CHANGELOG, hacer el commit Git y archivar la carpeta del cambio.
+Queda estrictamente prohibido que el Swarm transicione automáticamente sin que el usuario haya hecho una revisión manual y conforme del despliegue en vivo:
+1. **HIL Post-F1 (Aprobación de Spec)**: Después de F1 (`@sdd-planner`), el orquestador debe preguntar al usuario si aprueba el spec antes de continuar a F2.
+2. **HIL Post-F4 (Validación de QA)**: Después de F4 (`@sdd-deployer`), el orquestador debe preguntar al usuario si valida el QA y deploy antes de continuar a F5 (`@sdd-archiver`).
+3. **Auto-Pilot**: Si `auto_pilot: true`, las fases F0→F1→F2→F3→F4 van sin pausas intermedias, pero los HIL post-F1 y post-F4 son OBLIGATORIOS.
 
 ---
 
-## 🏛️ Estructura de 5 Agentes y Flujo de Datos
+## 🏛️ Estructura de 6 Agentes y Flujo de Datos
 
 Cada fase cuenta con un agente único ultra-especializado con inputs y outputs rígidos y bien definidos:
 
 | Fase | Agente | Rol | Inputs | Entregable |
 | :--- | :--- | :--- | :--- | :--- |
-| **F0** | **`@sdd-explorer`**| Explorador e Indexador | codebase actual | `diagnostics.md` + `skills_manifest.md` |
-| **F1** | **`@sdd-planner`** | Planificador e Interrogador | requerimiento + `diagnostics.md` | `specs/spec.md` (Plano + encuesta + BDD) |
+| **F0** | **`@sdd-explorer`**| Explorador e Indexador | codebase actual | `diagnostics.md` |
+| **F1** | **`@sdd-planner`** | Planificador e Interrogador | requerimiento + `diagnostics.md` | `specs/spec.md` |
 | **F2** | **`@sdd-builder`** | Constructor Lógico/Estético | `specs/spec.md` | Código funcional modificado |
-| **F3** | **`@sdd-tester`** | Control de Calidad y Despliegue | código + `specs/spec.md` | `verification_report.md` + deploy |
-| **F4** | **`@sdd-archiver`** | Especialista de Cierre | `specs/spec.md` + `verification_report.md` | bump, CHANGELOG, Git Commit |
+| **F3** | **`@sdd-tester`** | Validador (Linter, Auditorías) | `specs/spec.md` + código | `validation_report.md` |
+| **F4** | **`@sdd-deployer`** | Deployer (Push) | `validation_report.md` + código | `deployment_report.md` |
+| **F5** | **`@sdd-archiver`** | Especialista de Cierre | `specs/spec.md` + `deployment_report.md` | bump, CHANGELOG, Git Commit |
+
+---
+
+## 🗺️ Comandos vs Agentes (Complemento)
+
+Los **commands** (`sdd.md`, `sdd-builder.md`, `sdd-planner.md`, etc. en `zugz-plugin/commands/`) son wrappers de entrada que delegan a los **agents** (`zugz-plugin/agents/`). Los **agents** son los que realmente ejecutan la lógica del SDD.
+
+| Command | Agent Destino | Función |
+|---------|--------------|---------|
+| `sdd.md` | (orquestador primario) | Punto de entrada global |
+| `sdd-explorer.md` | `@sdd-explorer` | Diagnóstico de codebase |
+| `sdd-planner.md` | `@sdd-planner` | Planificación e interrogación |
+| `sdd-builder.md` | `@sdd-builder` | Construcción lógica/estética |
+| `sdd-tester.md` | `@sdd-tester` | Validación (linter, auditorías) |
+| `sdd-deployer.md` | `@sdd-deployer` | Deploy (push) |
+| `sdd-archiver.md` | `@sdd-archiver` | Cierre, bump, commit |
+
+> **Nota**: Todos los commands y agents usan `model: minimax-coding-plan/MiniMax-M2.7` como modelo unificado.
 
 ---
 
@@ -121,7 +140,7 @@ Feature: [Breve descripción de la funcionalidad]
 - [ ] Criterio 2: El diseño estético debe incorporar responsive y micro-animaciones fluidas.
 ```
 
-### 2. `verification_report.md`
+### 2. `validation_report.md`
 ```markdown
 # Reporte de Validación Técnica: [nombre-cambio]
 
@@ -135,7 +154,38 @@ Feature: [Breve descripción de la funcionalidad]
 - **Detalle de UX e Interacción**: Confirmación de la correcta aplicación del diseño responsive y micro-animaciones.
 ```
 
-### 3. `commit_message.txt`
+### 3. `diagnostics.md`
+```markdown
+# Diagnóstico del Proyecto
+
+## Stack Tecnológico
+- [tecnologías detectadas]
+
+## Estructura
+- [archivos principales]
+
+## Dependencias
+- [paquetes npm principales]
+
+## Puntos de Entrada
+- [archivos principales]
+```
+
+### 4. `deployment_report.md`
+```markdown
+# Reporte de Despliegue: [nombre-cambio]
+
+## Deploy
+- Comando: `npx clasp push`
+- Estado: [ÉXITO | FALLO]
+- Archivos subidos: X
+- Errores: [si hay]
+
+## Verificación
+- [ ] Push verificado
+```
+
+### 5. `commit_message.txt`
 ```text
 [tipo]([scope]): [breve descripción en minúscula y presente]
 

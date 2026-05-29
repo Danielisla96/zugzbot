@@ -7,14 +7,14 @@ import regressionDetector from "./sdd_regression_detector"
 import secretScanner from "./sdd_secret_scanner"
 import requirementTracker from "./sdd_requirement_tracker"
 import checkDependencyCooldown from "./check_dependency_cooldown"
-import sddCheckpoint from "./sdd_checkpoint"
 
 const SUBAGENT_MAPPING: { [key: number]: string } = {
   0: "sdd-explorer",
   1: "sdd-planner",
   2: "sdd-builder",
   3: "sdd-tester",
-  4: "sdd-archiver"
+  4: "sdd-deployer",
+  5: "sdd-archiver"
 }
 
 const DEFAULT_LOCKFILE = {
@@ -30,13 +30,14 @@ const DEFAULT_LOCKFILE = {
   last_successful_phase: 0,
   retry_count: 0,
   corrective_loop_active: false,
+  fresh_task: false,
   checkpoints: []
 }
 
 export default tool({
   description: "Tránsiciona de fase en el ciclo Spec-Driven Development (SDD), actualizando el archivo de bloqueo lockfile .openspec/sdd-lock.json de forma segura, e integra control de cambios en Git de forma automática.",
   args: {
-    nextPhase: tool.schema.number().describe("El número de la siguiente fase del ciclo SDD (0-4)"),
+    nextPhase: tool.schema.number().describe("El número de la siguiente fase del ciclo SDD (0-5)"),
     status: tool.schema.string().describe("El nuevo estado del ciclo (ej: 'idle', 'in_progress', 'corrective_loop', 'restored')"),
     reason: tool.schema.string().describe("La justificación o explicación resumida de los cambios logrados en esta fase"),
     activeSubagent: tool.schema.string().optional().describe("El subagente activo opcional (ej: 'sdd-planner', 'sdd-builder')"),
@@ -66,7 +67,7 @@ export default tool({
     let lockfile: any = {
       change_name: "nuevo-cambio",
       active_phase: 0,
-      active_subagent: "sdd-architect",
+      active_subagent: "sdd-explorer",
       status: "idle",
       auto_pilot: false,
       iteration: 0,
@@ -81,6 +82,7 @@ export default tool({
         lockfile.last_successful_phase = lockfile.last_successful_phase || 0;
         lockfile.retry_count = lockfile.retry_count || 0;
         lockfile.corrective_loop_active = lockfile.corrective_loop_active || false;
+        lockfile.fresh_task = lockfile.fresh_task || false;
         lockfile.checkpoints = lockfile.checkpoints || [];
       } catch (e) {
         lockfile = { ...DEFAULT_LOCKFILE };
@@ -95,15 +97,21 @@ export default tool({
       const previousPhase = Math.max(0, (args.nextPhase || lockfile.active_phase) - 1);
       lockfile.last_successful_phase = previousPhase;
       lockfile.corrective_loop_active = true;
+      lockfile.fresh_task = true;
       lockfile.retry_count = 0;
     }
 
     if (direction === "repeat") {
       lockfile.retry_count = (lockfile.retry_count || 0) + 1;
       lockfile.corrective_loop_active = true;
+      lockfile.fresh_task = true;
       if (lockfile.retry_count > 3) {
         return `[SDD Transition Blocked] Se excedió el límite de 3 reintentos para esta fase. Escalando a revisión humana.`;
       }
+    }
+
+    if (direction === "forward") {
+      lockfile.fresh_task = false;
     }
 
     const activeChangeName = args.changeName || lockfile.change_name;
@@ -152,11 +160,11 @@ export default tool({
       }
     }
 
-    // 2. Transición a Fase 4 (Cierre/Documentación): Validar regresiones de compilación, cobertura de requerimientos, cooldown y actualizar estado de tareas
-    if (args.nextPhase === 4 && args.status !== "corrective_loop") {
+    // 2. Transición a Fase 5 (Cierre/Archiver): Validar regresiones de compilación, cobertura de requerimientos, cooldown y actualizar estado de tareas
+    if (args.nextPhase === 5 && args.status !== "corrective_loop") {
       // Sincronizar checklist de tareas completadas desde el verification_report.md
       if (lockfile.tasks) {
-        const reportPath = path.join(projectRoot, ".openspec/changes", activeChangeName, "verification_report.md");
+        const reportPath = path.join(projectRoot, ".openspec/changes", activeChangeName, "validation_report.md");
         if (fs.existsSync(reportPath)) {
           try {
             const reportContent = fs.readFileSync(reportPath, "utf-8");

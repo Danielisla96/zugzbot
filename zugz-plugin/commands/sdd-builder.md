@@ -1,12 +1,11 @@
 ---
-description: Ejecutar construcción lógica y estética de Fase 2
+description: Implementar código según spec. Fase 2 del ciclo SDD.
 agent: sdd-builder
 subtask: true
-model: opencode/deepseek-v4-flash-free
+model: minimax-coding-plan/MiniMax-M2.7
 ---
 
-Ejecuta la codificación lógica y aplicación del diseño estético premium para el cambio activo: $ARGUMENTS
-- Lee las especificaciones en specs/spec.md.
-- Implementa modificaciones y parches quirúrgicos con alta precisión.
-- Valida tipos e integridad semántica utilizando herramientas LSP nativas de OpenCode.
-- Cede el turno a @sdd-tester (Fase 3) para las validaciones sintácticas, linter y deploy.
+Implementa el código: $ARGUMENTS
+- Lee spec.md
+- Codifica cambios
+- Al terminar: llama sdd_transition con nextPhase=3

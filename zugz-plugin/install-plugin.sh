@@ -24,11 +24,12 @@ check_dependencies() {
 }
 
 create_opencode_structure() {
-    echo "📁 Creando estructura .opencode/"
+    echo "📁 Creando estructura de herramientas..."
     
-    mkdir -p "$INSTALL_DIR/.opencode/tools"
-    mkdir -p "$INSTALL_DIR/.opencode/plugins"
-    mkdir -p "$INSTALL_DIR/.opencode/skills"
+    mkdir -p "$INSTALL_DIR/tools"
+    mkdir -p "$INSTALL_DIR/agents"
+    mkdir -p "$INSTALL_DIR/plugins"
+    mkdir -p "$INSTALL_DIR/skills"
     
     echo "   ✓ Directorios creados"
 }
@@ -36,20 +37,66 @@ create_opencode_structure() {
 copy_plugin_files() {
     echo "📦 Copiando archivos del plugin..."
     
-    if [ -d "$PLUGIN_DIR/.opencode" ]; then
-        cp -r "$PLUGIN_DIR/.opencode/"* "$INSTALL_DIR/.opencode/" 2>/dev/null || true
-        echo "   ✓ Motor de herramientas (.opencode/tools/) copiado"
+    local copy_failed=0
+    
+    if [ -d "$PLUGIN_DIR/tools" ]; then
+        if ! cp -r "$PLUGIN_DIR/tools/"* "$INSTALL_DIR/tools/" 2>&1; then
+            echo "   ⚠ ADVERTENCIA: Fallo al copiar tools/"
+            copy_failed=1
+        else
+            echo "   ✓ Motor de herramientas (tools/) copiado"
+        fi
     fi
     
     if [ -d "$PLUGIN_DIR/agents" ]; then
-        mkdir -p "$INSTALL_DIR/.opencode/agents"
-        cp "$PLUGIN_DIR/agents/"*.md "$INSTALL_DIR/.opencode/agents/" 2>/dev/null || true
-        echo "   ✓ Prompts de agentes (.opencode/agents/) copiados"
+        if ! cp "$PLUGIN_DIR/agents/"*.md "$INSTALL_DIR/agents/" 2>&1; then
+            echo "   ⚠ ADVERTENCIA: Fallo al copiar agents/"
+            copy_failed=1
+        else
+            echo "   ✓ Prompts de agentes (agents/) copiados"
+        fi
+    fi
+    
+    if [ -d "$PLUGIN_DIR/commands" ]; then
+        mkdir -p "$INSTALL_DIR/commands"
+        if ! cp "$PLUGIN_DIR/commands/"*.md "$INSTALL_DIR/commands/" 2>&1; then
+            echo "   ⚠ ADVERTENCIA: Fallo al copiar commands/"
+            copy_failed=1
+        else
+            echo "   ✓ Comandos (commands/) copiados"
+        fi
     fi
     
     if [ -d "$PLUGIN_DIR/skills" ]; then
-        cp -r "$PLUGIN_DIR/skills/"* "$INSTALL_DIR/.opencode/skills/" 2>/dev/null || true
-        echo "   ✓ Skills (.opencode/skills/) copiados"
+        if ! cp -r "$PLUGIN_DIR/skills/"* "$INSTALL_DIR/skills/" 2>&1; then
+            echo "   ⚠ ADVERTENCIA: Fallo al copiar skills/"
+            copy_failed=1
+        else
+            echo "   ✓ Skills (skills/) copiados"
+        fi
+    fi
+    
+    if [ -d "$PLUGIN_DIR/plugins" ]; then
+        if ! cp -r "$PLUGIN_DIR/plugins/"* "$INSTALL_DIR/plugins/" 2>&1; then
+            echo "   ⚠ ADVERTENCIA: Fallo al copiar plugins/"
+            copy_failed=1
+        else
+            echo "   ✓ Plugins (plugins/) copiados"
+        fi
+    fi
+    
+    if [ -f "$PLUGIN_DIR/sdd" ]; then
+        if ! cp "$PLUGIN_DIR/sdd" "$INSTALL_DIR/sdd" 2>&1; then
+            echo "   ⚠ ADVERTENCIA: Fallo al copiar script sdd"
+            copy_failed=1
+        else
+            chmod +x "$INSTALL_DIR/sdd"
+            echo "   ✓ Script sdd copiado"
+        fi
+    fi
+    
+    if [ $copy_failed -eq 1 ]; then
+        echo "   ⚠ Algunos archivos no se copiaron correctamente"
     fi
     
     echo "   ✓ Archivos del plugin copiados"
@@ -71,47 +118,98 @@ create_shared_files() {
     if [ ! -f "$INSTALL_DIR/opencode.json" ]; then
         cat > "$INSTALL_DIR/opencode.json" << 'EOF'
 {
-  "$schema": "https://opencode.ai/schema.json",
-  "agents": {
+  "$schema": "https://opencode.ai/config.json",
+  "lsp": true,
+  "permission": {
+    "edit": "allow",
+    "bash": "allow",
+    "lsp": "allow"
+  },
+  "agent": {
     "zugzbot": {
-      "description": "Orquestador Maestro SDD",
-      "enabled": true,
-      "model": "minimax-coding-plan/MiniMax-M2.7"
+      "mode": "primary",
+      "prompt": "./agents/zugzbot.md",
+      "permission": {
+        "task": { "sdd-*": "allow", "aux-*": "allow" },
+        "question": "allow",
+        "lsp": "allow",
+        "edit": { ".openspec/sdd-lock.json": "allow" }
+      }
     },
-    "sdd-explorer": {
-      "description": "Diagnosticador Fase 0",
-      "enabled": true,
-      "model": "minimax-coding-plan/MiniMax-M2.7"
+"sdd-explorer": {
+      "mode": "subagent",
+      "prompt": "./agents/sdd-explorer.md",
+      "permission": {
+        "bash": "allow",
+        "lsp": "allow",
+        "tools": { "sdd_transition": "allow", "sdd_generate_tree": "allow" }
+      }
     },
     "sdd-planner": {
-      "description": "Planificador Fase 1",
-      "enabled": true,
-      "model": "minimax-coding-plan/MiniMax-M2.7"
+      "mode": "subagent",
+      "prompt": "./agents/sdd-planner.md",
+      "permission": {
+        "edit": "allow",
+        "bash": "ask",
+        "lsp": "allow",
+        "tools": { "sdd_transition": "allow", "sdd_brain_sync": "allow" }
+      }
     },
     "sdd-builder": {
-      "description": "Constructor Fase 2",
-      "enabled": true,
-      "model": "minimax-coding-plan/MiniMax-M2.7"
+      "mode": "subagent",
+      "prompt": "./agents/sdd-builder.md",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "lsp": "allow",
+        "tools": { "sdd_transition": "allow", "sdd_ui_auditor": "allow" }
+      }
     },
     "sdd-tester": {
-      "description": "Tester Fase 3",
-      "enabled": true,
-      "model": "minimax-coding-plan/MiniMax-M2.7"
+      "mode": "subagent",
+      "prompt": "./agents/sdd-tester.md",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "lsp": "allow",
+        "tools": { "sdd_transition": "allow", "sdd_ui_auditor": "allow", "sdd_spec_validator": "allow" }
+      }
     },
     "sdd-archiver": {
-      "description": "Archiver Fase 4",
-      "enabled": true,
-      "model": "minimax-coding-plan/MiniMax-M2.7"
+      "mode": "subagent",
+      "prompt": "./agents/sdd-archiver.md",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "lsp": "allow",
+        "tools": { "sdd_archive_and_commit": "allow", "sdd_transition": "allow", "sdd_brain_sync": "allow", "sdd_install_autoskills": "allow" }
+      }
+    },
+    "sdd-deployer": {
+      "mode": "subagent",
+      "prompt": "./agents/sdd-deployer.md",
+      "permission": {
+        "bash": "allow",
+        "tools": { "sdd_transition": "allow" }
+      }
     },
     "aux-handyman": {
-      "description": "Tareas rápidas",
-      "enabled": true,
-      "model": "minimax-coding-plan/MiniMax-M2.7"
+      "mode": "subagent",
+      "prompt": "./agents/aux-handyman.md",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "lsp": "allow"
+      }
     },
     "aux-oracle": {
-      "description": "Consultas teóricas",
-      "enabled": true,
-      "model": "minimax-coding-plan/MiniMax-M2.7"
+      "mode": "subagent",
+      "prompt": "./agents/aux-oracle.md",
+      "permission": {
+        "edit": "deny",
+        "bash": "deny",
+        "lsp": "deny"
+      }
     }
   }
 }
@@ -128,13 +226,24 @@ setup_openspec() {
     if [ ! -f "$INSTALL_DIR/.openspec/sdd-lock.json" ]; then
         cat > "$INSTALL_DIR/.openspec/sdd-lock.json" << 'EOF'
 {
-  "current_phase": "idle",
-  "phase_status": "not_started",
+  "change_name": "nuevo-cambio",
+  "active_phase": 0,
+  "active_subagent": "sdd-explorer",
+  "status": "idle",
   "auto_pilot": false,
-  "change_name": null,
-  "complexity": null,
+  "iteration": 0,
+  "last_updated": "",
+  "orchestrator_mode": "delegation_only",
+  "direction": "forward",
+  "last_successful_phase": 0,
   "retry_count": 0,
-  "last_checkpoint": null
+  "corrective_loop_active": false,
+  "fresh_task": false,
+  "checkpoints": [],
+  "tasks": [],
+  "complexity": "medium",
+  "last_checkpoint_id": null,
+  "last_restored_from": null
 }
 EOF
         echo "   ✓ sdd-lock.json creado"
@@ -149,6 +258,39 @@ EOF
 EOF
         echo "   ✓ brain.md creado"
     fi
+}
+
+setup_opencode_plugins() {
+    echo "🔌 Configurando plugins de OpenCode..."
+    
+    mkdir -p "$INSTALL_DIR/.opencode/plugins"
+    
+    if [ -f "$PLUGIN_DIR/plugins/plugin_tui.tsx" ]; then
+        cp "$PLUGIN_DIR/plugins/plugin_tui.tsx" "$INSTALL_DIR/.opencode/plugins/" 2>/dev/null || true
+        echo "   ✓ TUI plugin configurado"
+    fi
+    
+    if [ -f "$PLUGIN_DIR/plugins/plugin_sdd_core.ts" ]; then
+        cp "$PLUGIN_DIR/plugins/plugin_sdd_core.ts" "$INSTALL_DIR/.opencode/plugins/" 2>/dev/null || true
+        echo "   ✓ Core plugin configurado"
+    fi
+    
+    echo "   ✓ OpenCode plugins configurados"
+}
+
+copy_models_config() {
+    echo "📊 Copiando configuración de modelos..."
+    
+    if [ -f "$PLUGIN_DIR/zugz-models.json" ]; then
+        if [ ! -f "$INSTALL_DIR/zugz-models.json" ]; then
+            cp "$PLUGIN_DIR/zugz-models.json" "$INSTALL_DIR/zugz-models.json" 2>/dev/null || true
+            echo "   ✓ zugz-models.json copiado"
+        else
+            echo "   ✓ zugz-models.json ya existe"
+        fi
+    fi
+    
+    echo "   ✓ Configuración de modelos completada"
 }
 
 update_gitignore() {
@@ -196,31 +338,14 @@ install_dependencies() {
 }
 
 create_sdd_alias() {
-    echo "🔗 Creando alias ./sdd..."
+    echo "🔗 Configurando comando ./sdd..."
     
-    cat > "$INSTALL_DIR/sdd" << 'ALIAS_EOF'
-#!/usr/bin/env bash
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TOOL="$DIR/.opencode/tools/sdd_transition.js"
-
-case "$1" in
-    status)
-        node "$TOOL" status
-        ;;
-    clean)
-        node "$TOOL" reset
-        ;;
-    autopilot)
-        node "$TOOL" autopilot "${2:-off}"
-        ;;
-    *)
-        node "$TOOL" "$@"
-        ;;
-esac
-ALIAS_EOF
-    
-    chmod +x "$INSTALL_DIR/sdd"
-    echo "   ✓ Alias ./sdd creado"
+    if [ -f "$INSTALL_DIR/sdd" ]; then
+        chmod +x "$INSTALL_DIR/sdd"
+        echo "   ✓ ./sdd configurado y ejecutable"
+    else
+        echo "   ⚠ ADVERTENCIA: Script sdd no encontrado en $INSTALL_DIR/sdd"
+    fi
 }
 
 check_dependencies
@@ -228,6 +353,8 @@ create_opencode_structure
 copy_plugin_files
 create_shared_files
 setup_openspec
+setup_opencode_plugins
+copy_models_config
 update_gitignore
 install_dependencies
 create_sdd_alias

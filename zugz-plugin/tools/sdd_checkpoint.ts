@@ -13,17 +13,6 @@ interface Checkpoint {
   lock_snapshot: any
 }
 
-interface TransitionArgs {
-  direction?: "forward" | "backward" | "repeat"
-  nextPhase: number
-  status: string
-  reason: string
-  activeSubagent?: string
-  iteration?: number
-  changeName?: string
-  complexity?: "low" | "high"
-}
-
 export default tool({
   description: "Guarda checkpoint del estado actual del ciclo SDD antes de transiciones, o restaura desde un checkpoint anterior. Permite repetir o retroceder fases sin perder contexto.",
   args: {

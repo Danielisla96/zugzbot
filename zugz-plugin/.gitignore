@@ -29,8 +29,7 @@ Thumbs.db
 # Zugzbot SDD Plugin - Local files
 .opencode/
 tui.json
-.openspec/sdd-lock.json
-.openspec/checkpoints/
+.openspec/
 
 # Temporary
 tmp/

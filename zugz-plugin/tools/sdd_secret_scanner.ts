@@ -146,7 +146,7 @@ export default tool({
       { type: "OpenAI API Key", regex: /sk-[a-zA-Z0-9]{48}/ },
       { type: "Google API Key", regex: /AIzaSy[A-Za-z0-9_-]{35}/ },
       { type: "Github Personal Access Token", regex: /ghp_[a-zA-Z0-9]{36}/ },
-      { type: "Generic High-Entropy Credential Assignment", regex: /(api_key|secret_key|client_secret|password|access_token|db_pass|auth_token)\s*[:=]\s*["'][a-zA-Z0-9_\-\.\/]{16,}["']/i }
+      { type: "Generic High-Entropy Credential Assignment", regex: /(api_key|secret_key|client_secret|password|access_token|db_pass|auth_token)\s*[:=]\s*["'][a-zA-Z0-9_./-]{16,}["']/i }
     ];
 
     const ignoreFilter = (line: string): boolean => {

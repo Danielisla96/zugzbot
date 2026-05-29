@@ -17,7 +17,7 @@
     "types": ["node"]
   },
   "include": [
-    ".opencode/**/*.js",
+    "tools/**/*.ts",
     "agents/**/*.md"
   ],
   "exclude": [

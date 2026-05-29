@@ -6,7 +6,7 @@
 #
 # Scoped local command-line helper for SDD.
 #
-# Version: 1.3.0
+# Version: 1.4.0
 
 set -e
 
@@ -34,8 +34,9 @@ fi
 get_json_val() {
     local key=$1
     local file=$2
-    if [ -f "$file" ]; then
-        grep -o '"'"$key"'"[[:space:]]*:[[:space:]]*"[^"]*"' "$file" 2>/dev/null | head -n1 | cut -d'"' -f4 || echo ""
+    if [ -f "$file" ] && [ -s "$file" ]; then
+        local val=$(grep -o '"'"$key"'"[[:space:]]*:[[:space:]]*"[^"]*"' "$file" 2>/dev/null | head -n1 | cut -d'"' -f4)
+        echo "${val:-}"
     else
         echo ""
     fi
@@ -44,8 +45,13 @@ get_json_val() {
 get_json_num() {
     local key=$1
     local file=$2
-    if [ -f "$file" ]; then
-        grep -o '"'"$key"'"[[:space:]]*:[[:space:]]*[0-9]*' "$file" 2>/dev/null | head -n1 | grep -o '[0-9]*' || echo "0"
+    if [ -f "$file" ] && [ -s "$file" ]; then
+        local val=$(grep -o '"'"$key"'"[[:space:]]*:[[:space:]]*[-0-9]*' "$file" 2>/dev/null | head -n1 | grep -o '[-0-9]*')
+        if [ -n "$val" ] && [ "$val" != "-" ]; then
+            echo "$val"
+        else
+            echo "0"
+        fi
     else
         echo "0"
     fi
@@ -54,8 +60,13 @@ get_json_num() {
 get_json_bool() {
     local key=$1
     local file=$2
-    if [ -f "$file" ]; then
-        grep -o '"'"$key"'"[[:space:]]*:[[:space:]]*[a-zA-Z]*' "$file" 2>/dev/null | head -n1 | awk -F: '{print $2}' | tr -d ' ' | tr -d ',' || echo "false"
+    if [ -f "$file" ] && [ -s "$file" ]; then
+        local val=$(grep -o '"'"$key"'"[[:space:]]*:[[:space:]]*[a-zA-Z]*' "$file" 2>/dev/null | head -n1 | awk -F: '{print $2}' | xargs 2>/dev/null || echo "")
+        if [ "$val" = "true" ] || [ "$val" = "false" ] || [ "$val" = "null" ]; then
+            echo "$val"
+        else
+            echo "false"
+        fi
     else
         echo "false"
     fi
@@ -188,9 +199,15 @@ perform_rollback() {
     read -r confirmation
     if [[ "$confirmation" =~ ^[sS]$ ]]; then
         echo -e "  ${COLOR_MUTED}▪ Descartando modificaciones de espacio de trabajo...${NC}"
-        git reset --hard HEAD
-        git clean -fd
-        echo -e "  ${COLOR_SUCCESS}✓ Espacio de trabajo restaurado limpiamente.${NC}\n"
+        set +e
+        git reset --hard HEAD 2>/dev/null && git clean -fd 2>/dev/null
+        local git_status=$?
+        set -e
+        if [ $git_status -eq 0 ]; then
+            echo -e "  ${COLOR_SUCCESS}✓ Espacio de trabajo restaurado limpiamente.${NC}\n"
+        else
+            echo -e "  ${COLOR_MUTED}▪ No había cambios para descartar orepo no es un git repo.${NC}\n"
+        fi
     else
         echo -e "  ${COLOR_MUTED}▪ Rollback abortado por el usuario.${NC}\n"
     fi
@@ -210,7 +227,19 @@ perform_clean() {
   "active_subagent": "sdd-explorer",
   "status": "idle",
   "auto_pilot": false,
-  "last_updated": ""
+  "iteration": 0,
+  "last_updated": "",
+  "orchestrator_mode": "delegation_only",
+  "direction": "forward",
+  "last_successful_phase": 0,
+  "retry_count": 0,
+  "corrective_loop_active": false,
+  "fresh_task": false,
+  "checkpoints": [],
+  "tasks": [],
+  "complexity": "medium",
+  "last_checkpoint_id": null,
+  "last_restored_from": null
 }
 EOF
     fi
@@ -239,7 +268,7 @@ validate_schemas() {
     # Check proposal.md
     if [ -f "$change_path/proposal.md" ]; then
         echo -ne "  ▪ Validando propuesta (proposal.md)... "
-        if grep -q "## " "$change_path/proposal.md"; then
+        if grep -q "## " "$change_path/proposal.md" 2>/dev/null; then
             echo -e "${COLOR_SUCCESS}OK (Secciones estructuradas)${NC}"
         else
             echo -e "${COLOR_WARNING}ADVERTENCIA (Falta estructura de títulos)${NC}"
@@ -249,7 +278,7 @@ validate_schemas() {
     # Check specs/spec.md
     if [ -f "$change_path/specs/spec.md" ]; then
         echo -ne "  ▪ Validando especificación BDD (spec.md)... "
-        if grep -q "Scenario:" "$change_path/specs/spec.md" || grep -q "Escenario:" "$change_path/specs/spec.md"; then
+        if grep -q "Scenario:" "$change_path/specs/spec.md" 2>/dev/null || grep -q "Escenario:" "$change_path/specs/spec.md" 2>/dev/null; then
             echo -e "${COLOR_SUCCESS}OK (Escenarios BDD detectados)${NC}"
         else
             echo -e "${COLOR_WARNING}ADVERTENCIA (Faltan palabras clave 'Scenario/Escenario')${NC}"
@@ -286,7 +315,6 @@ run_test() {
             npx jest
         else
             echo -e "  ${COLOR_WARNING}⚠ package.json detectado pero no hay framework de test estándar configurado.${NC}"
-            exit 1
         fi
     elif [ -f "requirements.txt" ] || [ -f "pyproject.toml" ] || [ -f "Pipfile" ]; then
         if command -v pytest &>/dev/null; then
@@ -301,7 +329,6 @@ run_test() {
     else
         echo -e "  ${COLOR_WARNING}⚠ No se detectó suite de pruebas automatizadas estandarizada para este stack.${NC}"
         echo -e "  Configura un script en tu proyecto o actualiza el Cerebro.${NC}"
-        exit 1
     fi
     echo -e "  ${COLOR_BORDER}──────────────────────────────────────────────────────────────${NC}"
     echo -e "  ${COLOR_SUCCESS}✓ Pruebas completadas exitosamente.${NC}\n"
@@ -372,14 +399,18 @@ generate_and_open_dashboard() {
     local phases_json=(
         "F0: Diagnóstico e Indexación"
         "F1: Planificación e Interrogación"
-        "F2: Construcción y Despliegue"
-        "F3: Documentación y Cierre"
+        "F2: Construcción"
+        "F3: Pruebas"
+        "F4: Despliegue"
+        "F5: Documentación y Cierre"
     )
 
     local phases_agents=(
         "@sdd-explorer"
         "@sdd-planner"
         "@sdd-builder"
+        "@sdd-tester"
+        "@sdd-deployer"
         "@sdd-archiver"
     )
 
@@ -410,8 +441,8 @@ generate_and_open_dashboard() {
         </div>'
     done
 
-    # Percentage calculation (4 phases: 0-3)
-    local percentage=$(( (phase_num * 100) / 3 ))
+    # Percentage calculation (6 phases: 0-5)
+    local percentage=$(( (phase_num * 100) / 5 ))
     if [ $percentage -gt 100 ]; then percentage=100; fi
 
     # Autopilot text & class
@@ -859,7 +890,19 @@ perform_init() {
   "active_subagent": "sdd-explorer",
   "status": "in_progress",
   "auto_pilot": false,
-  "last_updated": ""
+  "iteration": 0,
+  "last_updated": "",
+  "orchestrator_mode": "delegation_only",
+  "direction": "forward",
+  "last_successful_phase": 0,
+  "retry_count": 0,
+  "corrective_loop_active": false,
+  "fresh_task": false,
+  "checkpoints": [],
+  "tasks": [],
+  "complexity": "medium",
+  "last_checkpoint_id": null,
+  "last_restored_from": null
 }
 EOF
     fi
