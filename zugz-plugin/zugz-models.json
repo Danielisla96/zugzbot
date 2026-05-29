@@ -4,8 +4,8 @@
     "sdd-explorer": "deepseek/deepseek-v4-flash",
     "sdd-planner": "deepseek/deepseek-v4-pro",
     "sdd-builder": "minimax-coding-plan/MiniMax-M2.7",
-    "sdd-tester": "minimax-coding-plan/MiniMax-M2.7-highspeed",
-    "sdd-deployer": "minimax-coding-plan/MiniMax-M2.7-highspeed",
+    "sdd-tester": "minimax-coding-plan/MiniMax-M2.7",
+    "sdd-deployer": "minimax-coding-plan/MiniMax-M2.7",
     "sdd-archiver": "deepseek/deepseek-v4-flash",
     "aux-handyman": "deepseek/deepseek-v4-flash",
     "aux-oracle": "deepseek/deepseek-v4-flash"
