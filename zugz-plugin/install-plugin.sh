@@ -279,6 +279,21 @@ setup_opencode_plugins() {
     echo "   ✓ OpenCode plugins configurados"
 }
 
+copy_tui_config() {
+    echo "📡 Copiando configuración TUI..."
+    
+    if [ -f "$PLUGIN_DIR/tui.json" ]; then
+        if [ ! -f "$INSTALL_DIR/tui.json" ]; then
+            cp "$PLUGIN_DIR/tui.json" "$INSTALL_DIR/tui.json" 2>/dev/null || true
+            echo "   ✓ tui.json copiado"
+        else
+            echo "   ✓ tui.json ya existe"
+        fi
+    fi
+    
+    echo "   ✓ Configuración TUI completada"
+}
+
 copy_models_config() {
     echo "📊 Copiando configuración de modelos..."
     
@@ -355,6 +370,7 @@ copy_plugin_files
 create_shared_files
 setup_openspec
 setup_opencode_plugins
+copy_tui_config
 copy_models_config
 update_gitignore
 install_dependencies
