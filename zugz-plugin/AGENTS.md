@@ -204,7 +204,13 @@ Feature: [Breve descripción de la funcionalidad]
 2. **🛡️ Cooldown de Dependencias**:
    - Cualquier dependencia agregada debe tener al menos **3 días de publicada** en el registro oficial. Carga la habilidad `sdd-dependency-cooldown` para verificar su antigüedad antes de cualquier importación.
 
-3. **🔬 Estructura Estándar de Testing Agnóstico**:
+3. **⚡ Directivas de Activación y Uso de Skills Premium**:
+   El enjambre cuenta con habilidades premium cargadas dinámicamente en `.opencode/skills/`. Todos los agentes deben invocar y apegarse estrictamente a estas guías bajo las siguientes condiciones:
+   - **`sdd-auto-api-mocker` (Triggers: Fase 2 / Fase 3)**: Si el proyecto host contiene APIs inaccesibles localmente (como objetos globales de Google Apps Script `SpreadsheetApp`, clasp, APIs REST de terceros, bases de datos remotas), el `@sdd-builder` y `@sdd-tester` deben activar esta habilidad para simular mocks de red y sandbox locales no invasivos.
+   - **`sdd-semantic-context-pruner` (Triggers: Fase 0 / Fase 1 / Fase 2)**: Al indexar archivos o delegar tareas, los agentes deben usar poda semántica para eliminar cuerpos de métodos no afectados y enviar únicamente declaraciones de firmas/tipos para optimizar el consumo de tokens en un 70%.
+   - **`sdd-root-cause-diagnostician` (Trigger: Fallo de validación en F3 / F2)**: Ante cualquier error de linter o compilación, el `@sdd-tester` debe ejecutar esta habilidad para redactar un diagnóstico de causa raíz accionable en `.openspec/diagnostics/root_cause.md`, eliminando bucles infinitos de fallas.
+
+4. **🔬 Estructura Estándar de Testing Agnóstico**:
    - Todo proyecto gestionado por el arnés debe estructurar su carpeta de pruebas `tests/` en tres subdirectorios específicos:
      * `tests/unit/`: Para pruebas unitarias de funciones aisladas.
      * `tests/static/`: Para validadores estáticos universales y agnósticos (ej: balance de etiquetas HTML en `tag_balance.js`, detección de IDs duplicados en `dom_structure.js`).
