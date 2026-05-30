@@ -4,7 +4,10 @@
   "permission": {
     "edit": "allow",
     "bash": "allow",
-    "lsp": "allow"
+    "lsp": "allow",
+    "skill": {
+      "*": "allow"
+    }
   },
   "agent": {
     "zugzbot": {
@@ -18,6 +21,9 @@
         },
         "question": "allow",
         "lsp": "allow",
+        "skill": {
+          "*": "allow"
+        },
         "tools": {
           "sdd_transition": "allow",
           "sdd_checkpoint": "allow",
@@ -34,6 +40,9 @@
       "permission": {
         "bash": "allow",
         "lsp": "allow",
+        "skill": {
+          "*": "allow"
+        },
         "tools": {
           "sdd_transition": "allow",
           "sdd_generate_tree": "allow"
@@ -48,6 +57,9 @@
         "edit": "allow",
         "bash": "ask",
         "lsp": "allow",
+        "skill": {
+          "*": "allow"
+        },
         "tools": {
           "sdd_transition": "allow",
           "sdd_brain_sync": "allow",
@@ -68,6 +80,9 @@
         "edit": "allow",
         "bash": "allow",
         "lsp": "allow",
+        "skill": {
+          "*": "allow"
+        },
         "tools": {
           "sdd_transition": "allow",
           "sdd_ui_auditor": "allow",
@@ -89,6 +104,9 @@
         "edit": "allow",
         "bash": "allow",
         "lsp": "allow",
+        "skill": {
+          "*": "allow"
+        },
         "tools": {
           "sdd_transition": "allow",
           "sdd_ui_auditor": "allow",
@@ -116,6 +134,9 @@
         "edit": "allow",
         "bash": "allow",
         "lsp": "allow",
+        "skill": {
+          "*": "allow"
+        },
         "tools": {
           "sdd_archive_and_commit": "allow",
           "sdd_transition": "allow",
@@ -131,6 +152,9 @@
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-deployer.md}",
       "permission": {
         "bash": "allow",
+        "skill": {
+          "*": "allow"
+        },
         "tools": {
           "sdd_transition": "allow",
           "gas_clasp_tools": "allow"
@@ -144,7 +168,10 @@
       "permission": {
         "edit": "allow",
         "bash": "allow",
-        "lsp": "allow"
+        "lsp": "allow",
+        "skill": {
+          "*": "allow"
+        }
       }
     },
     "aux-oracle": {
@@ -154,7 +181,10 @@
       "permission": {
         "edit": "deny",
         "bash": "deny",
-        "lsp": "deny"
+        "lsp": "deny",
+        "skill": {
+          "*": "deny"
+        }
       }
     }
   }

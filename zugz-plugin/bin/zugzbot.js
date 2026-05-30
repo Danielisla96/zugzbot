@@ -70,7 +70,10 @@ function buildOpencodeJson(models) {
     "permission": {
       "edit": "allow",
       "bash": "allow",
-      "lsp": "allow"
+      "lsp": "allow",
+      "skill": {
+        "*": "allow"
+      }
     },
     "agent": {
       "zugzbot": {
@@ -81,11 +84,15 @@ function buildOpencodeJson(models) {
           "task": { "sdd-*": "allow", "aux-*": "allow" },
           "question": "allow",
           "lsp": "allow",
+          "skill": {
+            "*": "allow"
+          },
           "tools": {
             "sdd_transition": "allow",
             "sdd_checkpoint": "allow",
             "sdd_compact_context": "allow",
-            "sdd_context_pruner": "allow"
+            "sdd_context_pruner": "allow",
+            "gas_clasp_tools": "allow"
           }
         }
       },
@@ -96,6 +103,9 @@ function buildOpencodeJson(models) {
         "permission": {
           "bash": "allow",
           "lsp": "allow",
+          "skill": {
+            "*": "allow"
+          },
           "tools": {
             "sdd_transition": "allow",
             "sdd_generate_tree": "allow"
@@ -110,6 +120,9 @@ function buildOpencodeJson(models) {
           "edit": "allow",
           "bash": "ask",
           "lsp": "allow",
+          "skill": {
+            "*": "allow"
+          },
           "tools": {
             "sdd_transition": "allow",
             "sdd_brain_sync": "allow",
@@ -130,6 +143,9 @@ function buildOpencodeJson(models) {
           "edit": "allow",
           "bash": "allow",
           "lsp": "allow",
+          "skill": {
+            "*": "allow"
+          },
           "tools": {
             "sdd_transition": "allow",
             "sdd_ui_auditor": "allow",
@@ -138,7 +154,8 @@ function buildOpencodeJson(models) {
             "sdd_visual_regression_diff": "allow",
             "sdd_auto_api_mocker": "allow",
             "sdd_spec_compliance_linter": "allow",
-            "sdd_syntax_and_linter_auditor": "allow"
+            "sdd_syntax_and_linter_auditor": "allow",
+            "gas_clasp_tools": "allow"
           }
         }
       },
@@ -150,6 +167,9 @@ function buildOpencodeJson(models) {
           "edit": "allow",
           "bash": "allow",
           "lsp": "allow",
+          "skill": {
+            "*": "allow"
+          },
           "tools": {
             "sdd_transition": "allow",
             "sdd_ui_auditor": "allow",
@@ -177,6 +197,9 @@ function buildOpencodeJson(models) {
           "edit": "allow",
           "bash": "allow",
           "lsp": "allow",
+          "skill": {
+            "*": "allow"
+          },
           "tools": {
             "sdd_archive_and_commit": "allow",
             "sdd_transition": "allow",
@@ -192,8 +215,12 @@ function buildOpencodeJson(models) {
         "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-deployer.md}",
         "permission": {
           "bash": "allow",
+          "skill": {
+            "*": "allow"
+          },
           "tools": {
-            "sdd_transition": "allow"
+            "sdd_transition": "allow",
+            "gas_clasp_tools": "allow"
           }
         }
       },
@@ -204,7 +231,10 @@ function buildOpencodeJson(models) {
         "permission": {
           "edit": "allow",
           "bash": "allow",
-          "lsp": "allow"
+          "lsp": "allow",
+          "skill": {
+            "*": "allow"
+          }
         }
       },
       "aux-oracle": {
@@ -214,7 +244,10 @@ function buildOpencodeJson(models) {
         "permission": {
           "edit": "deny",
           "bash": "deny",
-          "lsp": "deny"
+          "lsp": "deny",
+          "skill": {
+            "*": "deny"
+          }
         }
       }
     }
