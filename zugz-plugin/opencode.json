@@ -18,8 +18,8 @@
         },
         "question": "allow",
         "lsp": "allow",
-        "tools": {
-          "sdd_transition": "allow"
+        "edit": {
+          ".openspec/sdd-lock.json": "allow"
         }
       }
     },
