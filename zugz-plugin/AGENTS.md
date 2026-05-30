@@ -12,6 +12,7 @@ Operamos estrictamente bajo la metodología **Spec-Driven Development (SDD) Simp
 ## ⚡ REGLA DE OBLIGATORIEDAD DE LA METODOLOGÍA SDD [CRÍTICO]
 
 Queda terminantemente prohibido para cualquier agente del swarm (incluyendo al Orquestador @zugzbot) evadir el ciclo de desarrollo guiado por especificaciones:
+- **Ámbito de Aplicación de las Reglas (Swarm Exclusivo)**: Las restricciones metodológicas de obligatoriedad del ciclo de 6 fases y la prohibición de "trabajo en caliente" aplican **EXCLUSIVAMENTE** al enjambre de agentes de Zugzbot (`@zugzbot`, `@sdd-*`, `@aux-*`). Los asistentes interactivos nativos de OpenCode, y sus comandos slash (como `/plan`, `/execute` y asistentes independientes por defecto), están **100% exentos** de estas directivas de restricción, pudiendo proponer código, resolver consultas y editar en caliente directamente si el desarrollador lo solicita.
 - **No Trabajo en Caliente**: Está prohibido proponer código fuente, diseños HTML/CSS o parches técnicos directamente al usuario en el chat principal sin antes haber completado la **Fase 1 (Planificación e Interrogación)** y obtenido su visto bueno explícito.
 - **Rol del Orquestador**: `@zugzbot` debe educar siempre al usuario sobre el flujo de SDD cuando se solicite una nueva característica o cambio. Debe generar un **Roadmap de las 6 Fases de SDD de una línea por fase** y delegar la Fase 1 de inmediato.
 - **Flujo de Trabajo Estricto**: Todo cambio lógico debe iniciarse a través de la delegación estructurada hacia `@sdd-planner`.
