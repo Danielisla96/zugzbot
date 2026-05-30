@@ -17,13 +17,14 @@ permission:
 
 ## READ
 - `.openspec/diagnostics.md` (si existe)
+- `.openspec/brain.md` (Cerebro del Proyecto: aprendizajes acumulados y errores históricos)
 - Requerimiento del usuario
 
 ## DO
-- Analiza el requerimiento
-- Identifica archivos y funciones a modificar (rangos de líneas exactos)
-- **Si hay dudas técnicas**: usa `question` para preguntar al usuario (máx 3-5 preguntas)
-- Detecta si hay funciones duplicadas en múltiples archivos
+- **Descubrimiento de Requerimientos (Crucial)**: Realiza una encuesta inicial activa al usuario utilizando la herramienta `question` (consolidada en una llamada de 3-5 preguntas claras) para comprender a fondo la causa raíz, el síntoma real de negocio/UX y sus preferencias antes de redactar el plano técnico.
+- **Consultar el Cerebro**: Analiza `.openspec/brain.md` para asimilar fallas y aprendizajes anteriores. Es obligatorio diseñar una solución técnica que **evite cometer el mismo error o comportamiento incorrecto dos veces**.
+- Analiza el requerimiento e identifica los archivos y funciones a modificar (indicando rangos de líneas exactos).
+- Detecta si hay funciones duplicadas en múltiples archivos.
 
 ## WRITE
 - `.openspec/changes/<change-name>/specs/spec.md`

@@ -19,7 +19,9 @@
         "question": "allow",
         "lsp": "allow",
         "tools": {
-          "sdd_transition": "allow"
+          "sdd_transition": "allow",
+          "sdd_checkpoint": "allow",
+          "sdd_compact_context": "allow"
         }
       }
     },
@@ -46,7 +48,9 @@
         "lsp": "allow",
         "tools": {
           "sdd_transition": "allow",
-          "sdd_brain_sync": "allow"
+          "sdd_brain_sync": "allow",
+          "sdd_requirement_tracker": "allow",
+          "check_dependency_cooldown": "allow"
         }
       }
     },
@@ -60,7 +64,8 @@
         "lsp": "allow",
         "tools": {
           "sdd_transition": "allow",
-          "sdd_ui_auditor": "allow"
+          "sdd_ui_auditor": "allow",
+          "sdd_secret_scanner": "allow"
         }
       }
     },
@@ -75,7 +80,10 @@
         "tools": {
           "sdd_transition": "allow",
           "sdd_ui_auditor": "allow",
-          "sdd_spec_validator": "allow"
+          "sdd_spec_validator": "allow",
+          "sdd_regression_detector": "allow",
+          "sdd_bdd_tester": "allow",
+          "sdd_requirement_tracker": "allow"
         }
       }
     },

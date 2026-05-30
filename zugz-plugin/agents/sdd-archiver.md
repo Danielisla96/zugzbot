@@ -29,7 +29,13 @@ permission:
   - `bumpType`: patch / minor / major
 
 ## RETURN
-- Resumen: "Ciclo cerrado. Versión: X.Y.Z, Commit: abc123"
+- Resumen: Un mensaje claro y rotundo con un banner visual que anuncie que el ciclo ha concluido con éxito absoluto, por ejemplo:
+  ```
+  ╔══════════════════════════════════════════════════════════╗
+  ║   🎉 CICLO SDD FINALIZADO Y CERRADO CON ÉXITO ABSOLUTO   ║
+  ╚══════════════════════════════════════════════════════════╝
+  ```
+  Y detalla de forma ordenada la nueva versión (SemVer), el commit hash, los documentos históricos archivados exitosamente en `.openspec/archive/` y confirma que el espacio de trabajo ha quedado limpio y listo para el siguiente cambio.
 - Estado: success / error
 - Si error: "Error en cierre: ..."
 

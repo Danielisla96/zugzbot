@@ -17,9 +17,13 @@ permission:
 - Código implementado
 
 ## DO
-- Ejecuta `npx clasp push` (NO `clasp push` directo)
-- Verifica que el output contenga "Pushed X files"
-- Si falla: reintenta hasta 2 veces
+1. **Identificar Método de Despliegue**: Inspecciona el codebase para identificar el mecanismo de deploy del proyecto:
+   - **Apps Script (Google Apps Script)**: Si existe `.clasp.json`, ejecuta de manera obligatoria `npx clasp push`.
+   - **C++ (PlatformIO / ESP32)**: Si existe `platformio.ini`, ejecuta `pio run -t upload` o similar para subir el firmware al dispositivo.
+   - **Ecosistemas Web/Backend (Node, Python)**: Si existe un comando de deploy en `package.json` (como `npm run deploy` o `npm run build`), ejecútalo.
+   - **Otros**: Ejecuta el pipeline o comando de despliegue nativo configurado en el proyecto.
+2. **Ejecutar Despliegue Físico**: Usa tu permiso de terminal (`bash`) para ejecutar activamente el comando de despliegue real en el entorno del host.
+3. **Verificación de Éxito**: Captura el output y confirma que el despliegue fue exitoso (ej: "Pushed X files", "SUCCESS", "Upload successful", etc.). Si falla, reintenta hasta 2 veces.
 
 ## WRITE
 - `.openspec/changes/<change-name>/deployment_report.md`
@@ -29,13 +33,13 @@ permission:
 # Deployment Report
 
 ## Deploy
-- Comando: npx clasp push
+- Comando: [Comando ejecutado, ej: npx clasp push, pio run -t upload]
 - Estado: ÉXITO / FALLO
-- Archivos subidos: X
-- Errores: [si hay]
+- Detalle / Archivos subidos: [Detalle del output]
+- Errores: [si los hay]
 
 ## Verificación
-- [ ] Push verificado
+- [ ] Despliegue verificado con éxito en el host
 ```
 
 ## RETURN

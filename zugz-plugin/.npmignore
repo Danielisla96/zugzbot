@@ -1,0 +1,15 @@
+# NPM Ignore configuration for zugzbot-sdd
+node_modules/
+tests/
+eslint.config.js
+.DS_Store
+.git/
+.vscode/
+.idea/
+.env*
+coverage/
+tmp/
+temp/
+
+# Keep compiled .opencode/tools/ and .opencode/plugins/ for distribution
+!.opencode/

@@ -17,11 +17,12 @@ permission:
 
 ## READ
 - `.openspec/changes/<change-name>/specs/spec.md`
+- `.openspec/brain.md` (Cerebro del Proyecto: convenciones técnicas y lecciones consolidadas)
 
 ## DO
-- Implementa los cambios en el código según el spec
-- Usa `edit` para parches quirúrgicos (prohibido reescribir archivos completos)
-- Valida con LSP (`documentSymbol`, `goToDefinition`)
+- Implementa los cambios en el código según el spec, asegurándote de revisar `.openspec/brain.md` para cumplir estrictamente con los patrones técnicos exitosos y evitar reintroducir malas prácticas.
+- Usa `edit` para parches quirúrgicos (prohibido reescribir archivos completos).
+- Valida con LSP (`documentSymbol`, `goToDefinition`).
 
 ## RETURN
 - Resumen: "Código implementado. Archivos modificados: X"

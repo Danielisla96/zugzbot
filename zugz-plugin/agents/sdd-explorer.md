@@ -17,12 +17,13 @@ permission:
 ## READ
 - Código fuente del proyecto
 - Estructura de archivos principal
+- `.openspec/brain.md` (Cerebro del Proyecto: memoria técnica y lecciones históricas)
 
 ## DO
-- Escanea la estructura del proyecto
+- Escanea la estructura del proyecto y lee el `.openspec/brain.md` para entender el mapa técnico y reglas arquitectónicas previas.
 - Identifica archivos principales y sus propósitos
 - Detecta stack tecnológico y dependencias
-- Genera `diagnostics.md` en `.openspec/`
+- Genera `diagnostics.md` en `.openspec/` orientando la exploración con el contexto del Cerebro.
 
 ## WRITE
 - `.openspec/diagnostics.md`

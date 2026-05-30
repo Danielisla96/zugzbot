@@ -81,7 +81,11 @@ function buildOpencodeJson(models) {
           "task": { "sdd-*": "allow", "aux-*": "allow" },
           "question": "allow",
           "lsp": "allow",
-          "tools": { "sdd_transition": "allow" }
+          "tools": {
+            "sdd_transition": "allow",
+            "sdd_checkpoint": "allow",
+            "sdd_compact_context": "allow"
+          }
         }
       },
       "sdd-explorer": {
@@ -91,7 +95,10 @@ function buildOpencodeJson(models) {
         "permission": {
           "bash": "allow",
           "lsp": "allow",
-          "tools": { "sdd_transition": "allow", "sdd_generate_tree": "allow" }
+          "tools": {
+            "sdd_transition": "allow",
+            "sdd_generate_tree": "allow"
+          }
         }
       },
       "sdd-planner": {
@@ -102,7 +109,12 @@ function buildOpencodeJson(models) {
           "edit": "allow",
           "bash": "ask",
           "lsp": "allow",
-          "tools": { "sdd_transition": "allow", "sdd_brain_sync": "allow" }
+          "tools": {
+            "sdd_transition": "allow",
+            "sdd_brain_sync": "allow",
+            "sdd_requirement_tracker": "allow",
+            "check_dependency_cooldown": "allow"
+          }
         }
       },
       "sdd-builder": {
@@ -113,7 +125,11 @@ function buildOpencodeJson(models) {
           "edit": "allow",
           "bash": "allow",
           "lsp": "allow",
-          "tools": { "sdd_transition": "allow", "sdd_ui_auditor": "allow" }
+          "tools": {
+            "sdd_transition": "allow",
+            "sdd_ui_auditor": "allow",
+            "sdd_secret_scanner": "allow"
+          }
         }
       },
       "sdd-tester": {
@@ -124,7 +140,14 @@ function buildOpencodeJson(models) {
           "edit": "allow",
           "bash": "allow",
           "lsp": "allow",
-          "tools": { "sdd_transition": "allow", "sdd_ui_auditor": "allow", "sdd_spec_validator": "allow" }
+          "tools": {
+            "sdd_transition": "allow",
+            "sdd_ui_auditor": "allow",
+            "sdd_spec_validator": "allow",
+            "sdd_regression_detector": "allow",
+            "sdd_bdd_tester": "allow",
+            "sdd_requirement_tracker": "allow"
+          }
         }
       },
       "sdd-archiver": {
@@ -135,7 +158,12 @@ function buildOpencodeJson(models) {
           "edit": "allow",
           "bash": "allow",
           "lsp": "allow",
-          "tools": { "sdd_archive_and_commit": "allow", "sdd_transition": "allow", "sdd_brain_sync": "allow", "sdd_install_autoskills": "allow" }
+          "tools": {
+            "sdd_archive_and_commit": "allow",
+            "sdd_transition": "allow",
+            "sdd_brain_sync": "allow",
+            "sdd_install_autoskills": "allow"
+          }
         }
       },
       "sdd-deployer": {
@@ -144,7 +172,9 @@ function buildOpencodeJson(models) {
         "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-deployer.md}",
         "permission": {
           "bash": "allow",
-          "tools": { "sdd_transition": "allow" }
+          "tools": {
+            "sdd_transition": "allow"
+          }
         }
       },
       "aux-handyman": {
@@ -175,6 +205,22 @@ function green(msg) { console.log(`  \x1b[32m✓\x1b[0m ${msg}`) }
 function yellow(msg) { console.log(`  \x1b[33m⚠\x1b[0m ${msg}`) }
 function header(msg) { console.log(`\n\x1b[1m${msg}\x1b[0m`) }
 
+function copyRecursiveSync(src, dest) {
+  const exists = fs.existsSync(src);
+  const stats = exists && fs.statSync(src);
+  const isDirectory = exists && stats.isDirectory();
+  if (isDirectory) {
+    if (!fs.existsSync(dest)) {
+      fs.mkdirSync(dest, { recursive: true });
+    }
+    fs.readdirSync(src).forEach((childItemName) => {
+      copyRecursiveSync(path.join(src, childItemName), path.join(dest, childItemName));
+    });
+  } else {
+    fs.copyFileSync(src, dest);
+  }
+}
+
 function init() {
   console.log(`
 ╔══════════════════════════════════════════════════════════╗
@@ -187,6 +233,7 @@ function init() {
 
   fs.mkdirSync(path.join(INSTALL_DIR, ".openspec/changes"), { recursive: true })
   fs.mkdirSync(path.join(INSTALL_DIR, ".opencode/plugins"), { recursive: true })
+  fs.mkdirSync(path.join(INSTALL_DIR, ".opencode/skills"), { recursive: true })
   green("Directorios creados")
 
   header("📝 Creando archivos de configuración...")
@@ -251,6 +298,13 @@ function init() {
   if (fs.existsSync(pluginCorePath)) {
     fs.copyFileSync(pluginCorePath, path.join(localPluginDir, "plugin_sdd_core.ts"))
     green("plugin_sdd_core.ts copiado")
+  }
+
+  const sourceSkillsDir = path.join(PKG_ROOT, "skills")
+  const localSkillsDir = path.join(INSTALL_DIR, ".opencode/skills")
+  if (fs.existsSync(sourceSkillsDir)) {
+    copyRecursiveSync(sourceSkillsDir, localSkillsDir)
+    green("Skills del Swarm copiadas")
   }
 
   console.log(`

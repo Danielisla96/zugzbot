@@ -36,9 +36,11 @@ permission:
 | 4 | `@sdd-deployer` | `deployment_report.md` | **Sí** (validar QA) |
 | 5 | `@sdd-archiver` | commit + archivado | No (cierra) |
 
-### 3. Manejar Auto-Pilot
-- Si `auto_pilot: true`: F0→F1→F2→F3 van sin pausas
-- **HIL post-F1 y post-F4 son OBLIGATORIOS** aunque auto_pilot esté prendido
+### 3. Manejar Flujo Eficiente (Reducción de Pausas)
+- Las transiciones **F0 → F1**, **F2 → F3** y **F3 → F4** son **completamente automáticas, fluidas y directas**. No debes detener el flujo ni interrumpir con preguntas de opción múltiple al usuario en estos pasos técnicos intermedios. Invoca `sdd_transition` y delega de inmediato al siguiente agente.
+- **HIL (Human-In-The-Loop) es obligatorio** únicamente en dos hitos metodológicos clave:
+  1. **Post-F1**: Revisión y aprobación explícita de la especificación (`spec.md`) antes de construir (F2).
+  2. **Post-F4**: QA final y validación manual del despliegue antes del archivado y cierre (F5).
 
 ### 4. Verificar Pendientes antes de F5
 - Antes de delegar a `@sdd-archiver`: verificar que todas las `lockfile.tasks[]` tengan `status: "completed"`
