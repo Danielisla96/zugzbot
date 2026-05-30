@@ -37,7 +37,10 @@ export default tool({
 
     // 2. Leer artefactos individuales
     const proposalPath = path.join(changeDir, "proposal.md");
-    const specPath = path.join(changeDir, "specs/spec.md");
+    let specPath = path.join(changeDir, "specs/spec.md");
+    if (!fs.existsSync(specPath)) {
+      specPath = path.join(changeDir, "spec.md");
+    }
     const archPath = path.join(changeDir, "orchestrator_architecture.md");
     const tasksPath = path.join(changeDir, "orchestrator_tasks.md");
 

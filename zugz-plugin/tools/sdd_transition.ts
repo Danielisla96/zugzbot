@@ -129,7 +129,11 @@ export default tool({
       } catch (e) {}
 
       // Extracción de checklist de tareas desde spec.md para el monitor de estados
-      const specPath = path.join(projectRoot, ".openspec/changes", activeChangeName, "specs/spec.md");
+      const changeDir = path.join(projectRoot, ".openspec/changes", activeChangeName);
+      let specPath = path.join(changeDir, "specs/spec.md");
+      if (!fs.existsSync(specPath)) {
+        specPath = path.join(changeDir, "spec.md");
+      }
       if (fs.existsSync(specPath)) {
         try {
           const specContent = fs.readFileSync(specPath, "utf-8");

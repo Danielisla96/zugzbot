@@ -47,7 +47,11 @@ export default tool({
     }
 
     // 2. Leer spec.md
-    const specPath = path.join(projectRoot, ".openspec/changes", changeName, "specs/spec.md");
+    const changeDir = path.join(projectRoot, ".openspec/changes", changeName);
+    let specPath = path.join(changeDir, "specs/spec.md");
+    if (!fs.existsSync(specPath)) {
+      specPath = path.join(changeDir, "spec.md");
+    }
     if (!fs.existsSync(specPath)) {
       return JSON.stringify({
         status: "FAILED",

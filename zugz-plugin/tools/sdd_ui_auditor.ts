@@ -153,7 +153,11 @@ export default tool({
     }
 
     // B. Buscar archivos listados en el spec.md activo
-    const specPath = path.join(projectRoot, ".openspec/changes", changeName, "specs/spec.md");
+    const changeDir = path.join(projectRoot, ".openspec/changes", changeName);
+    let specPath = path.join(changeDir, "specs/spec.md");
+    if (!fs.existsSync(specPath)) {
+      specPath = path.join(changeDir, "spec.md");
+    }
     if (fs.existsSync(specPath)) {
       try {
         const specContent = fs.readFileSync(specPath, "utf-8");

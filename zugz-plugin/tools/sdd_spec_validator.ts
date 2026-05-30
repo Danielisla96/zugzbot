@@ -28,18 +28,16 @@ export default tool({
       } catch (e) {}
     }
 
-    if (!changeName || changeName === "nuevo-cambio") {
-      return JSON.stringify({
-        status: "FAILED",
-        reason: "No se pudo autodetectar un cambio de desarrollo activo en .openspec/sdd-lock.json. Asegúrate de iniciar la Fase 1 primero."
-      }, null, 2);
+    const changeDir = path.join(projectRoot, ".openspec/changes", changeName || "nuevo-cambio");
+    let specPath = path.join(changeDir, "specs/spec.md");
+    if (!fs.existsSync(specPath)) {
+      specPath = path.join(changeDir, "spec.md");
     }
 
-    const specPath = path.join(projectRoot, ".openspec/changes", changeName, "specs/spec.md");
     if (!fs.existsSync(specPath)) {
       return JSON.stringify({
         status: "FAILED",
-        reason: `No se encuentra el archivo de especificación specs/spec.md para el cambio '${changeName}'. Ruta esperada: ${path.relative(projectRoot, specPath)}`
+        reason: `No se encuentra el archivo de especificación spec.md para el cambio '${changeName || "nuevo-cambio"}'. Ruta esperada: .openspec/changes/${changeName || "nuevo-cambio"}/[specs/]spec.md`
       }, null, 2);
     }
 
