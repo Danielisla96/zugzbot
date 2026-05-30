@@ -184,15 +184,79 @@ export default tool({
       }
     }
 
+    // 5.5. Generar reporte dedicado de tokens y costes para este cambio
+    const historyPath = path.join(projectRoot, ".openspec/changes", args.changeName, "phase_history.jsonl");
+    if (fs.existsSync(historyPath)) {
+      try {
+        const lines = fs.readFileSync(historyPath, "utf-8").split("\n").filter(Boolean);
+        const entries = lines.map(l => JSON.parse(l));
+        let totalCost = 0;
+        let totalInput = 0;
+        let totalOutput = 0;
+        const models = new Set<string>();
+        
+        entries.forEach((e: any) => {
+          if (e.analytics) {
+            totalCost = Math.max(totalCost, e.analytics.cumulative_cost_usd || 0);
+            totalInput = Math.max(totalInput, e.analytics.cumulative_tokens_input || 0);
+            totalOutput = Math.max(totalOutput, e.analytics.cumulative_tokens_output || 0);
+            if (Array.isArray(e.analytics.models_used)) {
+              e.analytics.models_used.forEach((m: string) => models.add(m));
+            }
+          }
+        });
+
+        const tokenUsageMarkdown = `# 💳 Reporte de Consumo del Cambio: ${args.changeName}
+
+Este reporte detalla la telemetría de tokens y coste financiero en USD acumulado por el enjambre de agentes durante el desarrollo de esta tarea.
+
+## 📊 Métricas de Consumo
+- **Coste Total de la Sesión:** $${totalCost.toFixed(4)} USD
+- **Tokens de Entrada (Prompt):** ${totalInput.toLocaleString()} tokens
+- **Tokens de Salida (Completion):** ${totalOutput.toLocaleString()} tokens
+- **Modelos de IA Participantes:** ${Array.from(models).join(", ") || "Ninguno registrado"}
+
+---
+*Reporte autogenerado de forma atómica al cierre de la tarea por sdd_archive_and_commit.*
+`;
+        fs.writeFileSync(path.join(projectRoot, ".openspec/changes", args.changeName, "token_usage.md"), tokenUsageMarkdown, "utf-8");
+        report.push(`✓ Reporte de telemetría de tokens generado con éxito en token_usage.md`);
+      } catch (e: any) {
+        report.push(`⚠️ No se pudo generar el reporte de telemetría de tokens: ${e.message}`);
+      }
+    }
+
     // 6. Archivar la carpeta físicamente (ANTES del commit para que quede registrado de forma atómica)
-    const archiveDir = path.join(projectRoot, ".openspec/changes/archive", `${dateStr}-${args.changeName}`)
+    // Calcular el siguiente prefijo de secuencia cronológica (ej: 0001_2026-05-30_143015)
+    let seqPrefix = "0001";
+    const archiveRoot = path.join(projectRoot, ".openspec/changes/archive");
+    if (fs.existsSync(archiveRoot)) {
+      try {
+        const dirs = fs.readdirSync(archiveRoot).filter(f => fs.statSync(path.join(archiveRoot, f)).isDirectory());
+        let maxSeq = 0;
+        dirs.forEach(d => {
+          const match = d.match(/^(\d{4})_/);
+          if (match) {
+            const seq = parseInt(match[1], 10);
+            if (seq > maxSeq) maxSeq = seq;
+          }
+        });
+        seqPrefix = String(maxSeq + 1).padStart(4, "0");
+      } catch (e) {}
+    }
+
+    const now = new Date();
+    const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, ""); // e.g. "143015"
+    const archiveFolderName = `${seqPrefix}_${dateStr}_${timeStr}-${args.changeName}`;
+    const archiveDir = path.join(archiveRoot, archiveFolderName);
+
     try {
       if (fs.existsSync(archiveDir)) {
         fs.rmSync(archiveDir, { recursive: true, force: true })
       }
       fs.mkdirSync(path.dirname(archiveDir), { recursive: true })
       moveRecursive(changeDir, archiveDir)
-      report.push(`✓ Carpeta archivada en: .openspec/changes/archive/${dateStr}-${args.changeName}/`)
+      report.push(`✓ Carpeta archivada en: .openspec/changes/archive/${archiveFolderName}/`)
     } catch (e: any) {
       return `[SDD Archive Error] Error crítico archivando carpetas: ${e.message}`
     }

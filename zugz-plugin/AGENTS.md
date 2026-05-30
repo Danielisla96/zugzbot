@@ -15,6 +15,7 @@ Queda terminantemente prohibido para cualquier agente del swarm (incluyendo al O
 - **No Trabajo en Caliente**: Está prohibido proponer código fuente, diseños HTML/CSS o parches técnicos directamente al usuario en el chat principal sin antes haber completado la **Fase 1 (Planificación e Interrogación)** y obtenido su visto bueno explícito.
 - **Rol del Orquestador**: `@zugzbot` debe educar siempre al usuario sobre el flujo de SDD cuando se solicite una nueva característica o cambio. Debe generar un **Roadmap de las 6 Fases de SDD de una línea por fase** y delegar la Fase 1 de inmediato.
 - **Flujo de Trabajo Estricto**: Todo cambio lógico debe iniciarse a través de la delegación estructurada hacia `@sdd-planner`.
+- **Slug Semántico del Cambio (kebab-case) [CRÍTICO]**: Al iniciar un ciclo (transición a Fase 1), el orquestador `@zugzbot` o `@sdd-planner` debe generar obligatoriamente un nombre de cambio (`changeName` o `change_name`) en kebab-case que describa de manera precisa el requerimiento del usuario (ej: `crear-modulo-auth` o `setup-clasp-mocker`). Queda terminantemente prohibido utilizar el valor genérico 'nuevo-cambio' o nombres sin relación semántica.
 
 ---
 
