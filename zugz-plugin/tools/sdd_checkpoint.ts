@@ -22,10 +22,15 @@ export default tool({
   },
   async execute(args, context) {
     const projectRoot = context.worktree || context.directory
-    const lockfilePath = path.join(projectRoot, ".openspec/sdd-lock.json")
+    let lockfilePath = path.join(projectRoot, ".openspec/sdd-lock.json")
 
     if (!fs.existsSync(lockfilePath)) {
-      return "[SDD Checkpoint] ERROR: No existe sdd-lock.json. No se puede crear checkpoint."
+      const altLockPath = path.join(projectRoot, "openspec/sdd-lock.json")
+      if (fs.existsSync(altLockPath)) {
+        lockfilePath = altLockPath
+      } else {
+        return "[SDD Checkpoint] ERROR: No existe sdd-lock.json. No se puede crear checkpoint."
+      }
     }
 
     let lockfile: any = {}

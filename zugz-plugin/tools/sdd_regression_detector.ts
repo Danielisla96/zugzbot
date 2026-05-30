@@ -90,6 +90,7 @@ export default tool({
     const hasGit = fs.existsSync(path.join(projectRoot, ".git"));
     if (hasGit) {
       try {
+        execSync("git config core.quotepath false", { cwd: projectRoot, stdio: "ignore" });
         const gitOutput = execSync("git status --porcelain", { cwd: projectRoot, encoding: "utf-8" });
         gitOutput.split("\n").forEach(line => {
           if (!line || line.length < 4) return;

@@ -13,7 +13,12 @@ export default tool({
     report.push(`━━━ sdd_spec_compliance_linter: ${args.changeName} ━━━`)
 
     const openspecDir = path.join(projectRoot, ".openspec")
-    const specFile = path.join(openspecDir, "changes", args.changeName, "spec.md")
+    const changeDir = path.join(openspecDir, "changes", args.changeName)
+    let specFile = path.join(changeDir, "specs/spec.md")
+    
+    if (!fs.existsSync(specFile)) {
+      specFile = path.join(changeDir, "spec.md")
+    }
     
     let specContent = ""
     if (fs.existsSync(specFile)) {
@@ -27,7 +32,12 @@ export default tool({
 
     if (!specContent) {
       report.push("⚠ No se encontró ningún archivo `spec.md` activo para el cambio. Imposible realizar cruce de especificaciones.")
-      return report.join("\n")
+      return JSON.stringify({
+        status: "FAILED",
+        complianceRate: 0,
+        message: "No se encontró el archivo spec.md.",
+        report: report.join("\n")
+      }, null, 2)
     }
 
     // Extraer requerimientos
@@ -118,6 +128,10 @@ export default tool({
       report.push("⚠ Atención: Completa los requerimientos huérfanos indicados arriba para evitar regresiones lógicas.")
     }
 
-    return report.join("\n")
+    return JSON.stringify({
+      status: complianceRate === 100 ? "APPROVED" : "FAILED",
+      complianceRate,
+      report: report.join("\n")
+    }, null, 2)
   }
 })
