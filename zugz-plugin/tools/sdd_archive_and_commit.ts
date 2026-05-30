@@ -172,14 +172,7 @@ export default tool({
       report.push(`⚠️ Sincronización automática de habilidades fallida o no disponible: ${e.message || e}`)
     }
 
-    // 4. Escribir commit_message.txt en location TEMPORAL antes de archivar
-    const tempCommitMsgPath = path.join(projectRoot, ".openspec", `commit_msg_${args.changeName}.txt`)
-    try {
-      fs.writeFileSync(tempCommitMsgPath, args.commitMessage + "\n", "utf-8")
-      report.push(`✓ Archivo commit_message.txt generado en location temporal`)
-    } catch (e: any) {
-      report.push(`⚠️ Error escribiendo commit_message.txt: ${e.message}`)
-    }
+    // 4. No temporary file is needed on disk, we feed it directly to git commit stdin in step 7.
 
     // 5. Resetear el lockfile a idle (ANTES del commit para incluirlo en el cierre)
     if (fs.existsSync(lockfilePath)) {
@@ -277,19 +270,12 @@ Este reporte detalla la telemetría de tokens y coste financiero en USD acumulad
     if (fs.existsSync(path.join(projectRoot, ".git"))) {
       try {
         execSync("git add .", { cwd: projectRoot, stdio: "ignore" })
-        execSync(`git commit -F "${tempCommitMsgPath}"`, { cwd: projectRoot, stdio: "ignore" })
+        execSync("git commit -F -", { cwd: projectRoot, input: args.commitMessage + "\n", stdio: ["pipe", "ignore", "ignore"] })
         report.push(`✓ Commit de Git ejecutado usando el mensaje semántico (incluye archivos archivados)`)
       } catch (e: any) {
         report.push(`⚠️ Git Commit falló o no había cambios pendientes de código: ${e.message}`)
       }
     }
-
-    // 8. Limpiar archivo temporal de commit message
-    try {
-      if (fs.existsSync(tempCommitMsgPath)) {
-        fs.unlinkSync(tempCommitMsgPath)
-      }
-    } catch (e: any) {}
 
     report.push("━━━ finalizado con éxito absoluto ━━━")
     return report.join("\n")
