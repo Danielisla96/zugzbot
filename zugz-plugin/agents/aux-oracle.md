@@ -1,5 +1,6 @@
 ---
 description: General Knowledge Assistant. Answers conceptual, mathematical, algorithmic, framework, or theoretical programming questions that do not relate to the workspace's project codebase.
+// model: overridden by opencode.json agent config (source of truth)
 mode: subagent
 model: minimax-coding-plan/MiniMax-M2.7
 variant: medium

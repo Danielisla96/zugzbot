@@ -53,6 +53,21 @@ export default tool({
       return `[SDD Archive Error] No se encontró la carpeta del cambio activo en: ${changeDir}`
     }
 
+    // ── VERIFICACIÓN CRÍTICA DE TAREAS PENDIENTES ──
+    const lockfilePath = path.join(projectRoot, ".openspec/sdd-lock.json")
+    if (fs.existsSync(lockfilePath)) {
+      try {
+        const lockfile = JSON.parse(fs.readFileSync(lockfilePath, "utf-8"))
+        if (lockfile.tasks && Array.isArray(lockfile.tasks) && lockfile.tasks.length > 0) {
+          const pendingTasks = lockfile.tasks.filter((t: any) => t.status === "pending")
+          if (pendingTasks.length > 0) {
+            const pendingList = pendingTasks.map((t: any) => `  ⚠️ [${t.id}] ${t.desc}`).join("\n")
+            return `[SDD Archive Blocked] No se puede cerrar el ciclo. Hay ${pendingTasks.length} tarea(s) pendiente(s):\n${pendingList}\n\nPor favor, completa todas las tareas o fuerza el cierre con aprobación explícita del usuario.`
+          }
+        }
+      } catch (e: any) {}
+    }
+
     const report: string[] = ["━━━ sdd_archive_and_commit ━━━"]
 
     // 1. SemVer Bump en package.json

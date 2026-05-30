@@ -1,13 +1,13 @@
 # 🤖 Zugzbot — Arnés SDD Multi-Agente para OpenCode
 
 > [!IMPORTANT]
-> **Zugzbot** es un arnés de orquestación industrial basado en **Spec-Driven Development (SDD) Simplificado** para [OpenCode](https://opencode.ai). Estructura el ciclo de vida del desarrollo de software en **5 fases secuenciales**, garantizando que ningún modelo de IA escriba código de producción sin planificación previa, revisión humana interactiva, validación estática de calidad y cierre documentado en Git.
+> **Zugzbot** es un arnés de orquestación industrial basado en **Spec-Driven Development (SDD) Simplificado** para [OpenCode](https://opencode.ai). Estructura el ciclo de vida del desarrollo de software en **6 fases secuenciales (F0 a F5)**, garantizando que ningún modelo de IA escriba código de producción sin planificación previa, revisión humana interactiva, validación estática de calidad y cierre documentado en Git.
 
 ---
 
-## 🧠 Filosofía: SDD Simplificado de 5 Fases
+## 🧠 Filosofía: SDD Simplificado de 6 Fases
 
-**Ningún agente toca código sin un plan aprobado.** El ciclo SDD de Zugzbot se compone de 5 hitos estructurados donde 5 agentes especializados se pasan el control entre sí de forma atómica:
+**Ningún agente toca código sin un plan aprobado.** El ciclo SDD de Zugzbot se compone de 6 hitos estructurados donde 6 agentes especializados se pasan el control entre sí de forma atómica:
 
 ```mermaid
 flowchart TD
@@ -16,20 +16,21 @@ flowchart TD
     classDef hil   fill:#2b161d,stroke:#fbbf24,color:#fff,stroke-width:1.5px
 
     U1(["👤 Usuario pide feature"]):::user
-    F0["🔭 Fase 0\nDiagnóstico e Indexación\n@sdd-explorer"]:::phase
-    F1["📝 Fase 1\nPlanificación e Interrogación\n@sdd-planner"]:::phase
+    F0["🔭 F0\nDiagnóstico\n@sdd-explorer"]:::phase
+    F1["📝 F1\nPlanificación\n@sdd-planner"]:::phase
     HIL1{{"✋ Hito A\n¿Apruebas el Plan?"}}:::hil
-    F2["💻 Fase 2\nConstrucción Lógica/Estética\n@sdd-builder"]:::phase
-    HIL2{{"✋ Hito B\n¿Conforme con el Deploy?"}}:::hil
-    F3["🧪 Fase 3\nPruebas y Validación\n@sdd-tester"]:::phase
-    F4["📦 Fase 4\nDocumentación y Cierre\n@sdd-archiver"]:::phase
+    F2["💻 F2\nConstrucción\n@sdd-builder"]:::phase
+    F3["🧪 F3\nValidación\n@sdd-tester"]:::phase
+    F4["📦 F4\nDeploy\n@sdd-deployer"]:::phase
+    HIL2{{"✋ Hito B\n¿Conforme con QA?"}}:::hil
+    F5["🏛️ F5\nCierre y Archive\n@sdd-archiver"]:::phase
     U2(["🎉 Feature cerrada en Git"]):::user
 
     U1 --> F0 --> F1 --> HIL1
-    HIL1 -- "Sí" --> F2 --> HIL2
+    HIL1 -- "Sí" --> F2 --> F3 --> F4 --> HIL2
     HIL1 -- "No" --> F1
-    HIL2 -- "Sí" --> F3 --> F4 --> U2
-    HIL2 -- "Detalles" --> F2
+    HIL2 -- "Sí" --> F5 --> U2
+    HIL2 -- "Detalles" --> F3
 ```
 
 > [!NOTE]
@@ -43,11 +44,11 @@ flowchart TD
 
 | Agente | Rol | Fase | Entregable principal |
 |:---|:---|:---:|:---|
-| **`zugzbot`** | **Orquestador Maestro** — coordina la metodología, delega a subagentes, fiscaliza sus límites y gestiona las pausas de visto bueno humano (HIL). | Permanente | Roadmap de 4 fases y delegaciones rápidas. |
+| **`zugzbot`** | **Orquestador Maestro** — coordina la metodología, delega a subagentes, fiscaliza sus límites y gestiona las pausas de visto bueno humano (HIL). | Permanente | Roadmap de 6 fases y delegaciones rápidas. |
 | **`sdd-explorer`** | **Diagnosticador e Indexador** — escanea la base de código, ejecuta análisis automáticos de habilidades y genera el mapa técnico del stack. | **F0** | `.openspec/diagnostics.md` + `skills_manifest.md` |
 | **`sdd-planner`** | **Planificador e Interrogador** — realiza una encuesta consolidada de 3-5 preguntas concretas y redacta la especificación técnica en formato BDD. | **F1** | `.openspec/changes/<change-name>/specs/spec.md` |
 | **`sdd-builder`** | **Constructor Lógico y Estético** — implementa el código en base a las especificaciones y asegura interfaces estéticamente modernas y balanceadas. | **F2** | Código funcional modificado de manera quirúrgica. |
-| **`sdd-tester`** | **Control de Calidad y Pruebas** — ejecuta las suites de tests automatizados de forma nativa y valida el balanceo de etiquetas de marcado (HTML/JSX). | **F3** | `.openspec/changes/<change-name>/verification_report.md` |
+| **`sdd-tester`** | **Control de Calidad y Pruebas** — ejecuta las suites de tests automatizados de forma nativa y valida el balanceo de etiquetas de marcado (HTML/JSX). | **F3** | `.openspec/changes/<change-name>/validation_report.md` |
 | **`sdd-archiver`** | **Especialista de Cierre** — realiza el bump de versión del proyecto, consolida el CHANGELOG, prepara el commit semántico y archiva la carpeta del cambio. | **F4** | `commit_message.txt` y carpeta de cambio archivada. |
 
 ### Agentes Auxiliares fuera del Ciclo Core
@@ -115,7 +116,7 @@ tu-proyecto/
 
 El plugin `plugin_tui.tsx` inyecta un panel reactivo en el sidebar lateral de OpenCode (activable con la tecla **`b`**), permitiendo visualizar:
 * Un logo interactivo de ZUGZ con efectos estéticos degradados en naranja.
-* La barra de porcentaje y el estado de progreso de las **5 fases** del ciclo activo.
+* La barra de porcentaje y el estado de progreso de las **6 fases (F0-F5)** del ciclo activo.
 * El registro en tiempo real de las últimas transiciones y las tareas pendientes con su respectivo check.
 
 ---

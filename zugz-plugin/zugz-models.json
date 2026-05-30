@@ -1,4 +1,5 @@
 {
+  "//": "Fuente de verdad: opencode.json. Este archivo existe para referencia rápida. Mantén sincronizado con opencode.json.",
   "agents": {
     "zugzbot": "deepseek/deepseek-v4-pro",
     "sdd-explorer": "deepseek/deepseek-v4-flash",

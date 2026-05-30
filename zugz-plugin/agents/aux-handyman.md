@@ -1,5 +1,6 @@
 ---
 description: Surgical Fixes Specialist. Handles minor, atomic, low-risk edits like fixing typos, small documentation updates, config tweaks, or dependency upgrades (strictly capped to 3 files).
+// model: overridden by opencode.json agent config (source of truth)
 mode: subagent
 model: minimax-coding-plan/MiniMax-M2.7
 variant: medium

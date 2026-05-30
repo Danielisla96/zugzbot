@@ -162,20 +162,43 @@ export default tool({
 
     // 2. Transición a Fase 5 (Cierre/Archiver): Validar regresiones de compilación, cobertura de requerimientos, cooldown y actualizar estado de tareas
     if (args.nextPhase === 5 && args.status !== "corrective_loop") {
-      // Sincronizar checklist de tareas completadas desde el verification_report.md
+      // Sincronizar checklist de tareas completadas desde el validation_report.md
       if (lockfile.tasks) {
         const reportPath = path.join(projectRoot, ".openspec/changes", activeChangeName, "validation_report.md");
         if (fs.existsSync(reportPath)) {
           try {
             const reportContent = fs.readFileSync(reportPath, "utf-8");
-            const qaSectionIndex = reportContent.indexOf("## 3. Correspondencia de Criterios");
+            // Buscar sección QA con fallback: probar ## QA (template tester) primero,
+            // luego ## 3. Correspondencia de Criterios (template anterior), luego buscar - [x] en cualquier parte
+            let qaSectionIndex = reportContent.indexOf("## QA");
+            if (qaSectionIndex === -1) {
+              qaSectionIndex = reportContent.indexOf("## 3. Correspondencia de Criterios");
+            }
             if (qaSectionIndex !== -1) {
               const qaContent = reportContent.substring(qaSectionIndex);
               const lines = qaContent.split("\n");
+              let matchedCount = 0;
               for (const line of lines) {
-                if (line.startsWith("##") && !line.includes("## 3.")) {
+                if (line.startsWith("##") && line !== "## QA" && line.includes("## QA") === false && !line.includes("## 3.")) {
                   break;
                 }
+                const match = line.match(/^\s*-\s*\[(x|\s)\]\s*(.+)$/i);
+                if (match) {
+                  const isCompleted = match[1].toLowerCase() === "x";
+                  const descClean = match[2].replace(/\*/g, "").trim().toLowerCase();
+                  for (const t of lockfile.tasks) {
+                    const taskClean = t.desc.toLowerCase();
+                    if (descClean.includes(taskClean) || taskClean.includes(descClean)) {
+                      t.status = isCompleted ? "completed" : "pending";
+                      matchedCount++;
+                    }
+                  }
+                }
+              }
+            } else {
+              // Fallback: buscar - [x] checkboxes en todo el documento
+              const lines = reportContent.split("\n");
+              for (const line of lines) {
                 const match = line.match(/^\s*-\s*\[(x|\s)\]\s*(.+)$/i);
                 if (match) {
                   const isCompleted = match[1].toLowerCase() === "x";

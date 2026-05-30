@@ -15,14 +15,16 @@ opencode
 ### 2. Habla con `@zugzbot`
 Indícale tu requerimiento. El arnés activará automáticamente el ciclo SDD.
 
-### 3. Flujo de 4 Fases
+### 3. Flujo de 6 Fases (F0-F5)
 
 | Fase | Tú | Agente |
 |:---|:---|:---|
-| **F1** | Responde la encuesta 3-5 preguntas | `@sdd-planner` |
+| **F0** | Esperar diagnóstico | `@sdd-explorer` |
+| **F1** | Responder encuesta (3-5 preguntas) | `@sdd-planner` |
 | **F2** | Hacer QA manual en caliente | `@sdd-builder` |
 | **F3** | Observar validación estática | `@sdd-tester` |
-| **F4** | Confirmar commit Git | `@sdd-archiver` |
+| **F4** | Confirmar deploy | `@sdd-deployer` |
+| **F5** | Confirmar commit Git | `@sdd-archiver` |
 
 ---
 
@@ -50,8 +52,8 @@ Indícale tu requerimiento. El arnés activará automáticamente el ciclo SDD.
 
 ## 🔄 Hitos de Aprobación
 
-1. **Hito A**: Después de Fase 1 → ¿Apruebas el plano técnico?
-2. **Hito B**: Después de Fase 3 → ¿Conforme con el deploy?
+1. **Hito A (Post-F1)**: ¿Apruebas el plano técnico? → Continúa a F2
+2. **Hito B (Post-F4)**: ¿Conforme con el deploy? → Continúa a F5
 
 ---
 
