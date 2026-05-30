@@ -81,7 +81,7 @@ function buildOpencodeJson(models) {
           "task": { "sdd-*": "allow", "aux-*": "allow" },
           "question": "allow",
           "lsp": "allow",
-          "edit": { ".openspec/sdd-lock.json": "allow" }
+          "tools": { "sdd_transition": "allow" }
         }
       },
       "sdd-explorer": {
