@@ -184,18 +184,7 @@ export default tool({
       }
     }
 
-    // 6. Confirmación Git Atómica (usa temp commit msg, antes de archivar)
-    if (fs.existsSync(path.join(projectRoot, ".git"))) {
-      try {
-        execSync("git add .", { cwd: projectRoot, stdio: "ignore" })
-        execSync(`git commit -F "${tempCommitMsgPath}"`, { cwd: projectRoot, stdio: "ignore" })
-        report.push(`✓ Commit de Git ejecutado usando el mensaje semántico`)
-      } catch (e: any) {
-        report.push(`⚠️ Git Commit falló o no había cambios pendientes de código: ${e.message}`)
-      }
-    }
-
-    // 8. Archivar la carpeta físicamente (DESPUÉS del commit)
+    // 6. Archivar la carpeta físicamente (ANTES del commit para que quede registrado de forma atómica)
     const archiveDir = path.join(projectRoot, ".openspec/changes/archive", `${dateStr}-${args.changeName}`)
     try {
       if (fs.existsSync(archiveDir)) {
@@ -208,7 +197,18 @@ export default tool({
       return `[SDD Archive Error] Error crítico archivando carpetas: ${e.message}`
     }
 
-    // 9. Limpiar archivo temporal de commit message
+    // 7. Confirmación Git Atómica (incluye la carpeta archivada y la eliminación de la activa)
+    if (fs.existsSync(path.join(projectRoot, ".git"))) {
+      try {
+        execSync("git add .", { cwd: projectRoot, stdio: "ignore" })
+        execSync(`git commit -F "${tempCommitMsgPath}"`, { cwd: projectRoot, stdio: "ignore" })
+        report.push(`✓ Commit de Git ejecutado usando el mensaje semántico (incluye archivos archivados)`)
+      } catch (e: any) {
+        report.push(`⚠️ Git Commit falló o no había cambios pendientes de código: ${e.message}`)
+      }
+    }
+
+    // 8. Limpiar archivo temporal de commit message
     try {
       if (fs.existsSync(tempCommitMsgPath)) {
         fs.unlinkSync(tempCommitMsgPath)
