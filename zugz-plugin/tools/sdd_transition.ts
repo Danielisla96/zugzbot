@@ -388,10 +388,16 @@ export default tool({
         // 2. Hacer commit automático de los artefactos .openspec/
         execSync("git add .openspec/", { cwd: projectRoot, stdio: "ignore" });
         
-        const commitMsg = `docs(sdd): transición a fase ${args.nextPhase} - ${args.reason.replace(/"/g, '\\"')}`;
-        execSync(`git commit -m "${commitMsg}"`, { cwd: projectRoot, stdio: "ignore" });
+        // Verificar si hay cambios reales preparados en el stage (staged changes)
+        const hasStagedChanges = execSync("git diff --cached --name-only", { cwd: projectRoot, encoding: "utf-8" }).trim().length > 0;
         
-        gitStatus = ` [Git: Rama '${branchName}' actualizada con commit semántico]`;
+        if (hasStagedChanges) {
+          const commitMsg = `docs(sdd): transición a fase ${args.nextPhase} - ${args.reason.replace(/"/g, '\\"')}`;
+          execSync(`git commit -m "${commitMsg}"`, { cwd: projectRoot, stdio: "ignore" });
+          gitStatus = ` [Git: Rama '${branchName}' actualizada con commit semántico]`;
+        } else {
+          gitStatus = ` [Git: Sin cambios nuevos en especificaciones para archivar]`;
+        }
       } catch (e: any) {
         gitStatus = ` [Git Warning: No se pudo realizar commit automático: ${e.message || e}]`;
       }

@@ -62,8 +62,6 @@ function checkHtmlTagBalance(filePath: string, content: string): string[] {
   }
 
   const issues: string[] = [];
-  const tagsToCheck = ["div", "span", "section", "p", "button", "main", "header", "footer", "a", "ul", "ol", "li"];
-  
   let cleaned = content;
   if (ext === ".html") {
     cleaned = content.replace(/<!--[\s\S]*?-->/g, "");
@@ -73,28 +71,44 @@ function checkHtmlTagBalance(filePath: string, content: string): string[] {
     cleaned = content.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, ""); // JS/TS comments
   }
 
-  for (const tag of tagsToCheck) {
-    const openRegex = new RegExp(`<${tag}\\b[^>]*[^/]>`, "gi");
-    const closeRegex = new RegExp(`</${tag}\\s*>`, "gi");
+  // Strip TypeScript generic type arguments from function calls or declarations (e.g. createSignal<string[]>)
+  // JSX tags are never directly preceded by a word character (like \w+), whereas TS generics are.
+  cleaned = cleaned.replace(/(\w+)<([A-Za-z0-9_\[\]\s|]+)>/g, '$1');
 
-    let openCount = 0;
-    let closeCount = 0;
-
-    let match;
-    while ((match = openRegex.exec(cleaned)) !== null) {
-      openCount++;
-    }
-    while ((match = closeRegex.exec(cleaned)) !== null) {
-      closeCount++;
-    }
-
-    if (openCount !== closeCount) {
-      issues.push(
-        `Desbalance en etiquetas '<${tag}>': Encontradas ${openCount} de apertura y ${closeCount} de cierre. Esto puede quebrar el DOM global de la aplicación.`
-      );
+  const tagRegex = /<(\/?[a-zA-Z0-9:-]+)(?:\s+[^>]*?)?>/g;
+  const stack: string[] = [];
+  const selfClosingTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
+  
+  let match;
+  while ((match = tagRegex.exec(cleaned)) !== null) {
+    const fullTag = match[0];
+    const tagName = match[1].toLowerCase();
+    
+    if (fullTag.endsWith('/>')) continue;
+    if (selfClosingTags.has(tagName)) continue;
+    if (fullTag.startsWith('<?') || fullTag.endsWith('?>')) continue;
+    if (fullTag.startsWith('<!')) continue;
+    
+    if (tagName.startsWith('/')) {
+      const closingName = tagName.substring(1);
+      if (stack.length === 0) {
+        issues.push(`Etiqueta de cierre sin apertura: </${closingName}>`);
+        break;
+      }
+      const lastOpen = stack.pop();
+      if (lastOpen !== closingName) {
+        issues.push(`Anidamiento roto: se esperaba </${lastOpen}> pero se encontró </${closingName}>`);
+        break;
+      }
+    } else {
+      stack.push(tagName);
     }
   }
-
+  
+  if (stack.length > 0 && issues.length === 0) {
+    issues.push(`Etiquetas sin cerrar: <${stack.join('>, <')}>`);
+  }
+  
   return issues;
 }
 

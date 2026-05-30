@@ -58,13 +58,20 @@ function sanitizeGitPath(line: string): string {
 // Analiza los errores de una salida de compilador y los mapea de forma limpia
 function parseCompilerErrors(errorOutput: string): Set<string> {
   const errors = new Set<string>();
-  const lines = errorOutput.split("\n").filter(l => l.trim());
+  const lines = errorOutput.split("\n").map(l => l.trim()).filter(Boolean);
+  
+  let currentFile = "";
   lines.forEach(line => {
-    // Captura líneas que parezcan errores de compilador (archivo con número de línea y mensaje)
-    const fileMatch = line.match(/^([a-zA-Z0-9_\-./]+)\(/) || line.match(/^([a-zA-Z0-9_\-./]+):\d+/) || line.match(/in\s+([a-zA-Z0-9_\-./]+\.py)/);
+    // Captura líneas que parezcan referirse a un archivo con error
+    const fileMatch = line.match(/^([a-zA-Z0-9_\-./]+\.[a-zA-Z0-9]+)/i);
     if (fileMatch) {
-      // Normalizar simplificando detalles variables de error
-      errors.add(line.trim());
+      currentFile = fileMatch[1];
+    }
+    
+    // Si la línea contiene palabras clave de error o aviso típico de compilación
+    if (line.includes("error") || line.includes("warning") || line.includes("Failed") || line.includes("Mismatched") || line.includes("Unclosed")) {
+      const errorMsg = currentFile ? `[${currentFile}] ${line}` : line;
+      errors.add(errorMsg);
     }
   });
   return errors;
