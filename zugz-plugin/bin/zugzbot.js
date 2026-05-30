@@ -137,7 +137,8 @@ function buildOpencodeJson(models) {
             "sdd_security_vulnerability_scanner": "allow",
             "sdd_visual_regression_diff": "allow",
             "sdd_auto_api_mocker": "allow",
-            "sdd_spec_compliance_linter": "allow"
+            "sdd_spec_compliance_linter": "allow",
+            "sdd_syntax_and_linter_auditor": "allow"
           }
         }
       },
@@ -163,7 +164,8 @@ function buildOpencodeJson(models) {
             "sdd_auto_api_mocker": "allow",
             "sdd_test_scaffold_generator": "allow",
             "sdd_spec_compliance_linter": "allow",
-            "sdd_sandbox_patcher": "allow"
+            "sdd_sandbox_patcher": "allow",
+            "sdd_syntax_and_linter_auditor": "allow"
           }
         }
       },
