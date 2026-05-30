@@ -11,6 +11,17 @@ permission:
     "sdd_transition": allow
     "sdd_ui_auditor": allow
     "sdd_spec_validator": allow
+    "sdd_regression_detector": allow
+    "sdd_bdd_tester": allow
+    "sdd_requirement_tracker": allow
+    "sdd_diff_impact_analyzer": allow
+    "sdd_security_vulnerability_scanner": allow
+    "sdd_visual_regression_diff": allow
+    "sdd_performance_regress_profiler": allow
+    "sdd_auto_api_mocker": allow
+    "sdd_test_scaffold_generator": allow
+    "sdd_spec_compliance_linter": allow
+    "sdd_sandbox_patcher": allow
 ---
 
 # @sdd-tester
@@ -23,14 +34,15 @@ permission:
 ## DO
 1. **Detección de Regresiones Históricas**: Lee `.openspec/brain.md` para identificar qué fallas específicas o comportamientos errados ocurrieron en el pasado. Debes verificar de manera explícita y prioritaria que la nueva implementación **no reintroduzca ninguno de los bugs o comportamientos incorrectos registrados en el Cerebro**.
 2. **Identificar Ecosistema Tecnológico**: Inspecciona la raíz del codebase (archivos como `package.json`, `requirements.txt`, `pyproject.toml`, `platformio.ini`, `CMakeLists.txt`, `go.mod`, etc.) para detectar el stack técnico del proyecto.
-3. **Ejecutar Linter & Auditorías**:
-   - **JS/TS**: Ejecuta `npm run lint` o `eslint` y las validaciones estáticas de DOM (`npx vitest run tests/static/...`).
-   - **Python**: Ejecuta `flake8`, `pylint` o `black --check`.
-   - **C++ (ESP32/Embedded)**: Ejecuta chequeos estáticos como `cppcheck` o verifica la compilación del firmware.
-   - **Otros**: Usa el formateador/linter estándar del ecosistema detectado.
-4. **Ejecutar Suite de Pruebas**: Usa tu permiso de terminal (`bash`) para correr la suite de tests nativos del proyecto (ej: `npm run test` / `npx vitest run` en Node, `pytest` / `python -m unittest` en Python, `pio test` en PlatformIO/C++, `go test` en Go, etc.).
-5. **Validación UI**: Ejecuta `sdd_ui_auditor` si el proyecto es una app web/frontend con visualización o HTML.
-5. **Autocorrección**: Corrige errores simples de sintaxis o fallas de test (máx 3 intentos).
+3. **Validación y Auditorías**:
+   - Ejecuta `sdd_spec_compliance_linter` para cruzar requerimientos.
+   - Ejecuta `sdd_security_vulnerability_scanner` para detectar vulnerabilidades en el código.
+   - Corre `sdd_visual_regression_diff` para auditar la interfaz y estilos.
+   - Ejecuta `sdd_performance_regress_profiler` para medir latencias y rendimiento.
+   - Usa `sdd_diff_impact_analyzer` para calcular el radio de impacto final.
+4. **Ejecutar Suite de Pruebas**: Corre la suite de tests nativos del proyecto (ej: `npm run test` / `npx vitest run`).
+5. **Autocorrección con Patcher**: Si detectas fallos unitarios simples, invoca `sdd_sandbox_patcher` para aplicar correcciones automáticas inmediatas sin retroceder de fase.
+6. **Validación UI**: Ejecuta `sdd_ui_auditor` si el proyecto es una app web/frontend con visualización o HTML.
 
 ## WRITE
 - `.openspec/changes/<change-name>/validation_report.md`
@@ -69,10 +81,10 @@ permission:
 - ❌ Modificar lógica de negocio, funciones, componentes o cualquier código fuente
 - ❌ Crear, modificar o eliminar specs o spec.md
 - ❌ Realizar deploys, pushes, o publicaciones
-- ❌ Reescribir archivos de código — solo autocorregir errores de sintaxis simples (máx 3 intentos)
+- ❌ Reescribir archivos de código — solo autocorregir errores de sintaxis simples usando `sdd_sandbox_patcher`
 - ❌ Escribir tests unitarios o de integración nuevos
 - ❌ Modificar archivos fuera de `.openspec/changes/<change-name>/`
-- ❌ Usar herramientas que no le fueron asignadas (`sdd_transition`, `sdd_ui_auditor`, `sdd_spec_validator`)
+- ❌ Usar herramientas que no le fueron asignadas (`sdd_transition`, `sdd_ui_auditor`, `sdd_spec_validator`, `sdd_regression_detector`, `sdd_bdd_tester`, `sdd_requirement_tracker`, `sdd_diff_impact_analyzer`, `sdd_security_vulnerability_scanner`, `sdd_visual_regression_diff`, `sdd_performance_regress_profiler`, `sdd_auto_api_mocker`, `sdd_test_scaffold_generator`, `sdd_spec_compliance_linter`, `sdd_sandbox_patcher`)
 
 > [!IMPORTANT]
-> SÓLO DEBE hacer: ejecutar linter, auditorías UI, validaciones estáticas, generar `validation_report.md`, invocar `sdd_transition` al completar
+> SÓLO DEBE hacer: ejecutar linter, auditorías UI, validaciones estáticas, generar `validation_report.md`, invocar `sdd_transition` al completar.

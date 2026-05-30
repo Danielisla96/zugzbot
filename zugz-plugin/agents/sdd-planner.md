@@ -11,6 +11,12 @@ permission:
   tools:
     "sdd_transition": allow
     "sdd_brain_sync": allow
+    "sdd_requirement_tracker": allow
+    "check_dependency_cooldown": allow
+    "sdd_diff_impact_analyzer": allow
+    "sdd_auto_api_mocker": allow
+    "sdd_test_scaffold_generator": allow
+    "sdd_context_pruner": allow
 ---
 
 # @sdd-planner
@@ -23,6 +29,10 @@ permission:
 ## DO
 - **Descubrimiento de Requerimientos (Crucial)**: Realiza una encuesta inicial activa al usuario utilizando la herramienta `question` (consolidada en una llamada de 3-5 preguntas claras) para comprender a fondo la causa raíz, el síntoma real de negocio/UX y sus preferencias antes de redactar el plano técnico.
 - **Consultar el Cerebro**: Analiza `.openspec/brain.md` para asimilar fallas y aprendizajes anteriores. Es obligatorio diseñar una solución técnica que **evite cometer el mismo error o comportamiento incorrecto dos veces**.
+- **Analizar el Impacto del Cambio**: Ejecuta `sdd_diff_impact_analyzer` para determinar el radio de impacto estructural del requerimiento.
+- **Scaffolding de Pruebas TDD**: Usa `sdd_test_scaffold_generator` para autogenerar la suite de pruebas unitarias en base a las especificaciones del `spec.md` diseñado.
+- **Mock de Servicios de Terceros**: Usa `sdd_auto_api_mocker` para extraer endpoints y generar mocks rápidos si el cambio interactúa con APIs externas.
+- **Optimizar Contexto**: Usa `sdd_context_pruner` para limpiar logs o historial redundante de context activo.
 - Analiza el requerimiento e identifica los archivos y funciones a modificar (indicando rangos de líneas exactos).
 - Detecta si hay funciones duplicadas en múltiples archivos.
 
@@ -70,11 +80,11 @@ Feature: [Breve descripción]
 - ❌ Escribir, modificar o eliminar ningún archivo de código fuente (.ts, .js, .tsx, .jsx, .css, .html)
 - ❌ Ejecutar comandos bash de ejecución (npm install, git push, npx, etc.) — solo `bash: ask` para lecturas
 - ❌ Realizar deploys, pushes o publicaciones
-- ❌ Crear tests, suites de validación, o archivos de reporte fuera del spec.md
+- ❌ Crear tests, suites de validación, o archivos de reporte fuera del spec.md y el scaffold de pruebas
 - ❌ Modificar archivos fuera de `.openspec/changes/<change-name>/specs/spec.md`
 - ❌ Hacer preguntas por goteo (una por turno) — todas las preguntas van consolidadas en UNA sola llamada a `question` (máx 3-5)
-- ❌ Usar herramientas más allá de las asignadas (`sdd_transition`, `sdd_brain_sync`)
+- ❌ Usar herramientas más allá de las asignadas (`sdd_transition`, `sdd_brain_sync`, `sdd_requirement_tracker`, `check_dependency_cooldown`, `sdd_diff_impact_analyzer`, `sdd_auto_api_mocker`, `sdd_test_scaffold_generator`, `sdd_context_pruner`)
 - ❌ Reabrir fases anteriores o retroceder el ciclo
 
 > [!IMPORTANT]
-> SÓLO DEBE hacer: analizar requerimiento, identificar archivos afectados, realizar encuesta consolidada, generar spec.md
+> SÓLO DEBE hacer: analizar requerimiento, identificar archivos afectados, realizar encuesta consolidada, generar spec.md, y andamiar tests TDD.
