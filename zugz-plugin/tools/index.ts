@@ -22,3 +22,4 @@ export { default as sdd_spec_compliance_linter } from './sdd_spec_compliance_lin
 export { default as sdd_sandbox_patcher } from './sdd_sandbox_patcher.js';
 export { default as sdd_context_pruner } from './sdd_context_pruner.js';
 export { default as gas_clasp_tools } from './gas_clasp_tools.js';
+export { default as sdd_auto_healer } from './sdd_auto_healer.js';

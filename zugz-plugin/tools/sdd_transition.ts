@@ -358,6 +358,74 @@ export default tool({
           }
         };
         fs.appendFileSync(historyPath, JSON.stringify(logEntry) + "\n", "utf-8");
+
+        // GENERACIÓN AUTOMÁTICA DEL DASHBOARD DE ANALÍTICAS
+        try {
+          const lines = fs.readFileSync(historyPath, "utf-8").split("\n").filter(Boolean);
+          const historyEntries = lines.map(l => JSON.parse(l));
+          
+          let totalCost = 0;
+          let totalInputTokens = 0;
+          let totalOutputTokens = 0;
+          const allModels = new Set<string>();
+          const phaseCounts: { [key: number]: number } = {};
+          
+          historyEntries.forEach(entry => {
+            if (entry.analytics) {
+              totalCost = Math.max(totalCost, entry.analytics.cumulative_cost_usd || 0);
+              totalInputTokens = Math.max(totalInputTokens, entry.analytics.cumulative_tokens_input || 0);
+              totalOutputTokens = Math.max(totalOutputTokens, entry.analytics.cumulative_tokens_output || 0);
+              if (Array.isArray(entry.analytics.models_used)) {
+                entry.analytics.models_used.forEach((m: string) => allModels.add(m));
+              }
+            }
+            phaseCounts[entry.phase] = (phaseCounts[entry.phase] || 0) + 1;
+          });
+
+          // Crear barras visuales estéticas en consola Markdown
+          const budgetLimit = 2.00; // Presupuesto sugerido de $2.00 USD
+          const costPercentage = Math.min(100, Math.round((totalCost / budgetLimit) * 100));
+          const barLength = 20;
+          const filledLength = Math.round((costPercentage / 100) * barLength);
+          const emptyLength = barLength - filledLength;
+          const progressBar = "█".repeat(filledLength) + "░".repeat(emptyLength);
+
+          const analyticsMarkdown = `# 📊 Tablero de Analíticas del Swarm: ${lockfile.change_name}
+
+Este reporte es generado de forma autónoma por la herramienta **sdd_transition** al cierre de cada fase para auditar la economía de tokens, presupuestos y eficiencia del enjambre multi-agente.
+
+> [!NOTE]
+> **Resumen Financiero de la Sesión:**
+> - **Presupuesto Consumido:** $${totalCost.toFixed(4)} USD
+> - **Límite de Presupuesto:** $${budgetLimit.toFixed(2)} USD
+> - **Eficiencia de Tokens:** Entrada: ${totalInputTokens.toLocaleString()} | Salida: ${totalOutputTokens.toLocaleString()}
+> - **Modelos Utilizados:** ${Array.from(allModels).join(", ") || "Ninguno registrado"}
+
+### 💳 Control de Presupuesto Consumido ($${totalCost.toFixed(4)} / $${budgetLimit.toFixed(2)})
+\`\`\`text
+[${progressBar}] ${costPercentage}% de límite
+\`\`\`
+
+## 🔄 Historial Completo del Swarm (Fases e Iteraciones)
+
+| Marca de Tiempo | Fase | Subagente | Estado | Iteración | Motivo |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+${historyEntries.map(e => `| ${e.timestamp.split("T")[1].substring(0, 8)} | F${e.phase} | \`@${e.subagent}\` | \`${e.status}\` | ${e.iteration} | ${e.reason} |`).join("\n")}
+
+---
+
+## 📈 Estadísticas de Frecuencia de Fases
+- **Fase 0 (Explorer):** ${phaseCounts[0] || 0} visitas.
+- **Fase 1 (Planner):** ${phaseCounts[1] || 0} visitas.
+- **Fase 2 (Builder):** ${phaseCounts[2] || 0} visitas.
+- **Fase 3 (Tester):** ${phaseCounts[3] || 0} visitas.
+- **Fase 4 (Deployer):** ${phaseCounts[4] || 0} visitas.
+- **Fase 5 (Archiver):** ${phaseCounts[5] || 0} visitas.
+
+*Nota: Múltiples visitas a una misma fase indican reintentos o ciclos correctivos activos.*
+`;
+          fs.writeFileSync(path.join(projectRoot, ".openspec/analytics.md"), analyticsMarkdown, "utf-8");
+        } catch (err) {}
       }
     }
 

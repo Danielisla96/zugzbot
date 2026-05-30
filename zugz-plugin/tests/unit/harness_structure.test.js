@@ -16,7 +16,8 @@ describe('Tool Scripts Existence', () => {
     'sdd_ui_auditor.js',
     'sdd_archive_and_commit.js',
     'sdd_brain_sync.js',
-    'gas_clasp_tools.js'
+    'gas_clasp_tools.js',
+    'sdd_auto_healer.js'
   ];
 
   tools.forEach(tool => {
