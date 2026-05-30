@@ -45,16 +45,16 @@ export default tool({
 
     // Secciones requeridas y sus expresiones regulares de validación según complejidad
     const requiredSections = [
-      { name: "Plano Técnico / Título", regex: /^# Plano Técnico de Especificación/m },
-      { name: "1. Diagnóstico y Archivos Afectados", regex: /^## 1\. Diagnóstico/m },
-      { name: "3. Propuesta de Solución y Arquitectura", regex: /^## 3\. Propuesta/m },
-      { name: "5. Criterios de Aceptación y Calidad", regex: /^## 5\. Criterios/m }
+      { name: "Plano Técnico / Título", regex: /^#\s*Plano\s+Técnico/mi },
+      { name: "1. Diagnóstico y Archivos Afectados", regex: /^##\s*1\.\s*Diagnóstico/mi },
+      { name: "3. Propuesta de Solución y Arquitectura", regex: /^##\s*3\.\s*Propuesta/mi },
+      { name: "5. Criterios de Aceptación y Calidad", regex: /^##\s*5\.\s*Criterios/mi }
     ];
 
     if (complexity !== "low") {
       requiredSections.push(
-        { name: "2. Consenso de Encuesta con el Usuario", regex: /^## 2\. Consenso/m },
-        { name: "4. Especificaciones BDD (Comportamiento)", regex: /^## 4\. Especificaciones BDD|Feature:/m }
+        { name: "2. Consenso de Encuesta con el Usuario", regex: /^##\s*2\.\s*Consenso/mi },
+        { name: "4. Especificaciones BDD (Comportamiento)", regex: /^##\s*4\.\s*Especificaciones BDD|Feature:/mi }
       );
     }
 

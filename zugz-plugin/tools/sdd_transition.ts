@@ -137,7 +137,7 @@ export default tool({
       if (fs.existsSync(specPath)) {
         try {
           const specContent = fs.readFileSync(specPath, "utf-8");
-          const qaSectionIndex = specContent.indexOf("## 5. Criterios de Aceptación");
+          const qaSectionIndex = specContent.search(/##\s*5\s*[\.\s-]?\s*Criterios/i);
           if (qaSectionIndex !== -1) {
             const qaContent = specContent.substring(qaSectionIndex);
             const lines = qaContent.split("\n");
@@ -174,9 +174,9 @@ export default tool({
             const reportContent = fs.readFileSync(reportPath, "utf-8");
             // Buscar sección QA con fallback: probar ## QA (template tester) primero,
             // luego ## 3. Correspondencia de Criterios (template anterior), luego buscar - [x] en cualquier parte
-            let qaSectionIndex = reportContent.indexOf("## QA");
+            let qaSectionIndex = reportContent.search(/##\s*QA/i);
             if (qaSectionIndex === -1) {
-              qaSectionIndex = reportContent.indexOf("## 3. Correspondencia de Criterios");
+              qaSectionIndex = reportContent.search(/##\s*3\s*[\.\s-]?\s*Correspondencia/i);
             }
             if (qaSectionIndex !== -1) {
               const qaContent = reportContent.substring(qaSectionIndex);
