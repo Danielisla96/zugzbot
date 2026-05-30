@@ -251,7 +251,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
             </box>
 
             {/* Componente Visual de Progreso SDD de 3 Fases */}
-            {sddProgress() && sddProgress()?.changeName !== "nuevo-cambio" && sddProgress()?.changeName !== "Ninguno" && (
+            {sddProgress() && (
               <box gap={0} paddingLeft={1} paddingTop={1} paddingBottom={0}>
                 <text fg="#FF7300">
                   {`SDD: ${sddProgress()?.changeName ?? ""}`}
