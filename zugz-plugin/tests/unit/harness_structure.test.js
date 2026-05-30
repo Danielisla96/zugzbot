@@ -15,7 +15,8 @@ describe('Tool Scripts Existence', () => {
     'sdd_checkpoint.js',
     'sdd_ui_auditor.js',
     'sdd_archive_and_commit.js',
-    'sdd_brain_sync.js'
+    'sdd_brain_sync.js',
+    'gas_clasp_tools.js'
   ];
 
   tools.forEach(tool => {
@@ -34,6 +35,7 @@ describe('Agent Files Existence', () => {
     'sdd-builder.md',
     'sdd-tester.md',
     'sdd-archiver.md',
+    'sdd-deployer.md',
     'aux-handyman.md',
     'aux-oracle.md'
   ];
