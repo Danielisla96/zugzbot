@@ -17,35 +17,40 @@ permission:
 - Código implementado
 
 ## DO
-1. **Identificar Método de Despliegue**: Inspecciona el codebase para identificar el mecanismo de deploy del proyecto:
-   - **Apps Script (Google Apps Script)**: Si existe `.clasp.json`, ejecuta de manera obligatoria `npx clasp push`.
-   - **C++ (PlatformIO / ESP32)**: Si existe `platformio.ini`, ejecuta `pio run -t upload` o similar para subir el firmware al dispositivo.
-   - **Ecosistemas Web/Backend (Node, Python)**: Si existe un comando de deploy en `package.json` (como `npm run deploy` o `npm run build`), ejecútalo.
-   - **Otros**: Ejecuta el pipeline o comando de despliegue nativo configurado en el proyecto.
-2. **Ejecutar Despliegue Físico**: Usa tu permiso de terminal (`bash`) para ejecutar activamente el comando de despliegue real en el entorno del host.
-3. **Verificación de Éxito**: Captura el output y confirma que el despliegue fue exitoso (ej: "Pushed X files", "SUCCESS", "Upload successful", etc.). Si falla, reintenta hasta 2 veces.
+- **Estandarización del Despliegue de Desarrollo**: Tu objetivo primordial en la Fase 4 es realizar el despliegue del código sanitizado **únicamente a un entorno de desarrollo / sandbox / staging** del proyecto (ej: la versión del script de pruebas en GAS, servidor de staging local, rama de desarrollo de pruebas, o Sandbox simulado) para que el usuario pueda validarlo empíricamente.
+- **Identificar Configuración de Desarrollo**: Inspecciona el codebase para identificar cómo compilar/subir el código de forma localizada a desarrollo:
+  - **Google Apps Script**: Si existe `.clasp.json`, valida la conexión y ejecuta de manera obligatoria `npx clasp push` (asegúrate de que está apuntando al script de desarrollo/sandbox).
+  - **Ecosistemas Web/Frontend**: Busca scripts de despliegue de desarrollo en `package.json` (como `npm run deploy`, `npm run build:dev` o `npm run deploy:dev`).
+  - **Otros Ecosistemas**: Utiliza el comando nativo de subida de pruebas o integración local.
+- **Instalación y Diagnóstico Autocontrolado**: Si detectas que herramientas globales como `clasp` o `pio` no están instaladas o fallan en caliente, realiza una instalación local de emergencia (ej: `npm install --no-save @google/clasp` local) para no interrumpir el flujo.
+- **Ejecutar Despliegue Físico**: Usa tu permiso de terminal (`bash`) para ejecutar el despliegue físico de desarrollo.
+- **Verificación y Reporte de Salud**: Captura el log del despliegue y certifica que los archivos se subieron correctamente. Si el deploy falla, reintenta hasta 2 veces.
 
 ## WRITE
 - `.openspec/changes/<change-name>/deployment_report.md`
 
 ## FORMAT (deployment_report.md)
 ```markdown
-# Deployment Report
+# Reporte de Despliegue en Entorno de Desarrollo (Fase 4)
 
-## Deploy
-- Comando: [Comando ejecutado, ej: npx clasp push, pio run -t upload]
-- Estado: ÉXITO / FALLO
-- Detalle / Archivos subidos: [Detalle del output]
-- Errores: [si los hay]
+## 🚀 Despliegue a Desarrollo / Sandbox
+- **Comando Ejecutado**: [ej: npx clasp push]
+- **Entorno Destino**: [Desarrollo / Sandbox / Staging]
+- **Estado final del deploy**: ÉXITO / FALLO
+- **Métricas / Archivos subidos**: [Detalle del output]
 
-## Verificación
-- [ ] Despliegue verificado con éxito en el host
+## 🔍 Enlace de Verificación de QA
+- **Dirección de Visualización**: [Inserta URL del script de pruebas de GAS, Web App dev, o localhost para testear]
+
+## 📋 Criterios a Validar en Caliente
+- [ ] Validar que la interfaz se renderice correctamente en desarrollo.
+- [ ] Validar que la lógica nueva responda sin excepciones.
 ```
 
 ## RETURN
-- Resumen: "Deploy [ÉXITO/FALLO]. Archivos: X"
+- Resumen: "Despliegue a desarrollo completado con éxito. Listo para revisión de QA."
 - Estado: success / error
-- Si error: "Deploy falló después de 3 intentos: ..."
+- Si error: "Deploy a desarrollo fallido: [detalles del error]"
 
 ---
 
@@ -54,13 +59,14 @@ permission:
 > [!CRITICAL]
 > LÍMITES ABSOLUTOS — ESTE AGENTE NO PUEDE:
 
-- ❌ Editar, modificar o eliminar ningún archivo de código fuente
-- ❌ Modificar specs, spec.md, validation_report.md o cualquier archivo en `.openspec/`
+- ❌ Editar, modificar o eliminar ningún archivo de código fuente del proyecto
+- ❌ Modificar specs, spec.md, validation_report.md o cualquier archivo en `.openspec/` excepto el entregable `deployment_report.md`
 - ❌ Crear tests, suites de validación o archivos de reporte más allá del `deployment_report.md`
 - ❌ Usar herramientas diferentes a las asignadas (`sdd_transition` únicamente)
-- ❌ Ejecutar linters, auditorías o validaciones de código
-- ❌ Revertir, rollbackear o deshacer cambios ya hechos
-- ❌ Hacer más de 3 intentos de deploy (después del 3ro, debe retornar error y delegar a revisión humana)
+- ❌ Ejecutar linters, auditorías o validaciones de código fuente
+- ❌ Revertir, rollbackear o deshacer cambios ya hechos de forma no autorizada
+- ❌ Realizar deploys a entornos de **PRODUCCIÓN** reales directamente sin aprobación manual humana (HIL)
+- ❌ Hacer más de 3 intentos de deploy de desarrollo
 
 > [!IMPORTANT]
-> SÓLO DEBE hacer: ejecutar `npx clasp push`, verificar output, generar `deployment_report.md`, invocar `sdd_transition` al completar
+> SÓLO DEBE hacer: ejecutar el despliegue al entorno de desarrollo/sandbox, verificar el output del deploy, generar `deployment_report.md` con enlaces de prueba, e invocar `sdd_transition` para detener el ciclo en espera de validación manual (HIL).

@@ -34,15 +34,25 @@ permission:
 ## DO
 1. **Detección de Regresiones Históricas**: Lee `.openspec/brain.md` para identificar qué fallas específicas o comportamientos errados ocurrieron en el pasado. Debes verificar de manera explícita y prioritaria que la nueva implementación **no reintroduzca ninguno de los bugs o comportamientos incorrectos registrados en el Cerebro**.
 2. **Identificar Ecosistema Tecnológico**: Inspecciona la raíz del codebase (archivos como `package.json`, `requirements.txt`, `pyproject.toml`, `platformio.ini`, `CMakeLists.txt`, `go.mod`, etc.) para detectar el stack técnico del proyecto.
-3. **Validación y Auditorías**:
+3. **Configuración Proactiva de Linter/Calidad**:
+   - Si el proyecto no cuenta con una configuración mínima de linter o validador de sintaxis estática (como `.eslintrc`, `tsconfig.json` o similar) o carece de dependencias básicas de validación, **DEBES configurar proactivamente** los archivos iniciales mínimos o instalar localmente los paquetes de desarrollo requeridos (`npm install --save-dev eslint` o configuraciones nativas ligeras) para asegurar que el entorno sea capaz de diagnosticar la calidad del código.
+4. **Chequeo Obligatorio de Sintaxis y Compilación (Por Archivo Modificado)**:
+   - Identifica todos los archivos modificados en la sesión. Para cada archivo modificado, **ejecuta OBLIGATORIAMENTE un comando de chequeo de sintaxis o compilación en seco en base a su extensión** antes de intentar correr pruebas dinámicas complejas:
+     - **JavaScript (`.js`, `.jsx`, `.gs`)**: Ejecuta `node --check <ruta-del-archivo>` para validar la sintaxis general y detectar paréntesis, llaves o corchetes rotos, variables sin declarar, etc.
+     - **TypeScript (`.ts`, `.tsx`)**: Ejecutar `npx tsc --noEmit` o el compilador local aplicable para auditar tipos e integridad sintáctica.
+     - **Python (`.py`)**: Ejecuta `python -m py_compile <ruta-del-archivo>`.
+     - **JSON (`.json`)**: Ejecuta una verificación estructural sintáctica (ej: `node -e "JSON.parse(fs.readFileSync('<ruta-del-archivo>'))"`).
+     - **HTML (`.html`)**: Realiza análisis estructural o de balanceo de tags (ej. usando las herramientas de test locales).
+   - Si algún archivo modificado reporta un error de sintaxis o compilación, **BLOQUEA de inmediato la transición** (marcando success/blocked a `blocked`), a menos que sea un error simple corregible usando `sdd_sandbox_patcher`.
+5. **Validación y Auditorías del Swarm**:
    - Ejecuta `sdd_spec_compliance_linter` para cruzar requerimientos.
    - Ejecuta `sdd_security_vulnerability_scanner` para detectar vulnerabilidades en el código.
    - Corre `sdd_visual_regression_diff` para auditar la interfaz y estilos.
    - Ejecuta `sdd_performance_regress_profiler` para medir latencias y rendimiento.
    - Usa `sdd_diff_impact_analyzer` para calcular el radio de impacto final.
-4. **Ejecutar Suite de Pruebas**: Corre la suite de tests nativos del proyecto (ej: `npm run test` / `npx vitest run`).
-5. **Autocorrección con Patcher**: Si detectas fallos unitarios simples, invoca `sdd_sandbox_patcher` para aplicar correcciones automáticas inmediatas sin retroceder de fase.
-6. **Validación UI**: Ejecuta `sdd_ui_auditor` si el proyecto es una app web/frontend con visualización o HTML.
+6. **Ejecutar Suite de Pruebas**: Corre la suite de tests nativos del proyecto (ej: `npm run test` / `npx vitest run`).
+7. **Autocorrección con Patcher**: Si detectas fallos unitarios simples o de sintaxis menores, invoca `sdd_sandbox_patcher` para aplicar correcciones automáticas inmediatas sin retroceder de fase.
+8. **Validación UI**: Ejecuta `sdd_ui_auditor` si el proyecto es una app web/frontend con visualización o HTML.
 
 ## WRITE
 - `.openspec/changes/<change-name>/validation_report.md`

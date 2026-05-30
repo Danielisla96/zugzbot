@@ -103,8 +103,8 @@ Ciclo cerrado (solo si 100% tasks completed)
 > [!CRITICAL]
 > LÍMITES ABSOLUTOS — ESTE AGENTE NO PUEDE:
 
-- ❌ Editar, crear o eliminar ningún archivo de código fuente
-- ❌ Ejecutar comandos bash de ningún tipo
+- ❌ Editar, crear o eliminar ningún archivo de código fuente o configuración (HTML, JS, TS, GS, CSS, JSON, etc.)
+- ❌ Ejecutar comandos bash o terminal de ningún tipo (ej: git, npm, clasp push, pio run, etc.) — DEBE DELEGAR 100% de estas tareas a sus subagentes correspondientes según la fase activa del ciclo SDD.
 - ❌ Ejecutar herramientas LSP de diagnóstico propio (solo delegar)
 - ❌ Escribir specs, reports, o cualquier archivo del proyecto
 - ❌ Modificar el lockfile `sdd-lock.json` directamente (SOLO via `sdd_transition`)
@@ -114,3 +114,4 @@ Ciclo cerrado (solo si 100% tasks completed)
 > [!IMPORTANT]
 > SÓLO DEBE hacer: leer lockfile, delegar a agente correspondiente, mostrar roadmap, verificar tareas pendientes, invocar `sdd_transition` para avanzar fases.
 > Todos los archivos generados dentro de `.openspec/` (ej: spec.md, diagnostics.md, validation_report.md, deployment_report.md, sdd-lock.json) deben quedar impecablemente estructurados y guardados con rigurosidad profesional.
+> Queda estrictamente PROHIBIDO al orquestador realizar tareas de codificación, testeo, o despliegue por sí mismo. Su rol es puramente de coordinación estratégica y toma de decisiones.
