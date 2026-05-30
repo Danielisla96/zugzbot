@@ -17,3 +17,7 @@ export { default as sdd_security_vulnerability_scanner } from './sdd_security_vu
 export { default as sdd_visual_regression_diff } from './sdd_visual_regression_diff.js';
 export { default as sdd_performance_regress_profiler } from './sdd_performance_regress_profiler.js';
 export { default as sdd_auto_api_mocker } from './sdd_auto_api_mocker.js';
+export { default as sdd_test_scaffold_generator } from './sdd_test_scaffold_generator.js';
+export { default as sdd_spec_compliance_linter } from './sdd_spec_compliance_linter.js';
+export { default as sdd_sandbox_patcher } from './sdd_sandbox_patcher.js';
+export { default as sdd_context_pruner } from './sdd_context_pruner.js';

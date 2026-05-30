@@ -25,7 +25,7 @@ permission:
 ## DO
 - Ejecuta `sdd_archive_and_commit` con:
   - `changeName`: nombre del cambio
-  - `commitMessage`: mensaje semántico
+  - `commitMessage`: mensaje semántico detallado redactado obligatoriamente en **ESPAÑOL** (siguiendo Conventional Commits, ej: `feat(sdd): ...`, `fix(sdd): ...`)
   - `bumpType`: patch / minor / major
 
 ## RETURN

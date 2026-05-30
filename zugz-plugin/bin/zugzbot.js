@@ -84,7 +84,8 @@ function buildOpencodeJson(models) {
           "tools": {
             "sdd_transition": "allow",
             "sdd_checkpoint": "allow",
-            "sdd_compact_context": "allow"
+            "sdd_compact_context": "allow",
+            "sdd_context_pruner": "allow"
           }
         }
       },
@@ -115,7 +116,9 @@ function buildOpencodeJson(models) {
             "sdd_requirement_tracker": "allow",
             "check_dependency_cooldown": "allow",
             "sdd_diff_impact_analyzer": "allow",
-            "sdd_auto_api_mocker": "allow"
+            "sdd_auto_api_mocker": "allow",
+            "sdd_test_scaffold_generator": "allow",
+            "sdd_context_pruner": "allow"
           }
         }
       },
@@ -133,7 +136,8 @@ function buildOpencodeJson(models) {
             "sdd_secret_scanner": "allow",
             "sdd_security_vulnerability_scanner": "allow",
             "sdd_visual_regression_diff": "allow",
-            "sdd_auto_api_mocker": "allow"
+            "sdd_auto_api_mocker": "allow",
+            "sdd_spec_compliance_linter": "allow"
           }
         }
       },
@@ -156,7 +160,10 @@ function buildOpencodeJson(models) {
             "sdd_security_vulnerability_scanner": "allow",
             "sdd_visual_regression_diff": "allow",
             "sdd_performance_regress_profiler": "allow",
-            "sdd_auto_api_mocker": "allow"
+            "sdd_auto_api_mocker": "allow",
+            "sdd_test_scaffold_generator": "allow",
+            "sdd_spec_compliance_linter": "allow",
+            "sdd_sandbox_patcher": "allow"
           }
         }
       },
@@ -172,7 +179,8 @@ function buildOpencodeJson(models) {
             "sdd_archive_and_commit": "allow",
             "sdd_transition": "allow",
             "sdd_brain_sync": "allow",
-            "sdd_install_autoskills": "allow"
+            "sdd_install_autoskills": "allow",
+            "sdd_context_pruner": "allow"
           }
         }
       },

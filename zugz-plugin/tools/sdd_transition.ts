@@ -384,7 +384,7 @@ export default tool({
         // 2. Hacer commit automático de los artefactos .openspec/
         execSync("git add .openspec/", { cwd: projectRoot, stdio: "ignore" });
         
-        const commitMsg = `docs(sdd): transition to phase ${args.nextPhase} - ${args.reason.replace(/"/g, '\\"')}`;
+        const commitMsg = `docs(sdd): transición a fase ${args.nextPhase} - ${args.reason.replace(/"/g, '\\"')}`;
         execSync(`git commit -m "${commitMsg}"`, { cwd: projectRoot, stdio: "ignore" });
         
         gitStatus = ` [Git: Rama '${branchName}' actualizada con commit semántico]`;

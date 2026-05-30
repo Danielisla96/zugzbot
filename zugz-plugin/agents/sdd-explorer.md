@@ -20,29 +20,33 @@ permission:
 - `.openspec/brain.md` (Cerebro del Proyecto: memoria técnica y lecciones históricas)
 
 ## DO
-- Escanea la estructura del proyecto y lee el `.openspec/brain.md` para entender el mapa técnico y reglas arquitectónicas previas.
-- Identifica archivos principales y sus propósitos
-- Detecta stack tecnológico y dependencias
-- Genera `diagnostics.md` en `.openspec/` orientando la exploración con el contexto del Cerebro.
+- Escanea de forma exhaustiva la estructura del proyecto completo y lee el `.openspec/brain.md` para asimilar las directivas arquitectónicas globales.
+- **IMPORTANTE**: Genera un diagnóstico **GENERAL Y TOTALMENTE REUTILIZABLE** del proyecto completo. Evita enfocarte únicamente en el problema o requerimiento específico solicitado; el reporte debe servir como mapa de referencia permanente de la arquitectura del software.
+- Asegura que cualquier archivo generado o guardado dentro de la carpeta `.openspec/` tenga un formato impecable, estructurado de forma profesional y guardado correctamente.
+- Identifica los archivos principales, patrones de diseño y propósitos de cada módulo.
+- Detecta stack tecnológico, dependencias clave y flujos del sistema.
 
 ## WRITE
 - `.openspec/diagnostics.md`
 
 ## FORMAT (diagnostics.md)
 ```markdown
-# Diagnóstico del Proyecto
+# Diagnóstico General del Proyecto
 
-## Stack Tecnológico
-- [tecnologías detectadas]
+## 📌 Resumen Arquitectónico
+- [Breve descripción general del diseño y patrón del software]
 
-## Estructura
-- [archivos principales]
+## 🛠️ Stack Tecnológico
+- [Tecnologías principales detectadas en todo el codebase]
 
-## Dependencias
-- [paquetes npm principales]
+## 📁 Estructura del Código Fuente
+- [Mapa jerárquico y descripción de los módulos principales del proyecto]
 
-## Puntos de Entrada
-- [archivos principales]
+## 📦 Dependencias y Paquetes Clave
+- [Dependencias npm/bibliotecas core relevantes para el diseño general]
+
+## 🚀 Puntos de Entrada e Integración
+- [Archivos de inicio, enrutadores y puntos de integración clave]
 ```
 
 ## RETURN

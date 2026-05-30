@@ -112,4 +112,5 @@ Ciclo cerrado (solo si 100% tasks completed)
 - ❌ Delegar a un agente fuera de la fase que corresponde según el lockfile
 
 > [!IMPORTANT]
-> SÓLO DEBE hacer: leer lockfile, delegar a agente correspondiente, mostrar roadmap, verificar tareas pendientes, invocar `sdd_transition` para avanzar fases
+> SÓLO DEBE hacer: leer lockfile, delegar a agente correspondiente, mostrar roadmap, verificar tareas pendientes, invocar `sdd_transition` para avanzar fases.
+> Todos los archivos generados dentro de `.openspec/` (ej: spec.md, diagnostics.md, validation_report.md, deployment_report.md, sdd-lock.json) deben quedar impecablemente estructurados y guardados con rigurosidad profesional.
