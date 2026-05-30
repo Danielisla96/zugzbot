@@ -174,16 +174,29 @@ export default tool({
 
     // 4. No temporary file is needed on disk, we feed it directly to git commit stdin in step 7.
 
-    // 5. Resetear el lockfile a idle (ANTES del commit para incluirlo en el cierre)
+    // 5. Resetear el lockfile a idle con un estado completamente limpio y fresco (ANTES del commit para incluirlo en el cierre)
     if (fs.existsSync(lockfilePath)) {
       try {
-        const lockfile = JSON.parse(fs.readFileSync(lockfilePath, "utf-8"))
-        lockfile.active_phase = 0
-        lockfile.active_subagent = "sdd-planner"
-        lockfile.status = "idle"
-        lockfile.last_updated = dateStr
+        const lockfile = {
+          change_name: "nuevo-cambio",
+          active_phase: 0,
+          active_subagent: "sdd-explorer",
+          status: "idle",
+          auto_pilot: false,
+          iteration: 0,
+          last_updated: dateStr,
+          orchestrator_mode: "delegation_only",
+          direction: "forward",
+          last_successful_phase: 0,
+          retry_count: 0,
+          corrective_loop_active: false,
+          fresh_task: false,
+          checkpoints: [],
+          tasks: [],
+          complexity: "low"
+        }
         fs.writeFileSync(lockfilePath, JSON.stringify(lockfile, null, 2), "utf-8")
-        report.push(`✓ Lockfile .openspec/sdd-lock.json restablecido a 'idle'`)
+        report.push(`✓ Lockfile .openspec/sdd-lock.json restablecido a 'idle' con valores limpios`)
       } catch (e: any) {
         report.push(`⚠️ No se pudo restablecer el lockfile: ${e.message}`)
       }
