@@ -238,13 +238,7 @@ function init() {
     }
   }
 
-  const sddScriptPath = path.join(PKG_ROOT, "sdd")
-  const localSddPath = path.join(INSTALL_DIR, "sdd")
-  if (fs.existsSync(sddScriptPath) && !fs.existsSync(localSddPath)) {
-    fs.copyFileSync(sddScriptPath, localSddPath)
-    fs.chmodSync(localSddPath, 0o755)
-    green("Script ./sdd copiado")
-  }
+  // No local CLI script copying needed (100% native OpenCode architecture)
 
   const pluginTuiPath = path.join(PKG_ROOT, "plugins/plugin_tui.tsx")
   const pluginCorePath = path.join(PKG_ROOT, "plugins/plugin_sdd_core.ts")
@@ -265,7 +259,6 @@ function init() {
 ╚══════════════════════════════════════════════════════════╝
 
    Uso: opencode + @zugzbot para iniciar el ciclo SDD
-        ./sdd status para ver el estado
 
    Estructura del proyecto:
    ├── opencode.json          (configuración de agentes)
@@ -273,8 +266,7 @@ function init() {
    ├── .openspec/             (estado del ciclo SDD)
    │   ├── sdd-lock.json
    │   └── brain.md
-   ├── .opencode/plugins/     (plugins de opencode)
-   └── sdd                    (comando local)
+   └── .opencode/plugins/     (plugins de opencode)
 `)
 }
 

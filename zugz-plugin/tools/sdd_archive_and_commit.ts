@@ -170,7 +170,6 @@ export default tool({
     }
 
     // 5. Resetear el lockfile a idle (ANTES del commit para incluirlo en el cierre)
-    const lockfilePath = path.join(projectRoot, ".openspec/sdd-lock.json")
     if (fs.existsSync(lockfilePath)) {
       try {
         const lockfile = JSON.parse(fs.readFileSync(lockfilePath, "utf-8"))

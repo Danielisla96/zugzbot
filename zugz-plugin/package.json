@@ -12,12 +12,9 @@
     "lint:fix": "eslint . --ext .js,.ts,.tsx,.jsx,.html --fix",
     "test": "node --test tests/**/*.test.js 2>/dev/null || echo 'No tests configured'",
     "test:static": "node tools/sdd_ui_auditor.ts src",
-    "build": "tsc --noEmit",
+    "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "sdd:status": "node sdd status",
-    "sdd:clean": "node sdd reset",
-    "sdd:autopilot": "node sdd autopilot on",
-    "prepare": "node bin/zugzbot.js"
+    "prepare": "node bin/zugzbot.js && tsc"
   },
   "keywords": [
     "sdd",

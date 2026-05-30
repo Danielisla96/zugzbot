@@ -25,6 +25,10 @@ function checkTagBalance(content) {
   cleaned = cleaned.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
   cleaned = cleaned.replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '');
   
+  // Strip TypeScript generic type arguments from function calls or declarations (e.g. createSignal<string[]>)
+  // JSX tags are never directly preceded by a word character (like \w+), whereas TS generics are.
+  cleaned = cleaned.replace(/(\w+)<([A-Za-z0-9_\[\]\s|]+)>/g, '$1');
+  
   const tagRegex = /<(\/?[a-zA-Z0-9:-]+)(?:\s+[^>]*?)?>/g;
   const stack = [];
   const selfClosingTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);

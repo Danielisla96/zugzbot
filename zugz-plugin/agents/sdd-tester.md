@@ -20,9 +20,15 @@ permission:
 - Código implementado
 
 ## DO
-- Ejecuta linter y validadores estáticos
-- Ejecuta `sdd_ui_auditor` si hay HTML/frontend
-- Autocorrige errores de sintaxis simples (máx 3 intentos)
+1. **Identificar Ecosistema Tecnológico**: Inspecciona la raíz del codebase (archivos como `package.json`, `requirements.txt`, `pyproject.toml`, `platformio.ini`, `CMakeLists.txt`, `go.mod`, etc.) para detectar el stack técnico del proyecto.
+2. **Ejecutar Linter & Auditorías**:
+   - **JS/TS**: Ejecuta `npm run lint` o `eslint` y las validaciones estáticas de DOM (`npx vitest run tests/static/...`).
+   - **Python**: Ejecuta `flake8`, `pylint` o `black --check`.
+   - **C++ (ESP32/Embedded)**: Ejecuta chequeos estáticos como `cppcheck` o verifica la compilación del firmware.
+   - **Otros**: Usa el formateador/linter estándar del ecosistema detectado.
+3. **Ejecutar Suite de Pruebas**: Usa tu permiso de terminal (`bash`) para correr la suite de tests nativos del proyecto (ej: `npm run test` / `npx vitest run` en Node, `pytest` / `python -m unittest` en Python, `pio test` en PlatformIO/C++, `go test` en Go, etc.).
+4. **Validación UI**: Ejecuta `sdd_ui_auditor` si el proyecto es una app web/frontend con visualización o HTML.
+5. **Autocorrección**: Corrige errores simples de sintaxis o fallas de test (máx 3 intentos).
 
 ## WRITE
 - `.openspec/changes/<change-name>/validation_report.md`
