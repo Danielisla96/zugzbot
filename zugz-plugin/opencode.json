@@ -22,7 +22,8 @@
           "sdd_transition": "allow",
           "sdd_checkpoint": "allow",
           "sdd_compact_context": "allow",
-          "sdd_context_pruner": "allow"
+          "sdd_context_pruner": "allow",
+          "gas_clasp_tools": "allow"
         }
       }
     },
@@ -75,7 +76,8 @@
           "sdd_visual_regression_diff": "allow",
           "sdd_auto_api_mocker": "allow",
           "sdd_spec_compliance_linter": "allow",
-          "sdd_syntax_and_linter_auditor": "allow"
+          "sdd_syntax_and_linter_auditor": "allow",
+          "gas_clasp_tools": "allow"
         }
       }
     },
@@ -130,7 +132,8 @@
       "permission": {
         "bash": "allow",
         "tools": {
-          "sdd_transition": "allow"
+          "sdd_transition": "allow",
+          "gas_clasp_tools": "allow"
         }
       }
     },

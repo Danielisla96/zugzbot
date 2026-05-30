@@ -21,3 +21,4 @@ export { default as sdd_test_scaffold_generator } from './sdd_test_scaffold_gene
 export { default as sdd_spec_compliance_linter } from './sdd_spec_compliance_linter.js';
 export { default as sdd_sandbox_patcher } from './sdd_sandbox_patcher.js';
 export { default as sdd_context_pruner } from './sdd_context_pruner.js';
+export { default as gas_clasp_tools } from './gas_clasp_tools.js';

@@ -175,39 +175,51 @@ export default tool({
     const auditResults: CriterionAudit[] = [];
 
     criteria.forEach(crit => {
-      // Extraer palabras clave de más de 3 letras ignorando conectores
-      const keywords = crit
-        .toLowerCase()
-        .replace(/[^a-záéíóúñü0-9\s]/g, "")
-        .split(/\s+/)
-        .filter(word => word.length > 3 && !["debe", "para", "como", "esta", "este", "consecuente"].includes(word));
+      // Verificar si el criterio individual tiene un bypass manual explícito
+      const isManualCrit = 
+        crit.toLowerCase().includes("[manual]") ||
+        crit.toLowerCase().includes("[e2e]") ||
+        crit.toLowerCase().includes("[qa manual]");
 
       let matched = false;
       let matchedFile = "";
       let matchedSnippet = "";
 
-      for (const testFile of testFiles) {
-        try {
-          const testContent = fs.readFileSync(testFile, "utf-8");
-          const testLines = testContent.split("\n");
+      if (isManualCrit) {
+        matched = true;
+        matchedFile = "QA Manual / E2E Bypass";
+        matchedSnippet = "Validación manual explícita declarada en spec.md";
+      } else {
+        // Extraer palabras clave de más de 3 letras ignorando conectores
+        const keywords = crit
+          .toLowerCase()
+          .replace(/[^a-záéíóúñü0-9\s]/g, "")
+          .split(/\s+/)
+          .filter(word => word.length > 3 && !["debe", "para", "como", "esta", "este", "consecuente"].includes(word));
 
-          // Búsqueda aproximada: comprobar si el test contiene palabras clave del criterio
-          for (let i = 0; i < testLines.length; i++) {
-            const line = testLines[i].toLowerCase();
-            // Si coincide con más del 60% de las palabras clave de un criterio en la misma línea
-            const matchCount = keywords.filter(keyword => line.includes(keyword)).length;
-            const threshold = Math.max(1, Math.floor(keywords.length * 0.5));
+        for (const testFile of testFiles) {
+          try {
+            const testContent = fs.readFileSync(testFile, "utf-8");
+            const testLines = testContent.split("\n");
 
-            if (matchCount >= threshold && threshold > 0) {
-              matched = true;
-              matchedFile = path.basename(testFile);
-              matchedSnippet = `Línea ${i + 1}: ${testLines[i].trim()}`;
-              break;
+            // Búsqueda aproximada: comprobar si el test contiene palabras clave del criterio
+            for (let i = 0; i < testLines.length; i++) {
+              const line = testLines[i].toLowerCase();
+              // Si coincide con más del 60% de las palabras clave de un criterio en la misma línea
+              const matchCount = keywords.filter(keyword => line.includes(keyword)).length;
+              const threshold = Math.max(1, Math.floor(keywords.length * 0.5));
+
+              if (matchCount >= threshold && threshold > 0) {
+                matched = true;
+                matchedFile = path.basename(testFile);
+                matchedSnippet = `Línea ${i + 1}: ${testLines[i].trim()}`;
+                break;
+              }
             }
-          }
 
-          if (matched) break;
-        } catch (e) {}
+            if (matched) break;
+          } catch (e) {}
+        }
       }
 
       auditResults.push({
