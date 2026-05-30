@@ -252,6 +252,7 @@ function init() {
   fs.mkdirSync(path.join(INSTALL_DIR, ".openspec/changes"), { recursive: true })
   fs.mkdirSync(path.join(INSTALL_DIR, ".opencode/plugins"), { recursive: true })
   fs.mkdirSync(path.join(INSTALL_DIR, ".opencode/skills"), { recursive: true })
+  fs.mkdirSync(path.join(INSTALL_DIR, ".opencode/tools"), { recursive: true })
   green("Directorios creados")
 
   header("📝 Creando archivos de configuración...")
@@ -323,6 +324,13 @@ function init() {
   if (fs.existsSync(sourceSkillsDir)) {
     copyRecursiveSync(sourceSkillsDir, localSkillsDir)
     green("Skills del Swarm copiadas")
+  }
+
+  const sourceToolsDir = path.join(PKG_ROOT, ".opencode/tools")
+  const localToolsDir = path.join(INSTALL_DIR, ".opencode/tools")
+  if (fs.existsSync(sourceToolsDir)) {
+    copyRecursiveSync(sourceToolsDir, localToolsDir)
+    green("Herramientas del Swarm copiadas")
   }
 
   console.log(`
