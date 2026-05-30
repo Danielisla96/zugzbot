@@ -113,7 +113,9 @@ function buildOpencodeJson(models) {
             "sdd_transition": "allow",
             "sdd_brain_sync": "allow",
             "sdd_requirement_tracker": "allow",
-            "check_dependency_cooldown": "allow"
+            "check_dependency_cooldown": "allow",
+            "sdd_diff_impact_analyzer": "allow",
+            "sdd_auto_api_mocker": "allow"
           }
         }
       },
@@ -128,7 +130,10 @@ function buildOpencodeJson(models) {
           "tools": {
             "sdd_transition": "allow",
             "sdd_ui_auditor": "allow",
-            "sdd_secret_scanner": "allow"
+            "sdd_secret_scanner": "allow",
+            "sdd_security_vulnerability_scanner": "allow",
+            "sdd_visual_regression_diff": "allow",
+            "sdd_auto_api_mocker": "allow"
           }
         }
       },
@@ -146,7 +151,12 @@ function buildOpencodeJson(models) {
             "sdd_spec_validator": "allow",
             "sdd_regression_detector": "allow",
             "sdd_bdd_tester": "allow",
-            "sdd_requirement_tracker": "allow"
+            "sdd_requirement_tracker": "allow",
+            "sdd_diff_impact_analyzer": "allow",
+            "sdd_security_vulnerability_scanner": "allow",
+            "sdd_visual_regression_diff": "allow",
+            "sdd_performance_regress_profiler": "allow",
+            "sdd_auto_api_mocker": "allow"
           }
         }
       },

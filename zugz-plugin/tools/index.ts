@@ -12,3 +12,8 @@ export { default as sdd_requirement_tracker } from './sdd_requirement_tracker.js
 export { default as sdd_bdd_tester } from './sdd_bdd_tester.js';
 export { default as sdd_compact_context } from './sdd_compact_context.js';
 export { default as check_dependency_cooldown } from './check_dependency_cooldown.js';
+export { default as sdd_diff_impact_analyzer } from './sdd_diff_impact_analyzer.js';
+export { default as sdd_security_vulnerability_scanner } from './sdd_security_vulnerability_scanner.js';
+export { default as sdd_visual_regression_diff } from './sdd_visual_regression_diff.js';
+export { default as sdd_performance_regress_profiler } from './sdd_performance_regress_profiler.js';
+export { default as sdd_auto_api_mocker } from './sdd_auto_api_mocker.js';
