@@ -40,6 +40,10 @@ const TEMPLATE_GITIGNORE = `# Zugzbot SDD
 .openspec/sdd-lock.json
 .openspec/checkpoints/
 tui.json
+zugz-models.json
+node_modules/
+.opencode/
+package-lock.json
 `
 
 const BRAIN_TEMPLATE = `# 🧠 Brain del Proyecto
