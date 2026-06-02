@@ -28,6 +28,7 @@ permission:
 ## DO
 - Implementa los cambios en el código según el spec, asegurándote de revisar `.openspec/brain.md` para cumplir estrictamente con los patrones técnicos exitosos y evitar reintroducir malas prácticas.
 - Usa `edit` para parches quirúrgicos (prohibido reescribir archivos completos).
+- **Aislamiento de Causa Raíz en Maquetación (Layouts/CSS)**: Si la UI tiene elementos interactivos inestables (flechas de paginación/menú que se desplazan físicamente al cambiar el texto de un botón), aplicar restricciones rígidas basadas en el modelo de caja (ej. ancho de contenedor fijo/mínimo, justify-content, `flex: 1` para empujar flechas a los extremos, etc.) garantizando una UX estática y libre de misclicks.
 - **Pre-chequeo Local de Sintaxis**: Ejecuta OBLIGATORIAMENTE la herramienta premium `sdd_syntax_and_linter_auditor` sobre tus archivos modificados antes de finalizar para certificar la total integridad sintáctica de tus cambios (erradicando paréntesis, corchetes o llaves abiertas, y problemas de balanceo en general).
 - **Escaneo SAST Quirúrgico**: Ejecuta `sdd_security_vulnerability_scanner` sobre tus archivos modificados antes de cerrar tu implementación.
 - **Validación de Secretos**: Corre `sdd_secret_scanner` para asegurarte de no dejar tokens/passwords temporales de desarrollo.

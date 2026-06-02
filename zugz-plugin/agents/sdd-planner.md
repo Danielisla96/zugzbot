@@ -29,6 +29,8 @@ permission:
 ## DO
 - **Descubrimiento de Requerimientos (Crucial)**: Realiza una encuesta inicial activa al usuario utilizando la herramienta `question` (consolidada en una llamada de 3-5 preguntas claras) para comprender a fondo la causa raíz, el síntoma real de negocio/UX y sus preferencias antes de redactar el plano técnico.
 - **Consultar el Cerebro**: Analiza `.openspec/brain.md` para asimilar fallas y aprendizajes anteriores. Es obligatorio diseñar una solución técnica que **evite cometer el mismo error o comportamiento incorrecto dos veces**.
+- **Investigación Focalizada**: No asumir dónde están las cosas. Utilizar búsquedas indexadas y exhaustivas (como buscar nombres de clases, selectores o IDs en toda la base de código) para rastrear colisiones (por ejemplo, clases CSS redefinidas en múltiples archivos) e identificar la precedencia/cascada en el DOM real.
+- **Análisis de Impacto de Dependencias**: Antes de proponer modificaciones de estructura HTML/DOM, rastrear activamente todos los selectores de Javascript y referencias que buscan IDs/clases que se planean cambiar, previniendo excepciones en tiempo de ejecución.
 - **Analizar el Impacto del Cambio**: Ejecuta `sdd_diff_impact_analyzer` para determinar el radio de impacto estructural del requerimiento.
 - **Scaffolding de Pruebas TDD**: Usa `sdd_test_scaffold_generator` para autogenerar la suite de pruebas unitarias en base a las especificaciones del `spec.md` diseñado.
 - **Mock de Servicios de Terceros**: Usa `sdd_auto_api_mocker` para extraer endpoints y generar mocks rápidos si el cambio interactúa con APIs externas.
