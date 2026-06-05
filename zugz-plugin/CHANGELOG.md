@@ -7,6 +7,19 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [2.0.7] - 2026-06-05 — Documentación "Cómo Funciona"
+
+### 📚 Documentación
+
+- **`README.md`**: nueva sección "🧠 Cómo funciona (la mecánica)" que explica los 4 componentes clave (router, subagentes, lockfile, tools SRP) y el ciclo de un turno.
+- Diagrama ASCII del flujo router → subagentes → lockfile.
+- Tabla "El ciclo de un turno" con 9 pasos numerados.
+- Explicación detallada de por qué el lockfile es el corazón del sistema (amnesia-cero).
+- Reorganización de "Las 33 herramientas SRP" por categoría funcional con énfasis en `sdd_transition` como única vía de cambio de fase.
+- Sección "Las reglas de delegación" explicando por qué solo `@zugzbot` puede delegar.
+
+---
+
 ## [2.0.6] - 2026-06-05 — Guion de Interacción Guiada
 
 ### ✨ Mejoras de UX para el Usuario Final

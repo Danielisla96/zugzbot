@@ -1,7 +1,7 @@
 # 🤖 Zugzbot v2.0.0 — Arnés SDD Multi-Agente Agnóstico al Stack
 
 > [!IMPORTANT]
-> **Zugzbot v2.0.0** es un arnés de orquestación industrial basado en **Spec-Driven Development (SDD) con TDD puro** para [OpenCode](https://opencode.ai). Estructura el ciclo de vida del desarrollo de software en **6 fases con TDD atómico (Red → Green → Refactor)**, garantizando que ningún modelo de IA escriba código de producción sin planning, validación humana y tests aprobados.
+> **Zugzbot v2.0.0** es un arnés de orquestación para [OpenCode](https://opencode.ai) que implementa **Spec-Driven Development (SDD) con TDD puro (Red → Green → Refactor)**. Tú le dices QUÉ quieres en lenguaje natural; él clasifica tu pedido, monta un equipo de subagentes especializados, ejecuta el ciclo de 11 fases, y te entrega un cambio versionado con commit semántico. **Tú solo apruebas en 2 momentos** (HIL-A y HIL-B); el resto es coreografía determinista.
 
 ---
 
@@ -20,45 +20,109 @@ opencode .
 # 3) Aprobar cuando te pregunte (2 momentos: HIL-A y HIL-B)
 ```
 
-No hay paso 4. **`@zugzbot`** clasifica tu pedido, monta el equipo de subagentes, ejecuta el ciclo, y te entrega un cambio versionado con commit semántico.
+No hay paso 4. **`@zugzbot`** hace el resto.
+
+---
+
+## 🧠 Cómo funciona (la mecánica)
+
+El arnés tiene 4 piezas que interactúan entre sí en cada turno:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  👤 TÚ escribes en lenguaje natural                          │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+              ┌──────────────────────┐
+              │  @zugzbot (router)   │  ← ÚNICO con mode: primary
+              │  Clasifica tu intent │
+              └──────────┬───────────┘
+                         │ delega vía "task" permission
+        ┌────────────────┼────────────────┬──────────────┐
+        ▼                ▼                ▼              ▼
+   @sdd-explorer   @sdd-builder     @aux-auditor   @aux-oracle
+   (F0: detectar)  (F2: codear)     (audit)        (teoría)
+        │                │                │              │
+        └────────────────┴────────────────┴──────────────┘
+                         │
+                         ▼
+              ┌──────────────────────┐
+              │  .openspec/          │  ← Única fuente de verdad
+              │  sdd-lock.json v2    │     entre turnos
+              └──────────────────────┘
+```
+
+### Los 4 componentes clave
+
+| Componente | Qué hace | Dónde vive |
+|---|---|---|
+| **`@zugzbot`** (router) | Clasifica tu prompt en uno de 6 workflows, lee el lockfile, delega al subagente correcto, fiscaliza transiciones y HIL | `agents/zugzbot.md` (modo `primary`) |
+| **Subagentes** (14 total) | Cada uno hace UN trabajo: detectar stack, escribir tests, implementar, validar, etc. SRP estricto. | `agents/sdd-*.md`, `agents/f*.md`, `agents/aux-*.md` |
+| **Lockfile v2** | Estado completo del ciclo activo: fase actual, stack detectado, TDD progress, rama git, tareas pendientes. Única vía de saber "dónde quedé". | `.openspec/sdd-lock.json` |
+| **Tools SRP** (33) | Atómicas: `sdd_transition` (cambiar fase), `sdd_lock_manager` (leer/escribir lock), `sdd_test_runner` (correr tests), `sdd_linter`, etc. | `tools/*.ts` + `.opencode/tools/*.js` |
+
+### El ciclo de un turno
+
+```
+1. 📥 TÚ escribes:  "agrega un endpoint POST /api/logout que invalide JWT"
+2. 🧭 @zugzbot clasifica:  sdd_router → workflow: "full-sdd-tdd"
+3. 📖 @zugzbot lee lockfile:  change_name="" → crear "agregar-endpoint-logout"
+4. 🗺️ @zugzbot imprime roadmap:  [ ] F0  [ ] F1  [ ] F1.5  [ ] HIL-A  [ ] F2-RED  ...
+5. 🤝 @zugzbot delega vía task:  sdd-explorer (F0) / sdd-planner (F1) / f2-red-test-writer (F2-RED) / ...
+6. 🔧 Subagente trabaja:  lee spec, corre tests, escribe código, genera reportes
+7. 🔄 Subagente transiciona:  sdd_transition(F1 → F1.5) con validación TDD gate
+8. 📤 @zugzbot retorna:  "F1 hecho. F1.5 en curso. Próxima: revisión de testeabilidad."
+9. 🔁 Repite desde paso 1 hasta F5 (cierre) o HIL-A/HIL-B (pausa para tu input)
+```
+
+### Por qué el lockfile es el corazón
+
+El lockfile es **la única cosa que persiste entre turnos**. Cuando cierras OpenCode y vuelves otro día, `@zugzbot` no tiene memoria de tu sesión — solo lee el lockfile y sabe exactamente:
+
+- En qué fase estás (`F0` | `F1` | `F2-RED` | ... | `DONE`)
+- Qué stack detectó (`node-typescript` | `python` | `go` | ...)
+- Cuántos tests añadiste en RED y cuántos pasan en GREEN
+- Si la rama git está limpia o tiene cambios sin commit
+- Qué tareas están pendientes
+
+**El lockfile es amnesia-cero**: nunca pierdes el contexto de un cambio a medio hacer.
 
 ---
 
 ## 🎬 Tu primera conversación (ejemplo realista)
 
-> Pedido: "agrega un endpoint POST /api/logout que invalide el JWT"
+> Pedido: *"agrega un endpoint POST /api/logout que invalide el JWT"*
 
 | Turno | Quién habla | Qué pasa |
 |---|---|---|
 | 1 | **👤 Tú** | "agrega un endpoint POST /api/logout que invalide el JWT" |
-| 1 | **🤖 @zugzbot** | Clasifica `full-sdd-tdd`. Lee lockfile (vacío). Crea `change_name: "agregar-endpoint-logout"`. Imprime roadmap. Delega a `@sdd-explorer`. |
-| 1 | **🤖 @sdd-explorer** | Detecta stack (`node-typescript`), genera `diagnostics.md`, transiciona a F1. |
-| 2 | **🤖 @sdd-planner** | Te pregunta en 1 llamada consolidada: "¿El logout borra sesión en BD? ¿JWT expirado → 200 o 401? ¿Lista negra? ¿Rol requerido?" |
+| 1 | **🤖 @zugzbot** | Clasifica `full-sdd-tdd`. Lockfile vacío → crea `change_name: "agregar-endpoint-logout"`. Imprime roadmap. Delega a `@sdd-explorer`. |
+| 1 | **🤖 @sdd-explorer** | Detecta stack (`node-typescript`), genera `diagnostics.md`. `sdd_transition(F0 → F1)`. |
+| 2 | **🤖 @sdd-planner** | Te pregunta en **1 llamada consolidada**: *"¿El logout borra sesión en BD? ¿JWT expirado → 200 o 401? ¿Lista negra? ¿Rol requerido?"* |
 | 2 | **👤 Tú** | Respondes A/B/C/D (o texto libre) |
-| 2 | **🤖 @sdd-planner** | Escribe `spec.md` con 5 criterios BDD. Transiciona a F1.5. |
-| 3 | **🤖 @zugzbot (F1.5)** | Corre 8 checks de testeabilidad. Si pasa → **HIL-A**. |
-| 3 | **🤖 @zugzbot (HIL-A)** | Te muestra el resumen del spec y te pregunta: `[A] Aprobar` / `[B] Rechazar` / `[C] Pausar` |
-| 3 | **👤 Tú** | Apruebas (A) |
-| 3 | **🤖 @f2-red-test-writer** | Escribe 5 tests que FALLAN. `verify-red` → `all_failing: true`. Transiciona a F2-GREEN. |
+| 2 | **🤖 @sdd-planner** | Escribe `spec.md` con 5 criterios BDD. `sdd_transition(F1 → F1.5)`. |
+| 3 | **🤖 @zugzbot (F1.5)** | Corre 8 checks de testeabilidad sobre el spec. Si pasa → HIL-A. |
+| 3 | **🤖 @zugzbot (HIL-A)** | Te muestra resumen y pregunta A/B/C. |
+| 3 | **👤 Tú** | Apruebas (A) → `sdd_transition(F1.5 → F2-RED, status: "spec_approved")` |
+| 3 | **🤖 @f2-red-test-writer** | Escribe 5 tests que FALLAN. `sdd_test_runner verify-red` → `all_failing: true`. Transiciona a F2-GREEN. |
 | 4 | **🤖 @sdd-builder** | Implementa el mínimo viable en `src/auth/logout.ts`. `verify-green` → 5/5. Transiciona a F2-REFACTOR. |
 | 4 | **🤖 @f2-refactor-improver** | Aplica prettier + extrae `validateToken()`. Linter 0 errors. Tests 5/5 verdes. Transiciona a F3. |
 | 5 | **🤖 @sdd-tester** | Corre 15 validadores (linter, security, secrets, spec compliance). Genera `validation_report.md`. Si todo OK → F4. |
 | 5 | **🤖 @sdd-deployer** | Levanta `npm run dev`, captura logs, genera `deployment_report.md`. |
-| 5 | **🤖 @zugzbot (HIL-B)** | Te muestra URL de dev y te pregunta: `[A] Aprobar` / `[B] Reportar issues` / `[C] Rollback` |
-| 5 | **👤 Tú** | Apruebas (A) |
+| 5 | **🤖 @zugzbot (HIL-B)** | Te muestra URL de dev y pregunta A/B/C. |
+| 5 | **👤 Tú** | Apruebas (A) → `sdd_transition(F4 → F5, status: "qa_validated")` |
 | 6 | **🤖 @sdd-archiver** | Bump 1.0.0 → 1.1.0, actualiza CHANGELOG, commit `feat(auth): agregar endpoint POST /api/logout`, archiva `.openspec/changes/...`, resetea lockfile. |
-| 6 | **🤖 @zugzbot** | Imprime banner: 🎉 **CICLO SDD FINALIZADO** con versión, archivos, commit, lecciones. |
+| 6 | **🤖 @zugzbot** | Imprime banner: 🎉 **CICLO SDD FINALIZADO**. |
 
-**Tiempo total**: 6 turnos (puede ser 1 sesión o varios días). **Tú solo hablaste 3 veces** (F1 + HIL-A + HIL-B). El resto es coreografía determinista.
+**Tiempo total**: 6 turnos (1 sesión o varios días). **Tú solo hablaste 3 veces** (F1 + HIL-A + HIL-B). El resto es coreografía determinista.
 
 ---
 
 ## 🔁 Reanudar una sesión (amnesia cero)
 
-El lockfile (`.openspec/sdd-lock.json`) es la única fuente de verdad. Si cierras OpenCode y vuelves otro día, **`@zugzbot` retoma exactamente donde quedaste** sin que tengas que explicarle nada:
-
 ```
-👤 Tú: "qué tal" (o cualquier cosa)
+👤 Tú: "qué tal" (o cualquier cosa, da igual)
 🤖 @zugzbot:
   📋 Estado del cambio: agregar-endpoint-logout
      Stack: node-typescript
@@ -81,11 +145,13 @@ El lockfile (`.openspec/sdd-lock.json`) es la única fuente de verdad. Si cierra
   ¿Continúo con el refactor, o quieres revisar algo antes?
 ```
 
+Cierra OpenCode. Vuelve al día siguiente. Di lo que sea. El router detecta que hay un cambio activo y te muestra dónde quedaste. **No tienes que explicar nada.**
+
 ---
 
-## 🧭 Workflows Soportados (Router Cognitivo)
+## 🧭 Los 6 workflows (router cognitivo)
 
-`@zugzbot` clasifica tu prompt en uno de 6 workflows. El primero es el más común; los otros 5 son atajos para tareas rápidas.
+`@zugzbot` clasifica tu prompt en uno de 6 workflows:
 
 | Workflow | Frase-ejemplo | Qué hace | Toca código? |
 | :--- | :--- | :--- | :--- |
@@ -96,7 +162,7 @@ El lockfile (`.openspec/sdd-lock.json`) es la única fuente de verdad. Si cierra
 | **`explain`** | "explícame qué hace este archivo", "muéstrame el flujo" | Walkthrough con diagramas | No |
 | **`oracle`** | "qué es un closure", "diferencia entre X e Y" | Conocimiento puro | No |
 
-> Si tu prompt es ambiguo, `@zugzbot` te hace **1 pregunta consolidada** con 2-3 opciones para que elijas. Nunca te pregunta de a poco.
+> Si tu prompt es ambiguo, `@zugzbot` te hace **1 pregunta consolidada** con 2-3 opciones. Nunca te pregunta de a poco.
 
 ```mermaid
 graph LR
@@ -118,7 +184,7 @@ graph LR
 
 ---
 
-## 🚦 Cuándo me preguntará @zugzbot (HIL)
+## 🚦 Cuándo me preguntará @zugzbot (los 2 HIL)
 
 Solo en **2 momentos** del ciclo `full-sdd-tdd` se requiere tu aprobación. El resto es automático.
 
@@ -165,183 +231,191 @@ Resumen:
 
 ---
 
-## 🤖 Agentes (14 total)
+## 🧬 Los 14 agentes (uno por responsabilidad)
 
-### Core SDD (8)
+### Core SDD (8) — el ciclo completo
 
-| Agente | Rol | Fase | Permisos clave |
-| :--- | :--- | :--- | :--- |
-| **`zugzbot`** | **Router cognitivo** — clasifica intent y delega | Permanente | `task`, `sdd_transition`, `sdd_lock_manager`, `sdd_router` |
-| **`sdd-explorer`** | Detecta stack, mapea codebase, persiste `stack_profile` | **F0** | `sdd_stack_detector`, `sdd_generate_tree`, `sdd_git_awareness` |
-| **`sdd-planner`** | Entrevista al usuario, redacta `spec.md` con BDD | **F1** | `sdd_brain_sync`, `sdd_diff_impact_analyzer`, `sdd_requirement_tracker` |
-| **`f2-red-test-writer`** | Escribe tests reales que fallan | **F2-RED** | `sdd_test_runner`, `edit` (solo tests) |
+| Agente | Rol | Fase | Herramientas |
+|---|---|---|---|
+| **`zugzbot`** | **Router cognitivo** — clasifica y delega | Permanente | `task`, `sdd_transition`, `sdd_lock_manager`, `sdd_router` |
+| **`sdd-explorer`** | Detecta stack, mapea codebase | **F0** | `sdd_stack_detector`, `sdd_generate_tree`, `sdd_git_awareness` |
+| **`sdd-planner`** | Entrevista, redacta `spec.md` con BDD | **F1** | `sdd_brain_sync`, `sdd_diff_impact_analyzer`, `sdd_requirement_tracker` |
+| **`f2-red-test-writer`** | Escribe tests que FALLAN | **F2-RED** | `sdd_test_runner`, `edit` (solo tests) |
 | **`sdd-builder`** | Implementa el mínimo código que pasa tests | **F2-GREEN** | `sdd_test_runner`, `sdd_linter`, `edit` (mínimo) |
-| **`f2-refactor-improver`** | Limpia código, mantiene tests verdes | **F2-REFACTOR** | `sdd_linter`, `sdd_test_runner`, `edit` (refactor atómico) |
-| **`sdd-tester`** | Valida linter, security, secret-scan, spec compliance | **F3** | 15 tools de validación |
-| **`sdd-deployer`** | Deploy a dev/staging según `stack_profile.deploy.kind` | **F4** | `sdd_clasp` (solo si GAS), `bash` |
+| **`f2-refactor-improver`** | Limpia código, tests siguen verdes | **F2-REFACTOR** | `sdd_linter`, `sdd_test_runner`, `edit` (atómico) |
+| **`sdd-tester`** | 15 validadores (linter, security, secrets) | **F3** | Todos los `sdd_*_test` y `sdd_*_validator` |
+| **`sdd-deployer`** | Deploy a dev/staging | **F4** | `sdd_clasp` (GAS), `bash` |
 | **`sdd-archiver`** | Bump versión, CHANGELOG, commit semántico | **F5** | `sdd_archive_and_commit` |
 
-### Auxiliares fuera del Ciclo Core (5)
+### Auxiliares (5) — atajos fuera del ciclo
 
-| Agente | Rol | Limitaciones |
-| :--- | :--- | :--- |
-| **`aux-handyman`** | Parches atómicos (typos, renames, bumps ≤3 archivos) | `edit: allow`, ≤3 archivos |
-| **`aux-oracle`** | Consultas conceptuales/teóricas | `edit/bash/lsp: deny` |
-| **`aux-auditor`** | Auditoría de calidad estática (linter, security, secrets) | `edit: deny` (read-only) |
-| **`aux-refactor`** | Refactor seguro con cobertura de tests | `edit: allow`, tests siempre verdes |
-| **`aux-explainer`** | Walkthrough didáctico del código | `edit/bash: deny` (solo lectura) |
+| Agente | Cuándo usarlo | Permisos |
+|---|---|---|
+| **`aux-handyman`** | Typos, renames, bumps ≤3 archivos | `edit: allow`, sin HIL |
+| **`aux-oracle`** | "¿qué es X?", "diferencia A vs B" | `edit/bash/lsp: deny` (solo conocimiento) |
+| **`aux-auditor`** | "audita la calidad", "qué deuda hay" | `edit: deny` (read-only) |
+| **`aux-refactor`** | "limpia X", "simplifica Y" | `edit: allow`, tests siempre verdes |
+| **`aux-explainer`** | "explícame qué hace Z" | `edit/bash: deny` (solo lectura) |
+
+### Reglas de delegación
+
+- **Solo `@zugzbot` puede delegar** (wildcards `sdd-*`, `f*`, `aux-*` en `task` permission).
+- **Ningún subagente puede delegar a otro**. SRP absoluto: cada uno hace su trabajo y retorna.
+- Esto preserva la **linealidad de la máquina de estados** y evita loops infinitos.
 
 ---
 
-## 🛠️ Herramientas SRP (33)
+## 🛠️ Las 33 herramientas SRP
 
-### Lockfile y Estado
+Una herramienta = un trabajo. Componentes por categoría:
 
-- `sdd_lock_manager` — I/O centralizada del lockfile v2 con 9 acciones
-- `sdd_transition` — máquina de estados SDD con TDD gates
-- `sdd_git_awareness` — rama, SHA, working tree, stash
-- `sdd_checkpoint` — snapshots de fase
+### Máquina de estados (la única vía de cambiar de fase)
 
-### Stack y Profile
+- **`sdd_transition`** — recibe `nextPhase`, valida TDD gates, HIL, spec existente, rama git, y escribe lockfile + commit + log atómicamente. Es **la única herramienta** que puede moverte de F0 a F1, de F1 a F1.5, etc.
+- **`sdd_lock_manager`** — I/O centralizada del lockfile v2 con 9 acciones: `read | write | update | validate | set_tdd | set_git | add_task | mark_task | reset`.
 
-- `sdd_stack_detector` — auto-detección de stack
-- `sdd_stack_detector_lib` — helpers compartidos
+### Clasificación y orquestación
 
-### Router
+- **`sdd_router`** — clasificador determinista de intent (keyword scoring + heurísticas de ambigüedad).
+- **`sdd_stack_detector`** — auto-detección leyendo `profiles/*.json`.
 
-- `sdd_router` — clasificador de intent (full-sdd-tdd / quick-fix / audit / refactor / explain / oracle)
+### TDD discipline (enforcement dura)
 
-### TDD Discipline
+- **`sdd_test_runner`** — runner agnóstico: `verify-red` (todos rojos), `verify-green` (todos verdes), `verify-all-passing`. Detecta automáticamente `vitest`, `jest`, `pytest`, `go test`, `cargo test`, `mvn test`.
+- **`sdd_linter`** — linter agnóstico: `check` (reporta errors), `fix` (auto-fix), `detect`. Detecta `eslint`, `biome`, `ruff`, `mypy`, `clippy`, `checkstyle`.
+- **`sdd_spec_reviewer`** — F1.5: 8 checks objetivos de testeabilidad del spec.
 
-- `sdd_test_runner` — runner agnóstico (vitest/jest/pytest/go test/cargo test/mvn test)
-- `sdd_linter` — linter agnóstico (eslint/biome/ruff/mypy/clippy/etc.)
-- `sdd_spec_reviewer` — F1.5 validador de testeabilidad
+### Validación (F3)
 
-### Spec y Requisitos
+- `sdd_spec_validator`, `sdd_spec_compliance_linter` — verifican 1:1 spec↔código.
+- `sdd_requirement_tracker` — cobertura de requisitos.
+- `sdd_regression_detector` — bugs reintroducidos desde `brain.md`.
+- `sdd_secret_scanner`, `sdd_security_vulnerability_scanner` — seguridad.
+- `sdd_bdd_tester`, `sdd_visual_regression_diff`, `sdd_performance_regress_profiler`, `sdd_ui_auditor`, `sdd_sandbox_patcher` — validación dinámica.
 
-- `sdd_spec_validator` — verifica que el código cumple el spec
-- `sdd_spec_compliance_linter` — 1:1 entre criterios y código
-- `sdd_requirement_tracker` — cobertura de requisitos
-- `sdd_diff_impact_analyzer` — radio de impacto
+### Memoria y contexto
 
-### Calidad
+- `sdd_brain_sync`, `sdd_brain_curator` — memoria técnica del proyecto (`.openspec/brain.md`).
+- `sdd_compact_context`, `sdd_context_pruner` — gestión de tokens.
+- `sdd_checkpoint` — snapshots de fase (`.openspec/checkpoints/`).
 
-- `sdd_secret_scanner` — busca secretos en código
-- `sdd_security_vulnerability_scanner` — CVEs + code vulns
-- `sdd_visual_regression_diff` — diff visual (frontend)
-- `sdd_performance_regress_profiler` — latencias
-- `sdd_sandbox_patcher` — autocorrección de errores simples
-- `sdd_ui_auditor` — balance de tags HTML
+### Stack-específicas (carga condicional)
 
-### Validación Dinámica
-
-- `sdd_bdd_tester` — corre escenarios BDD
-- `sdd_regression_detector` — detecta bugs reintroducidos
-- `sdd_test_scaffold_generator` — genera scaffolds de tests
-
-### Memoria (Brain)
-
-- `sdd_brain_sync` — añade/lee/limpia lecciones
-- `sdd_brain_curator` — detecta duplicados y entradas de bajo valor
-
-### Contexto
-
-- `sdd_compact_context` — comprime contexto largo
-- `sdd_context_pruner` — poda semántica
-- `sdd_install_autoskills` — instala/migra skills (con resolución por profile)
-
-### Stack-Específico (carga condicional)
-
-- `sdd_clasp` — Google Apps Script (solo si `stack_profile === "gas"`)
-- `sdd_auto_api_mocker` — mocks de APIs externas
+- **`sdd_clasp`** — Google Apps Script (solo si `stack_profile === "gas"`).
+- `sdd_auto_api_mocker` — mocks de APIs externas.
 
 ### Utilidad
 
-- `sdd_generate_tree` — árbol de archivos
-- `sdd_archive_and_commit` — git semántico
+- `sdd_git_awareness` — estado de Git (rama, SHA, working tree).
+- `sdd_generate_tree` — árbol de archivos.
+- `sdd_archive_and_commit` — git semántico (bump + CHANGELOG + commit + archive).
+- `sdd_install_autoskills` — auto-instala skills desde registry.
 
 ---
 
-## 🌍 Stacks Soportados (8 profiles)
+## 🌍 Los 8 stacks auto-detectados
 
 | Profile | Detectado por | Test runner | Linter | Deploy |
 | :--- | :--- | :--- | :--- | :--- |
-| `node-typescript` | `package.json` + `tsconfig.json` | vitest, jest, mocha, node-test | eslint, biome, tsc | dev-server, build, publish |
+| `node-typescript` | `package.json` + `tsconfig.json` | vitest, jest, mocha | eslint, biome, tsc | dev-server, build, publish |
 | `node-javascript` | `package.json` | vitest, jest, mocha | eslint, biome | dev-server, build, publish |
-| `python` | `pyproject.toml`, `requirements.txt`, `setup.py` | pytest, unittest, tox | ruff, flake8, mypy, pylint | dev-server, build, publish |
-| `go` | `go.mod` | go test | go vet, staticcheck, golangci-lint | build, publish (tag) |
+| `python` | `pyproject.toml`, `requirements.txt` | pytest, unittest, tox | ruff, flake8, mypy | dev-server, build, publish |
+| `go` | `go.mod` | go test | go vet, staticcheck | build, publish (tag) |
 | `rust` | `Cargo.toml` | cargo test | clippy, rustfmt | publish (crates.io) |
-| `java` | `pom.xml`, `build.gradle` | mvn test, gradle test | checkstyle, spotbugs, pmd | build, publish |
+| `java` | `pom.xml`, `build.gradle` | mvn test, gradle test | checkstyle, spotbugs | build, publish |
 | `gas` | `.clasp.json`, `appsscript.json` | mocks locales | eslint-gas | clasp push |
-| `static-site` | `astro.config.*`, `hugo.toml`, `_config.yml` | vitest, playwright | eslint, markdownlint | build (SSG) |
+| `static-site` | `astro.config.*`, `hugo.toml` | vitest, playwright | eslint, markdownlint | build (SSG) |
+
+**Cero hardcoding**: el core del arnés no sabe qué es React, Next, Django, Flask o Clasp. Toda la lógica de stack vive en estos 8 JSON.
 
 ---
 
-## 📂 Anatomía de Archivos
+## 🧠 La disciplina TDD (lo más importante)
+
+> **No se puede escribir código de producción sin un test que lo exija.**
+
+```
+F2-RED      → Test escrito que FALLA       (sdd_test_runner verify-red)
+F2-GREEN    → Mínimo código que PASA       (sdd_test_runner verify-green)
+F2-REFACTOR → Limpiar, tests siguen VERDES (sdd_linter check + tests verdes)
+```
+
+**El lockfile rechaza transiciones inválidas físicamente**:
+
+- ❌ `sdd_transition(F2-GREEN)` si `tdd.red.completed !== true`
+- ❌ `sdd_transition(F2-REFACTOR)` si `tdd.green.completed !== true`
+- ❌ `sdd_transition(F3)` si `tdd.refactor.linter_clean !== true`
+- ❌ `sdd_transition(F2-RED)` si `status !== "spec_approved"` (HIL-A pendiente)
+
+No hay atajos. El LLM puede intentarlo, pero `sdd_transition` retorna `[SDD Transition Blocked]` y aborta.
+
+### Anti-patrones (los detecta el sistema)
+
+- 🚫 "Implementar primero, tests después" — no es TDD, F2-GREEN se bloquea.
+- 🚫 "Mega-test" (1 test que prueba 10 cosas) — `f2-red-test-writer` está entrenado a evitarlo.
+- 🚫 "Test de implementación" (probar funciones internas) — el spec reviewer lo flaggea.
+- 🚫 "Refactor oportunista" (limpiar código no tocado por el cambio) — `f2-refactor-improver` lo evita.
+- 🚫 "Skip RED" (asumir que el test es trivial) — el lockfile lo bloquea.
+
+---
+
+## 📂 Lo que se crea al hacer `npx zugzbot`
 
 ```
 tu-proyecto/
 ├── AGENTS.md                      # 🟢 Reglamento global del swarm
-├── ZUGZ.md                        # 🟢 Manual de inducción rápida
-├── opencode.json                  # 🟢 Configuración de 14 agentes
-├── zugz-models.json               # 🟢 (opcional) override de modelos por agente
+├── ZUGZ.md                        # 🟢 Cheat sheet de una pantalla
+├── opencode.json                  # 🟢 Config de 14 agentes (generada, regenerable)
+├── zugz-models.json               # 🟢 Override de modelos por agente (editable)
 ├── tui.json                       # 🔴 Cargador visual del plugin TUI
-├── .opencode/                     # 🔴 Motor del arnés
-│   ├── tools/                     # 33 herramientas SRP
-│   ├── plugins/                   # TUI + SDD core
-│   ├── profiles/                  # 8 profiles de stack
-│   └── skills/                    # 11 skills premium
-├── prompts/                       # 🟢 Prompts modulares (system/, contracts/, boundaries/)
-│   ├── system/
-│   │   ├── orchestrator-base.md
-│   │   ├── subagent-base.md
-│   │   ├── tdd-discipline.md
-│   │   └── router-rules.md
-│   ├── contracts/                 # QUÉ hace cada fase (9)
-│   └── boundaries/                # QUÉ NO hace cada fase (9)
+├── .opencode/                     # 🔴 Motor del arnés (instalado por el bootstrap)
+│   ├── tools/                     #    33 herramientas SRP (compiladas a .js)
+│   ├── plugins/                   #    TUI + SDD core
+│   ├── profiles/                  #    8 profiles de stack
+│   └── skills/                    #    11 skills premium
+├── prompts/                       # 🟢 Prompts modulares (referencia, no se tocan)
+│   ├── system/                    #    orchestrator-base, subagent-base, tdd-discipline, router-rules
+│   ├── contracts/                 #    QUÉ hace cada fase (9)
+│   └── boundaries/                #    QUÉ NO hace cada fase (9)
 └── .openspec/                     # 🟢 Estado del ciclo SDD
-    ├── sdd-lock.json              # Schema v2 con bloque tdd y git
-    ├── brain.md                   # Memoria técnica del proyecto
-    ├── changes/                   # Historial de specs
-    └── audits/                    # Reportes de aux-auditor
+    ├── sdd-lock.json              #    Schema v2 (bloques: tdd, git, workflow, stack_profile, tasks[])
+    ├── brain.md                   #    Memoria técnica del proyecto
+    ├── changes/                   #    Historial de specs
+    └── audits/                    #    Reportes de aux-auditor
 ```
 
----
-
-## 🧠 Filosofía: Spec + TDD Discipline
-
-> [!NOTE]
-> Zugzbot v2.0.0 cree que:
-> 1. **Ningún código de producción sin spec aprobado** (F1.5 enforcement).
-> 2. **Ningún código sin test que lo exija** (Red antes que Green).
-> 3. **Ningún test roto en refactor** (tests verdes durante limpieza).
-> 4. **Ningún cambio fuera de su lane** (SRP estricto + boundaries absolutas).
-> 5. **Cero acoplamiento al stack** (agnosticismo via profiles JSON).
+🟢 = editable / parte del proyecto. 🔴 = generado por el installer, no tocar a mano.
 
 ---
 
 ## 📦 Instalación
 
 ```bash
-# Instalación limpia en tu proyecto
+# Limpia
 cd tu-proyecto
 npm install zugzbot-sdd@latest
 npx zugzbot
+
+# Si ya tienes v1.x (legacy)
+rm -rf .openspec/changes/<cambio-activo>
+rm .openspec/sdd-lock.json
+npx zugzbot
 ```
 
-### ¿Qué hace el instalador?
+### ¿Qué hace el instalador? (paso a paso)
 
-1. Detecta si hay una instalación legacy v1.x (falla con instrucciones claras si la hay).
-2. Crea estructura de directorios (`.openspec/`, `.opencode/`, `prompts/`).
-3. Genera `opencode.json` con 14 agentes y permisos por herramienta.
-4. Crea lockfile v2 con bloques `tdd` y `git`.
-5. Copia `zugz-models.json` con modelos por defecto (editable).
-6. Instala 8 profiles de stack, 11 skills, 33 tools.
-7. Actualiza `.gitignore` con exclusiones v2.
+1. **Detecta** si hay una instalación legacy v1.x → falla con instrucciones si la hay.
+2. **Crea** estructura de directorios: `.openspec/changes/`, `.opencode/{plugins,skills,tools,profiles}/`, etc.
+3. **Genera** `opencode.json` con 14 agentes, permisos por herramienta, y modelos leídos de `zugz-models.json` (si existe) o del template del paquete.
+4. **Crea** lockfile v2 con template inicial (`change_name: ""`, `active_phase: "F0"`, `status: "idle"`).
+5. **Copia** `zugz-models.json` con modelos por defecto (editable).
+6. **Copia** profiles, skills, tools, plugins desde el paquete.
+7. **Crea/actualiza** `.gitignore` con exclusiones v2.
+8. **Re-entradas seguras**: en cada `npx zugzbot` posterior, preserva tu `zugz-models.json`, `opencode.json` (mergea modelos), `sdd-lock.json`, `tui.json`, `brain.md`.
 
 ### Personalizar modelos por agente
 
-Edita `zugz-models.json` y re-ejecuta `npx zugzbot` para aplicar los cambios a `opencode.json`:
+Edita `zugz-models.json` y re-ejecuta `npx zugzbot`:
 
 ```json
 {
@@ -354,35 +428,22 @@ Edita `zugz-models.json` y re-ejecuta `npx zugzbot` para aplicar los cambios a `
 }
 ```
 
-### ⚠️ Breaking Change v1 → v2
-
-No hay migrador automático. Si tienes v1.5.x instalado:
-
-```bash
-# 1. Cierra el ciclo activo
-rm -rf .openspec/changes/<cambio-activo>
-
-# 2. Borra el lockfile antiguo
-rm .openspec/sdd-lock.json
-
-# 3. Continúa con la instalación de v2
-npx zugzbot
-```
+Los modelos se aplican al `opencode.json` automáticamente. Si añades agentes custom a `opencode.json`, también se preservan.
 
 ---
 
-## 📊 Convenciones de Desarrollo
+## 📊 Convenciones internas
 
-1. **Fase 0 solo una vez**: el diagnóstico se ejecuta cuando `.openspec/diagnostics.md` no existe (o bajo demanda).
-2. **Carga perezosa (Lazy Loading)**: los agentes leen archivos solo bajo demanda.
-3. **TDD enforcement**: el lockfile rechaza transiciones inválidas.
-4. **HIL en puntos críticos**: F1.5 y F4 son obligatorios.
-5. **Tests de regresión**: se ejecutan en F3 y F5.
-6. **Auto-detección de stack**: no hardcoded, profiles JSON.
+1. **Fase 0 solo una vez**: el diagnóstico se ejecuta cuando `.openspec/diagnostics.md` no existe.
+2. **Carga perezosa**: los agentes leen archivos solo bajo demanda (no se carga todo el contexto en cada turno).
+3. **TDD enforcement**: el lockfile rechaza transiciones inválidas físicamente.
+4. **HIL obligatorios**: F1.5 y F4. Aunque `auto_pilot: true`, estos dos siguen requiriendo tu input.
+5. **Auto-detección de stack**: no hardcoded, profiles JSON.
+6. **Tests de regresión**: se ejecutan en F3 y F5.
 
 ---
 
-## 🧪 Validación
+## 🧪 Validación del arnés (desarrollo)
 
 ```bash
 npx tsc         # 0 errores
@@ -390,11 +451,14 @@ npx eslint .    # 0 errores
 npx vitest run  # 97/97 tests
 ```
 
+- **30 unit** — estructura de harness, schema v2, prompts completos.
+- **67 integration** — stack detection (16), TDD cycle (9), router (24), installer (6), e2e demo (6), harness structure (4), dom structure (1), tag balance (1).
+
 ---
 
 ## ⚙️ Modelo Oficial
 
-`minimax-coding-plan/MiniMax-M2.7` (default). Configurable vía `zugz-models.json`.
+`minimax-coding-plan/MiniMax-M2.7` (default). Configurable vía `zugz-models.json` — ver sección "Personalizar modelos por agente".
 
 ---
 
