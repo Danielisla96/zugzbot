@@ -7,6 +7,46 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [2.0.6] - 2026-06-05 — Guion de Interacción Guiada
+
+### ✨ Mejoras de UX para el Usuario Final
+
+- **`agents/zugzbot.md`**: nueva sección "Primer Turno (Lockfile Vacío)" que muestra el menú de 6 workflows con ejemplos antes de esperar input.
+- **Plantilla de Reanudación**: cada turno imprime el estado del lockfile en formato legible con roadmap `[x]/[➡️]/[ ]` (nunca JSON crudo).
+- **Plantilla HIL A/B/C**: refuerzo explícito de que los HIL-A y HIL-B siempre usan 3 opciones cerradas idénticas y predecibles.
+- **Plantilla de Cierre F5**: banner "🎉 CICLO SDD FINALIZADO" con versión, archivos, commit y lecciones.
+
+### 📚 Documentación Reescrita
+
+- **`README.md`**: nueva sección "🚀 Quickstart (3 pasos)" al inicio para onboarding inmediato.
+- **Sección "🎬 Tu primera conversación"**: tabla de 6 turnos mostrando el ciclo `full-sdd-tdd` realista (agregar endpoint logout) con quién habla y qué hace.
+- **Sección "🔁 Reanudar una sesión"**: explicación del comportamiento "amnesia cero" del lockfile.
+- **Sección "🚦 Cuándo me preguntará @zugzbot"**: formato A/B/C de los 2 HIL con ejemplos visuales.
+- **Tabla de workflows mejorada**: añade frases-ejemplo concretas en lugar de solo keywords.
+- **`ZUGZ.md`**: compactado a cheat sheet de una pantalla (~100 líneas vs 171).
+- **Instalación actualizada**: de git clone a `npm install zugzbot-sdd@latest && npx zugzbot`.
+- **Sección "Personalizar modelos por agente"** con ejemplo de `zugz-models.json`.
+
+### 🔧 Cambios Internos
+
+- `package.json`: `version: 2.0.5 → 2.0.6`.
+
+---
+
+## [2.0.5] - 2026-06-05 — zugz-models.json Editable
+
+### ✨ Features
+
+- **zugz-models.json editable**: el archivo se preserva entre re-instalaciones y sus modelos se aplican al `opencode.json` en cada `npx zugzbot`.
+- **Overlay de modelos**: edita `zugz-models.json` con modelos custom por agente y re-ejecuta el installer para aplicarlos.
+- **Agentes custom preservados**: si el usuario añade agentes adicionales a `opencode.json`, no se pierden al re-instalar.
+
+### 🧪 Tests (97/97 pasando)
+
+- `installer.test.js` (6 nuevos): primer install copia `zugz-models.json`, segundo install preserva, custom agents sobreviven, edicion entre installs propaga cambios.
+
+---
+
 ## [2.0.0] - 2026-06-05 — Arnés Genérico Modular con TDD Puro
 
 ### 🔥 Breaking Changes

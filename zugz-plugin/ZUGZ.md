@@ -1,171 +1,111 @@
-# 🚀 Guía Rápida Zugzbot v2.0.0
+# 🚀 ZUGZ — Cheat Sheet v2.0.0
 
-> [!TIP]
-> Esta es una guía rápida. Para documentación completa, consulta `README.md`.
+> Una pantalla. Para detalles, ver `README.md`.
 
 ---
 
-## ⚡ Inicio Rápido
-
-### 1. Abre OpenCode en tu proyecto
+## ⚡ 3 pasos para empezar
 
 ```bash
-opencode
-```
-
-### 2. Habla con `@zugzbot`
-
-Indícale tu requerimiento. El router cognitivo lo clasificará automáticamente.
-
-```text
-"agrega un endpoint de logout que invalide el JWT"
-"arregla el typo en README línea 12"
-"audita la calidad del código"
-"qué es un closure en JavaScript"
-"refactoriza el UserService"
-```
-
-El router detecta el workflow apropiado y delega al subagente correcto.
-
----
-
-## 🧭 6 Workflows Disponibles
-
-| Workflow | Trigger típico | Agente |
-| :--- | :--- | :--- |
-| `full-sdd-tdd` | "agrega", "implementa", "crea módulo", "el bug es" | `@sdd-explorer` → F0 |
-| `quick-fix` | "arregla typo", "renombra", "bump", "cambia formato" | `@aux-handyman` |
-| `audit` | "audita", "revisa calidad", "qué deuda técnica" | `@aux-auditor` |
-| `refactor` | "refactoriza", "limpia", "simplifica" | `@aux-refactor` |
-| `explain` | "qué hace", "explica", "muéstrame cómo" | `@aux-explainer` |
-| `oracle` | "qué es X", "diferencia entre A y B" | `@aux-oracle` |
-
----
-
-## 🔄 Flujo Completo (full-sdd-tdd)
-
-| Fase | Tú | Agente |
-| :--- | :--- | :--- |
-| **F0** | Esperar | `@sdd-explorer` detecta stack y mapea |
-| **F1** | Responder encuesta (3-5 preguntas) | `@sdd-planner` redacta `spec.md` |
-| **F1.5** | (automático) | `@f1.5-spec-reviewer` valida testeabilidad |
-| **HIL-A** | **Aprobar spec** | – |
-| **F2-RED** | Esperar | `@f2-red-test-writer` escribe tests fallidos |
-| **F2-GREEN** | Esperar | `@sdd-builder` implementa mínimo código |
-| **F2-REFACTOR** | Esperar | `@f2-refactor-improver` limpia |
-| **F3** | Observar | `@sdd-tester` valida linter, security, spec |
-| **F4** | (opcional) | `@sdd-deployer` deploya a dev/staging |
-| **HIL-B** | **Validar QA** | – |
-| **F5** | Confirmar | `@sdd-archiver` bump + commit + archive |
-
----
-
-## 🛠️ Comandos CLI
-
-```bash
-npx tsc         # Verificar compilación TS
-npx eslint .    # Linter
-npx vitest run  # Tests (81/81)
+cd tu-proyecto
+npm install zugzbot-sdd@latest && npx zugzbot
+opencode .
 ```
 
 ---
 
-## 📁 Archivos Clave
+## 🎯 6 workflows (dile a @zugzbot)
 
-| Archivo | Propósito |
-| :--- | :--- |
-| `opencode.json` | Configuración de 14 agentes |
-| `.openspec/sdd-lock.json` | Estado del ciclo (schema v2) |
-| `.openspec/brain.md` | Memoria técnica del proyecto |
-| `.openspec/diagnostics.md` | Mapa del stack detectado |
-| `.openspec/changes/<name>/specs/spec.md` | Spec BDD del cambio activo |
-| `.opencode/profiles/*.json` | 8 profiles de stack |
-| `prompts/system/router-rules.md` | Tabla de decisión del router |
-
----
-
-## 🚦 Hitos HIL
-
-| Hito | Cuándo | Acción |
-| :--- | :--- | :--- |
-| **HIL-A** | Post-F1.5 | Responder: "¿Apruebas el spec?" |
-| **HIL-B** | Post-F4 | Responder: "¿Apruebas el QA?" |
-
-> Las preguntas se hacen en **una sola llamada consolidada** (no por goteo).
+| Di... | Workflow | Agente |
+|---|---|---|
+| "agrega X", "implementa Y", "el bug es Z" | `full-sdd-tdd` | F0→F5 (ciclo completo) |
+| "arregla typo", "renombra", "bump versión" | `quick-fix` | `@aux-handyman` (≤3 archivos) |
+| "audita", "qué deuda técnica hay" | `audit` | `@aux-auditor` (read-only) |
+| "refactoriza", "limpia", "simplifica" | `refactor` | `@aux-refactor` (con tests) |
+| "explícame qué hace este archivo" | `explain` | `@aux-explainer` (read-only) |
+| "qué es un closure", "diferencia X vs Y" | `oracle` | `@aux-oracle` (teoría) |
 
 ---
 
-## ⚙️ Personalizar Modelos
+## 🔄 Ciclo `full-sdd-tdd` (las 11 estaciones)
 
-Edita `zugz-models.json`:
+```
+F0 → F1 → F1.5 → HIL-A → F2-RED → F2-GREEN → F2-REFACTOR → F3 → F4(opt) → HIL-B → F5
+                            ↑                                          ↑
+                       Tú apruebas                              Tú validas QA
+```
+
+| Fase | Quién hace | Tú |
+|---|---|---|
+| F0 | `@sdd-explorer` detecta stack | – |
+| F1 | `@sdd-planner` redacta `spec.md` (BDD) | Respondes 3-5 preguntas |
+| F1.5 | Spec reviewer valida testeabilidad | – |
+| **HIL-A** | – | **Aprobar / Rechazar / Pausar** |
+| F2-RED | `@f2-red-test-writer` escribe tests rojos | – |
+| F2-GREEN | `@sdd-builder` mínimo viable | – |
+| F2-REFACTOR | `@f2-refactor-improver` limpia | – |
+| F3 | `@sdd-tester` 15 validadores | – |
+| F4 | `@sdd-deployer` deploy a dev (opt) | – |
+| **HIL-B** | – | **Aprobar / Issues / Rollback** |
+| F5 | `@sdd-archiver` bump + commit + archive | – |
+
+---
+
+## 🚦 HIL (formato A/B/C siempre)
+
+**HIL-A** (post-F1.5): `[A] ✅ Aprobar` / `[B] ❌ Rechazar` / `[C] ⏸ Pausar`
+**HIL-B** (post-F4): `[A] ✅ Aprobar` / `[B] 🐛 Issues` / `[C] ⏪ Rollback`
+
+---
+
+## 🔁 Reanudar (amnesia cero)
+
+Cierra OpenCode. Vuelve otro día. Di lo que sea. `@zugzbot` lee `.openspec/sdd-lock.json` y continúa donde quedaste.
+
+---
+
+## ⚙️ Cambiar modelos por agente
+
+Edita `zugz-models.json` y re-ejecuta `npx zugzbot`:
 
 ```json
 {
+  "default": "google/gemini-2.5-pro",
   "agents": {
-    "zugzbot": "minimax-coding-plan/MiniMax-M2.7",
-    "sdd-builder": "minimax-coding-plan/MiniMax-M2.7",
-    "aux-oracle": "minimax-coding-plan/MiniMax-M2.7"
-  },
-  "default": "minimax-coding-plan/MiniMax-M2.7"
+    "zugzbot": "anthropic/claude-sonnet-4.5",
+    "sdd-explorer": "openai/gpt-5"
+  }
 }
 ```
 
 ---
 
-## 🌐 Stacks Soportados (auto-detección)
+## 🌍 8 stacks auto-detectados
 
-Zugzbot detecta automáticamente tu stack:
+Node/TS · Node/JS · Python · Go · Rust · Java · Google Apps Script · Static Site
 
-- **Node/TypeScript** (Next, React, Vue, Svelte, Express, Fastify, Nest)
-- **Python** (Django, FastAPI, Flask, Click)
-- **Go** (módulos estándar)
-- **Rust** (Cargo)
-- **Java** (Maven, Gradle)
-- **Google Apps Script** (clasp)
-- **Static Site** (Astro, Hugo, Jekyll, Next SSG)
+---
 
-Para verificar la detección:
+## 🧠 TDD en 3 pasos
+
+```
+1. RED     → test que FALLA
+2. GREEN   → mínimo código que PASA
+3. REFACTOR → limpiar, tests siguen VERDES
+```
+
+El lockfile rechaza transiciones inválidas. **No hay atajos**.
+
+---
+
+## 🛠️ Validar el arnés (dev)
 
 ```bash
-# (vía herramienta) action: "detect"
-# o pregunta al zugzbot: "¿qué stack detectó?"
+npx tsc         # 0 errores
+npx eslint .    # 0 errores
+npx vitest run  # 97/97 tests
 ```
 
 ---
 
-## 🧠 TDD Discipline (lo más importante)
-
-> **No se puede escribir código de producción sin un test que lo exija.**
-
-```
-1. RED     → Test escrito que FALLA
-2. GREEN   → Mínimo código que PASA el test
-3. REFACTOR → Limpiar código, tests siguen VERDES
-```
-
-El lockfile rechaza transiciones inválidas. Si intentas saltar de F1 a F2-GREEN sin F2-RED, recibes un error.
-
----
-
-## 📚 Anti-patrones (evítalos)
-
-- 🚫 "Implementar primero, tests después" — NO es TDD.
-- 🚫 "Mega-test" (1 test que prueba 10 cosas).
-- 🚫 "Test de implementación" (probar funciones internas, no comportamiento).
-- 🚫 "Refactor oportunista" (mejorar código no tocado por el cambio).
-- 🚫 "Skip RED" (asumir que el test es trivial sin hacerlo fallar primero).
-
----
-
-## 🤝 Contribuir al Arnés
-
-1. Fork el repo.
-2. Clona tu fork y ejecuta `./zugz-plugin/install-plugin.sh` (modo dev con symlinks).
-3. Corre `bun install` o `npm install` en la raíz.
-4. Envía un Pull Request con la especificación del cambio.
-
----
-
-## 📄 Licencia
-
-MIT © Danielisla96
+## 📄 MIT © Danielisla96
