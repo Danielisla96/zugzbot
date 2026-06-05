@@ -1,0 +1,55 @@
+{
+  "id": "python",
+  "display_name": "Python (Django / FastAPI / Flask / CLI)",
+  "detect": {
+    "files_any": ["pyproject.toml", "requirements.txt", "setup.py", "Pipfile"],
+    "files_any_deep": ["manage.py"]
+  },
+  "test_runners": [
+    { "name": "pytest", "cmd": "pytest", "detect": "pytest.ini" },
+    { "name": "pytest", "cmd": "python -m pytest", "detect": null },
+    { "name": "unittest", "cmd": "python -m unittest", "detect": null },
+    { "name": "tox", "cmd": "tox", "detect": "tox.ini" }
+  ],
+  "linters": [
+    { "name": "ruff", "cmd": "ruff check .", "detect": "ruff.toml" },
+    { "name": "flake8", "cmd": "flake8 .", "detect": ".flake8" },
+    { "name": "pylint", "cmd": "pylint **/*.py", "detect": ".pylintrc" },
+    { "name": "mypy", "cmd": "mypy .", "detect": "mypy.ini" }
+  ],
+  "formatters": [
+    { "name": "black", "cmd": "black .", "detect": "pyproject.toml" },
+    { "name": "ruff-format", "cmd": "ruff format .", "detect": "ruff.toml" },
+    { "name": "autopep8", "cmd": "autopep8 --in-place -r .", "detect": null }
+  ],
+  "deploy": {
+    "kind": "dev-server",
+    "dev_cmd": "python -m uvicorn main:app --reload",
+    "build_cmd": "python -m build",
+    "publish_cmd": "python -m twine upload dist/*"
+  },
+  "skip_tools": ["sdd_clasp"],
+  "required_tools": [
+    "sdd_linter",
+    "sdd_test_runner",
+    "sdd_git_awareness",
+    "sdd_lock_manager"
+  ],
+  "conventions": {
+    "test_dir": "tests",
+    "test_unit_dir": "tests/unit",
+    "test_integration_dir": "tests/integration",
+    "source_dir": "src",
+    "version_file": "pyproject.toml"
+  },
+  "frameworks_hint": {
+    "pyproject_toml_dependencies": {
+      "django": "Django (Web framework)",
+      "fastapi": "FastAPI (Async web framework)",
+      "flask": "Flask (Micro web framework)",
+      "click": "Click (CLI framework)",
+      "typer": "Typer (Modern CLI framework)",
+      "pydantic": "Pydantic (Data validation)"
+    }
+  }
+}

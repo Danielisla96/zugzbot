@@ -2,7 +2,7 @@ import type { Plugin } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
 
-export const SddCorePlugin: Plugin = async ({ project, client, $, directory, worktree }) => {
+export const SddCorePlugin: Plugin = async ({ _project, _client, _$, directory, worktree }) => {
   return {
     "experimental.session.compacting": async (input, output) => {
       const projectRoot = worktree || directory;
@@ -31,7 +31,9 @@ export const SddCorePlugin: Plugin = async ({ project, client, $, directory, wor
             amnesiaInstruction = `
 5. AMNESIA DE PLANIFICACIÓN [CRÍTICO]: Since we are already in Phase ${lockObj.active_phase} (Implementation/Closure) and the technical spec is approved, you MUST completely purge all conversational Q&A and planning discussions from Phase 1. Condense all Phase 1 conversations into a single high-density status line (e.g. "[Phase 1 Q&A resolved. Spec approved: see specs/spec.md]"). Focus 100% of the active context on code files, logical edits, and test validation logs.`;
           }
-        } catch (e) {}
+        } catch {
+          // Ignorar error de lectura de lock
+        }
       }
 
       // 1. Inyectar estado activo en el contexto de compactación para preservar memoria metodológica

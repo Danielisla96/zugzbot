@@ -1,0 +1,59 @@
+{
+  "id": "node-typescript",
+  "display_name": "Node.js + TypeScript",
+  "detect": {
+    "files_any": ["package.json"],
+    "files_any_deep": ["tsconfig.json", "vite.config.*", "next.config.*", "nuxt.config.*"]
+  },
+  "test_runners": [
+    { "name": "vitest", "cmd": "npx vitest run", "detect": "vitest.config.*" },
+    { "name": "jest", "cmd": "npx jest", "detect": "jest.config.*" },
+    { "name": "mocha", "cmd": "npx mocha", "detect": ".mocharc*" },
+    { "name": "node-test", "cmd": "node --test", "detect": null }
+  ],
+  "linters": [
+    { "name": "eslint", "cmd": "npx eslint .", "detect": ".eslintrc*" },
+    { "name": "biome", "cmd": "npx biome check", "detect": "biome.json" },
+    { "name": "tsc", "cmd": "npx tsc --noEmit", "detect": "tsconfig.json" }
+  ],
+  "formatters": [
+    { "name": "prettier", "cmd": "npx prettier --write .", "detect": ".prettierrc*" },
+    { "name": "biome-format", "cmd": "npx biome format --write .", "detect": "biome.json" }
+  ],
+  "deploy": {
+    "kind": "dev-server",
+    "dev_cmd": "npm run dev",
+    "build_cmd": "npm run build",
+    "publish_cmd": "npm publish"
+  },
+  "skip_tools": ["sdd_clasp"],
+  "required_tools": [
+    "sdd_linter",
+    "sdd_test_runner",
+    "sdd_git_awareness",
+    "sdd_stack_detector",
+    "sdd_lock_manager"
+  ],
+  "conventions": {
+    "test_dir": "tests",
+    "test_unit_dir": "tests/unit",
+    "test_integration_dir": "tests/integration",
+    "source_dir": "src",
+    "version_file": "package.json"
+  },
+  "frameworks_hint": {
+    "package_json_dependencies": {
+      "next": "Next.js (React SSR/SSG)",
+      "react": "React (SPA)",
+      "vue": "Vue (SPA)",
+      "nuxt": "Nuxt (Vue SSR/SSG)",
+      "svelte": "Svelte (SPA)",
+      "@sveltejs/kit": "SvelteKit (SSR/SSG)",
+      "express": "Express (Backend)",
+      "fastify": "Fastify (Backend)",
+      "@nestjs/core": "NestJS (Backend)",
+      "hono": "Hono (Backend)",
+      "remix": "Remix (Full-stack React)"
+    }
+  }
+}

@@ -27,7 +27,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                 status: data.status || "idle",
               }
             }
-          } catch (e) { }
+          } catch {}
           return null
         }
 

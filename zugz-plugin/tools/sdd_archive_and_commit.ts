@@ -3,7 +3,7 @@ import fs from "fs"
 import path from "path"
 import { execSync } from "child_process"
 import sddInstallAutoskills from "./sdd_install_autoskills"
-import { BrainEntry, parseEntries, today, nextId, buildFullBrain, buildIndex, buildEntryBlock, readBrainFile } from "./brain-utils.js"
+import { BrainEntry, today, nextId, buildFullBrain, readBrainFile } from "./brain-utils.js"
 
 function bumpVersion(version: string, type: "major" | "minor" | "patch"): string {
   const parts = version.split(".").map(x => parseInt(x, 10))
@@ -77,7 +77,7 @@ export default tool({
             }
           }
         }
-      } catch (e: any) {}
+      } catch {}
     }
 
     const report: string[] = ["━━━ sdd_archive_and_commit ━━━"]
@@ -160,7 +160,7 @@ export default tool({
     // 3.5. Sincronizar habilidades de IA (Autoskills) de forma automática
     try {
       report.push("▶ Buscando y sincronizando habilidades de IA nuevas en base a tus cambios...")
-      const skillsOutputObj: any = await sddInstallAutoskills.execute({ dryRun: false }, context)
+      const skillsOutputObj: any = await sddInstallAutoskills.execute({ action: "install", dryRun: false }, context)
       const skillsOutputStr = typeof skillsOutputObj === "string" ? skillsOutputObj : (skillsOutputObj?.output || "")
       const shortSkillsOutput = skillsOutputStr
         .split("\n")
@@ -260,7 +260,7 @@ Este reporte detalla la telemetría de tokens y coste financiero en USD acumulad
           }
         });
         seqPrefix = String(maxSeq + 1).padStart(4, "0");
-      } catch (e) {}
+      } catch {}
     }
 
     const now = new Date();

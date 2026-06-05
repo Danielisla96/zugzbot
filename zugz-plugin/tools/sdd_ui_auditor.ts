@@ -37,7 +37,7 @@ function decodeGitPath(gitPath: string): string {
         }
       }
       return Buffer.from(bytes).toString("utf-8")
-    } catch (e) {
+    } catch {
       return cleaned.replace(/\\([0-7]{3})/g, (match, octal) => {
         return String.fromCharCode(parseInt(octal, 8))
       })
@@ -73,7 +73,7 @@ function checkHtmlTagBalance(filePath: string, content: string): string[] {
 
   // Strip TypeScript generic type arguments from function calls or declarations (e.g. createSignal<string[]>)
   // JSX tags are never directly preceded by a word character (like \w+), whereas TS generics are.
-  cleaned = cleaned.replace(/(\w+)<([A-Za-z0-9_\[\]\s|]+)>/g, '$1');
+  cleaned = cleaned.replace(/(\w+)<([A-Za-z0-9_[\]\s|]+)>/g, '$1');
 
   const tagRegex = /<(\/?[a-zA-Z0-9:-]+)(?:\s+[^>]*?)?>/g;
   const stack: string[] = [];
@@ -133,7 +133,9 @@ export default tool({
           if (lockObj.change_name && lockObj.change_name !== "nuevo-cambio") {
             changeName = lockObj.change_name;
           }
-        } catch (e) {}
+        } catch {
+          // Ignorar error de lectura de lock
+        }
       }
     }
 
@@ -163,7 +165,9 @@ export default tool({
             filesToAudit.add(filePathRel);
           }
         });
-      } catch (e) {}
+      } catch {
+        // Ignorar error de git status
+      }
     }
 
     // B. Buscar archivos listados en el spec.md activo
@@ -183,7 +187,9 @@ export default tool({
             filesToAudit.add(matchedFile);
           }
         }
-      } catch (e) {}
+      } catch {
+        // Ignorar error de lectura de spec
+      }
     }
 
     // 3. Escaneo de las clases y estilos UI
@@ -252,7 +258,9 @@ export default tool({
             structuralIssues
           });
         }
-      } catch (e) {}
+      } catch {
+        // Ignorar error de lectura de archivo a auditar
+      }
     });
 
     // 4. Intento de Screenshot Headless (Opcional si provee puerto)

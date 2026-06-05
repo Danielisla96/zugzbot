@@ -1,4 +1,13 @@
 export { default as sdd_transition } from './sdd_transition.js';
+export { default as sdd_lock_manager } from './sdd_lock_manager.js';
+export { default as sdd_stack_detector } from './sdd_stack_detector.js';
+export * from './sdd_stack_detector_lib.js';
+export { default as sdd_git_awareness } from './sdd_git_awareness.js';
+export { default as sdd_router } from './sdd_router.js';
+export { default as sdd_test_runner } from './sdd_test_runner.js';
+export { default as sdd_linter } from './sdd_linter.js';
+export { default as sdd_spec_reviewer } from './sdd_spec_reviewer.js';
+export { default as sdd_brain_curator } from './sdd_brain_curator.js';
 export { default as sdd_archive_and_commit } from './sdd_archive_and_commit.js';
 export { default as sdd_brain_sync } from './sdd_brain_sync.js';
 export { default as sdd_checkpoint } from './sdd_checkpoint.js';
@@ -21,5 +30,5 @@ export { default as sdd_test_scaffold_generator } from './sdd_test_scaffold_gene
 export { default as sdd_spec_compliance_linter } from './sdd_spec_compliance_linter.js';
 export { default as sdd_sandbox_patcher } from './sdd_sandbox_patcher.js';
 export { default as sdd_context_pruner } from './sdd_context_pruner.js';
-export { default as gas_clasp_tools } from './gas_clasp_tools.js';
+export { default as sdd_clasp } from './sdd_clasp.js';
 export { default as sdd_auto_healer } from './sdd_auto_healer.js';

@@ -1,7 +1,7 @@
 import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
-import { BrainEntry, parseEntries, buildFullBrain, readBrainFile, writeBrainFile, nextId, today } from "./brain-utils.js"
+import { BrainEntry, readBrainFile, writeBrainFile, nextId, today } from "./brain-utils.js"
 
 const BRAIN_FILE = ".openspec/brain.md"
 const BRAIN_SUBDIR = ".openspec/brain"

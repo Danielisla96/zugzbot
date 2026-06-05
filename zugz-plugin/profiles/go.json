@@ -1,0 +1,40 @@
+{
+  "id": "go",
+  "display_name": "Go",
+  "detect": {
+    "files_any": ["go.mod"],
+    "files_any_deep": []
+  },
+  "test_runners": [
+    { "name": "go-test", "cmd": "go test ./...", "detect": "go.mod" }
+  ],
+  "linters": [
+    { "name": "go-vet", "cmd": "go vet ./...", "detect": "go.mod" },
+    { "name": "staticcheck", "cmd": "staticcheck ./...", "detect": null },
+    { "name": "golangci-lint", "cmd": "golangci-lint run", "detect": ".golangci.yml" }
+  ],
+  "formatters": [
+    { "name": "gofmt", "cmd": "gofmt -w .", "detect": "go.mod" },
+    { "name": "goimports", "cmd": "goimports -w .", "detect": null }
+  ],
+  "deploy": {
+    "kind": "build",
+    "dev_cmd": "go run ./...",
+    "build_cmd": "go build -o bin/ ./...",
+    "publish_cmd": "git tag v$(cat VERSION) && git push --tags"
+  },
+  "skip_tools": ["sdd_clasp"],
+  "required_tools": [
+    "sdd_linter",
+    "sdd_test_runner",
+    "sdd_git_awareness",
+    "sdd_lock_manager"
+  ],
+  "conventions": {
+    "test_dir": ".",
+    "test_unit_dir": ".",
+    "test_integration_dir": "tests",
+    "source_dir": ".",
+    "version_file": "VERSION"
+  }
+}
