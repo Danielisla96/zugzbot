@@ -7,6 +7,14 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [2.0.9] - 2026-06-05 — Versión visible en el TUI
+
+### ✨ Nuevas visualizaciones
+
+- **`plugins/plugin_tui.tsx`**: muestra `zugzbot-sdd v<version>` en el sidebar, debajo del logo, en color muted para no competir con el progreso SDD. Utiliza la constante `ZUGBOT_VERSION` que se actualiza con cada bump.
+
+---
+
 ## [2.0.8] - 2026-06-05 — TUI actualizado a v2
 
 ### 🐛 Fixes

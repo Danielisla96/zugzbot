@@ -13,6 +13,8 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
         const [sessionIds, setSessionIds] = createSignal<string[]>([props.session_id])
 
         // --- Constantes del lockfile v2 (deben coincidir con tools/sdd_transition.ts) ---
+        const ZUGBOT_VERSION = "2.0.9"
+
         const PHASE_ORDER = [
           "F0",
           "F1",
@@ -345,6 +347,9 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                   {line}
                 </text>
               ))}
+              <text fg={api.theme.current.textMuted} paddingTop={0}>
+                {`zugzbot-sdd v${ZUGBOT_VERSION}`}
+              </text>
             </box>
 
             {/* Progreso SDD v2: 12 estaciones (F0, F1, F1.5, HIL-A, F2-RED/GREEN/REFACTOR, F3, F4, HIL-B, F5, DONE) */}
