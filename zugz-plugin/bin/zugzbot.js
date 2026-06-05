@@ -419,10 +419,29 @@ function init() {
   header("📝 Creando archivos de configuración v2...")
 
   const models = getTemplateModels()
-  const opencodeJson = buildOpencodeJson(models)
-
   const opencodePath = path.join(INSTALL_DIR, "opencode.json")
-  fs.writeFileSync(opencodePath, JSON.stringify(opencodeJson, null, 2), "utf-8")
+  const templateOpencodePath = path.join(PKG_ROOT, "opencode.json")
+  if (fs.existsSync(templateOpencodePath)) {
+    const templateOpencode = JSON.parse(fs.readFileSync(templateOpencodePath, "utf-8"))
+    if (models && models.agents && templateOpencode.agent) {
+      for (const [agentName, model] of Object.entries(models.agents)) {
+        if (templateOpencode.agent[agentName]) {
+          templateOpencode.agent[agentName].model = model
+        }
+      }
+      if (models.default) {
+        for (const agentName of Object.keys(templateOpencode.agent)) {
+          if (!models.agents[agentName]) {
+            templateOpencode.agent[agentName].model = models.default
+          }
+        }
+      }
+    }
+    fs.writeFileSync(opencodePath, JSON.stringify(templateOpencode, null, 2), "utf-8")
+  } else {
+    const opencodeJson = buildOpencodeJson(models)
+    fs.writeFileSync(opencodePath, JSON.stringify(opencodeJson, null, 2), "utf-8")
+  }
   green("opencode.json creado (con 14 agentes: zugzbot + 8 core + 4 aux)")
 
   const tuiPath = path.join(INSTALL_DIR, "tui.json")
