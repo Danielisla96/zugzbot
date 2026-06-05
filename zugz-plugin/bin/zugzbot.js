@@ -111,6 +111,18 @@ function getTemplateModels() {
   return null
 }
 
+function getProjectModels(projectModelsPath) {
+  if (fs.existsSync(projectModelsPath)) {
+    try {
+      return JSON.parse(fs.readFileSync(projectModelsPath, "utf-8"))
+    } catch (e) {
+      red(`zugz-models.json existe pero es inválido, ignorando`)
+      return null
+    }
+  }
+  return getTemplateModels()
+}
+
 function buildOpencodeJson(models) {
   const defaultModel = models?.default || "minimax-coding-plan/MiniMax-M2.7"
   const agents = models?.agents || {}
@@ -418,31 +430,60 @@ function init() {
 
   header("📝 Creando archivos de configuración v2...")
 
-  const models = getTemplateModels()
+  const modelsPath = path.join(INSTALL_DIR, "zugz-models.json")
+  const templateModelsPath = path.join(PKG_ROOT, "zugz-models.json")
+  if (!fs.existsSync(modelsPath) && fs.existsSync(templateModelsPath)) {
+    fs.copyFileSync(templateModelsPath, modelsPath)
+    green("zugz-models.json copiado desde el paquete")
+  } else if (fs.existsSync(modelsPath)) {
+    yellow("zugz-models.json ya existe, preservado (editable por el usuario)")
+  }
+
+  const models = getProjectModels(modelsPath)
+
   const opencodePath = path.join(INSTALL_DIR, "opencode.json")
+  const existingOpencodePath = path.join(INSTALL_DIR, "opencode.json")
   const templateOpencodePath = path.join(PKG_ROOT, "opencode.json")
-  if (fs.existsSync(templateOpencodePath)) {
-    const templateOpencode = JSON.parse(fs.readFileSync(templateOpencodePath, "utf-8"))
-    if (models && models.agents && templateOpencode.agent) {
-      for (const [agentName, model] of Object.entries(models.agents)) {
-        if (templateOpencode.agent[agentName]) {
-          templateOpencode.agent[agentName].model = model
-        }
+  let opencodeBase = null
+  if (fs.existsSync(existingOpencodePath)) {
+    try {
+      opencodeBase = JSON.parse(fs.readFileSync(existingOpencodePath, "utf-8"))
+      yellow("opencode.json ya existe, fusionando modelos desde zugz-models.json")
+    } catch (e) {
+      red("opencode.json existe pero es inválido, se regenerará desde el paquete")
+    }
+  }
+  if (!opencodeBase) {
+    if (fs.existsSync(templateOpencodePath)) {
+      opencodeBase = JSON.parse(fs.readFileSync(templateOpencodePath, "utf-8"))
+    } else {
+      opencodeBase = buildOpencodeJson(models)
+    }
+  }
+  if (models && models.agents && opencodeBase.agent) {
+    let applied = 0
+    for (const [agentName, model] of Object.entries(models.agents)) {
+      if (opencodeBase.agent[agentName]) {
+        opencodeBase.agent[agentName].model = model
+        applied += 1
       }
-      if (models.default) {
-        for (const agentName of Object.keys(templateOpencode.agent)) {
-          if (!models.agents[agentName]) {
-            templateOpencode.agent[agentName].model = models.default
-          }
+    }
+    if (models.default) {
+      for (const agentName of Object.keys(opencodeBase.agent)) {
+        if (!models.agents[agentName]) {
+          opencodeBase.agent[agentName].model = models.default
+          applied += 1
         }
       }
     }
-    fs.writeFileSync(opencodePath, JSON.stringify(templateOpencode, null, 2), "utf-8")
-  } else {
-    const opencodeJson = buildOpencodeJson(models)
-    fs.writeFileSync(opencodePath, JSON.stringify(opencodeJson, null, 2), "utf-8")
+    if (applied > 0) {
+      green(`Modelos aplicados a opencode.json (${applied} agentes)`)
+    }
   }
-  green("opencode.json creado (con 14 agentes: zugzbot + 8 core + 4 aux)")
+  fs.writeFileSync(opencodePath, JSON.stringify(opencodeBase, null, 2), "utf-8")
+  if (!fs.existsSync(existingOpencodePath)) {
+    green("opencode.json creado (con 14 agentes: zugzbot + 8 core + 4 aux)")
+  }
 
   const tuiPath = path.join(INSTALL_DIR, "tui.json")
   if (!fs.existsSync(tuiPath)) {
@@ -466,13 +507,6 @@ function init() {
     green(".openspec/brain.md creado")
   } else {
     yellow("brain.md ya existe, preservado")
-  }
-
-  const modelsPath = path.join(INSTALL_DIR, "zugz-models.json")
-  const templateModelsPath = path.join(PKG_ROOT, "zugz-models.json")
-  if (!fs.existsSync(modelsPath) && fs.existsSync(templateModelsPath)) {
-    fs.copyFileSync(templateModelsPath, modelsPath)
-    green("zugz-models.json copiado")
   }
 
   const gitignorePath = path.join(INSTALL_DIR, ".gitignore")
