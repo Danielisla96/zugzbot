@@ -7,6 +7,27 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [2.0.8] - 2026-06-05 — TUI actualizado a v2
+
+### 🐛 Fixes
+
+- **`plugins/plugin_tui.tsx`**: el sidebar leía `active_phase` como número (schema v1 legacy). Ahora lee correctamente como string.
+- Las 6 fases del sidebar (F0-F5) han sido reemplazadas por las **12 estaciones v2**: F0, F1, F1.5, HIL-A, F2-RED, F2-GREEN, F2-REFACTOR, F3, F4, HIL-B, F5, DONE.
+- Los HIL-A y HIL-B ahora se renderizan con prefijo `⚠` y color ámbar para señalarlos como puntos de aprobación humana.
+- Mapeo de fases a subagentes actualizado a v2 (`@f1.5-spec-reviewer`, `@f2-red-test-writer`, `@f2-refactor-improver`, etc.).
+
+### ✨ Nuevas visualizaciones
+
+- **`stack_profile`**: muestra el stack auto-detectado (`node-typescript`, `python`, `go`, etc.).
+- **`workflow`**: muestra el workflow activo (`full-sdd-tdd`, `quick-fix`, etc.).
+- **`status`**: muestra el status del lockfile (`idle`, `in_progress`, `spec_approved`, `qa_validated`).
+- **`auto_pilot`**: indicador visual si el modo auto-pilot está activo.
+- **TDD progress**: línea con `✓ RED (N) · ✓ GREEN (N) · ✓ REFACTOR(lint)` mostrando el avance de las 3 etapas TDD.
+- **Git branch**: muestra la rama actual (`sdd/change-<name>`) y si el working tree está limpio.
+- **Subagente activo**: mapea la fase actual al subagente que la ejecuta.
+
+---
+
 ## [2.0.7] - 2026-06-05 — Documentación "Cómo Funciona"
 
 ### 📚 Documentación
