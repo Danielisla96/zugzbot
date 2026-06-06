@@ -386,10 +386,30 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                 <box gap={0} paddingTop={1}>
                   {PHASE_ORDER.map((phase) => {
                     const current = sddProgress()?.activePhase ?? "F0"
+                    const status = sddProgress()?.status ?? "idle"
                     const curIdx = phaseIndex(current)
                     const myIdx = phaseIndex(phase)
-                    const isActive = current === phase
-                    const isCompleted = curIdx > myIdx
+                    
+                    let isActive = current === phase
+                    let isCompleted = curIdx > myIdx
+
+                    if (phase === "F1.5" && status === "awaiting_hil") {
+                      isActive = false
+                      isCompleted = true
+                    }
+                    if (phase === "HIL-A") {
+                      isActive = (current === "F1.5" && status === "awaiting_hil")
+                      isCompleted = curIdx > phaseIndex("F1.5") || (current === "F1.5" && status === "spec_approved")
+                    }
+                    if (phase === "F4" && status === "awaiting_hil") {
+                      isActive = false
+                      isCompleted = true
+                    }
+                    if (phase === "HIL-B") {
+                      isActive = (current === "F4" && status === "awaiting_hil")
+                      isCompleted = curIdx > phaseIndex("F4") || (current === "F4" && status === "qa_validated")
+                    }
+
                     const isHil = phase === "HIL-A" || phase === "HIL-B"
 
                     let prefix = "  ○ "

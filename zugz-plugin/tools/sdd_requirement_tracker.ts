@@ -115,7 +115,7 @@ export default tool({
     const testFiles: string[] = [];
     const excludeDirs = [
       "node_modules", ".git", ".openspec", ".opencode", "dist",
-      "build", ".next", "coverage"
+      "build", ".next", "coverage", "__pycache__", ".pytest_cache"
     ];
 
     function findTestFilesRecursive(dir: string) {
@@ -143,12 +143,15 @@ export default tool({
         } else {
           const lowerFile = entry.toLowerCase();
           const ext = path.extname(entry).toLowerCase();
+          const validTestExtensions = [".ts", ".tsx", ".js", ".jsx", ".py", ".go", ".rs", ".java", ".cs"];
           const isTestFile = 
-            lowerFile.includes(".test.") || 
-            lowerFile.includes(".spec.") || 
-            lowerFile.startsWith("test_") || 
-            lowerFile.endsWith("_test.go") || 
-            (dir.split(path.sep).some(p => p === "tests" || p === "test") && [".ts", ".tsx", ".js", ".jsx", ".py", ".go", ".rs"].includes(ext));
+            validTestExtensions.includes(ext) && (
+              lowerFile.includes(".test.") || 
+              lowerFile.includes(".spec.") || 
+              lowerFile.startsWith("test_") || 
+              lowerFile.endsWith("_test.go") || 
+              dir.split(path.sep).some(p => p === "tests" || p === "test")
+            );
 
           if (isTestFile) {
             testFiles.push(fullPath);

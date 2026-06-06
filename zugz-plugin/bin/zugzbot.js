@@ -217,7 +217,7 @@ function buildOpencodeJson(models) {
         "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-planner.md}",
         "permission": {
           "edit": "allow",
-          "bash": "ask",
+          "bash": "allow",
           "lsp": "allow",
           "skill": { "*": "allow" },
           "tools": {
