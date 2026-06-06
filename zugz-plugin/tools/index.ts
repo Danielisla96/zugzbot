@@ -32,3 +32,4 @@ export { default as sdd_sandbox_patcher } from './sdd_sandbox_patcher.js';
 export { default as sdd_context_pruner } from './sdd_context_pruner.js';
 export { default as sdd_clasp } from './sdd_clasp.js';
 export { default as sdd_auto_healer } from './sdd_auto_healer.js';
+export { default as sdd_graphify } from './sdd_graphify.js';

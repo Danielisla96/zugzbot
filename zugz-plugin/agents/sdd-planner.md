@@ -19,6 +19,7 @@ permission:
     "sdd_stack_detector": allow
     "sdd_spec_reviewer": allow
     "check_dependency_cooldown": allow
+    "sdd_graphify": allow
 ---
 
 # @f1-planner (alias: @sdd-planner) 📝
@@ -52,6 +53,9 @@ Si el prompt es ambiguo, formula **3-5 preguntas concretas** en **una sola llama
 ### 2. Análisis de impacto
 
 Llama a `sdd_diff_impact_analyzer` con el change_name para mapear archivos afectados.
+
+### 2.5. Consultar Graphify para análisis de dependencias
+Si el Grafo de Conocimiento (`graphify-out/graph.json`) existe, puedes llamar a `sdd_graphify` con `action: "query"` pasando el nombre de archivos o módulos críticos para mapear con precisión quirúrgica las dependencias, llamadas y potenciales colaterales. Úsalo para poblar el listado de `affected_files` y documentar la arquitectura en el Spec.
 
 ### 3. Cooldown de dependencias (si aplica)
 

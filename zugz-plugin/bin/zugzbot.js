@@ -190,7 +190,8 @@ function buildOpencodeJson(models) {
             "sdd_checkpoint": "allow",
             "sdd_compact_context": "allow",
             "sdd_context_pruner": "allow",
-            "sdd_clasp": "allow"
+            "sdd_clasp": "allow",
+            "sdd_graphify": "allow"
           }
         }
       },
@@ -207,7 +208,8 @@ function buildOpencodeJson(models) {
             "sdd_lock_manager": "allow",
             "sdd_stack_detector": "allow",
             "sdd_generate_tree": "allow",
-            "sdd_git_awareness": "allow"
+            "sdd_git_awareness": "allow",
+            "sdd_graphify": "allow"
           }
         }
       },
@@ -230,7 +232,8 @@ function buildOpencodeJson(models) {
             "sdd_test_scaffold_generator": "allow",
             "sdd_context_pruner": "allow",
             "sdd_stack_detector": "allow",
-            "check_dependency_cooldown": "allow"
+            "check_dependency_cooldown": "allow",
+            "sdd_graphify": "allow"
           }
         }
       },
@@ -249,7 +252,8 @@ function buildOpencodeJson(models) {
             "sdd_linter": "allow",
             "sdd_test_runner": "allow",
             "sdd_git_awareness": "allow",
-            "sdd_security_vulnerability_scanner": "allow"
+            "sdd_security_vulnerability_scanner": "allow",
+            "sdd_graphify": "allow"
           }
         }
       },

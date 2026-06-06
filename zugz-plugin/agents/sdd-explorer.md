@@ -12,6 +12,7 @@ permission:
     "sdd_stack_detector": allow
     "sdd_git_awareness": allow
     "sdd_generate_tree": allow
+    "sdd_graphify": allow
 ---
 
 # @sdd-explorer
@@ -61,6 +62,9 @@ Llama a `sdd_git_awareness` con `action: "status"`.
 ### 3.5. Ejecutar autoskills para obtener mejores prácticas y soporte
 
 Si detectas que la carpeta `skills/` en `.opencode/` o en la raíz no contiene las skills del ecosistema del proyecto (o quieres actualizarlas debido a nuevas dependencias detectadas), ejecuta la herramienta correspondiente para correr `npx autoskills --yes`. Esto instalará y actualizará de forma dinámica y silenciosa las skills alineadas con el `stack_profile` detectado. Las Design Skills estarán disponibles para cualquier edición de UI subsiguiente.
+
+### 3.7. Ejecutar Graphify si está disponible
+Llama a `sdd_graphify` con `action: "status"`. Si el campo `graphify_installed` es `true`, ejecuta `sdd_graphify` con `action: "run"` para mapear la arquitectura completa del proyecto en un Grafo de Conocimiento (`graphify-out/graph.json` y `GRAPH_REPORT.md`). Esto agiliza masivamente las búsquedas del swarm en las fases siguientes.
 
 ### 4. Escanear estructura del proyecto
 
