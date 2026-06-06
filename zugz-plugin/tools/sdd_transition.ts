@@ -4,6 +4,7 @@ import path from "path"
 import { execSync } from "child_process"
 import { readLockfile, writeLockfile, isValidChangeName, SddLockfile, SCHEMA_VERSION } from "./sdd_lock_manager.js"
 import specValidator from "./sdd_spec_validator.js"
+import specReviewer from "./sdd_spec_reviewer.js"
 import regressionDetector from "./sdd_regression_detector.js"
 import secretScanner from "./sdd_secret_scanner.js"
 import requirementTracker from "./sdd_requirement_tracker.js"
@@ -149,8 +150,28 @@ export default tool({
       return `[SDD Transition Blocked] F2-RED solo se activa tras HIL-A (aprobación del spec). Estado actual: '${lock.status}'. El Orquestador debe transicionar primero a 'spec_approved'.`
     }
 
-    if (args.nextPhase === "F1.5" && !fs.existsSync(path.join(projectRoot, ".openspec/changes", lock.change_name, "specs/spec.md"))) {
-      return `[SDD Transition Blocked] No existe spec.md para el change '${lock.change_name}'. F1 debe crearlo antes de F1.5.`
+    if (args.nextPhase === "F1.5") {
+      const specPath = path.join(projectRoot, ".openspec/changes", lock.change_name, "specs/spec.md")
+      if (!fs.existsSync(specPath)) {
+        return `[SDD Transition Blocked] No existe spec.md para el change '${lock.change_name}'. F1 debe crearlo antes de F1.5.`
+      }
+
+      // Validar el Spec usando sdd_spec_reviewer
+      const reviewerResultObj: any = await specReviewer.execute({ action: "validate", specPath }, context)
+      const reviewerResultStr = typeof reviewerResultObj === "string"
+        ? reviewerResultObj
+        : (reviewerResultObj?.output || "")
+      try {
+        const result = JSON.parse(reviewerResultStr)
+        if (result.status === "FAILED" || result.verdict === "REJECTED") {
+          const failedDetails = Array.isArray(result.checks)
+            ? result.checks.filter((c: any) => !c.pass).map((c: any) => `- ${c.name}: ${c.details}`).join("\n")
+            : result.message
+          return `[SDD Transition Blocked] Spec rechazado en F1.5 por falla de testeabilidad/diseño:\n\n${failedDetails}`
+        }
+      } catch (e: any) {
+        return `[SDD Transition Blocked] Fallo crítico al validar el Spec con sdd_spec_reviewer: ${e.message}`
+      }
     }
 
     if (args.nextPhase === "F3" && args.status !== "corrective_loop" && direction === "forward") {

@@ -5,6 +5,13 @@ Todas las versiones notables del proyecto Zugzbot SDD se documentan aquí.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.0.35] - 2026-06-06 — Validación de Calidad obligatoria en F1.5
+
+### ✨ Features
+- **Gate de especificación en F1.5**: Modificación de la máquina de estados en `sdd_transition.ts`. Ahora, al intentar transicionar desde F1 (Planner) a F1.5 (Review), se ejecuta automáticamente la validación de `sdd_spec_reviewer` (incluyendo la nueva regla de Design Skills de Frontend). Si la especificación técnica no cumple las reglas, la transición se bloquea impidiendo que los agentes sigan adelante hasta que el Spec se corrija.
+
+---
+
 ## [2.0.34] - 2026-06-06 — Fix transiciones HIL-B y Git en Repos Vacíos
 
 ### 🐛 Fixes
