@@ -334,17 +334,23 @@ Feature: Login
 ## 1. Diagnóstico
 - \`src/api.ts\` Líneas 10-50: agregar handler
 
+### 3.1 Principios Arquitectónicos bajo Diagnóstico
+
 ## 2. Consenso de Encuesta con el Usuario
 - **Pregunta A**: Decisión: usar JWT.
 
 ## 3. Propuesta
 Endpoint POST /login que retorna JWT.
 
+### 4.1 Detalle de Propuesta
+
 ## 4. Especificaciones
 Dado un usuario registrado
 Cuando hace POST
 Entonces recibe token
 Y status 200
+
+### 3.1 Escenario Detallado
 
 ## 5. Criterios
 - [ ] Criterio 1: POST /login con credenciales válidas retorna 200
@@ -366,8 +372,11 @@ Y status 200
     expect(fixedContent).toContain('# Plano Técnico');
     expect(fixedContent).toContain('## 1. Diagnóstico y Archivos Afectados');
     expect(fixedContent).toContain('(Líneas 10-50)');
+    expect(fixedContent).toContain('### 1.1 Principios Arquitectónicos bajo Diagnóstico');
     expect(fixedContent).toContain('## 3. Propuesta de Solución');
+    expect(fixedContent).toContain('### 3.1 Detalle de Propuesta');
     expect(fixedContent).toContain('## 4. Especificaciones BDD');
+    expect(fixedContent).toContain('### 4.1 Escenario Detallado');
     expect(fixedContent).toContain('Given');
     expect(fixedContent).toContain('When');
     expect(fixedContent).toContain('Then');

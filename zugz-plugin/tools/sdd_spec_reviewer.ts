@@ -188,6 +188,22 @@ export default tool({
       // 4. Line Ranges Auto-parenthesizing
       content = content.replace(/(?<!\()\b(L[ií]neas?\s+\d+(?:-\d+)?|L\d+-\d+|L\d+)\b(?!\))/gi, "($1)")
 
+      // 5. Auto-renumber subheadings to match their parent section number
+      const lines = content.split("\n")
+      let currentSectionNumber: string | null = null
+      for (let i = 0; i < lines.length; i++) {
+        const sectionMatch = lines[i].match(/^##\s*(\d+)\./)
+        if (sectionMatch) {
+          currentSectionNumber = sectionMatch[1]
+        } else if (currentSectionNumber) {
+          const subMatch = lines[i].match(/^(###\s*)(\d+)(\.\d+\s+.*)$/)
+          if (subMatch && subMatch[2] !== currentSectionNumber) {
+            lines[i] = `${subMatch[1]}${currentSectionNumber}${subMatch[3]}`
+          }
+        }
+      }
+      content = lines.join("\n")
+
       fs.writeFileSync(specPath, content, "utf-8")
       spec = content
     }

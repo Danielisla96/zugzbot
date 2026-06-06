@@ -46,7 +46,10 @@ export default tool({
       .describe("Forzar un test runner específico (ej: 'vitest'). Si no, autodetecta.")
   },
   async execute(args, context) {
-    const projectRoot = context.worktree || context.directory
+    let projectRoot = context.worktree || context.directory || process.cwd()
+    if (projectRoot === "/") {
+      projectRoot = process.cwd()
+    }
     const lock = readLockfile(projectRoot)
     const profileId = lock.stack_profile || "unknown"
     const profile = getProfileById(projectRoot, profileId) || loadAllProfiles(projectRoot).find(() => true)
