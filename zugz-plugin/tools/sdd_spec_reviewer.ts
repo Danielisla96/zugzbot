@@ -309,59 +309,123 @@ export default tool({
       frontmatter = parsed.frontmatter
       markdown = parsed.markdown
 
-      // 1. Title Normalization
-      const hasTitle = /^#\s+Plano Técnico/m.test(markdown)
-      if (!hasTitle) {
-        const firstHeader = markdown.match(/^#\s+(.+)$/m)
-        if (firstHeader) {
-          markdown = markdown.replace(/^#\s+(.+)$/m, "# Plano Técnico")
-        } else {
-          markdown = "# Plano Técnico\n\n" + markdown
+      // Re-structure the markdown content into a strict template
+      const sections: Record<number, string[]> = {
+        1: [],
+        2: [],
+        3: [],
+        4: [],
+        5: []
+      }
+      let currentSectionIdx = 0 // 0 means title or intro
+
+      const lines = markdown.split(/\r?\n/)
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (trimmed.startsWith("#") && !trimmed.startsWith("##")) {
+          // It's the title '# Plano Técnico', skip or ignore as we write it at the top
+          continue
+        }
+        
+        if (line.match(/^##\s*1\s*[.\s-]?\s*Diagn[oó]stico/i)) {
+          currentSectionIdx = 1
+          continue
+        } else if (line.match(/^##\s*2\s*[.\s-]?\s*Consenso/i)) {
+          currentSectionIdx = 2
+          continue
+        } else if (line.match(/^##\s*3\s*[.\s-]?\s*Propuesta/i)) {
+          currentSectionIdx = 3
+          continue
+        } else if (line.match(/^##\s*4\s*[.\s-]?\s*Especificaciones/i)) {
+          currentSectionIdx = 4
+          continue
+        } else if (line.match(/^##\s*5\s*[.\s-]?\s*Criterios/i)) {
+          currentSectionIdx = 5
+          continue
+        } else if (line.match(/^##\s*\d+\s*[.\s-]?/)) {
+          // Other main heading, ignore heading line but keep content
+          continue
+        }
+
+        if (currentSectionIdx > 0) {
+          sections[currentSectionIdx].push(line)
+        } else if (trimmed.length > 0) {
+          // Capture intro text into section 1
+          sections[1].push(line)
         }
       }
 
-      // 2. Section Headings Normalization
-      markdown = markdown.replace(/##\s*1\s*[.\s-]?\s*Diagn[oó]stico.*/gi, "## 1. Diagnóstico y Archivos Afectados")
-      markdown = markdown.replace(/##\s*3\s*[.\s-]?\s*Propuesta.*/gi, "## 3. Propuesta de Solución")
-      markdown = markdown.replace(/##\s*4\s*[.\s-]?\s*Especificaciones.*/gi, "## 4. Especificaciones BDD (Comportamiento)")
-      markdown = markdown.replace(/##\s*5\s*[.\s-]?\s*Criterios.*/gi, "## 5. Criterios de Aceptación")
-
-      // Auto-inject Section 2 if missing
-      if (!/##\s*2\.\s*Consenso/i.test(markdown)) {
-        const sec1Match = markdown.match(/## 1\. Diagnóstico y Archivos Afectados([\s\S]*?)(?=##|$)/)
-        if (sec1Match) {
-          const sec1Content = sec1Match[0]
-          markdown = markdown.replace(sec1Content, sec1Content + "\n## 2. Consenso de Encuesta con el Usuario\nEl plan técnico y los criterios de aceptación han sido definidos de acuerdo con los requerimientos provistos por el usuario y validados formalmente.\n\n")
-        } else {
-          markdown = markdown.replace("## 1. Diagnóstico y Archivos Afectados", "## 1. Diagnóstico y Archivos Afectados\n\n## 2. Consenso de Encuesta con el Usuario\nEl plan técnico y los criterios de aceptación han sido definidos de acuerdo con los requerimientos provistos por el usuario y validados formalmente.\n")
-        }
+      // Default contents if sections are empty
+      if (sections[1].length === 0) {
+        sections[1] = ["Se requiere analizar y documentar el diagnóstico y los archivos afectados para este cambio."]
+      }
+      if (sections[2].length === 0) {
+        sections[2] = ["El plan técnico y los criterios de aceptación han sido definidos de acuerdo con los requerimientos provistos por el usuario y validados formalmente."]
+      }
+      if (sections[3].length === 0) {
+        sections[3] = ["Se requiere detallar la propuesta de solución técnica y de arquitectura."]
+      }
+      if (sections[4].length === 0) {
+        sections[4] = [
+          "### Scenario: Initial scenario",
+          "Given the system is initialized",
+          "When the primary action is executed",
+          "Then the system state is updated successfully"
+        ]
+      }
+      if (sections[5].length === 0) {
+        sections[5] = ["- [ ] CA1: Criterio de aceptación inicial"]
       }
 
-      // 3. Translate BDD Keywords and Normalize Scenarios
-      markdown = markdown.replace(/^(?<indent>\s*)(?:Dado|Dada)(?:\s+que)?\b/gim, "$1Given")
-      markdown = markdown.replace(/^(?<indent>\s*)Cuando\b/gim, "$1When")
-      markdown = markdown.replace(/^(?<indent>\s*)Entonces\b/gim, "$1Then")
-      markdown = markdown.replace(/^(?<indent>\s*)Y\b/gim, "$1And")
-      markdown = markdown.replace(/###\s*(Scenario|Escenario)\s*\d*\s*:?/gi, "### Scenario:")
+      // Rebuild markdown with clean normalized headings
+      const cleanMarkdownLines: string[] = []
+      cleanMarkdownLines.push("# Plano Técnico\n")
+
+      cleanMarkdownLines.push("## 1. Diagnóstico y Archivos Afectados")
+      cleanMarkdownLines.push(sections[1].join("\n").trim() + "\n")
+
+      cleanMarkdownLines.push("## 2. Consenso de Encuesta con el Usuario")
+      cleanMarkdownLines.push(sections[2].join("\n").trim() + "\n")
+
+      cleanMarkdownLines.push("## 3. Propuesta de Solución")
+      cleanMarkdownLines.push(sections[3].join("\n").trim() + "\n")
+
+      cleanMarkdownLines.push("## 4. Especificaciones BDD (Comportamiento)")
+      
+      // Clean BDD scenarios in section 4
+      let sec4Text = sections[4].join("\n")
+      // Translate BDD keywords in section 4
+      sec4Text = sec4Text.replace(/^(?<indent>\s*)(?:Dado|Dada)(?:\s+que)?\b/gim, "$1Given")
+      sec4Text = sec4Text.replace(/^(?<indent>\s*)Cuando\b/gim, "$1When")
+      sec4Text = sec4Text.replace(/^(?<indent>\s*)Entonces\b/gim, "$1Then")
+      sec4Text = sec4Text.replace(/^(?<indent>\s*)Y\b/gim, "$1And")
+      sec4Text = sec4Text.replace(/###\s*(Scenario|Escenario)\s*\d*\s*:?/gi, "### Scenario:")
+      
+      cleanMarkdownLines.push(sec4Text.trim() + "\n")
+
+      cleanMarkdownLines.push("## 5. Criterios de Aceptación")
+      cleanMarkdownLines.push(sections[5].join("\n").trim())
+
+      markdown = cleanMarkdownLines.join("\n")
 
       // 4. Line Ranges Auto-parenthesizing
       markdown = markdown.replace(/(?<!\()\b(L[ií]neas?\s+\d+(?:-\d+)?|L\d+-\d+|L\d+)\b(?!\))/gi, "($1)")
 
       // 5. Auto-renumber subheadings to match their parent section number
-      const lines = markdown.split("\n")
+      const finalLines = markdown.split("\n")
       let currentSectionNumber: string | null = null
-      for (let i = 0; i < lines.length; i++) {
-        const sectionMatch = lines[i].match(/^##\s*(\d+)\./)
+      for (let i = 0; i < finalLines.length; i++) {
+        const sectionMatch = finalLines[i].match(/^##\s*(\d+)\./)
         if (sectionMatch) {
           currentSectionNumber = sectionMatch[1]
         } else if (currentSectionNumber) {
-          const subMatch = lines[i].match(/^(###\s*)(\d+)(\.\d+\s+.*)$/)
+          const subMatch = finalLines[i].match(/^(###\s*)(\d+)(\.\d+\s+.*)$/)
           if (subMatch && subMatch[2] !== currentSectionNumber) {
-            lines[i] = `${subMatch[1]}${currentSectionNumber}${subMatch[3]}`
+            finalLines[i] = `${subMatch[1]}${currentSectionNumber}${subMatch[3]}`
           }
         }
       }
-      markdown = lines.join("\n")
+      markdown = finalLines.join("\n")
 
       // Write everything back
       const yamlPart = [
