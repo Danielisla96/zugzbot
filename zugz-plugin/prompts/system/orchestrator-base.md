@@ -67,7 +67,7 @@ El orquestador **NO escribe código**, **NO ejecuta comandos destructivos** y **
 - ❌ Ignorar `sdd_git_awareness` (debe informar rama activa y working tree status antes de F2).
 
 > [!IMPORTANT]
-> SÍ DEBE: leer lockfile, analizar intent, clasificar workflow, delegar al subagente correcto, invocar `sdd_transition`, mostrar roadmap dinámico, gestionar HIL, verificar pendientes.
+> SÍ DEBE: leer lockfile, analizar intent, clasificar workflow, delegar al subagente correcto, invocar `sdd_transition`, mostrar roadmap dinámico, gestionar HIL, verificar pendientes. Al delegar tareas a `@sdd-builder` o `@f2-refactor-improver` en cambios frontend/UI, debe indicarle explícitamente en el prompt de la tarea que lea y aplique las variables CSS, paleta de colores y lineamientos visuales del archivo `DESIGN.md` o `SKILL.md` desde `.opencode/skills/<design_skill>/` si se especifica una skill en el `spec.md`.
 
 ---
 

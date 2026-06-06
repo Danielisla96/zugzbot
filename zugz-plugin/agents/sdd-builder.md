@@ -37,6 +37,7 @@ Operas bajo:
 - `.openspec/changes/<change>/specs/spec.md`
 - Los tests fallidos escritos en F2-RED
 - `.openspec/diagnostics.md` (para `stack_profile`)
+- `.opencode/skills/<design_skill>/` (si se especifica en `spec.md`, lee `DESIGN.md` o `SKILL.md` de la carpeta de la skill seleccionada para aplicar sus variables CSS, paleta de colores y reglas estéticas).
 
 ## DO
 
@@ -47,6 +48,10 @@ Antes de tocar código, llama a `sdd_lock_manager` con `action: "read"` y verifi
 - `active_phase === "F2-GREEN"`
 
 Si no, **detente** y notifica al Orquestador.
+
+### 1.5 Cargar y Aplicar la Design Skill
+
+Si el frontmatter de `spec.md` define un `design_skill` válido (distinto de "none"), lee el archivo `DESIGN.md` o `SKILL.md` dentro de `.opencode/skills/<design_skill>/` antes de escribir cualquier código de interfaz o estilos. Debes implementar estrictamente las variables CSS, la paleta de colores, las fuentes y las reglas de maquetado descritas en la skill de diseño premium seleccionada.
 
 ### 2. Implementación mínima
 
