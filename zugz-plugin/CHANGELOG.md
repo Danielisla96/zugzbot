@@ -5,6 +5,13 @@ Todas las versiones notables del proyecto Zugzbot SDD se documentan aquí.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.0.37] - 2026-06-06 — Actualización de Paleta de Colores TDD
+
+### ✨ Features
+- **Colores TDD Claros**: Se actualizó el coloreado visual de la barra de progreso TDD en `plugin_tui.tsx`. El color de la línea de estado cambiará dinámicamente a **Rojo** (`#FF3B30`) en la etapa RED, **Verde** (`#34C759`) en la etapa GREEN y **Azul** (`#0A84FF`) en la etapa REFACTOR, haciendo mucho más intuitiva la identificación de la fase actual.
+
+---
+
 ## [2.0.36] - 2026-06-06 — Fix Estabilidad de Solid TUI en plantilla
 
 ### 🐛 Fixes

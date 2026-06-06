@@ -26,7 +26,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
               const pkg = JSON.parse(fs.readFileSync(depPkgPath, "utf-8"))
               return pkg.version || fallback
             }
-          } catch {}
+          } catch { }
           return fallback
         }
         const ZUGBOT_VERSION = getZugzbotVersion()
@@ -374,7 +374,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                 <text fg="#FF7300">
                   {`SDD: ${sddProgress()?.changeName ?? "—"}`}
                 </text>
-                 <text fg={api.theme.current.textMuted}>
+                <text fg={api.theme.current.textMuted}>
                   {`Stack: ${sddProgress()?.stackProfile ?? "unknown"}`}
                 </text>
                 <text fg={api.theme.current.textMuted}>
@@ -389,7 +389,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                     const status = sddProgress()?.status ?? "idle"
                     const curIdx = phaseIndex(current)
                     const myIdx = phaseIndex(phase)
-                    
+
                     let isActive = current === phase
                     let isCompleted = curIdx > myIdx
 
@@ -447,16 +447,16 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                   const redMark = tdd.red.completed ? "✓" : "○"
                   const greenMark = tdd.green.completed ? "✓" : "○"
                   const refactorMark = tdd.refactor.completed || tdd.refactor.linterClean ? "✓" : "○"
-                  
+
                   let tddColor = api.theme.current.textMuted
                   if (tdd.refactor.completed || tdd.refactor.linterClean) {
-                    tddColor = api.theme.current.success
+                    tddColor = "#0A84FF" // Azul
                   } else if (tdd.green.completed) {
-                    tddColor = "#5AC8FA"
+                    tddColor = "#34C759" // Verde
                   } else if (tdd.red.completed) {
-                    tddColor = "#FF3B30"
+                    tddColor = "#FF3B30" // Rojo
                   }
-                  
+
                   return (
                     <text fg={tddColor} paddingTop={1}>
                       {`TDD: RED[${redMark}] GRN[${greenMark}] REF[${refactorMark}]`}
