@@ -5,6 +5,13 @@ Todas las versiones notables del proyecto Zugzbot SDD se documentan aquí.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.0.33] - 2026-06-06 — Distribución de Design Skills en Plantilla
+
+### 🐛 Fixes
+- **Distribución de Skills**: Se migraron las 67 design skills del directorio temporal de desarrollo `skills/` hacia el directorio de distribución `.opencode/skills/` para asegurar que el instalador `npx zugzbot` las copie en el workspace del usuario destino de forma exitosa.
+
+---
+
 ## [2.0.32] - 2026-06-06 — Git Init, Autoskills, Design Skills & Corrective Loops
 
 ### ✨ Features
