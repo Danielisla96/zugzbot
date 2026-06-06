@@ -450,11 +450,11 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                   
                   let tddColor = api.theme.current.textMuted
                   if (tdd.refactor.completed || tdd.refactor.linterClean) {
-                    tddColor = api.theme.current.success
+                    tddColor = "#0A84FF" // Azul
                   } else if (tdd.green.completed) {
-                    tddColor = "#5AC8FA"
+                    tddColor = "#34C759" // Verde
                   } else if (tdd.red.completed) {
-                    tddColor = "#FF3B30"
+                    tddColor = "#FF3B30" // Rojo
                   }
                   
                   return (
