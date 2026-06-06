@@ -1,3 +1,8 @@
+---
+name: sdd-auto-rollback-recovery
+description: Enseña a los agentes cómo actuar quirúrgicamente ante un fallo en la fase de despliegue para restaurar la estabilidad de forma atómica.
+---
+
 # Skill: SDD Auto Rollback Recovery
 
 Enseña a los agentes (principalmente `@sdd-deployer`) cómo actuar quirúrgicamente ante un fallo en la fase de despliegue para restaurar la estabilidad de forma atómica.

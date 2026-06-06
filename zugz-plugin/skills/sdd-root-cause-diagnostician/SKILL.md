@@ -1,3 +1,8 @@
+---
+name: sdd-root-cause-diagnostician
+description: Dota al enjambre de capacidades explicativas profundas al detectar fallas en las Fases de Calidad y Construcción.
+---
+
 # Skill: SDD Root Cause Diagnostician
 
 Esta habilidad dota al enjambre de Inteligencia Artificial de capacidades explicativas profundas al detectar fallas en las Fases de Calidad (F3) y Construcción (F2), impidiendo bucles correctivos infinitos mediante el aislamiento del error real y la inyección de guías de remediación inmediatas.

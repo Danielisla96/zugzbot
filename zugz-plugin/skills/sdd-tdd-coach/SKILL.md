@@ -1,5 +1,6 @@
 ---
-description: "Coach de disciplina TDD para guiar a los subagentes F2-RED, F2-GREEN y F2-REFACTOR en el ciclo Red→Green→Refactor."
+name: sdd-tdd-coach
+description: Coach de disciplina TDD para guiar a los subagentes F2-RED, F2-GREEN y F2-REFACTOR en el ciclo Red-Green-Refactor.
 ---
 
 # 🔴🟢🔵 TDD Coach

@@ -1,3 +1,8 @@
+---
+name: sdd-clean-architecture
+description: Instruye en principios de desacoplamiento modular para evitar la creación de archivos gigantescos que saturen el contexto.
+---
+
 # Skill: SDD Clean Architecture
 
 Instruye al `@sdd-builder` en principios de desacoplamiento modular para evitar la creación de archivos gigantescos que saturen el contexto de edición.

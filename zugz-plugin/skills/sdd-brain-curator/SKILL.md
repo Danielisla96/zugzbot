@@ -1,3 +1,8 @@
+---
+name: sdd-brain-curator
+description: Instruye sobre cómo sintetizar y empaquetar aprendizajes en el archivo de memoria brain.md, evitando duplicación de contexto.
+---
+
 # Skill: SDD Brain Curator
 
 Instruye al `@sdd-archiver` sobre cómo sintetizar y empaquetar aprendizajes en el archivo de memoria `brain.md`, evitando duplicación de contexto y optimizando la comprensión de la IA en futuras iteraciones.
