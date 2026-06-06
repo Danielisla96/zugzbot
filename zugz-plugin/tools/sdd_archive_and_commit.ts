@@ -139,7 +139,10 @@ export default tool({
     bypassPendingTasks: tool.schema.boolean().optional().default(false).describe("Ignorar/Bypassear la verificación de tareas pendientes en el lockfile si el usuario aprobó manualmente o es un flujo QA Manual")
   },
   async execute(args, context) {
-    const projectRoot = context.worktree || context.directory
+    let projectRoot = context.worktree || context.directory || process.cwd()
+    if (projectRoot === "/") {
+      projectRoot = process.cwd()
+    }
     const changeDir = path.join(projectRoot, ".openspec/changes", args.changeName)
 
     if (!fs.existsSync(changeDir)) {

@@ -57,9 +57,13 @@ Llama a `sdd_diff_impact_analyzer` con el change_name para mapear archivos afect
 
 Si el spec requiere nuevas deps, valida con `check_dependency_cooldown` cada una (3+ días publicadas).
 
-### 4. Generación del spec
-
-Crea `.openspec/changes/<change-name>/specs/spec.md` siguiendo la plantilla canónica (ver contract).
+Crea `.openspec/changes/<change-name>/specs/spec.md` siguiendo la plantilla canónica de forma obligatoria para pasar la validación F1.5 (spec reviewer):
+- Título principal exacto: `# Plano Técnico`
+- Sección 1: `## 1. Diagnóstico y Archivos Afectados` (Lista los archivos involucrados usando backticks y especifica el rango de líneas, ej. `main.ts` (Líneas 10-35)).
+- Sección 2: `## 2. Requerimientos` (Detalle de lo solicitado).
+- Sección 3: `## 3. Propuesta de Solución` (Describe la arquitectura detalladamente con más de 50 caracteres).
+- Sección 4: `## 4. Especificaciones BDD` (Escenarios detallados usando cláusulas explícitas Given / When / Then).
+- Sección 5: `## 5. Criterios de Aceptación` (Debe contener al menos 1 checkbox vacío `- [ ]` para cada criterio de aceptación).
 
 ### 5. Criterios TESTEABLES (CRÍTICO para F1.5)
 

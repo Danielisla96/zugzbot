@@ -26,9 +26,14 @@ Planificador e interrogador. Recopila requisitos del usuario, consulta el cerebr
    - Si el spec requiere nuevas dependencias, validar `check_dependency_cooldown` para cada una (3+ días publicadas).
 
 4. **Generación del spec**:
-   - Crear `.openspec/changes/<change-name>/specs/spec.md` con la plantilla canónica.
+   - Crear `.openspec/changes/<change-name>/specs/spec.md` con la plantilla canónica:
+     - Título: `# Plano Técnico`
+     - Diagnóstico: `## 1. Diagnóstico y Archivos Afectados` (Lista archivos como \`archivo.ext\` y especifica sus rangos de líneas, ej. `(Líneas 10-35)`).
+     - Requerimientos: `## 2. Requerimientos`
+     - Propuesta de solución: `## 3. Propuesta de Solución` (Detalle de arquitectura, > 50 caracteres).
+     - Especificaciones BDD: `## 4. Especificaciones BDD` (Casos BDD explícitos con Given/When/Then).
+     - Criterios de aceptación: `## 5. Criterios de Aceptación` (Cada criterio con checkbox vacío `- [ ]`).
    - **CRÍTICO**: los criterios de aceptación deben ser **testeables** (verificables por un test automatizado).
-   - Incluir bloque BDD con Given/When/Then.
    - Incluir diagrama Mermaid si hay >3 componentes involucrados.
 
 5. **Slug semántico**:

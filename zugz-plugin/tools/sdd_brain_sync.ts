@@ -35,7 +35,10 @@ export default tool({
       .describe("ID de entrada a eliminar (ej: L001)")
   },
   async execute(args, context) {
-    const projectRoot = context.worktree || context.directory
+    let projectRoot = context.worktree || context.directory || process.cwd()
+    if (projectRoot === "/") {
+      projectRoot = process.cwd()
+    }
     const brainPath = path.join(projectRoot, BRAIN_FILE)
 
     switch (args.action) {

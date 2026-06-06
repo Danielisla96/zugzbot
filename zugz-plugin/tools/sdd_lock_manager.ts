@@ -155,7 +155,10 @@ export default tool({
       .describe("Confirmación explícita requerida para acciones destructivas (reset, write)")
   },
   async execute(args, context) {
-    const projectRoot = context.worktree || context.directory
+    let projectRoot = context.worktree || context.directory || process.cwd()
+    if (projectRoot === "/") {
+      projectRoot = process.cwd()
+    }
 
     switch (args.action) {
       case "read": {

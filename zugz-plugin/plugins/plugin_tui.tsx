@@ -14,7 +14,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
 
         // --- Constantes del lockfile v2 (deben coincidir con tools/sdd_transition.ts) ---
         const getZugzbotVersion = (): string => {
-          const fallback = "2.0.12"
+          const fallback = "2.0.13"
           try {
             const localPkgPath = path.join(process.cwd(), "package.json")
             if (fs.existsSync(localPkgPath)) {

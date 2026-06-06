@@ -53,8 +53,15 @@ export default tool({
     maxDepth: tool.schema.number().optional().default(2).describe("Nivel máximo de profundidad para el escaneo recursivo de directorios (por defecto 2, máx 3)")
   },
   async execute(args, context) {
-    const projectRoot = context.worktree || context.directory
+    let projectRoot = context.worktree || context.directory || process.cwd()
+    if (projectRoot === "/") {
+      projectRoot = process.cwd()
+    }
     const depth = Math.min(Math.max(args.maxDepth, 1), 3)
+
+    if (projectRoot === "/" || projectRoot.startsWith("/usr") || projectRoot.startsWith("/System") || projectRoot.startsWith("/private")) {
+      return "Error: No se permite escanear directorios raíz del sistema para evitar fuga de tokens."
+    }
 
     const tree = buildTreeString(projectRoot, "", 0, depth)
     const projectName = path.basename(projectRoot)
