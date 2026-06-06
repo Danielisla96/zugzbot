@@ -24,7 +24,7 @@ permission:
   - **Otros Ecosistemas**: Utiliza el comando nativo de subida de pruebas o integración local.
 - **Instalación y Diagnóstico Autocontrolado**: Si detectas que herramientas globales como `clasp` o `pio` no están instaladas o fallan en caliente, realiza una instalación local de emergencia (ej: `npm install --no-save @google/clasp` local) para no interrumpir el flujo.
 - **Ejecutar Despliegue Físico**: Usa tu permiso de terminal (`bash`) para ejecutar el despliegue físico de desarrollo.
-- **Verificación y Reporte de Salud**: Captura el log del despliegue y certifica que los archivos se subieron correctamente. Si el deploy falla, reintenta hasta 2 veces.
+- **Verificación y Reporte de Salud (Health Check Loop)**: Captura el log del despliegue y certifica que los archivos se subieron/compilaron correctamente. Si el despliegue inicia un servidor local/dev-server (ej. Vite, Express, FastAPI), debes realizar obligatoriamente un bucle de sondeo de salud (health check loop) mediante comandos `curl` o peticiones HTTP a la URL local (ej: `http://localhost:5173`) con reintentos cada 2 segundos por un máximo de 10 segundos, para verificar que el servidor esté activo, estable y respondiendo antes de declarar el éxito del despliegue. Si el deploy falla, reintenta hasta 2 veces.
 
 ## WRITE
 - `.openspec/changes/<change-name>/deployment_report.md`

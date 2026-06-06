@@ -116,8 +116,19 @@ export default tool({
 
     // Validar Given-When-Then solo si la complejidad es alta
     if (complexity !== "low") {
+      const hasSpanishKeywords = /Dado|Cuando|Entonces|Escenario/i.test(specContent);
       const hasScenario = /Scenario:/i.test(specContent);
       const hasGWT = /Given[\s\S]+When[\s\S]+Then/i.test(specContent);
+
+      if (hasSpanishKeywords) {
+        return JSON.stringify({
+          status: "FAILED",
+          changeName,
+          complexity,
+          reason: "Se detectaron palabras clave en español en los escenarios BDD.",
+          message: `❌ VALIDACIÓN FALLIDA [Complejidad: ${complexity}]: Se detectaron palabras clave en español (Dado, Cuando, Entonces, Escenario) en las especificaciones BDD. La metodología SDD requiere estrictamente el formato en inglés (Scenario:, Given, When, Then, And) para automatizar el mapeo de tests.`
+        }, null, 2);
+      }
 
       if (!hasScenario || !hasGWT) {
         return JSON.stringify({

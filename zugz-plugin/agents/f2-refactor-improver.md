@@ -57,15 +57,13 @@ Por cada mejora identificada:
 3. Si un test falla → **rollback** del cambio y reintentar.
 4. Si pasa → siguiente mejora.
 
-### 3. Linter estricto
+### 3. Linter y Formateo Unificado
 
-Al final, llama a `sdd_linter` con `action: "check"`:
-- Si `errors_found: true` → aplica `action: "fix"` si está disponible, sino corrige manualmente.
-- Re-corre hasta que `errors: 0`.
-
-### 4. Formateo (opcional)
-
-Si el profile tiene formatter (prettier, black, gofmt, rustfmt), aplícalo.
+Al final, ejecuta el linter y el formateador de forma integrada para evitar loops o discrepancias estilísticas:
+1. Llama a `sdd_linter` con `action: "check"`.
+2. Si `errors_found: true`, aplica `action: "fix"` si está disponible, o corrige manualmente.
+3. Si el profile tiene un formateador (ej: Prettier, Black, gofmt), ejecútalo inmediatamente después de corregir el linter para asegurar que el formateo del código cumpla con los estándares.
+4. Vuelve a correr `sdd_linter` con `action: "check"` para asegurar que el formateador no haya introducido advertencias de estilo o linter. Repite hasta que `errors: 0` y el formateo sea consistente.
 
 ### 5. Brain sync (opcional)
 

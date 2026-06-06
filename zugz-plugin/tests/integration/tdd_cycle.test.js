@@ -111,7 +111,7 @@ Feature: Validación de email
     const reviewParsed = JSON.parse(review);
     expect(reviewParsed.status).toBe('SUCCESS');
     expect(reviewParsed.verdict).toBe('APPROVED');
-    expect(reviewParsed.score).toMatch(/8\/8/);
+    expect(reviewParsed.score).toMatch(/9\/9/);
 
     // F1.5 → F2-RED
     r = await sddTransition.execute({

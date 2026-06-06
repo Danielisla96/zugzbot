@@ -141,7 +141,7 @@ Feature: Validación de email
       await specReviewer.execute({ action: 'validate' }, context)
     );
     expect(review.verdict).toBe('APPROVED');
-    expect(review.score).toMatch(/8\/8/);
+    expect(review.score).toMatch(/9\/9/);
 
     await sddTransition.execute({
       nextPhase: 'F1.5', status: 'in_progress', reason: 'Spec listo para revisión'
