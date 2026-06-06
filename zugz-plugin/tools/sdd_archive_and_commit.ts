@@ -34,6 +34,98 @@ function moveRecursive(src: string, dest: string) {
   }
 }
 
+function autoUpdateGitignore(projectRoot: string, report: string[]) {
+  const gitignorePath = path.join(projectRoot, ".gitignore")
+  let currentRules: string[] = []
+  
+  if (fs.existsSync(gitignorePath)) {
+    try {
+      currentRules = fs.readFileSync(gitignorePath, "utf-8")
+        .split("\n")
+        .map(line => line.trim())
+        .filter(line => line && !line.startsWith("#"))
+    } catch {}
+  }
+
+  let untrackedLines: string[] = []
+  try {
+    const stdout = execSync("git status --porcelain", { cwd: projectRoot, encoding: "utf-8" })
+    untrackedLines = stdout.split("\n")
+      .filter(line => line.startsWith("?? "))
+      .map(line => line.substring(3).trim())
+  } catch (err) {
+    return
+  }
+
+  if (untrackedLines.length === 0) return
+
+  const rules = [
+    { test: /(^|\/)\.DS_Store$/, pattern: ".DS_Store" },
+    { test: /(^|\/)node_modules\/?$/, pattern: "node_modules/" },
+    { test: /(^|\/)dist\/?$/, pattern: "dist/" },
+    { test: /(^|\/)build\/?$/, pattern: "build/" },
+    { test: /(^|\/)out\/?$/, pattern: "out/" },
+    { test: /(^|\/)target\/?$/, pattern: "target/" },
+    { test: /(^|\/)coverage\/?$/, pattern: "coverage/" },
+    { test: /(^|\/)\.nyc_output\/?$/, pattern: ".nyc_output/" },
+    { test: /\.log$/, pattern: "*.log" },
+    { test: /\.tmp$/, pattern: "*.tmp" },
+    { test: /\.temp$/, pattern: "*.temp" },
+    { test: /(^|\/)\.env(\..+)?$/, pattern: ".env\n.env.*\n.env.local" },
+    { test: /(^|\/)__pycache__\/?$/, pattern: "__pycache__/" },
+    { test: /\.py[cod]$/, pattern: "*.py[cod]" },
+    { test: /(^|\/)\.venv\/?$/, pattern: ".venv/" },
+    { test: /(^|\/)venv\/?$/, pattern: "venv/" },
+    { test: /(^|\/)env\/?$/, pattern: "env/" },
+    { test: /(^|\/)\.pytest_cache\/?$/, pattern: ".pytest_cache/" },
+    { test: /\.pem$/, pattern: "*.pem" },
+    { test: /\.key$/, pattern: "*.key" }
+  ]
+
+  const addedPatterns = new Set<string>()
+
+  for (const item of untrackedLines) {
+    let matched = false
+    for (const rule of rules) {
+      if (rule.test.test(item)) {
+        matched = true
+        const gitignorePatterns = rule.pattern.split("\n")
+        for (const gp of gitignorePatterns) {
+          if (!currentRules.includes(gp) && !addedPatterns.has(gp)) {
+            addedPatterns.add(gp)
+          }
+        }
+        break
+      }
+    }
+
+    if (!matched) {
+      report.push(`⚠️ Archivo no trackeado detectado: ${item}. Si es un archivo generado, considera agregarlo a tu .gitignore.`)
+    }
+  }
+
+  if (addedPatterns.size > 0) {
+    try {
+      let content = ""
+      if (fs.existsSync(gitignorePath)) {
+        content = fs.readFileSync(gitignorePath, "utf-8")
+        if (content && !content.endsWith("\n")) {
+          content += "\n"
+        }
+      }
+      content += `\n# Agregado automáticamente por Zugzbot (Detección Inteligente)\n`
+      for (const pattern of addedPatterns) {
+        content += `${pattern}\n`
+        report.push(`✓ Auto-ignorado en .gitignore: ${pattern}`)
+      }
+      fs.writeFileSync(gitignorePath, content, "utf-8")
+    } catch (e: any) {
+      report.push(`⚠️ Error actualizando .gitignore: ${e.message}`)
+    }
+  }
+}
+
+
 export default tool({
   description: "Cierra el ciclo SDD de forma atómica: realiza el bump SemVer, inyecta lecciones en el cerebro, documenta en CHANGELOG, archiva el directorio de cambios y realiza el commit de cierre de Git.",
   args: {
@@ -282,6 +374,9 @@ Este reporte detalla la telemetría de tokens y coste financiero en USD acumulad
     // 7. Confirmación Git Atómica (incluye la carpeta archivada y la eliminación de la activa)
     if (fs.existsSync(path.join(projectRoot, ".git"))) {
       try {
+        // Detección Inteligente de Gitignore para archivos generados/temporales antes del add/commit
+        autoUpdateGitignore(projectRoot, report)
+
         execSync("git add .", { cwd: projectRoot, stdio: "ignore" })
         execSync("git commit -F -", { cwd: projectRoot, input: args.commitMessage + "\n", stdio: ["pipe", "ignore", "ignore"] })
         report.push(`✓ Commit de Git ejecutado usando el mensaje semántico (incluye archivos archivados)`)

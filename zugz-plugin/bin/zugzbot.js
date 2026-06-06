@@ -63,6 +63,33 @@ zugz-models.json
 node_modules/
 .opencode/
 package-lock.json
+
+# Sistema / OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Compilados y salidas de construcción
+dist/
+build/
+out/
+target/
+coverage/
+.nyc_output/
+
+# Entornos y Secretos
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
 `
 
 const BRAIN_TEMPLATE = `# 🧠 Brain del Proyecto
