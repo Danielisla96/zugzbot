@@ -28,15 +28,20 @@ export default tool({
 
   Esta herramienta NO hace commit ni push. Para commit, usar sdd_archive_and_commit.`,
   args: {
-    action: tool.schema.enum(["status", "branch", "diff", "stash", "pop_stash"])
+    action: tool.schema.enum(["status", "branch", "diff", "stash", "pop_stash", "checkout_branch"])
       .describe("Acción a ejecutar"),
     message: tool.schema.string().optional()
       .describe("Mensaje del stash (para action=stash)"),
     confirm: tool.schema.boolean().optional().default(false)
-      .describe("Confirmación explícita para acciones mutables (stash, pop_stash)")
+      .describe("Confirmación explícita para acciones mutables (stash, pop_stash, checkout_branch)"),
+    branchName: tool.schema.string().optional()
+      .describe("Nombre de la rama a crear o cambiar (para action=checkout_branch)")
   },
   async execute(args, context) {
-    const projectRoot = context.worktree || context.directory
+    let projectRoot = context.worktree || context.directory || process.cwd()
+    if (projectRoot === "/") {
+      projectRoot = process.cwd()
+    }
 
     if (!isGitRepo(projectRoot)) {
       return JSON.stringify({
@@ -135,6 +140,39 @@ export default tool({
       return JSON.stringify({
         status: "SUCCESS",
         message: "Stash recuperado.",
+        output: result.stdout
+      }, null, 2)
+    }
+    if (args.action === "checkout_branch") {
+      if (!args.confirm) {
+        return JSON.stringify({
+          status: "FAILED",
+          reason: "Se requiere confirm=true para cambiar de rama."
+        }, null, 2)
+      }
+      if (!args.branchName) {
+        return JSON.stringify({
+          status: "FAILED",
+          reason: "Falta 'branchName' para cambiar de rama."
+        }, null, 2)
+      }
+      
+      // Intentar cambiar de rama, si falla (no existe localmente), crearla con checkout -b
+      let result = safeExec(`git checkout ${args.branchName}`, projectRoot)
+      if (!result.ok) {
+        result = safeExec(`git checkout -b ${args.branchName}`, projectRoot)
+      }
+      
+      if (!result.ok) {
+        return JSON.stringify({
+          status: "FAILED",
+          reason: `No se pudo cambiar ni crear la rama: ${result.stderr}`
+        }, null, 2)
+      }
+      
+      return JSON.stringify({
+        status: "SUCCESS",
+        message: `Rama establecida en ${args.branchName}.`,
         output: result.stdout
       }, null, 2)
     }

@@ -29,7 +29,9 @@ Leer `specs/spec.md`, extraer los criterios de aceptación BDD, y traducirlos a 
 ### Reglas
 
 - **PROHIBIDO** escribir código de producción. Solo tests.
-- Cada criterio de aceptación BDD → al menos un test.
+- **Cobertura Adaptativa según Complejidad (Evitar sobre-testing):**
+  - **Complejidad "low" (Baja):** Escribir una suite mínima (máximo 3-5 casos de test clave: happy path principal, caso de borde crítico y 1 caso de error). No sobre-testear ni generar tests redundantes.
+  - **Complejidad "medium" o "high" (Media/Alta):** Cada criterio de aceptación BDD → al menos un test executable (cobertura exhaustiva).
 - Los tests deben ser **fáciles de fallar primero**: usar aserciones claras, no mocks innecesarios.
 - Confirmar con `sdd_test_runner` que **todos los tests nuevos fallen** antes de transicionar a GREEN.
 - Si un test pasa a la primera (no falla), **es un bug**: reportar a F1.5 para revisar el spec.
