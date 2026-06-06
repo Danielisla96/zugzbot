@@ -114,6 +114,27 @@ export function autoUpdateGitignore(projectRoot: string, report: string[]) {
     }
 
     if (!matched) {
+      const basename = path.basename(item)
+      if (
+        basename.toLowerCase().includes("cache") ||
+        basename.toLowerCase().includes("tmp") ||
+        basename.toLowerCase().includes("temp") ||
+        basename.toLowerCase().endsWith(".log") ||
+        (basename.startsWith(".") && (item.includes("/") || fs.existsSync(path.join(projectRoot, item)) && fs.statSync(path.join(projectRoot, item)).isDirectory()))
+      ) {
+        let isDir = false
+        try {
+          isDir = fs.statSync(path.join(projectRoot, item)).isDirectory()
+        } catch {}
+        const pattern = isDir ? `${item}/` : item
+        if (!currentRules.includes(pattern) && !addedPatterns.has(pattern)) {
+          addedPatterns.add(pattern)
+        }
+        matched = true
+      }
+    }
+
+    if (!matched) {
       report.push(`⚠️ Archivo no trackeado detectado: ${item}. Si es un archivo generado, considera agregarlo a tu .gitignore.`)
     }
   }
