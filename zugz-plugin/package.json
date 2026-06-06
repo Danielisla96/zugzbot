@@ -1,6 +1,6 @@
 {
   "name": "zugzbot-sdd",
-  "version": "2.0.37",
+  "version": "2.0.38",
   "description": "Zugzbot v2.0.0 - Stack-Agnostic SDD Harness with TDD Discipline for OpenCode",
   "main": "index.js",
   "type": "module",
@@ -12,9 +12,9 @@
     "lint:fix": "eslint . --ext .js,.ts,.tsx,.jsx,.html --fix",
     "test": "vitest run",
     "test:static": "node tools/sdd_ui_auditor.ts src",
-    "build": "tsc",
-    "typecheck": "tsc --noEmit",
-    "prepublishOnly": "tsc"
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit -p tsconfig.build.json",
+    "prepublishOnly": "tsc -p tsconfig.build.json"
   },
   "keywords": [
     "sdd",
