@@ -20,7 +20,8 @@ describe('Tool Scripts Existence (v2)', () => {
     'sdd_ui_auditor.js',
     'sdd_archive_and_commit.js',
     'sdd_brain_sync.js',
-    'sdd_auto_healer.js'
+    'sdd_auto_healer.js',
+    'sdd_dependency_installer.js'
   ];
 
   tools.forEach(tool => {

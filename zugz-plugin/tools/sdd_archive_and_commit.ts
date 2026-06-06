@@ -419,10 +419,16 @@ Este reporte detalla la telemetría de tokens y coste financiero en USD acumulad
         autoUpdateGitignore(projectRoot, report)
 
         execSync("git add .", { cwd: projectRoot, stdio: "ignore" })
-        execSync("git commit -F -", { cwd: projectRoot, input: args.commitMessage + "\n", stdio: ["pipe", "ignore", "ignore"] })
+        try {
+          execSync("git commit -F -", { cwd: projectRoot, input: args.commitMessage + "\n", stdio: ["pipe", "ignore", "ignore"] })
+        } catch {
+          execSync("git config user.email \"zugzbot@sdd.local\"", { cwd: projectRoot, stdio: "ignore" })
+          execSync("git config user.name \"Zugzbot SDD\"", { cwd: projectRoot, stdio: "ignore" })
+          execSync("git commit -F -", { cwd: projectRoot, input: args.commitMessage + "\n", stdio: ["pipe", "ignore", "ignore"] })
+        }
         report.push(`✓ Commit de Git ejecutado usando el mensaje semántico (incluye archivos archivados)`)
       } catch (e: any) {
-        report.push(`⚠️ Git Commit falló o no había cambios pendientes de código: ${e.message}`)
+        report.push(`⚠️ Git Commit falló: ${e.message}`)
       }
     }
 

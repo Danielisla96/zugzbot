@@ -14,14 +14,136 @@ function safeExec(cmd: string, cwd: string, timeoutMs = 60000): { ok: true; stdo
   }
 }
 
-function detectActiveLinter(projectRoot: string, profile: StackProfile): { name: string; cmd: string } | null {
-  for (const linter of profile.linters) {
-    if (linter.detect === null) continue
-    if (fs.existsSync(path.join(projectRoot, linter.detect))) {
-      return linter
+function isMissingCommandError(stderr: string, code: number): boolean {
+  const lower = stderr.toLowerCase()
+  return (
+    code === 127 ||
+    code === 126 ||
+    lower.includes("not found") ||
+    lower.includes("no such file") ||
+    lower.includes("enoent") ||
+    lower.includes("cannot find module") ||
+    lower.includes("not recognized as an internal")
+  )
+}
+
+function tryInstallLinter(linterName: string, cwd: string): boolean {
+  try {
+    if (["eslint", "biome", "tsc"].includes(linterName)) {
+      const pkg = linterName === "tsc" ? "typescript" : (linterName === "biome" ? "@biomejs/biome" : linterName)
+      let hasPackageJson = false
+      let checkDir = cwd
+      for (let i = 0; i < 4; i++) {
+        if (fs.existsSync(path.join(checkDir, "package.json"))) {
+          hasPackageJson = true
+          break
+        }
+        const parent = path.dirname(checkDir)
+        if (parent === checkDir) break
+        checkDir = parent
+      }
+      if (hasPackageJson) {
+        execSync(`npm install --save-dev ${pkg}`, { cwd: checkDir, stdio: "inherit" })
+      } else {
+        execSync(`npm install -g ${pkg}`, { stdio: "inherit" })
+      }
+      return true
+    } else if (["ruff", "flake8", "pylint", "mypy", "black"].includes(linterName)) {
+      let pipCmd = "pip"
+      try {
+        execSync("which pip3", { stdio: "ignore" })
+        pipCmd = "pip3"
+      } catch {}
+      execSync(`${pipCmd} install ${linterName}`, { cwd, stdio: "inherit" })
+      return true
+    }
+  } catch {
+    // Silent fail if install fails
+  }
+  return false
+}
+
+
+function findDetectFile(dir: string, pattern: string, maxDepth = 3): string | null {
+  if (maxDepth < 0) return null
+  if (!fs.existsSync(dir)) return null
+  
+  let entries: string[] = []
+  try {
+    entries = fs.readdirSync(dir)
+  } catch {
+    return null
+  }
+  
+  const isGlob = pattern.includes("*")
+  const prefix = isGlob ? pattern.split("*")[0] : pattern
+  const suffix = isGlob ? pattern.split("*")[1] : ""
+  
+  // Try to find in the current directory first
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry)
+    let stat
+    try {
+      stat = fs.statSync(fullPath)
+    } catch {
+      continue
+    }
+    
+    if (stat.isFile()) {
+      if (isGlob) {
+        if (entry.startsWith(prefix) && (suffix === "" || entry.endsWith(suffix))) {
+          return dir
+        }
+      } else {
+        if (entry === pattern) {
+          return dir
+        }
+      }
     }
   }
-  return profile.linters[0] || null
+  
+  // Try subdirectories
+  const excludeDirs = [
+    "node_modules", ".git", ".openspec", ".opencode", "dist", "build", ".next", "coverage", "__pycache__", ".pytest_cache",
+    "bin", "boot", "dev", "etc", "home", "lib", "lib64", "media", "mnt", "opt", "proc", "root", "run", "sbin", "srv", "sys", "tmp", "usr", "var"
+  ]
+  for (const entry of entries) {
+    if (excludeDirs.includes(entry)) continue
+    const fullPath = path.join(dir, entry)
+    let stat
+    try {
+      stat = fs.statSync(fullPath)
+    } catch {
+      continue
+    }
+    
+    if (stat.isDirectory()) {
+      const foundDir = findDetectFile(fullPath, pattern, maxDepth - 1)
+      if (foundDir) return foundDir
+    }
+  }
+  
+  return null
+}
+
+interface DetectedLinter {
+  name: string
+  cmd: string
+  cwd: string
+}
+
+function detectActiveLinter(projectRoot: string, profile: StackProfile): DetectedLinter | null {
+  for (const linter of profile.linters) {
+    if (linter.detect === null) continue
+    const detectedDir = findDetectFile(projectRoot, linter.detect)
+    if (detectedDir) {
+      return { name: linter.name, cmd: linter.cmd, cwd: detectedDir }
+    }
+  }
+  if (profile.linters.length > 0) {
+    return { name: profile.linters[0].name, cmd: profile.linters[0].cmd, cwd: projectRoot }
+  }
+  return null
 }
 
 export default tool({
@@ -46,6 +168,12 @@ export default tool({
     if (projectRoot === "/") {
       projectRoot = process.cwd()
     }
+    if (projectRoot === "/" || projectRoot.startsWith("/usr") || projectRoot.startsWith("/System") || projectRoot.startsWith("/private")) {
+      return JSON.stringify({
+        status: "FAILED",
+        reason: "No se permite escanear o ejecutar linters en directorios raíz del sistema."
+      }, null, 2)
+    }
     const lock = readLockfile(projectRoot)
     const profileId = lock.stack_profile || "unknown"
     const profile = getProfileById(projectRoot, profileId) || loadAllProfiles(projectRoot).find(() => true)
@@ -67,7 +195,7 @@ export default tool({
     }
 
     const linter = args.linter
-      ? profile.linters.find(l => l.name === args.linter)
+      ? (profile.linters.find(l => l.name === args.linter) ? { name: args.linter, cmd: profile.linters.find(l => l.name === args.linter)!.cmd, cwd: projectRoot } : null)
       : detectActiveLinter(projectRoot, profile)
 
     if (!linter) {
@@ -89,7 +217,14 @@ export default tool({
       else if (linter.name === "rustfmt") cmd = `cargo fmt ${args.specificPath || ""}`
     }
 
-    const result = safeExec(cmd, projectRoot)
+    let result = safeExec(cmd, linter.cwd)
+
+    if (!result.ok && isMissingCommandError(result.stderr, result.code)) {
+      const installed = tryInstallLinter(linter.name, linter.cwd)
+      if (installed) {
+        result = safeExec(cmd, linter.cwd)
+      }
+    }
 
     return JSON.stringify({
       status: result.ok ? "SUCCESS" : "FAILED",

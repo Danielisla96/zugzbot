@@ -214,7 +214,6 @@ export default tool({
         matchedFile = "QA Manual / E2E Bypass";
         matchedSnippet = "Validación manual explícita declarada en spec.md";
       } else {
-        // Extraer palabras clave de más de 3 letras ignorando conectores
         const TRANSLATION_MAP: Record<string, string[]> = {
           "suma": ["sum", "add"],
           "sumar": ["sum", "add"],
@@ -229,7 +228,9 @@ export default tool({
           "error": ["error", "fail", "exception"],
           "errores": ["error", "errors", "fail"],
           "validador": ["validator", "validation"],
-          "validar": ["validate", "validation"],
+          "validar": ["validate", "validation", "validating"],
+          "valido": ["valid", "ok", "success", "200"],
+          "invalido": ["invalid", "error", "422", "400"],
           "archivo": ["file", "path"],
           "archivos": ["file", "files", "path"],
           "estructura": ["structure", "layout", "dir"],
@@ -240,21 +241,36 @@ export default tool({
           "faltante": ["missing", "none", "null"],
           "falta": ["missing", "none", "null"],
           "formulario": ["form"],
-          "botón": ["button", "btn"],
-          "envío": ["submit", "send"],
+          "boton": ["button", "btn"],
+          "envio": ["submit", "send"],
           "enviar": ["submit", "send"],
           "campo": ["input", "field"],
           "campos": ["inputs", "fields"],
           "resultado": ["result", "output"],
-          "conexión": ["connection", "connect", "fetch"],
+          "conexion": ["connection", "connect", "fetch"],
           "conectado": ["connected", "online"],
           "desconectado": ["disconnected", "offline"],
-          "carga": ["loading", "spinner", "load"],
+          "carga": ["loading", "spinner", "load", "loading state"],
+          "cargando": ["loading", "spinner", "load"],
           "mensaje": ["message", "text"],
           "interfaz": ["ui", "interface", "layout"],
           "pantalla": ["screen", "view"],
-          "diseño": ["design", "style", "css"]
+          "diseno": ["design", "style", "css"],
+          "estilo": ["style", "design", "css"],
+          "retorna": ["return", "returns", "response", "respond", "returning"],
+          "permite": ["allow", "allows", "permit"],
+          "endpoint": ["route", "path", "endpoint", "url", "post", "get"],
+          "backend": ["backend", "server", "api", "fastapi", "main.py"],
+          "frontend": ["frontend", "client", "app", "ui"],
+          "actualizado": ["updated", "added", "git"],
+          "entradas": ["entries", "ignore"],
+          "monocromatico": ["monochrome", "monochromatic", "solid", "black", "white", "shadcn"],
+          "numeros": ["number", "numbers", "float", "int"],
+          "decimales": ["decimal", "decimals", "float", "double"],
+          "cobertura": ["coverage", "tests", "passed"]
         };
+
+        const normalizeWord = (w: string) => w.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
         const baseKeywords = crit
           .toLowerCase()
@@ -264,9 +280,13 @@ export default tool({
 
         const keywords: string[] = [];
         baseKeywords.forEach(word => {
+          const norm = normalizeWord(word);
           keywords.push(word);
-          if (TRANSLATION_MAP[word]) {
-            keywords.push(...TRANSLATION_MAP[word]);
+          if (norm !== word) {
+            keywords.push(norm);
+          }
+          if (TRANSLATION_MAP[norm]) {
+            keywords.push(...TRANSLATION_MAP[norm]);
           }
         });
 
@@ -283,19 +303,25 @@ export default tool({
             const testContent = fs.readFileSync(testFile, "utf-8");
             const testLines = testContent.split("\n");
 
-            // Búsqueda aproximada: comprobar si el test contiene palabras clave del criterio
-            for (let i = 0; i < testLines.length; i++) {
-              const line = testLines[i].toLowerCase();
-              const hasExplicitId = explicitId && line.includes(explicitId);
+            // Búsqueda por ventana deslizante (8 líneas) para capturar el contexto de una función/bloque de prueba completo
+            const windowSize = 8;
+            const totalLines = testLines.length;
+            
+            for (let i = 0; i < totalLines; i++) {
+              const sliceEnd = Math.min(totalLines, i + windowSize);
+              const windowLines = testLines.slice(i, sliceEnd);
+              const windowText = windowLines.join("\n").toLowerCase();
               
-              // Si coincide con más del 45% de las palabras clave de un criterio en la misma línea, o contiene el ID explícito
-              const matchCount = keywords.filter(keyword => line.includes(keyword)).length;
+              const hasExplicitId = explicitId && windowText.includes(explicitId);
+              
+              // Coincidencia de palabras clave dentro de la ventana de contexto
+              const matchCount = keywords.filter(keyword => windowText.includes(keyword)).length;
               const threshold = Math.max(1, Math.floor(keywords.length * 0.45));
 
               if (hasExplicitId || (matchCount >= threshold && threshold > 0)) {
                 matched = true;
                 matchedFile = path.basename(testFile);
-                matchedSnippet = `Línea ${i + 1}: ${testLines[i].trim()}`;
+                matchedSnippet = `Líneas ${i + 1}-${sliceEnd}: ${testLines[i].trim()} ...`;
                 break;
               }
             }

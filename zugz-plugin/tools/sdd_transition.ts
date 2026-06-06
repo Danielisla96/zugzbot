@@ -380,7 +380,13 @@ export default tool({
           // Si el repo está vacío, hacemos commit inicial para definir HEAD y evitar errores
           execSync("git add .gitignore", { cwd: projectRoot, stdio: "ignore" })
           try {
-            execSync("git commit -m \"chore: initial commit with base .gitignore\"", { cwd: projectRoot, stdio: "ignore" })
+            try {
+              execSync("git commit -m \"chore: initial commit with base .gitignore\"", { cwd: projectRoot, stdio: "ignore" })
+            } catch {
+              execSync("git config user.email \"zugzbot@sdd.local\"", { cwd: projectRoot, stdio: "ignore" })
+              execSync("git config user.name \"Zugzbot SDD\"", { cwd: projectRoot, stdio: "ignore" })
+              execSync("git commit -m \"chore: initial commit with base .gitignore\"", { cwd: projectRoot, stdio: "ignore" })
+            }
             isRepoEmpty = false
             currentBranch = execSync("git rev-parse --abbrev-ref HEAD", { cwd: projectRoot, encoding: "utf-8" }).trim()
           } catch {}
@@ -412,7 +418,15 @@ export default tool({
 
         if (hasStagedChanges) {
           const commitMsg = `docs(sdd): transición a ${args.nextPhase} - ${args.reason.replace(/"/g, '\\"').slice(0, 60)}`
-          execSync(`git commit -m "${commitMsg}"`, { cwd: projectRoot, stdio: "ignore" })
+          try {
+            execSync(`git commit -m "${commitMsg}"`, { cwd: projectRoot, stdio: "ignore" })
+          } catch {
+            try {
+              execSync("git config user.email \"zugzbot@sdd.local\"", { cwd: projectRoot, stdio: "ignore" })
+              execSync("git config user.name \"Zugzbot SDD\"", { cwd: projectRoot, stdio: "ignore" })
+              execSync(`git commit -m "${commitMsg}"`, { cwd: projectRoot, stdio: "ignore" })
+            } catch {}
+          }
           gitStatus = ` [Git: Rama '${branchName}' actualizada con commit inicial]`
         } else {
           gitStatus = ` [Git: Sin cambios nuevos en .openspec/]`

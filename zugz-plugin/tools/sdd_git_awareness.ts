@@ -3,6 +3,7 @@ import { execSync } from "child_process"
 import fs from "fs"
 import path from "path"
 import { autoUpdateGitignore } from "./sdd_archive_and_commit.js"
+import { sanitizeGitPath } from "./git_utils.js"
 
 function safeExec(cmd: string, cwd: string): { ok: true; stdout: string } | { ok: false; stderr: string } {
   try {
@@ -99,7 +100,12 @@ export default tool({
       if (fs.existsSync(path.join(projectRoot, "opencode.json"))) {
         safeExec("git add opencode.json", projectRoot)
       }
-      safeExec("git commit -m \"chore: initial commit with base configurations\"", projectRoot)
+      let commitRes = safeExec("git commit -m \"chore: initial commit with base configurations\"", projectRoot)
+      if (!commitRes.ok) {
+        safeExec("git config user.email \"zugzbot@sdd.local\"", projectRoot)
+        safeExec("git config user.name \"Zugzbot SDD\"", projectRoot)
+        commitRes = safeExec("git commit -m \"chore: initial commit with base configurations\"", projectRoot)
+      }
 
       // 4. Si se especificó una rama de trabajo, crearla e ir a ella
       let activeBranch = "main"
@@ -144,7 +150,7 @@ export default tool({
       const porcelain = safeExec("git status --porcelain", projectRoot)
       const clean = porcelain.ok ? porcelain.stdout === "" : true
       const files = porcelain.ok && porcelain.stdout
-        ? porcelain.stdout.split("\n").filter(Boolean)
+        ? porcelain.stdout.split("\n").filter(Boolean).map(sanitizeGitPath)
         : []
       return JSON.stringify({
         status: "SUCCESS",

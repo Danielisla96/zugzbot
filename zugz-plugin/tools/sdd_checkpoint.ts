@@ -1,4 +1,5 @@
 import { tool } from "@opencode-ai/plugin"
+import { execSync } from "child_process"
 import fs from "fs"
 import path from "path"
 
@@ -11,6 +12,7 @@ interface Checkpoint {
   status: string
   iteration: number
   lock_snapshot: any
+  git_sha?: string
 }
 
 export default tool({
@@ -46,6 +48,15 @@ export default tool({
     }
 
     if (args.action === "save") {
+      let gitSha: string | undefined = undefined
+      try {
+        if (fs.existsSync(path.join(projectRoot, ".git"))) {
+          gitSha = execSync("git rev-parse HEAD", { cwd: projectRoot, encoding: "utf-8" }).trim()
+        }
+      } catch {
+        // Git not active or failed
+      }
+
       const checkpoint: Checkpoint = {
         id: Date.now(),
         timestamp: new Date().toISOString(),
@@ -54,7 +65,8 @@ export default tool({
         change_name: lockfile.change_name || "nuevo-cambio",
         status: lockfile.status || "idle",
         iteration: lockfile.iteration || 0,
-        lock_snapshot: { ...lockfile }
+        lock_snapshot: { ...lockfile },
+        git_sha: gitSha
       }
 
       const historyPath = path.join(checkpointsDir, "checkpoint_history.jsonl")
@@ -114,6 +126,17 @@ export default tool({
         return `[SDD Checkpoint] ERROR: No se encontro checkpoint para los parametros dados.`
       }
 
+      if (targetCheckpoint.git_sha) {
+        try {
+          if (fs.existsSync(path.join(projectRoot, ".git"))) {
+            execSync(`git reset --hard ${targetCheckpoint.git_sha}`, { cwd: projectRoot, stdio: "inherit" })
+            execSync("git clean -fd", { cwd: projectRoot, stdio: "inherit" })
+          }
+        } catch (e: any) {
+          console.error(`[SDD Checkpoint] Warning: Git restore failed: ${e.message || e}`)
+        }
+      }
+
       const restoredLock = {
         ...targetCheckpoint.lock_snapshot,
         active_phase: args.phase ?? targetCheckpoint.phase,
@@ -123,7 +146,7 @@ export default tool({
 
       fs.writeFileSync(lockfilePath, JSON.stringify(restoredLock, null, 2), "utf-8")
 
-      return `[SDD Checkpoint] Restaurado checkpoint #${targetCheckpoint.id} (Fase ${targetCheckpoint.phase}). Estado del lockfile restaurado.`
+      return `[SDD Checkpoint] Restaurado checkpoint #${targetCheckpoint.id} (Fase ${targetCheckpoint.phase}). Estado del lockfile y repositorio restaurados.`
     }
 
     if (args.action === "clear") {

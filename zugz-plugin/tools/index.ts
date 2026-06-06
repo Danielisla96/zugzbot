@@ -33,3 +33,6 @@ export { default as sdd_context_pruner } from './sdd_context_pruner.js';
 export { default as sdd_clasp } from './sdd_clasp.js';
 export { default as sdd_auto_healer } from './sdd_auto_healer.js';
 export { default as sdd_graphify } from './sdd_graphify.js';
+export { default as sdd_dependency_installer } from './sdd_dependency_installer.js';
+export { default as sdd_create_custom_skill } from './sdd_create_custom_skill.js';
+

@@ -52,3 +52,6 @@ package-lock.json
 !zugz-plugin/package.json
 !zugz-plugin/tsconfig.json
 !zugz-plugin/eslint.config.js
+
+
+export_ses_*

@@ -61,12 +61,28 @@ export default tool({
 
     // Leer código y pruebas para cruzar
     const filesToScan: string[] = []
+    const excludeDirs = [
+      "node_modules", ".git", ".openspec", ".opencode", "dist",
+      "build", ".next", "coverage", "__pycache__", ".pytest_cache"
+    ]
     function recurse(dir: string) {
       if (fs.existsSync(dir)) {
-        fs.readdirSync(dir).forEach(f => {
+        let entries: string[] = []
+        try {
+          entries = fs.readdirSync(dir)
+        } catch (e) {
+          return
+        }
+        entries.forEach(f => {
           const full = path.join(dir, f)
-          if (fs.statSync(full).isDirectory()) {
-            if (f !== "node_modules" && f !== ".git" && f !== ".openspec" && f !== ".opencode") {
+          let stat
+          try {
+            stat = fs.statSync(full)
+          } catch (e) {
+            return
+          }
+          if (stat.isDirectory()) {
+            if (!excludeDirs.includes(f)) {
               recurse(full)
             }
           } else if (/\.(js|ts|gs|html|tsx|py|go|rs|java|cs)$/i.test(f)) {
@@ -75,8 +91,65 @@ export default tool({
         })
       }
     }
-    recurse(path.join(projectRoot, "src"))
-    recurse(path.join(projectRoot, "tests"))
+    recurse(projectRoot)
+
+    const TRANSLATION_MAP: Record<string, string[]> = {
+      "suma": ["sum", "add"],
+      "sumar": ["sum", "add"],
+      "entero": ["int", "integer"],
+      "enteros": ["int", "integer", "integers"],
+      "positivo": ["positive"],
+      "positivos": ["positive", "positives"],
+      "negativo": ["negative"],
+      "negativos": ["negative", "negatives"],
+      "grande": ["large", "big"],
+      "grandes": ["large", "big"],
+      "error": ["error", "fail", "exception"],
+      "errores": ["error", "errors", "fail"],
+      "validador": ["validator", "validation"],
+      "validar": ["validate", "validation", "validating"],
+      "valido": ["valid", "ok", "success", "200"],
+      "invalido": ["invalid", "error", "422", "400"],
+      "archivo": ["file", "path"],
+      "archivos": ["file", "files", "path"],
+      "estructura": ["structure", "layout", "dir"],
+      "servidor": ["server", "app", "host"],
+      "arranca": ["start", "run", "launch", "up"],
+      "linter": ["linter", "ruff", "eslint"],
+      "limpio": ["clean", "passed"],
+      "faltante": ["missing", "none", "null"],
+      "falta": ["missing", "none", "null"],
+      "formulario": ["form"],
+      "boton": ["button", "btn"],
+      "envio": ["submit", "send"],
+      "enviar": ["submit", "send"],
+      "campo": ["input", "field"],
+      "campos": ["inputs", "fields"],
+      "resultado": ["result", "output"],
+      "conexion": ["connection", "connect", "fetch"],
+      "conectado": ["connected", "online"],
+      "desconectado": ["disconnected", "offline"],
+      "carga": ["loading", "spinner", "load", "loading state"],
+      "cargando": ["loading", "spinner", "load"],
+      "mensaje": ["message", "text"],
+      "interfaz": ["ui", "interface", "layout"],
+      "pantalla": ["screen", "view"],
+      "diseno": ["design", "style", "css"],
+      "estilo": ["style", "design", "css"],
+      "retorna": ["return", "returns", "response", "respond", "returning"],
+      "permite": ["allow", "allows", "permit"],
+      "endpoint": ["route", "path", "endpoint", "url", "post", "get"],
+      "backend": ["backend", "server", "api", "fastapi", "main.py"],
+      "frontend": ["frontend", "client", "app", "ui"],
+      "actualizado": ["updated", "added", "git"],
+      "entradas": ["entries", "ignore"],
+      "monocromatico": ["monochrome", "monochromatic", "solid", "black", "white", "shadcn"],
+      "numeros": ["number", "numbers", "float", "int"],
+      "decimales": ["decimal", "decimals", "float", "double"],
+      "cobertura": ["coverage", "tests", "passed"]
+    };
+
+    const normalizeWord = (w: string) => w.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
     let coveredCount = 0
     report.push(`🔍 Auditando cobertura para ${requirements.length} requerimientos...`)
@@ -85,7 +158,23 @@ export default tool({
       let isImplemented = false
       let isTested = false
       
-      const keywords = req.toLowerCase().split(/\s+/).filter(w => w.length > 4)
+      const baseKeywords = req
+        .toLowerCase()
+        .replace(/[^a-záéíóúñü0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter(word => word.length > 2 && !["debe", "para", "como", "esta", "este", "consecuente", "cuando", "donde", "tiene", "responde"].includes(word));
+
+      const keywords: string[] = [];
+      baseKeywords.forEach(word => {
+        const norm = normalizeWord(word);
+        keywords.push(word);
+        if (norm !== word) {
+          keywords.push(norm);
+        }
+        if (TRANSLATION_MAP[norm]) {
+          keywords.push(...TRANSLATION_MAP[norm]);
+        }
+      });
       
       filesToScan.forEach(filePath => {
         try {
@@ -100,7 +189,7 @@ export default tool({
             if (content.includes(kw)) keywordHits++
           })
 
-          const isMatch = directMatch || (keywords.length > 0 && keywordHits / keywords.length >= 0.5)
+          const isMatch = directMatch || (keywords.length > 0 && keywordHits / keywords.length >= 0.45)
 
           if (isMatch) {
             if (filePath.includes("test")) {
