@@ -348,13 +348,28 @@ export default tool({
     if (fs.existsSync(path.join(projectRoot, ".git")) && lock.change_name && isValidChangeName(lock.change_name)) {
       try {
         const branchName = `sdd/change-${lock.change_name}`
-        const currentBranch = execSync("git rev-parse --abbrev-ref HEAD", { cwd: projectRoot, encoding: "utf-8" }).trim()
-        // Verificar si el repositorio está vacío (sin commits) para evitar errores con HEAD
         let isRepoEmpty = false
         try {
           execSync("git rev-parse HEAD", { cwd: projectRoot, stdio: "ignore" })
         } catch {
           isRepoEmpty = true
+        }
+
+        let currentBranch = "main"
+        if (!isRepoEmpty) {
+          try {
+            currentBranch = execSync("git rev-parse --abbrev-ref HEAD", { cwd: projectRoot, encoding: "utf-8" }).trim()
+          } catch {}
+        }
+
+        if (isRepoEmpty) {
+          // Si el repo está vacío, hacemos commit inicial para definir HEAD y evitar errores
+          execSync("git add .gitignore", { cwd: projectRoot, stdio: "ignore" })
+          try {
+            execSync("git commit -m \"chore: initial commit with base .gitignore\"", { cwd: projectRoot, stdio: "ignore" })
+            isRepoEmpty = false
+            currentBranch = execSync("git rev-parse --abbrev-ref HEAD", { cwd: projectRoot, encoding: "utf-8" }).trim()
+          } catch {}
         }
 
         if (currentBranch !== branchName) {
@@ -367,12 +382,7 @@ export default tool({
           if (branchExists) {
             execSync(`git checkout ${branchName}`, { cwd: projectRoot, stdio: "ignore" })
           } else {
-            // Si el repo está vacío, no se puede hacer checkout -b directo con HEAD ausente, se crea rama simple
-            if (isRepoEmpty) {
-              execSync(`git checkout -b ${branchName}`, { cwd: projectRoot, stdio: "ignore" })
-            } else {
-              execSync(`git checkout -b ${branchName}`, { cwd: projectRoot, stdio: "ignore" })
-            }
+            execSync(`git checkout -b ${branchName}`, { cwd: projectRoot, stdio: "ignore" })
           }
         }
 

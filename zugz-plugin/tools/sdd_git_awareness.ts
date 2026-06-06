@@ -59,19 +59,8 @@ export default tool({
           message: "El repositorio ya existe, no se requiere inicializar."
         }, null, 2)
       }
-      
-      const gitInit = safeExec("git init", projectRoot)
-      if (!gitInit.ok) {
-        return JSON.stringify({
-          status: "FAILED",
-          reason: `Fallo al ejecutar git init: ${gitInit.stderr}`
-        }, null, 2)
-      }
-      
-      // Intentar forzar main como rama por defecto
-      safeExec("git checkout -b main", projectRoot)
 
-      // Configurar un .gitignore por defecto si no existe
+      // 1. Configurar un .gitignore por defecto si no existe antes de git init
       const gitignorePath = path.join(projectRoot, ".gitignore")
       if (!fs.existsSync(gitignorePath)) {
         const defaultGitignore = [
@@ -83,19 +72,47 @@ export default tool({
           "build/",
           ".env",
           "*.log",
-          ".openspec/sdd-lock.json", // el lockfile suele no comitearse si el usuario lo prefiere, o sí. Dejamos que el usuario decida pero por defecto no ignoramos openspec entera
+          ".openspec/sdd-lock.json",
           "!.openspec/"
         ].join("\n")
         fs.writeFileSync(gitignorePath, defaultGitignore, "utf-8")
       }
-      
+
       // Auto-update gitignore para agregar temporales de tests
       const report: string[] = []
       autoUpdateGitignore(projectRoot, report)
+      
+      // 2. Inicializar git
+      const gitInit = safeExec("git init", projectRoot)
+      if (!gitInit.ok) {
+        return JSON.stringify({
+          status: "FAILED",
+          reason: `Fallo al ejecutar git init: ${gitInit.stderr}`
+        }, null, 2)
+      }
+      
+      // Intentar forzar main como rama por defecto
+      safeExec("git checkout -b main", projectRoot)
+
+      // 3. Crear commit inicial con .gitignore y opencode.json si existen para definir HEAD
+      safeExec("git add .gitignore", projectRoot)
+      if (fs.existsSync(path.join(projectRoot, "opencode.json"))) {
+        safeExec("git add opencode.json", projectRoot)
+      }
+      safeExec("git commit -m \"chore: initial commit with base configurations\"", projectRoot)
+
+      // 4. Si se especificó una rama de trabajo, crearla e ir a ella
+      let activeBranch = "main"
+      if (args.branchName) {
+        const branchRes = safeExec(`git checkout -b ${args.branchName}`, projectRoot)
+        if (branchRes.ok) {
+          activeBranch = args.branchName
+        }
+      }
 
       return JSON.stringify({
         status: "SUCCESS",
-        message: "Repositorio Git inicializado correctamente con rama main y .gitignore configurado.",
+        message: `Repositorio Git inicializado correctamente, commit inicial creado y rama establecida en '${activeBranch}'.`,
         gitignore_report: report
       }, null, 2)
     }
