@@ -328,6 +328,14 @@ export default tool({
       try {
         const branchName = `sdd/change-${lock.change_name}`
         const currentBranch = execSync("git rev-parse --abbrev-ref HEAD", { cwd: projectRoot, encoding: "utf-8" }).trim()
+        // Verificar si el repositorio está vacío (sin commits) para evitar errores con HEAD
+        let isRepoEmpty = false
+        try {
+          execSync("git rev-parse HEAD", { cwd: projectRoot, stdio: "ignore" })
+        } catch {
+          isRepoEmpty = true
+        }
+
         if (currentBranch !== branchName) {
           let branchExists = false
           try {
@@ -338,15 +346,29 @@ export default tool({
           if (branchExists) {
             execSync(`git checkout ${branchName}`, { cwd: projectRoot, stdio: "ignore" })
           } else {
-            execSync(`git checkout -b ${branchName}`, { cwd: projectRoot, stdio: "ignore" })
+            // Si el repo está vacío, no se puede hacer checkout -b directo con HEAD ausente, se crea rama simple
+            if (isRepoEmpty) {
+              execSync(`git checkout -b ${branchName}`, { cwd: projectRoot, stdio: "ignore" })
+            } else {
+              execSync(`git checkout -b ${branchName}`, { cwd: projectRoot, stdio: "ignore" })
+            }
           }
         }
-        execSync("git add .openspec/", { cwd: projectRoot, stdio: "ignore" })
-        const hasStagedChanges = execSync("git diff --cached --name-only", { cwd: projectRoot, encoding: "utf-8" }).trim().length > 0
+
+        execSync("git add .openspec/ .gitignore", { cwd: projectRoot, stdio: "ignore" })
+        
+        let hasStagedChanges = false
+        if (isRepoEmpty) {
+          // En reposo vacío, si hay archivos staged, git diff falla. Asumimos true.
+          hasStagedChanges = true
+        } else {
+          hasStagedChanges = execSync("git diff --cached --name-only", { cwd: projectRoot, encoding: "utf-8" }).trim().length > 0
+        }
+
         if (hasStagedChanges) {
           const commitMsg = `docs(sdd): transición a ${args.nextPhase} - ${args.reason.replace(/"/g, '\\"').slice(0, 60)}`
           execSync(`git commit -m "${commitMsg}"`, { cwd: projectRoot, stdio: "ignore" })
-          gitStatus = ` [Git: Rama '${branchName}' actualizada]`
+          gitStatus = ` [Git: Rama '${branchName}' actualizada con commit inicial]`
         } else {
           gitStatus = ` [Git: Sin cambios nuevos en .openspec/]`
         }

@@ -5,6 +5,14 @@ Todas las versiones notables del proyecto Zugzbot SDD se documentan aquí.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.0.34] - 2026-06-06 — Fix transiciones HIL-B y Git en Repos Vacíos
+
+### 🐛 Fixes
+- **`plugins/plugin_tui.tsx`**: Corrección de la validación del estado `isCompleted` en HIL-A y HIL-B. Se comparaba contra fases previas (`F1.5` y `F4`) impidiendo que el sidebar se actualizara visualmente al avanzar a `F5` o `DONE`. Ahora compara correctamente contra sus propios índices en `PHASE_ORDER`.
+- **`tools/sdd_transition.ts`**: Prevención del error visual de `HEAD` en repositorios vacíos (recién inicializados sin commits) al evaluar cambios staged. Si no hay commits iniciales en el repositorio Git, la transición asume cambios iniciales para estructurar el primer commit y crear la rama `sdd/change-<name>` sin fallar.
+
+---
+
 ## [2.0.33] - 2026-06-06 — Distribución de Design Skills en Plantilla
 
 ### 🐛 Fixes

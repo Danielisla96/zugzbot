@@ -399,7 +399,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                     }
                     if (phase === "HIL-A") {
                       isActive = (current === "F1.5" && status === "awaiting_hil")
-                      isCompleted = curIdx > phaseIndex("F1.5") || (current === "F1.5" && status === "spec_approved")
+                      isCompleted = curIdx > phaseIndex("HIL-A") || (current === "F1.5" && status === "spec_approved")
                     }
                     if (phase === "F4" && status === "awaiting_hil") {
                       isActive = false
@@ -407,7 +407,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                     }
                     if (phase === "HIL-B") {
                       isActive = (current === "F4" && status === "awaiting_hil")
-                      isCompleted = curIdx > phaseIndex("F4") || (current === "F4" && status === "qa_validated")
+                      isCompleted = curIdx > phaseIndex("HIL-B") || (current === "F4" && status === "qa_validated")
                     }
 
                     const isHil = phase === "HIL-A" || phase === "HIL-B"
