@@ -31,10 +31,13 @@ acceptance_criteria:
 ## 1. Diagnóstico y Archivos Afectados
 El diagnóstico detallado del cambio y la justificación técnica de la afectación.
 
+## 2. Consenso de Encuesta con el Usuario
+Breve resumen de las aclaraciones y decisiones tomadas en consenso con el usuario.
+
 ## 3. Propuesta de Solución
 Detalle preciso de la arquitectura propuesta, cambios lógicos y diseño técnico (debe tener al menos 50 caracteres).
 
-## 4. Especificaciones BDD
+## 4. Especificaciones BDD (Comportamiento)
 Casos de prueba BDD escritos estrictamente en inglés usando las cláusulas:
 - Given
 - When
