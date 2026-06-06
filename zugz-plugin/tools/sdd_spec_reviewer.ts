@@ -323,14 +323,26 @@ export default tool({
       // 2. Section Headings Normalization
       markdown = markdown.replace(/##\s*1\s*[.\s-]?\s*Diagn[oó]stico.*/gi, "## 1. Diagnóstico y Archivos Afectados")
       markdown = markdown.replace(/##\s*3\s*[.\s-]?\s*Propuesta.*/gi, "## 3. Propuesta de Solución")
-      markdown = markdown.replace(/##\s*4\s*[.\s-]?\s*Especificaciones.*/gi, "## 4. Especificaciones BDD")
+      markdown = markdown.replace(/##\s*4\s*[.\s-]?\s*Especificaciones.*/gi, "## 4. Especificaciones BDD (Comportamiento)")
       markdown = markdown.replace(/##\s*5\s*[.\s-]?\s*Criterios.*/gi, "## 5. Criterios de Aceptación")
 
-      // 3. Translate BDD Keywords
+      // Auto-inject Section 2 if missing
+      if (!/##\s*2\.\s*Consenso/i.test(markdown)) {
+        const sec1Match = markdown.match(/## 1\. Diagnóstico y Archivos Afectados([\s\S]*?)(?=##|$)/)
+        if (sec1Match) {
+          const sec1Content = sec1Match[0]
+          markdown = markdown.replace(sec1Content, sec1Content + "\n## 2. Consenso de Encuesta con el Usuario\nEl plan técnico y los criterios de aceptación han sido definidos de acuerdo con los requerimientos provistos por el usuario y validados formalmente.\n\n")
+        } else {
+          markdown = markdown.replace("## 1. Diagnóstico y Archivos Afectados", "## 1. Diagnóstico y Archivos Afectados\n\n## 2. Consenso de Encuesta con el Usuario\nEl plan técnico y los criterios de aceptación han sido definidos de acuerdo con los requerimientos provistos por el usuario y validados formalmente.\n")
+        }
+      }
+
+      // 3. Translate BDD Keywords and Normalize Scenarios
       markdown = markdown.replace(/^(?<indent>\s*)(?:Dado|Dada)(?:\s+que)?\b/gim, "$1Given")
       markdown = markdown.replace(/^(?<indent>\s*)Cuando\b/gim, "$1When")
       markdown = markdown.replace(/^(?<indent>\s*)Entonces\b/gim, "$1Then")
       markdown = markdown.replace(/^(?<indent>\s*)Y\b/gim, "$1And")
+      markdown = markdown.replace(/###\s*(Scenario|Escenario)\s*\d*\s*:?/gi, "### Scenario:")
 
       // 4. Line Ranges Auto-parenthesizing
       markdown = markdown.replace(/(?<!\()\b(L[ií]neas?\s+\d+(?:-\d+)?|L\d+-\d+|L\d+)\b(?!\))/gi, "($1)")

@@ -156,7 +156,7 @@ export default tool({
         return `[SDD Transition Blocked] No existe spec.md para el change '${lock.change_name}'. F1 debe crearlo antes de F1.5.`
       }
 
-      // Validar el Spec usando sdd_spec_reviewer
+      // 1. Validar el Spec usando sdd_spec_reviewer
       const reviewerResultObj: any = await specReviewer.execute({ action: "validate", specPath }, context)
       const reviewerResultStr = typeof reviewerResultObj === "string"
         ? reviewerResultObj
@@ -171,6 +171,20 @@ export default tool({
         }
       } catch (e: any) {
         return `[SDD Transition Blocked] Fallo crítico al validar el Spec con sdd_spec_reviewer: ${e.message}`
+      }
+
+      // 2. Validar también con sdd_spec_validator para asegurar formato mandatorio de secciones y placeholders
+      const validatorResultObj: any = await specValidator.execute({ changeName: lock.change_name }, context)
+      const validatorResultStr = typeof validatorResultObj === "string"
+        ? validatorResultObj
+        : (validatorResultObj?.output || "")
+      try {
+        const result = JSON.parse(validatorResultStr)
+        if (result.status === "FAILED") {
+          return `[SDD Transition Blocked] Spec rechazado en F1.5 por incumplimiento de formato de secciones obligatorias:\n\n${result.message}`
+        }
+      } catch (e: any) {
+        return `[SDD Transition Blocked] Fallo crítico al validar el formato del Spec con sdd_spec_validator: ${e.message}`
       }
     }
 

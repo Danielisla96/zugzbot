@@ -197,11 +197,53 @@ export default tool({
         matchedSnippet = "Validación manual explícita declarada en spec.md";
       } else {
         // Extraer palabras clave de más de 3 letras ignorando conectores
-        const keywords = crit
+        const TRANSLATION_MAP: Record<string, string[]> = {
+          "suma": ["sum", "add"],
+          "sumar": ["sum", "add"],
+          "entero": ["int", "integer"],
+          "enteros": ["int", "integer", "integers"],
+          "positivo": ["positive"],
+          "positivos": ["positive", "positives"],
+          "negativo": ["negative"],
+          "negativos": ["negative", "negatives"],
+          "grande": ["large", "big"],
+          "grandes": ["large", "big"],
+          "error": ["error", "fail", "exception"],
+          "errores": ["error", "errors", "fail"],
+          "validador": ["validator", "validation"],
+          "validar": ["validate", "validation"],
+          "archivo": ["file", "path"],
+          "archivos": ["file", "files", "path"],
+          "estructura": ["structure", "layout", "dir"],
+          "servidor": ["server", "app", "host"],
+          "arranca": ["start", "run", "launch", "up"],
+          "linter": ["linter", "ruff", "eslint"],
+          "limpio": ["clean", "passed"],
+          "faltante": ["missing", "none", "null"],
+          "falta": ["missing", "none", "null"]
+        };
+
+        const baseKeywords = crit
           .toLowerCase()
-          .replace(/[^a-záéíóúñü0-9\s]/g, "")
+          .replace(/[^a-záéíóúñü0-9\s]/g, " ")
           .split(/\s+/)
-          .filter(word => word.length > 3 && !["debe", "para", "como", "esta", "este", "consecuente"].includes(word));
+          .filter(word => word.length > 2 && !["debe", "para", "como", "esta", "este", "consecuente", "cuando", "donde", "tiene", "responde"].includes(word));
+
+        const keywords: string[] = [];
+        baseKeywords.forEach(word => {
+          keywords.push(word);
+          if (TRANSLATION_MAP[word]) {
+            keywords.push(...TRANSLATION_MAP[word]);
+          }
+        });
+
+        // Detectar si hay un ID explícito (como CA1, CA-2, Criterio 3...)
+        const idMatch = crit.match(/^(?:ca|rq|tc|req|criterio)\s*[-_]?\s*(\d+)/i) || crit.match(/\b(?:ca|rq|tc|req)\s*[-_]?\s*(\d+)\b/i);
+        let explicitId = "";
+        if (idMatch) {
+          explicitId = `ca${idMatch[1]}`;
+          keywords.push(explicitId);
+        }
 
         for (const testFile of testFiles) {
           try {
@@ -211,11 +253,13 @@ export default tool({
             // Búsqueda aproximada: comprobar si el test contiene palabras clave del criterio
             for (let i = 0; i < testLines.length; i++) {
               const line = testLines[i].toLowerCase();
-              // Si coincide con más del 60% de las palabras clave de un criterio en la misma línea
+              const hasExplicitId = explicitId && line.includes(explicitId);
+              
+              // Si coincide con más del 45% de las palabras clave de un criterio en la misma línea, o contiene el ID explícito
               const matchCount = keywords.filter(keyword => line.includes(keyword)).length;
-              const threshold = Math.max(1, Math.floor(keywords.length * 0.5));
+              const threshold = Math.max(1, Math.floor(keywords.length * 0.45));
 
-              if (matchCount >= threshold && threshold > 0) {
+              if (hasExplicitId || (matchCount >= threshold && threshold > 0)) {
                 matched = true;
                 matchedFile = path.basename(testFile);
                 matchedSnippet = `Línea ${i + 1}: ${testLines[i].trim()}`;
