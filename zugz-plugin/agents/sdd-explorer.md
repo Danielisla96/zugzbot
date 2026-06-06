@@ -52,15 +52,15 @@ Llama a `sdd_stack_detector` con `action: "detect"` para identificar el `stack_p
 
 Llama a `sdd_lock_manager` con `action: "update"` y `patch: { "stack_profile": "<id>" }` para guardar el stack detectado en el lockfile v2. Esto es crítico: todos los agentes de F2+ lo leerán.
 
-### 3. Capturar contexto Git
+### 3. Capturar contexto Git e inicializar si es necesario
 
-Llama a `sdd_git_awareness` con `action: "status"` para registrar:
-- Rama activa
-- SHA base
-- Working tree limpio o sucio
-- Archivos modificados (si los hay)
+Llama a `sdd_git_awareness` con `action: "status"`.
+- Si el resultado es `FAILED` indicando que no es un repositorio Git, **llama inmediatamente a `sdd_git_awareness` con `action: "init", confirm: true`** para inicializar el repositorio Git con la rama principal `main` y un `.gitignore` por defecto.
+- Una vez inicializado o si ya existía, lee `action: "status"` y persiste la información en el lockfile con `action: "set_git"`.
 
-Persiste en el lockfile con `action: "set_git"`.
+### 3.5. Ejecutar autoskills para obtener mejores prácticas y soporte
+
+Si detectas que la carpeta `skills/` en `.opencode/` o en la raíz no contiene las skills del ecosistema del proyecto (o quieres actualizarlas debido a nuevas dependencias detectadas), ejecuta la herramienta correspondiente para correr `npx autoskills --yes`. Esto instalará y actualizará de forma dinámica y silenciosa las skills alineadas con el `stack_profile` detectado. Las Design Skills estarán disponibles para cualquier edición de UI subsiguiente.
 
 ### 4. Escanear estructura del proyecto
 

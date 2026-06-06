@@ -82,9 +82,10 @@ Siguiente acción: [qué agente viene o qué espera el orquestador]
 
 ---
 
-## 7. Memoria Técnica (`brain.md`)
+## 7. Memoria Técnica y Aprendizaje de Loops (`brain.md`)
 
 - **Solo registra aprendizajes de alto valor y no triviales** (bugs complejos de librerías, peculiaridades de ESM/CJS, workarounds de bundlers, decisiones arquitectónicas clave).
+- **Registro Obligatorio de Corrective Loops**: Si experimentas un bucle de corrección (es decir, una fase donde un linter falló, un test en verde falló inicialmente, o un error de importación/sintaxis te obligó a iterar más de 2 veces) y logras resolver el problema con éxito, **debes registrar obligatoriamente la solución** llamando a `sdd_brain_sync` con la acción `add`, documentando el bug y la resolución exacta para prevenir que el swarm cometa el mismo error en turnos futuros.
 - **PROHIBIDO** editar `brain.md` directamente con `write`/`edit`. Usa SIEMPRE la herramienta `sdd_brain_sync` con acción `add`.
 - **PROHIBIDO** duplicar entradas (la herramienta detecta duplicados por tag+problem).
 

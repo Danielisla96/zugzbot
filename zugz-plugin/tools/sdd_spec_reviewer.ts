@@ -182,6 +182,53 @@ function checkArchitectureDescription(spec: string, markdown: string): SpecCheck
   }
 }
 
+function checkUIDesignSkill(spec: string, frontmatter: any, markdown: string): SpecCheck {
+  let isUI = false
+  let files: string[] = []
+  if (frontmatter && Array.isArray(frontmatter.affected_files)) {
+    files = frontmatter.affected_files
+  } else {
+    const fileMatches = [...markdown.matchAll(/`([^`]+\.\w+)`/g)]
+    files = fileMatches.map(m => m[1])
+  }
+
+  const uiExtensions = /\.(tsx|jsx|css|html|svelte|vue)$/i
+  isUI = files.some(f => uiExtensions.test(f))
+
+  if (!isUI) {
+    return {
+      name: "ui_design_skill",
+      description: "Si el cambio es backend/no-UI, no se requiere Design Skill",
+      pass: true,
+      details: "No se detectaron archivos de Frontend o estilos"
+    }
+  }
+
+  // Verificar si menciona alguna Design Skill en el frontmatter o en el cuerpo del Markdown
+  // Comprobamos si hay una propiedad "design_skill" o si el texto menciona "Design Skill: <nombre>"
+  let hasDesignSkill = false
+  let skillName = ""
+  if (frontmatter && frontmatter.design_skill) {
+    hasDesignSkill = true
+    skillName = frontmatter.design_skill
+  } else {
+    const match = markdown.match(/design[-_]skill:\s*(\w+)/i) || markdown.match(/design\s+skill:\s*(\w+)/i)
+    if (match) {
+      hasDesignSkill = true
+      skillName = match[1]
+    }
+  }
+
+  return {
+    name: "ui_design_skill",
+    description: "Si el cambio involucra UI, debe especificar una Design Skill (ej: glassmorphism, neobrutalism, bento)",
+    pass: hasDesignSkill,
+    details: hasDesignSkill 
+      ? `Diseño consistente usando la skill: ${skillName}`
+      : "❌ Se detectaron archivos UI pero no se especificó ninguna 'design_skill' en el Spec para asegurar un diseño consistente."
+  }
+}
+
 export default tool({
   description: `Validador de testeabilidad del spec (Fase 1.5). Lee el spec.md y verifica que cumpla las condiciones mínimas para que pueda derivarse en tests ejecutables. Supports YAML frontmatter and Markdown fallback.
   
@@ -308,6 +355,7 @@ export default tool({
       const yamlPart = [
         "---",
         `change_name: "${frontmatter?.change_name || changeName}"`,
+        `design_skill: "${frontmatter?.design_skill || ""}"`,
         "affected_files:",
         ...(Array.isArray(frontmatter?.affected_files) ? frontmatter.affected_files.map((f: string) => `  - "${f}"`) : ["  - \"src/\""]),
         "acceptance_criteria:",
@@ -332,7 +380,8 @@ export default tool({
       checkTestability(spec),
       checkFilesHaveLineRanges(spec, frontmatter, markdown),
       checkChangeNameInSpec(spec, frontmatter, markdown),
-      checkArchitectureDescription(spec, markdown)
+      checkArchitectureDescription(spec, markdown),
+      checkUIDesignSkill(spec, frontmatter, markdown)
     ]
 
     const passed = checks.filter(c => c.pass).length

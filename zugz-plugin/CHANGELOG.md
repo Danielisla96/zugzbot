@@ -5,6 +5,27 @@ Todas las versiones notables del proyecto Zugzbot SDD se documentan aquí.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.0.32] - 2026-06-06 — Git Init, Autoskills, Design Skills & Corrective Loops
+
+### ✨ Features
+- **Auto-Setup Git en F0**: Se implementó la acción `init` en `sdd_git_awareness.ts` para inicializar el repositorio y estructurar el `.gitignore` por defecto.
+- **Autoskills Integrado**: El agente `sdd-explorer` ahora corre `npx autoskills` al inicializarse el proyecto y en fases intermedias si las dependencias cambian.
+- **Enforcer de Design Skills**: `sdd_spec_reviewer.ts` y el boundary de F1.5 ahora exigen e invalidan specs UI que no definan una `design_skill` para guías consistentes de diseño.
+- **Persistencia de Corrective Loops**: Regla en `subagent-base.md` para obligar a los subagentes a guardar aprendizajes del proceso de depuración en `brain.md` usando `sdd_brain_sync`.
+
+---
+
+## [2.0.31] - 2026-06-06 — Fix Orphan Text en plugin_tui.tsx
+
+### 🐛 Fixes
+
+- **`plugins/plugin_tui.tsx`**: corrección del error fatal `Orphan text error: "" must have a <text> as a parent` en opentui. El patrón `{condition && <jsx>}` retorna `false` cuando la condición falla, y opentui intenta renderizarlo como nodo de texto huérfano. Los tres renders condicionales afectados fueron reemplazados por ternarios `condition ? <jsx> : null`:
+  - `{sddProgress() && (...)}` → `{sddProgress() ? (...) : null}`
+  - `{isActive && agent && (...)}` → `{(isActive && agent) ? (...) : null}`
+  - `{branch && branch !== "—" && (...)}` → `{(branch && branch !== "—") ? (...) : null}`
+
+---
+
 ## [2.0.10] - 2026-06-05 — Fix detección legacy y versión dinámica
 
 ### 🐛 Fixes

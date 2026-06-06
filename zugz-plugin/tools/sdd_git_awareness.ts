@@ -18,9 +18,10 @@ function isGitRepo(projectRoot: string): boolean {
 }
 
 export default tool({
-  description: `Awareness de Git para el swarm. Proporciona información del estado del repo sin ejecutar mutaciones.
+  description: `Awareness de Git para el swarm. Proporciona información del estado del repo o inicializa el mismo.
   
   Acciones:
+  - "init": Inicializa el repositorio si no existe, crea una rama inicial (main) y configura el .gitignore base.
   - "status": Rama activa, SHA base, si el working tree está limpio, y archivos modificados.
   - "branch": Solo la rama activa.
   - "diff": Diff de archivos modificados vs HEAD (resumido).
@@ -30,12 +31,12 @@ export default tool({
 
   Esta herramienta NO hace commit ni push. Para commit, usar sdd_archive_and_commit.`,
   args: {
-    action: tool.schema.enum(["status", "branch", "diff", "stash", "pop_stash", "checkout_branch", "update_gitignore"])
+    action: tool.schema.enum(["init", "status", "branch", "diff", "stash", "pop_stash", "checkout_branch", "update_gitignore"])
       .describe("Acción a ejecutar"),
     message: tool.schema.string().optional()
       .describe("Mensaje del stash (para action=stash)"),
     confirm: tool.schema.boolean().optional().default(false)
-      .describe("Confirmación explícita para acciones mutables (stash, pop_stash, checkout_branch, update_gitignore)"),
+      .describe("Confirmación explícita para acciones mutables (stash, pop_stash, checkout_branch, update_gitignore, init)"),
     branchName: tool.schema.string().optional()
       .describe("Nombre de la rama a crear o cambiar (para action=checkout_branch)")
   },
@@ -45,10 +46,64 @@ export default tool({
       projectRoot = process.cwd()
     }
 
+    if (args.action === "init") {
+      if (!args.confirm) {
+        return JSON.stringify({
+          status: "FAILED",
+          reason: "Se requiere confirm=true para inicializar el repositorio."
+        }, null, 2)
+      }
+      if (isGitRepo(projectRoot)) {
+        return JSON.stringify({
+          status: "SUCCESS",
+          message: "El repositorio ya existe, no se requiere inicializar."
+        }, null, 2)
+      }
+      
+      const gitInit = safeExec("git init", projectRoot)
+      if (!gitInit.ok) {
+        return JSON.stringify({
+          status: "FAILED",
+          reason: `Fallo al ejecutar git init: ${gitInit.stderr}`
+        }, null, 2)
+      }
+      
+      // Intentar forzar main como rama por defecto
+      safeExec("git checkout -b main", projectRoot)
+
+      // Configurar un .gitignore por defecto si no existe
+      const gitignorePath = path.join(projectRoot, ".gitignore")
+      if (!fs.existsSync(gitignorePath)) {
+        const defaultGitignore = [
+          "node_modules/",
+          ".opencode/",
+          "!.opencode/plugins/",
+          "!.opencode/tools/",
+          "dist/",
+          "build/",
+          ".env",
+          "*.log",
+          ".openspec/sdd-lock.json", // el lockfile suele no comitearse si el usuario lo prefiere, o sí. Dejamos que el usuario decida pero por defecto no ignoramos openspec entera
+          "!.openspec/"
+        ].join("\n")
+        fs.writeFileSync(gitignorePath, defaultGitignore, "utf-8")
+      }
+      
+      // Auto-update gitignore para agregar temporales de tests
+      const report: string[] = []
+      autoUpdateGitignore(projectRoot, report)
+
+      return JSON.stringify({
+        status: "SUCCESS",
+        message: "Repositorio Git inicializado correctamente con rama main y .gitignore configurado.",
+        gitignore_report: report
+      }, null, 2)
+    }
+
     if (!isGitRepo(projectRoot)) {
       return JSON.stringify({
         status: "FAILED",
-        reason: "No es un repositorio Git (no existe .git/)."
+        reason: "No es un repositorio Git (no existe .git/). Puedes usar action: 'init' para crearlo."
       }, null, 2)
     }
 
