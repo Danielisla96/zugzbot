@@ -12,7 +12,7 @@
   "agent": {
     "zugzbot": {
       "mode": "primary",
-      "model": "minimax-coding-plan/MiniMax-M2.7",
+      "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/zugzbot.md}",
       "permission": {
         "task": {
@@ -40,7 +40,7 @@
     },
     "sdd-explorer": {
       "mode": "subagent",
-      "model": "minimax-coding-plan/MiniMax-M2.7",
+      "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-explorer.md}",
       "permission": {
         "bash": "allow",
@@ -59,7 +59,7 @@
     },
     "sdd-planner": {
       "mode": "subagent",
-      "model": "minimax-coding-plan/MiniMax-M2.7",
+      "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-planner.md}",
       "permission": {
         "edit": "allow",
@@ -85,7 +85,7 @@
     },
     "f2-red-test-writer": {
       "mode": "subagent",
-      "model": "minimax-coding-plan/MiniMax-M2.7",
+      "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/f2-red-test-writer.md}",
       "permission": {
         "edit": "allow",
@@ -104,7 +104,7 @@
     },
     "sdd-builder": {
       "mode": "subagent",
-      "model": "minimax-coding-plan/MiniMax-M2.7",
+      "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-builder.md}",
       "permission": {
         "edit": "allow",
@@ -124,7 +124,7 @@
     },
     "f2-refactor-improver": {
       "mode": "subagent",
-      "model": "minimax-coding-plan/MiniMax-M2.7",
+      "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/f2-refactor-improver.md}",
       "permission": {
         "edit": "allow",
@@ -144,7 +144,7 @@
     },
     "sdd-tester": {
       "mode": "subagent",
-      "model": "minimax-coding-plan/MiniMax-M2.7",
+      "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-tester.md}",
       "permission": {
         "edit": "allow",
@@ -176,7 +176,7 @@
     },
     "sdd-deployer": {
       "mode": "subagent",
-      "model": "minimax-coding-plan/MiniMax-M2.7",
+      "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-deployer.md}",
       "permission": {
         "bash": "allow",
@@ -193,7 +193,7 @@
     },
     "sdd-archiver": {
       "mode": "subagent",
-      "model": "minimax-coding-plan/MiniMax-M2.7",
+      "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-archiver.md}",
       "permission": {
         "edit": "allow",
@@ -214,7 +214,7 @@
     },
     "aux-handyman": {
       "mode": "subagent",
-      "model": "minimax-coding-plan/MiniMax-M2.7",
+      "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-handyman.md}",
       "permission": {
         "edit": "allow",
@@ -231,7 +231,7 @@
     },
     "aux-oracle": {
       "mode": "subagent",
-      "model": "minimax-coding-plan/MiniMax-M2.7",
+      "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-oracle.md}",
       "permission": {
         "edit": "deny",
@@ -244,7 +244,7 @@
     },
     "aux-auditor": {
       "mode": "subagent",
-      "model": "minimax-coding-plan/MiniMax-M2.7",
+      "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-auditor.md}",
       "permission": {
         "edit": "deny",
@@ -266,7 +266,7 @@
     },
     "aux-refactor": {
       "mode": "subagent",
-      "model": "minimax-coding-plan/MiniMax-M2.7",
+      "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-refactor.md}",
       "permission": {
         "edit": "allow",
@@ -286,7 +286,7 @@
     },
     "aux-explainer": {
       "mode": "subagent",
-      "model": "minimax-coding-plan/MiniMax-M2.7",
+      "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-explainer.md}",
       "permission": {
         "edit": "deny",

@@ -158,7 +158,7 @@ function getProjectModels(projectModelsPath) {
 }
 
 function buildOpencodeJson(models) {
-  const defaultModel = models?.default || "minimax-coding-plan/MiniMax-M2.7"
+  const defaultModel = models?.default || "deepseek/deepseek-v4-flash"
   const agents = models?.agents || {}
 
   return {

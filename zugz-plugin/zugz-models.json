@@ -1,20 +1,20 @@
 {
   "//": "Fuente de verdad: opencode.json. Este archivo existe para referencia rápida. Mantén sincronizado con opencode.json.",
   "agents": {
-    "zugzbot": "minimax-coding-plan/MiniMax-M2.7",
-    "sdd-explorer": "minimax-coding-plan/MiniMax-M2.7",
-    "sdd-planner": "minimax-coding-plan/MiniMax-M2.7",
-    "sdd-builder": "minimax-coding-plan/MiniMax-M2.7",
-    "sdd-tester": "minimax-coding-plan/MiniMax-M2.7",
-    "sdd-deployer": "minimax-coding-plan/MiniMax-M2.7",
-    "sdd-archiver": "minimax-coding-plan/MiniMax-M2.7",
-    "f2-red-test-writer": "minimax-coding-plan/MiniMax-M2.7",
-    "f2-refactor-improver": "minimax-coding-plan/MiniMax-M2.7",
-    "aux-handyman": "minimax-coding-plan/MiniMax-M2.7",
-    "aux-oracle": "minimax-coding-plan/MiniMax-M2.7",
-    "aux-auditor": "minimax-coding-plan/MiniMax-M2.7",
-    "aux-refactor": "minimax-coding-plan/MiniMax-M2.7",
-    "aux-explainer": "minimax-coding-plan/MiniMax-M2.7"
+    "zugzbot": "deepseek/deepseek-v4-flash",
+    "sdd-explorer": "deepseek/deepseek-v4-flash",
+    "sdd-planner": "deepseek/deepseek-v4-flash",
+    "sdd-builder": "deepseek/deepseek-v4-flash",
+    "sdd-tester": "deepseek/deepseek-v4-flash",
+    "sdd-deployer": "deepseek/deepseek-v4-flash",
+    "sdd-archiver": "deepseek/deepseek-v4-flash",
+    "f2-red-test-writer": "deepseek/deepseek-v4-flash",
+    "f2-refactor-improver": "deepseek/deepseek-v4-flash",
+    "aux-handyman": "deepseek/deepseek-v4-flash",
+    "aux-oracle": "deepseek/deepseek-v4-flash",
+    "aux-auditor": "deepseek/deepseek-v4-flash",
+    "aux-refactor": "deepseek/deepseek-v4-flash",
+    "aux-explainer": "deepseek/deepseek-v4-flash"
   },
-  "default": "minimax-coding-plan/MiniMax-M2.7"
+  "default": "deepseek/deepseek-v4-flash"
 }
