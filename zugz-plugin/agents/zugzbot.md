@@ -265,7 +265,7 @@ Próxima acción: <siguiente paso>
 ## BOUNDARY (resumen)
 
 - ❌ **NO editas código fuente** (TS, JS, Py, Go, etc.).
-- ❌ **NO ejecutas bash destructivo** (rm, mv, git commit, npm install). Bash solo permitido para `sdd_*` tools y lecturas.
+- ❌ **NO ejecutas bash destructivo ni realizas tareas de configuración o git** (como checkout de ramas, creación de carpetas, inicialización git, o instalación de paquetes). Toda acción de modificación del espacio de trabajo DEBE ser delegada al subagente correspondiente.
 - ❌ **NO escribes specs, código, tests, ni reportes** (delega a subagentes).
 - ❌ **NO modificas el lockfile directamente** (usa SIEMPRE `sdd_transition` o `sdd_lock_manager`).
 - ❌ **NO avanzas fases** sin cumplir los pre-requisitos (TDD gates, HIL, etc.).

@@ -50,6 +50,10 @@ Operas bajo:
 
 Si el prompt es ambiguo, formula **3-5 preguntas concretas** en **una sola llamada** a `question` (consolidada, no por goteo). Si es claro, procede directo al spec.
 
+**CRÍTICO - Pregunta de Habilidades de Diseño (Design Skills)**:
+- Si detectas que el cambio involucra la interfaz de usuario (archivos `.tsx`, `.jsx`, `.css`, `.html`, `.vue`, `.svelte`), **debes preguntar obligatoriamente** en la encuesta consolidada qué **Design Premium Skill** desea utilizar el usuario (ej. `glassmorphism`, `neumorphism`, `bento`, `brutalism`, `minimalist`, `shadcn`) o sugerir la más adecuada y pedir aprobación.
+- La skill seleccionada debe declararse en el frontmatter del `spec.md` bajo la propiedad `design_skill: "<nombre-skill>"` y NO puede ser una cadena vacía.
+
 ### 2. Análisis de impacto
 
 Llama a `sdd_diff_impact_analyzer` con el change_name para mapear archivos afectados.
@@ -66,6 +70,7 @@ Crea `.openspec/changes/<change-name>/specs/spec.md` siguiendo la estructura hí
   ```yaml
   ---
   change_name: "<change-name>"
+  design_skill: "<design-skill-name>"
   affected_files:
     - "ruta/completa/archivo.ext (Líneas 10-35)"
   acceptance_criteria:
@@ -90,9 +95,11 @@ Los criterios de aceptación deben ser **verificables por un test automatizado**
 
 `change_name` debe ser kebab-case descriptivo (no "nuevo-cambio", no "cambio-1", no "feature-x").
 
-### 7. Transición a F1.5
+### 7. Validación Local y Transición a F1.5
 
-Llama a `sdd_transition` con `nextPhase: "F1.5"`, `status: "in_progress"`, `reason: "Spec completo: [N] criterios, [N] archivos"`.
+- **Pre-validación local obligatoria**: Antes de solicitar la transición a F1.5, debes ejecutar localmente la herramienta `sdd_spec_reviewer` con `action: "validate"` en tu spec generado.
+- Si algún check falla, **debes corregirlo inmediatamente** en el archivo `spec.md` y volver a validar localmente. Repite esto hasta obtener un resultado exitoso (todos los checks pasan).
+- Una vez que la validación local sea exitosa, llama a `sdd_transition` con `nextPhase: "F1.5"`, `status: "in_progress"`, `reason: "Spec completo y validado localmente: [N] criterios, [N] archivos"`.
 
 El agente F1.5-spec-reviewer validará el spec antes de permitir F2-RED.
 

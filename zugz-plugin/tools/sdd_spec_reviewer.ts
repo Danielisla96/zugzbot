@@ -192,7 +192,7 @@ function checkUIDesignSkill(spec: string, frontmatter: any, markdown: string): S
     files = fileMatches.map(m => m[1])
   }
 
-  const uiExtensions = /\.(tsx|jsx|css|html|svelte|vue)$/i
+  const uiExtensions = /\.(tsx|jsx|css|html|svelte|vue)(?:\s+\([^)]+\))?\s*$/i
   isUI = files.some(f => uiExtensions.test(f))
 
   if (!isUI) {
@@ -208,14 +208,14 @@ function checkUIDesignSkill(spec: string, frontmatter: any, markdown: string): S
   // Comprobamos si hay una propiedad "design_skill" o si el texto menciona "Design Skill: <nombre>"
   let hasDesignSkill = false
   let skillName = ""
-  if (frontmatter && frontmatter.design_skill) {
+  if (frontmatter && typeof frontmatter.design_skill === "string" && frontmatter.design_skill.trim() !== "") {
     hasDesignSkill = true
-    skillName = frontmatter.design_skill
+    skillName = frontmatter.design_skill.trim()
   } else {
     const match = markdown.match(/design[-_]skill:\s*(\w+)/i) || markdown.match(/design\s+skill:\s*(\w+)/i)
-    if (match) {
+    if (match && match[1] && match[1].trim() !== "") {
       hasDesignSkill = true
-      skillName = match[1]
+      skillName = match[1].trim()
     }
   }
 
