@@ -322,6 +322,57 @@ Feature: Login
     expect(parsed.status).toBe('SUCCESS');
     expect(parsed.verdict).toBe('APPROVED');
   });
+
+  test('fixes non-standard spec to make it pass validation', async () => {
+    const projectPath = makeProject('spec-to-fix');
+    const context = ctx(projectPath);
+
+    const specPath = path.join(projectPath, 'specs/bad-format.md');
+    fs.mkdirSync(path.dirname(specPath), { recursive: true });
+    fs.writeFileSync(specPath, `# Plano Técnico Incorrecto
+
+## 1. Diagnóstico
+- \`src/api.ts\` Líneas 10-50: agregar handler
+
+## 2. Consenso de Encuesta con el Usuario
+- **Pregunta A**: Decisión: usar JWT.
+
+## 3. Propuesta
+Endpoint POST /login que retorna JWT.
+
+## 4. Especificaciones
+Dado un usuario registrado
+Cuando hace POST
+Entonces recibe token
+Y status 200
+
+## 5. Criterios
+- [ ] Criterio 1: POST /login con credenciales válidas retorna 200
+`);
+
+    // First, validate should fail
+    const validateRes = await specReviewer.execute({ action: 'validate', specPath }, context);
+    const validateParsed = JSON.parse(validateRes);
+    expect(validateParsed.status).toBe('FAILED');
+
+    // Run fix
+    const fixRes = await specReviewer.execute({ action: 'fix', specPath }, context);
+    const fixParsed = JSON.parse(fixRes);
+    expect(fixParsed.status).toBe('SUCCESS');
+    expect(fixParsed.verdict).toBe('APPROVED');
+
+    // Verify file content was corrected
+    const fixedContent = fs.readFileSync(specPath, 'utf-8');
+    expect(fixedContent).toContain('# Plano Técnico');
+    expect(fixedContent).toContain('## 1. Diagnóstico y Archivos Afectados');
+    expect(fixedContent).toContain('(Líneas 10-50)');
+    expect(fixedContent).toContain('## 3. Propuesta de Solución');
+    expect(fixedContent).toContain('## 4. Especificaciones BDD');
+    expect(fixedContent).toContain('Given');
+    expect(fixedContent).toContain('When');
+    expect(fixedContent).toContain('Then');
+    expect(fixedContent).toContain('And');
+  });
 });
 
 describe('Brain Curator (v2)', () => {

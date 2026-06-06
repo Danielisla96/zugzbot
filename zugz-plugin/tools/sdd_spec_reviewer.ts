@@ -127,13 +127,16 @@ export default tool({
 
   Esta herramienta NO modifica el spec; solo lo lee y emite un veredicto.`,
   args: {
-    action: tool.schema.enum(["validate", "summary"])
+    action: tool.schema.enum(["validate", "summary", "fix"])
       .describe("Acción a ejecutar"),
     specPath: tool.schema.string().optional()
       .describe("Path al spec.md (default: .openspec/changes/<change>/specs/spec.md)")
   },
   async execute(args, context) {
-    const projectRoot = context.worktree || context.directory
+    let projectRoot = context.worktree || context.directory || process.cwd()
+    if (projectRoot === "/") {
+      projectRoot = process.cwd()
+    }
 
     let specPath = args.specPath
     if (!specPath) {
@@ -148,12 +151,45 @@ export default tool({
       specPath = path.join(projectRoot, ".openspec/changes", lock.change_name, "specs/spec.md")
     }
 
-    const spec = readSpec(specPath)
+    let spec = readSpec(specPath)
     if (!spec) {
       return JSON.stringify({
         status: "FAILED",
         reason: `No se encontró el spec en ${specPath}`
       }, null, 2)
+    }
+
+    if (args.action === "fix") {
+      let content = spec
+
+      // 1. Title Normalization
+      const hasTitle = /^#\s+Plano Técnico/m.test(content)
+      if (!hasTitle) {
+        const firstHeader = content.match(/^#\s+(.+)$/m)
+        if (firstHeader) {
+          content = content.replace(/^#\s+(.+)$/m, "# Plano Técnico")
+        } else {
+          content = "# Plano Técnico\n\n" + content
+        }
+      }
+
+      // 2. Section Headings Normalization
+      content = content.replace(/##\s*1\s*[.\s-]?\s*Diagn[oó]stico.*/gi, "## 1. Diagnóstico y Archivos Afectados")
+      content = content.replace(/##\s*3\s*[.\s-]?\s*Propuesta.*/gi, "## 3. Propuesta de Solución")
+      content = content.replace(/##\s*4\s*[.\s-]?\s*Especificaciones.*/gi, "## 4. Especificaciones BDD")
+      content = content.replace(/##\s*5\s*[.\s-]?\s*Criterios.*/gi, "## 5. Criterios de Aceptación")
+
+      // 3. Translate BDD Keywords
+      content = content.replace(/^(?<indent>\s*)(?:Dado|Dada)(?:\s+que)?\b/gim, "$1Given")
+      content = content.replace(/^(?<indent>\s*)Cuando\b/gim, "$1When")
+      content = content.replace(/^(?<indent>\s*)Entonces\b/gim, "$1Then")
+      content = content.replace(/^(?<indent>\s*)Y\b/gim, "$1And")
+
+      // 4. Line Ranges Auto-parenthesizing
+      content = content.replace(/(?<!\()\b(L[ií]neas?\s+\d+(?:-\d+)?|L\d+-\d+|L\d+)\b(?!\))/gi, "($1)")
+
+      fs.writeFileSync(specPath, content, "utf-8")
+      spec = content
     }
 
     const checks: SpecCheck[] = [
