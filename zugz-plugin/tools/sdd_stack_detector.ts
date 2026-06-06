@@ -79,7 +79,10 @@ export default tool({
       .describe("ID del profile (para action=get)")
   },
   async execute(args, context) {
-    const projectRoot = context.worktree || context.directory
+    let projectRoot = context.worktree || context.directory || process.cwd()
+    if (projectRoot === "/") {
+      projectRoot = process.cwd()
+    }
     const profilesDir = findProfilesDir(projectRoot)
 
     if (!profilesDir) {

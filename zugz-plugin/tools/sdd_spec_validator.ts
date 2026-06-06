@@ -8,7 +8,10 @@ export default tool({
     changeName: tool.schema.string().optional().describe("Nombre del cambio en kebab-case. Por defecto se autodetectará del sdd-lock.")
   },
   async execute(args, context) {
-    const projectRoot = context.worktree || context.directory;
+    let projectRoot = context.worktree || context.directory || process.cwd();
+    if (projectRoot === "/") {
+      projectRoot = process.cwd();
+    }
     let changeName = args.changeName;
     let complexity = "high";
 
