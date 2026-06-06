@@ -5,6 +5,31 @@ Todas las versiones notables del proyecto Zugzbot SDD se documentan aquí.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.0.10] - 2026-06-05 — Fix detección legacy y versión dinámica
+
+### 🐛 Fixes
+
+- **`bin/zugzbot.js` → `detectLegacyInstallation()`**: la detección era demasiado estricta. Usaba `lock.schema_version === 2` con `===` estricto, así que un lockfile con `schema_version: "2"` (string) o sin el campo era clasificado erróneamente como legacy v1. Ahora detecta v2 por:
+  - `schema_version === 2` (número) o `=== "2"` (string)
+  - O por estructura: presencia de `tdd` block + `active_phase` como string
+  - Solo bloquea si hay indicadores claros de v1: `schema_version: 1` o lockfile sin schema_version ni estructura v2.
+  - JSON inválido: NO bloquea (el installer preserva el archivo y deja que el usuario lo arregle).
+- **Versión hardcodeada en el header**: el header, mensaje de error legacy, y mensaje de éxito mostraban `v2.0.0` literal sin importar qué versión del paquete se ejecutaba. Ahora se lee `version` de `package.json` del paquete en runtime.
+- **`BRAIN_TEMPLATE`**: el comentario "inicializado con Zugzbot SDD v2.0.0" ahora usa la versión real del paquete.
+
+### ✅ Tests
+
+- 7 tests nuevos en `tests/integration/installer.test.js` para `detectLegacyInstallation()`:
+  - `schema_version: 2` (número) → no legacy ✓
+  - `schema_version: "2"` (string) → no legacy ✓
+  - estructura v2 (tdd + active_phase) sin schema_version → no legacy ✓
+  - JSON inválido → no bloquea ✓
+  - `schema_version: 1` → SÍ legacy ✓
+  - sin schema_version ni estructura v2 → SÍ legacy ✓
+  - header muestra la versión del paquete (no hardcodeada) ✓
+
+**104/104 tests** pasando (97 anteriores + 7 nuevos).
+
 ---
 
 ## [2.0.9] - 2026-06-05 — Versión visible en el TUI

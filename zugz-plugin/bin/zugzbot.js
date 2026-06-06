@@ -8,6 +8,11 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const PKG_ROOT = path.resolve(__dirname, "..")
 
+let PKG_VERSION = "unknown"
+try {
+  PKG_VERSION = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, "package.json"), "utf-8")).version
+} catch (_e) { PKG_VERSION = "unknown" }
+
 const INSTALL_DIR = process.cwd()
 
 const TEMPLATE_SDD_LOCK_V2 = {
@@ -63,7 +68,7 @@ package-lock.json
 const BRAIN_TEMPLATE = `# 🧠 Brain del Proyecto
 
 ## General
-- Proyecto inicializado con Zugzbot SDD v2.0.0 (TDD-discipline, stack-agnostic)
+- Proyecto inicializado con Zugzbot SDD v${PKG_VERSION} (TDD-discipline, stack-agnostic)
 `
 
 function green(msg) { console.log(`  \x1b[32m✓\x1b[0m ${msg}`) }
@@ -92,10 +97,12 @@ function detectLegacyInstallation(installDir) {
   if (!fs.existsSync(legacyLockPath)) return false
   try {
     const lock = JSON.parse(fs.readFileSync(legacyLockPath, "utf-8"))
-    if (lock.schema_version === 2) return false
+    if (lock.schema_version === 2 || lock.schema_version === "2") return false
+    if (lock.tdd && typeof lock.active_phase === "string") return false
+    if (lock.schema_version === 1 || lock.schema_version === "1") return true
     return true
-  } catch {
-    return true
+  } catch (_e) {
+    return false
   }
 }
 
@@ -399,7 +406,7 @@ function buildOpencodeJson(models) {
 function init() {
   console.log(`
 ╔══════════════════════════════════════════════════════════╗
-║   Zugzbot SDD Plugin v2.0.0                              ║
+║   Zugzbot SDD Plugin v${PKG_VERSION.padEnd(36)}║
 ║   Stack-Agnostic + TDD Discipline                        ║
 ╚══════════════════════════════════════════════════════════╝
 `)
@@ -407,14 +414,14 @@ function init() {
   if (detectLegacyInstallation(INSTALL_DIR)) {
     console.log()
     red("⚠ INSTALACIÓN LEGACY v1.x DETECTADA")
-    red("Zugzbot v2.0.0 es un breaking change limpio (sin migrador).")
+    red(`Zugzbot v${PKG_VERSION} es un breaking change limpio (sin migrador).`)
     red("Pasos para migrar manualmente:")
     console.log()
     console.log("  1. Cierra el ciclo activo actual:")
     console.log("     rm -rf .openspec/changes/<cambio-activo>")
     console.log("  2. Borra el lockfile antiguo:")
     console.log("     rm .openspec/sdd-lock.json")
-    console.log("  3. Continúa con esta instalación de v2.0.0")
+    console.log(`  3. Continúa con esta instalación de v${PKG_VERSION}`)
     console.log()
     process.exit(1)
   }
@@ -557,7 +564,7 @@ function init() {
 
   console.log(`
 ╔══════════════════════════════════════════════════════════╗
-║  ✅ Zugzbot v2.0.0 instalado correctamente!             ║
+║  ✅ Zugzbot v${PKG_VERSION.padEnd(36)} instalado correctamente!  ║
 ╚══════════════════════════════════════════════════════════╝
 
    Workflow: opencode + @zugzbot (router cognitivo)

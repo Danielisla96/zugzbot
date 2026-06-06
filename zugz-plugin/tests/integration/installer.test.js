@@ -21,6 +21,19 @@ function runInstaller(projectDir) {
   });
 }
 
+function runInstallerExpectError(projectDir) {
+  try {
+    execFileSync('node', [INSTALLER], {
+      cwd: projectDir,
+      stdio: 'pipe',
+      env: { ...process.env, NO_COLOR: '1' }
+    });
+    return null;
+  } catch (e) {
+    return { code: e.status, stdout: e.stdout?.toString() || '', stderr: e.stderr?.toString() || '' };
+  }
+}
+
 function readJson(p) {
   return JSON.parse(fs.readFileSync(p, 'utf-8'));
 }
@@ -136,5 +149,104 @@ describe('installer: overlay de modelos en reinstalación', () => {
     expect(opencode.agent.zugzbot.model).toBe('google/gemini-2.5-pro');
     expect(opencode.agent['sdd-builder'].model).toBe('google/gemini-2.5-pro');
     expect(opencode.agent['f2-red-test-writer'].model).toBe('google/gemini-2.5-pro');
+  });
+});
+
+describe('installer: detección de legacy v1.x', () => {
+  const projectDir = path.join(SANDBOX, 'project-legacy');
+  const lockPath = path.join(projectDir, '.openspec/sdd-lock.json');
+
+  beforeAll(() => {
+    fs.mkdirSync(projectDir, { recursive: true });
+    fs.writeFileSync(path.join(projectDir, 'package.json'), JSON.stringify({ name: 'c', version: '0.1.0' }));
+  });
+
+  afterAll(() => {
+    fs.rmSync(SANDBOX, { recursive: true, force: true });
+  });
+
+  test('lockfile con schema_version: 2 (número) → no es legacy, installer procede', () => {
+    const lock = { schema_version: 2, active_phase: 'F0', tdd: { red: { completed: false } } };
+    fs.mkdirSync(path.dirname(lockPath), { recursive: true });
+    fs.writeFileSync(lockPath, JSON.stringify(lock, null, 2));
+
+    runInstaller(projectDir);
+
+    const result = readJson(lockPath);
+    expect(result.schema_version).toBe(2);
+  });
+
+  test('lockfile con schema_version: "2" (string) → no es legacy, installer procede', () => {
+    const lock = { schema_version: '2', active_phase: 'F0', tdd: { red: { completed: false } } };
+    fs.writeFileSync(lockPath, JSON.stringify(lock, null, 2));
+
+    runInstaller(projectDir);
+
+    const result = readJson(lockPath);
+    expect(result.schema_version).toBe('2');
+  });
+
+  test('lockfile sin schema_version pero con tdd + active_phase (estructura v2) → no es legacy', () => {
+    const lock = { active_phase: 'F1.5', tdd: { red: { completed: true, tests_added: 3 } } };
+    fs.writeFileSync(lockPath, JSON.stringify(lock, null, 2));
+
+    runInstaller(projectDir);
+
+    const result = readJson(lockPath);
+    expect(result.active_phase).toBe('F1.5');
+    expect(result.tdd.red.tests_added).toBe(3);
+  });
+
+  test('lockfile con JSON inválido → no bloquea, installer procede (lockfile preservado tal cual)', () => {
+    fs.writeFileSync(lockPath, '{ this is not valid json');
+
+    runInstaller(projectDir);
+
+    const rawContent = fs.readFileSync(lockPath, 'utf-8');
+    expect(rawContent).toBe('{ this is not valid json');
+
+    const otherArtifacts = fs.readFileSync(path.join(projectDir, 'opencode.json'), 'utf-8');
+    expect(otherArtifacts).toContain('"zugzbot"');
+  });
+
+  test('lockfile con schema_version: 1 → SÍ es legacy, installer bloquea', () => {
+    const lock = { schema_version: 1, current_phase: 2 };
+    fs.writeFileSync(lockPath, JSON.stringify(lock, null, 2));
+
+    const err = runInstallerExpectError(projectDir);
+    expect(err).not.toBeNull();
+    expect(err.code).not.toBe(0);
+    expect(err.stdout).toMatch(/INSTALACIÓN LEGACY v1\.x DETECTADA/);
+  });
+
+  test('lockfile sin schema_version ni estructura v2 → SÍ es legacy, installer bloquea', () => {
+    const lock = { current_phase: 2, active_agent: 'sdd-planner' };
+    fs.writeFileSync(lockPath, JSON.stringify(lock, null, 2));
+
+    const err = runInstallerExpectError(projectDir);
+    expect(err).not.toBeNull();
+    expect(err.code).not.toBe(0);
+    expect(err.stdout).toMatch(/INSTALACIÓN LEGACY v1\.x DETECTADA/);
+  });
+
+  test('header del installer muestra la versión del paquete (no hardcodeada)', () => {
+    const lock = { schema_version: 2, active_phase: 'F0' };
+    fs.writeFileSync(lockPath, JSON.stringify(lock, null, 2));
+
+    const result = (() => {
+      try {
+        const out = execFileSync('node', [INSTALLER], {
+          cwd: projectDir,
+          encoding: 'utf-8',
+          env: { ...process.env, NO_COLOR: '1' }
+        });
+        return { code: 0, stdout: out };
+      } catch (e) {
+        return { code: e.status, stdout: e.stdout?.toString() || '' };
+      }
+    })();
+
+    const pkg = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'package.json'), 'utf-8'));
+    expect(result.stdout).toContain(`v${pkg.version}`);
   });
 });
