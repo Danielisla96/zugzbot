@@ -65,7 +65,9 @@ Si el Grafo de Conocimiento (`graphify-out/graph.json`) existe, puedes llamar a 
 
 Si el spec requiere nuevas deps, valida con `check_dependency_cooldown` cada una (3+ días publicadas).
 
-Crea `.openspec/changes/<change-name>/specs/spec.md` siguiendo la estructura híbrida (YAML Frontmatter + Markdown) obligatoriamente para pasar la validación F1.5 (spec reviewer):
+**Inicialización obligatoria del Spec:**
+- Llama a `sdd_spec_reviewer` con `action: "init"` para crear el archivo plantilla `.openspec/changes/<change-name>/specs/spec.md` con el formato e inicializaciones estandarizadas y exactas de la metodología SDD.
+- A continuación, lee la plantilla creada y **rellena o edita** cada sección con los requerimientos específicos de la tarea, asegurando mantener la estructura y los nombres de las secciones tal como fueron generados en la plantilla:
 - **YAML Frontmatter**: Al inicio del archivo, delimitado por `---`, con los campos exactos:
   ```yaml
   ---

@@ -237,7 +237,7 @@ export default tool({
   - "summary": Retorna un resumen ejecutivo del estado del spec.
   - "fix": Formatea y re-estructura automáticamente el spec en el formato híbrido YAML Frontmatter + Markdown.`,
   args: {
-    action: tool.schema.enum(["validate", "summary", "fix"])
+    action: tool.schema.enum(["validate", "summary", "fix", "init"])
       .describe("Acción a ejecutar"),
     specPath: tool.schema.string().optional()
       .describe("Path al spec.md (default: .openspec/changes/<change>/specs/spec.md)")
@@ -262,6 +262,52 @@ export default tool({
         }, null, 2)
       }
       specPath = path.join(projectRoot, ".openspec/changes", lock.change_name, "specs/spec.md")
+    }
+
+    if (args.action === "init") {
+      const dir = path.dirname(specPath)
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true })
+      }
+      
+      const templateContent = [
+        "---",
+        `change_name: "${changeName}"`,
+        "design_skill: \"none\"",
+        "affected_files:",
+        "  - \"src/main.ts (Líneas 1-10)\"",
+        "acceptance_criteria:",
+        "  - \"[ ] CA1: Criterio de aceptación\"",
+        "---",
+        "",
+        "# Plano Técnico",
+        "",
+        "## 1. Diagnóstico y Archivos Afectados",
+        "[Escribe aquí el diagnóstico del problema y los archivos afectados]",
+        "",
+        "## 2. Consenso de Encuesta con el Usuario",
+        "El plan técnico y los criterios de aceptación han sido definidos de acuerdo con los requerimientos provistos por el usuario y validados formalmente.",
+        "",
+        "## 3. Propuesta de Solución",
+        "[Escribe aquí la propuesta técnica y de arquitectura]",
+        "",
+        "## 4. Especificaciones BDD (Comportamiento)",
+        "### Scenario: Escenario inicial",
+        "Given el sistema está inicializado",
+        "When se ejecuta la acción principal",
+        "Then el estado se actualiza correctamente",
+        "",
+        "## 5. Criterios de Aceptación",
+        "- [ ] CA1: Criterio de aceptación 1",
+        ""
+      ].join("\n")
+
+      fs.writeFileSync(specPath, templateContent, "utf-8")
+      return JSON.stringify({
+        status: "SUCCESS",
+        message: `✅ Spec inicializado con la plantilla estándar en: ${specPath}`,
+        specPath
+      }, null, 2)
     }
 
     let spec = readSpec(specPath)
