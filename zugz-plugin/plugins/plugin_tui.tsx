@@ -369,7 +369,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
             </box>
 
             {/* Progreso SDD v2: 12 estaciones (F0, F1, F1.5, HIL-A, F2-RED/GREEN/REFACTOR, F3, F4, HIL-B, F5, DONE) */}
-            {sddProgress() && (
+            {sddProgress() ? (
               <box gap={0} paddingLeft={1} paddingTop={1} paddingBottom={0}>
                 <text fg="#FF7300">
                   {`SDD: ${sddProgress()?.changeName ?? "—"}`}
@@ -430,11 +430,11 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                         <text fg={fgColor}>
                           {`${prefix}${label}`}
                         </text>
-                        {isActive && agent && (
+                        {(isActive && agent) ? (
                           <text fg="#FFAA00">
                             {`   └─ ${agent}`}
                           </text>
-                        )}
+                        ) : null}
                       </box>
                     )
                   })}
@@ -450,11 +450,11 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                   
                   let tddColor = api.theme.current.textMuted
                   if (tdd.refactor.completed || tdd.refactor.linterClean) {
-                    tddColor = "#0A84FF" // Azul
+                    tddColor = api.theme.current.success
                   } else if (tdd.green.completed) {
-                    tddColor = "#34C759" // Verde
+                    tddColor = "#5AC8FA"
                   } else if (tdd.red.completed) {
-                    tddColor = "#FF3B30" // Rojo
+                    tddColor = "#FF3B30"
                   }
                   
                   return (
@@ -465,11 +465,11 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                 })()}
 
                 {/* Git branch */}
-                {sddProgress()?.git?.branch && sddProgress()?.git?.branch !== "—" && (
+                {(sddProgress()?.git?.branch && sddProgress()?.git?.branch !== "—") ? (
                   <text fg={sddProgress()?.git?.workingTreeClean ? api.theme.current.success : "#FF7300"}>
                     {`Git: ${sddProgress()?.git?.branch ?? "—"}${sddProgress()?.git?.workingTreeClean ? " (clean)" : " (dirty)"}`}
                   </text>
-                )}
+                ) : null}
 
                 <text fg={api.theme.current.borderSubtle} paddingTop={1}>
                   {"────────────────────────────────────"}

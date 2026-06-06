@@ -5,6 +5,13 @@ Todas las versiones notables del proyecto Zugzbot SDD se documentan aquí.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.0.36] - 2026-06-06 — Fix Estabilidad de Solid TUI en plantilla
+
+### 🐛 Fixes
+- **`plugins/plugin_tui.tsx`**: Migración de expresiones condicionales de renderizado lógico (`&&`) hacia ternarios puros `? : null` en la plantilla de origen. Esto previene que Solid retorne `false` al renderizador de opentui y erradica permanentemente el error fatal `Orphan text error: "" must have a <text> as a parent` en cualquier nueva instalación.
+
+---
+
 ## [2.0.35] - 2026-06-06 — Validación de Calidad obligatoria en F1.5
 
 ### ✨ Features
