@@ -382,6 +382,43 @@ Y status 200
     expect(fixedContent).toContain('Then');
     expect(fixedContent).toContain('And');
   });
+
+  test('validates spec with YAML Frontmatter + Markdown hybrid format', async () => {
+    const projectPath = makeProject('spec-yaml-hybrid');
+    const context = ctx(projectPath);
+
+    const specPath = path.join(projectPath, 'specs/hybrid.md');
+    fs.mkdirSync(path.dirname(specPath), { recursive: true });
+    fs.writeFileSync(specPath, `---
+change_name: "jwt-authentication"
+affected_files:
+  - "src/api.ts (Líneas 10-50)"
+acceptance_criteria:
+  - "[ ] El login con credenciales válidas debe retornar 200 y token JWT"
+---
+
+# Plano Técnico
+
+## 1. Diagnóstico y Archivos Afectados
+Diagnosticamos la necesidad de validar usuarios.
+
+## 3. Propuesta de Solución
+Implementaremos un endpoint POST /login y retornaremos un token JWT firmado.
+
+## 4. Especificaciones BDD
+Given credenciales válidas
+When hace POST
+Then recibe status 200
+
+## 5. Criterios de Aceptación
+- [ ] El login con credenciales válidas debe retornar 200 y token JWT
+`);
+
+    const result = await specReviewer.execute({ action: 'validate', specPath }, context);
+    const parsed = JSON.parse(result);
+    expect(parsed.status).toBe('SUCCESS');
+    expect(parsed.verdict).toBe('APPROVED');
+  });
 });
 
 describe('Brain Curator (v2)', () => {

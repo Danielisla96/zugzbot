@@ -26,13 +26,30 @@ Planificador e interrogador. Recopila requisitos del usuario, consulta el cerebr
    - Si el spec requiere nuevas dependencias, validar `check_dependency_cooldown` para cada una (3+ días publicadas).
 
 4. **Generación del spec**:
-   - Crear `.openspec/changes/<change-name>/specs/spec.md` con la plantilla canónica:
-     - Título: `# Plano Técnico`
-     - Diagnóstico: `## 1. Diagnóstico y Archivos Afectados` (Lista archivos como \`archivo.ext\` y especifica sus rangos de líneas, ej. `(Líneas 10-35)`).
-     - Requerimientos: `## 2. Requerimientos`
-     - Propuesta de solución: `## 3. Propuesta de Solución` (Detalle de arquitectura, > 50 caracteres).
-     - Especificaciones BDD: `## 4. Especificaciones BDD` (Casos BDD explícitos con Given/When/Then).
-     - Criterios de aceptación: `## 5. Criterios de Aceptación` (Cada criterio con checkbox vacío `- [ ]`).
+   - Crear `.openspec/changes/<change-name>/specs/spec.md` con la estructura híbrida (YAML Frontmatter + Markdown):
+     ```markdown
+     ---
+     change_name: "<change-name>"
+     affected_files:
+       - "ruta/completa/archivo.ext (Líneas 10-35)"
+     acceptance_criteria:
+       - "[ ] Criterio de aceptación 1"
+     ---
+     
+     # Plano Técnico
+     
+     ## 1. Diagnóstico y Archivos Afectados
+     (Detalle del diagnóstico técnico y justificación de afectación)
+     
+     ## 3. Propuesta de Solución
+     (Detalle de arquitectura, > 50 caracteres)
+     
+     ## 4. Especificaciones BDD
+     (Casos BDD con Given/When/Then en inglés)
+     
+     ## 5. Criterios de Aceptación
+     (Listado rápido de criterios)
+     ```
    - **CRÍTICO**: los criterios de aceptación deben ser **testeables** (verificables por un test automatizado).
    - Incluir diagrama Mermaid si hay >3 componentes involucrados.
 
