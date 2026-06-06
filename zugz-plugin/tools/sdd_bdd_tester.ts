@@ -52,13 +52,13 @@ export default tool({
     const lines = specContent.split("\n");
     lines.forEach(line => {
       const trimmed = line.trim();
-      if (trimmed.startsWith("Scenario:") || trimmed.startsWith("Escenario:")) {
+      if (trimmed.startsWith("Scenario:")) {
         if (currentScenarioTitle) {
           scenarios.push({ title: currentScenarioTitle, steps: currentSteps });
         }
         currentScenarioTitle = trimmed.substring(trimmed.indexOf(":") + 1).trim();
         currentSteps = [];
-      } else if (currentScenarioTitle && (trimmed.startsWith("Given") || trimmed.startsWith("When") || trimmed.startsWith("Then") || trimmed.startsWith("And") || trimmed.startsWith("Dado") || trimmed.startsWith("Cuando") || trimmed.startsWith("Entonces") || trimmed.startsWith("Y "))) {
+      } else if (currentScenarioTitle && (trimmed.startsWith("Given") || trimmed.startsWith("When") || trimmed.startsWith("Then") || trimmed.startsWith("And"))) {
         currentSteps.push(trimmed);
       }
     });

@@ -83,7 +83,7 @@ Si el spec requiere nuevas deps, valida con `check_dependency_cooldown` cada una
 - **Sección 1**: `## 1. Diagnóstico y Archivos Afectados` (Lista los archivos involucrados usando backticks y especifica el rango de líneas, ej. `main.ts` (Líneas 10-35)).
 - **Sección 2**: `## 2. Consenso de Encuesta con el Usuario` (Resume brevemente las decisiones y aclaraciones conversadas con el usuario).
 - **Sección 3**: `## 3. Propuesta de Solución` (Describe la arquitectura detalladamente con más de 50 caracteres).
-- **Sección 4**: `## 4. Especificaciones BDD (Comportamiento)` (Escenarios detallados usando cláusulas explícitas Given / When / Then en inglés).
+- **Sección 4**: `## 4. Especificaciones BDD (Comportamiento)` (Escenarios detallados iniciando obligatoriamente con la cláusula `Scenario:` —no `Escenario:`— y los pasos Given / When / Then / And en inglés).
 - **Sección 5**: `## 5. Criterios de Aceptación` (Listado rápido con casillas `- [ ]` para referencia).
 
 ### 5. Criterios TESTEABLES (CRÍTICO para F1.5)

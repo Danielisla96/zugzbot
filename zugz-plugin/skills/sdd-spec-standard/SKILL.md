@@ -39,7 +39,7 @@ Breve resumen de las aclaraciones y decisiones tomadas en consenso con el usuari
 Detalle preciso de la arquitectura propuesta, cambios lógicos y diseño técnico (debe tener al menos 50 caracteres).
 
 ## 4. Especificaciones BDD (Comportamiento)
-Casos de prueba BDD escritos estrictamente en inglés usando las cláusulas:
+Casos de prueba BDD escritos estrictamente en inglés e iniciados obligatoriamente con `Scenario:` (no `Escenario:`), usando las cláusulas:
 - Given
 - When
 - Then
@@ -57,7 +57,7 @@ Breve listado que repite los criterios del frontmatter para referencia del usuar
 2. **change_name**: Debe ser el slug en kebab-case exacto definido en el lockfile. No puede ser genérico ni usar "nuevo-cambio".
 3. **affected_files**: Lista de rutas de archivos relativas al proyecto. Cada elemento debe llevar su rango de líneas especificado (ej: `(Líneas 10-35)`).
 4. **acceptance_criteria**: Lista de oraciones objetivas y testeables. Deben incluir el checkbox vacío `[ ]`.
-5. **Palabras Clave BDD**: Los escenarios BDD deben ser redactados en inglés (`Given`, `When`, `Then`).
+5. **Palabras Clave BDD**: Los escenarios BDD deben ser redactados estrictamente en inglés (`Scenario:`, `Given`, `When`, `Then`, `And`).
 
 ## Auto-corrección (Fixing)
 

@@ -116,8 +116,8 @@ export default tool({
 
     // Validar Given-When-Then solo si la complejidad es alta
     if (complexity !== "low") {
-      const hasScenario = /Scenario:|Escenario:/i.test(specContent);
-      const hasGWT = /(Given|Dado)[\s\S]+(When|Cuando)[\s\S]+(Then|Entonces)/i.test(specContent);
+      const hasScenario = /Scenario:/i.test(specContent);
+      const hasGWT = /Given[\s\S]+When[\s\S]+Then/i.test(specContent);
 
       if (!hasScenario || !hasGWT) {
         return JSON.stringify({
@@ -125,7 +125,7 @@ export default tool({
           changeName,
           complexity,
           reason: "No se encontraron escenarios Given-When-Then estructurados.",
-          message: `❌ VALIDACIÓN FALLIDA [Complejidad: ${complexity}]: Se requiere al menos un escenario estructurado 'Scenario:' con pasos Given-When-Then (Dado-Cuando-Entonces) para habilitar las pruebas automáticas en la Fase 2.`
+          message: `❌ VALIDACIÓN FALLIDA [Complejidad: ${complexity}]: Se requiere al menos un escenario estructurado 'Scenario:' con pasos Given-When-Then en inglés para habilitar las pruebas automáticas en la Fase 2.`
         }, null, 2);
       }
     }
