@@ -2,6 +2,7 @@ import { tool } from "@opencode-ai/plugin"
 import { execSync } from "child_process"
 import fs from "fs"
 import path from "path"
+import { autoUpdateGitignore } from "./sdd_archive_and_commit.js"
 
 function safeExec(cmd: string, cwd: string): { ok: true; stdout: string } | { ok: false; stderr: string } {
   try {
@@ -25,15 +26,16 @@ export default tool({
   - "diff": Diff de archivos modificados vs HEAD (resumido).
   - "stash": Crea un stash temporal con un mensaje (requiere confirm=true).
   - "pop_stash": Recupera el último stash (requiere confirm=true).
+  - "update_gitignore": Detecta y auto-ignora archivos temporales/caché del linter o test runners en el .gitignore.
 
   Esta herramienta NO hace commit ni push. Para commit, usar sdd_archive_and_commit.`,
   args: {
-    action: tool.schema.enum(["status", "branch", "diff", "stash", "pop_stash", "checkout_branch"])
+    action: tool.schema.enum(["status", "branch", "diff", "stash", "pop_stash", "checkout_branch", "update_gitignore"])
       .describe("Acción a ejecutar"),
     message: tool.schema.string().optional()
       .describe("Mensaje del stash (para action=stash)"),
     confirm: tool.schema.boolean().optional().default(false)
-      .describe("Confirmación explícita para acciones mutables (stash, pop_stash, checkout_branch)"),
+      .describe("Confirmación explícita para acciones mutables (stash, pop_stash, checkout_branch, update_gitignore)"),
     branchName: tool.schema.string().optional()
       .describe("Nombre de la rama a crear o cambiar (para action=checkout_branch)")
   },
@@ -174,6 +176,21 @@ export default tool({
         status: "SUCCESS",
         message: `Rama establecida en ${args.branchName}.`,
         output: result.stdout
+      }, null, 2)
+    }
+    if (args.action === "update_gitignore") {
+      if (!args.confirm) {
+        return JSON.stringify({
+          status: "FAILED",
+          reason: "Se requiere confirm=true para actualizar el .gitignore."
+        }, null, 2)
+      }
+      const report: string[] = []
+      autoUpdateGitignore(projectRoot, report)
+      return JSON.stringify({
+        status: "SUCCESS",
+        message: "Detección e ignorado automático de Git completado.",
+        report
       }, null, 2)
     }
 

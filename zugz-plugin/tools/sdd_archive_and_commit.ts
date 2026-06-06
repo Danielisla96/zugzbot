@@ -34,7 +34,7 @@ function moveRecursive(src: string, dest: string) {
   }
 }
 
-function autoUpdateGitignore(projectRoot: string, report: string[]) {
+export function autoUpdateGitignore(projectRoot: string, report: string[]) {
   const gitignorePath = path.join(projectRoot, ".gitignore")
   let currentRules: string[] = []
   
@@ -78,8 +78,22 @@ function autoUpdateGitignore(projectRoot: string, report: string[]) {
     { test: /(^|\/)venv\/?$/, pattern: "venv/" },
     { test: /(^|\/)env\/?$/, pattern: "env/" },
     { test: /(^|\/)\.pytest_cache\/?$/, pattern: ".pytest_cache/" },
+    { test: /(^|\/)\.ruff_cache\/?$/, pattern: ".ruff_cache/" },
     { test: /\.pem$/, pattern: "*.pem" },
-    { test: /\.key$/, pattern: "*.key" }
+    { test: /\.key$/, pattern: "*.key" },
+    { test: /\.eslintcache$/, pattern: ".eslintcache" },
+    { test: /\.tsbuildinfo$/, pattern: "*.tsbuildinfo" },
+    { test: /(^|\/)\.parcel-cache\/?$/, pattern: ".parcel-cache/" },
+    { test: /(^|\/)\.next\/?$/, pattern: ".next/" },
+    { test: /(^|\/)\.nuxt\/?$/, pattern: ".nuxt/" },
+    { test: /(^|\/)\.turbo\/?$/, pattern: ".turbo/" },
+    { test: /(^|\/)\.cache\/?$/, pattern: ".cache/" },
+    { test: /(^|\/)\.swc\/?$/, pattern: ".swc/" },
+    { test: /(^|\/)\.vitest-cache\/?$/, pattern: ".vitest-cache/" },
+    { test: /(^|\/)npm-debug\.log*$/, pattern: "npm-debug.log*" },
+    { test: /(^|\/)yarn-debug\.log*$/, pattern: "yarn-debug.log*" },
+    { test: /(^|\/)yarn-error\.log*$/, pattern: "yarn-error.log*" },
+    { test: /(^|\/)pnpm-debug\.log*$/, pattern: "pnpm-debug.log*" }
   ]
 
   const addedPatterns = new Set<string>()
