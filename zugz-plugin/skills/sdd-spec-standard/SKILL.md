@@ -18,6 +18,7 @@ Todo archivo `spec.md` debe respetar exactamente la siguiente estructura:
 ```markdown
 ---
 change_name: "fastapi-sum-endpoint"
+design_skill: "none"
 affected_files:
   - "src/server.ts (Líneas 10-35)"
   - "src/validators.ts (Líneas 1-15)"

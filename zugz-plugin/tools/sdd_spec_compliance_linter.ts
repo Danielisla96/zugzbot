@@ -47,9 +47,10 @@ export default tool({
     const requirements: string[] = []
     const lines = specContent.split("\n")
     lines.forEach(line => {
-      const match = line.match(/^[-*+]\s+\[\s*\]\s+(.+)$/) || line.match(/^\d+\.\s+(.+)$/)
+      const match = line.trim().match(/^[-*+]\s+\[[\s*xX]?\]\s+(.+)$/)
       if (match && match[1]) {
-        requirements.push(match[1].trim())
+        const cleaned = match[1].replace(/^["']|["']$/g, "").trim()
+        requirements.push(cleaned)
       }
     })
 

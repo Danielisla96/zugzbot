@@ -50,8 +50,8 @@ export default tool({
     const requiredSections = [
       { name: "Plano Técnico / Título", regex: /^#\s*Plano\s+Técnico/mi },
       { name: "1. Diagnóstico y Archivos Afectados", regex: /^##\s*1\.\s*Diagnóstico/mi },
-      { name: "3. Propuesta de Solución y Arquitectura", regex: /^##\s*3\.\s*Propuesta/mi },
-      { name: "5. Criterios de Aceptación y Calidad", regex: /^##\s*5\.\s*Criterios/mi }
+      { name: "3. Propuesta de Solución", regex: /^##\s*3\.\s*Propuesta/mi },
+      { name: "5. Criterios de Aceptación", regex: /^##\s*5\.\s*Criterios/mi }
     ];
 
     if (complexity !== "low") {

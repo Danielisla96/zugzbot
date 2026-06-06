@@ -30,6 +30,7 @@ Planificador e interrogador. Recopila requisitos del usuario, consulta el cerebr
      ```markdown
      ---
      change_name: "<change-name>"
+     design_skill: "none"
      affected_files:
        - "ruta/completa/archivo.ext (Líneas 10-35)"
      acceptance_criteria:
@@ -41,10 +42,13 @@ Planificador e interrogador. Recopila requisitos del usuario, consulta el cerebr
      ## 1. Diagnóstico y Archivos Afectados
      (Detalle del diagnóstico técnico y justificación de afectación)
      
+     ## 2. Consenso de Encuesta con el Usuario
+     (Resumen de las aclaraciones y decisiones tomadas en consenso con el usuario)
+     
      ## 3. Propuesta de Solución
      (Detalle de arquitectura, > 50 caracteres)
      
-     ## 4. Especificaciones BDD
+     ## 4. Especificaciones BDD (Comportamiento)
      (Casos BDD con Given/When/Then en inglés)
      
      ## 5. Criterios de Aceptación
