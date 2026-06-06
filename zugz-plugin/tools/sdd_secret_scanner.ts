@@ -62,7 +62,10 @@ export default tool({
     scanAll: tool.schema.boolean().optional().default(false).describe("Si es true, escanea todos los archivos de código del proyecto; por defecto solo escanea archivos modificados en Git.")
   },
   async execute(args, context) {
-    const projectRoot = context.worktree || context.directory;
+    let projectRoot = context.worktree || context.directory || process.cwd()
+    if (projectRoot === "/") {
+      projectRoot = process.cwd()
+    }
     const findings: Array<{ file: string; line: number; type: string; snippet: string }> = [];
 
     // 1. Obtener la lista de archivos a escanear

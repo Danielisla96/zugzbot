@@ -8,7 +8,10 @@ export default tool({
     changeName: tool.schema.string().describe("Nombre del cambio de desarrollo activo en .openspec/changes/")
   },
   async execute(args, context) {
-    const projectRoot = context.worktree || context.directory
+    let projectRoot = context.worktree || context.directory || process.cwd()
+    if (projectRoot === "/") {
+      projectRoot = process.cwd()
+    }
     const report: string[] = []
     report.push(`━━━ sdd_spec_compliance_linter: ${args.changeName} ━━━`)
 
@@ -65,7 +68,7 @@ export default tool({
             if (f !== "node_modules" && f !== ".git" && f !== ".openspec" && f !== ".opencode") {
               recurse(full)
             }
-          } else if (f.endsWith(".js") || f.endsWith(".ts") || f.endsWith(".gs") || f.endsWith(".html") || f.endsWith(".tsx")) {
+          } else if (/\.(js|ts|gs|html|tsx|py|go|rs|java|cs)$/i.test(f)) {
             filesToScan.push(full)
           }
         })

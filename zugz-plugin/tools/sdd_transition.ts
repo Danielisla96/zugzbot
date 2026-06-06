@@ -93,7 +93,10 @@ export default tool({
       .describe("Dirección: forward (normal), backward (corregir), repeat (reintentar)")
   },
   async execute(args, context) {
-    const projectRoot = context.worktree || context.directory
+    let projectRoot = context.worktree || context.directory || process.cwd()
+    if (projectRoot === "/") {
+      projectRoot = process.cwd()
+    }
 
     if (!isValidPhase(args.nextPhase)) {
       return `[SDD Transition Blocked] Fase '${args.nextPhase}' inválida. Válidas: ${VALID_PHASES.join(", ")}`

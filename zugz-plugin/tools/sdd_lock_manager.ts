@@ -108,6 +108,19 @@ export function migrateToV2(raw: any): SddLockfile {
   return { ...DEFAULT_LOCKFILE }
 }
 
+export function setNestedValue(obj: any, pathStr: string, value: any): void {
+  const parts = pathStr.split(".")
+  let current = obj
+  for (let i = 0; i < parts.length - 1; i++) {
+    const part = parts[i]
+    if (current[part] === undefined) {
+      current[part] = {}
+    }
+    current = current[part]
+  }
+  current[parts[parts.length - 1]] = value
+}
+
 export function isValidChangeName(name: string): boolean {
   if (!name) return false
   if (name === "nuevo-cambio" || name === "nuevo_cambio") return false
@@ -208,7 +221,13 @@ export default tool({
         try {
           const lock = readLockfile(projectRoot)
           const patch = JSON.parse(args.patch)
-          Object.assign(lock, patch)
+          for (const [key, val] of Object.entries(patch)) {
+            if (key.includes(".")) {
+              setNestedValue(lock, key, val)
+            } else {
+              (lock as any)[key] = val
+            }
+          }
           writeLockfile(projectRoot, lock)
           return JSON.stringify({
             status: "SUCCESS",
