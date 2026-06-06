@@ -99,6 +99,9 @@ export function autoUpdateGitignore(projectRoot: string, report: string[]) {
   const addedPatterns = new Set<string>()
 
   for (const item of untrackedLines) {
+    if (item.startsWith(".openspec/") || item.startsWith(".openspec") || item.startsWith(".git/") || item.startsWith(".git")) {
+      continue
+    }
     let matched = false
     for (const rule of rules) {
       if (rule.test.test(item)) {
