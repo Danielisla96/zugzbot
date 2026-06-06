@@ -3,18 +3,28 @@ import { execSync } from "child_process"
 import fs from "fs"
 import path from "path"
 
-function isGraphifyInstalled(): boolean {
+function getWorkingGraphifyCommand(): string | null {
   try {
     execSync("which graphify", { stdio: "ignore" })
-    return true
-  } catch {
-    try {
-      execSync("graphify --help", { stdio: "ignore" })
-      return true
-    } catch {
-      return false
-    }
-  }
+    return "graphify"
+  } catch {}
+  
+  try {
+    execSync("graphify --help", { stdio: "ignore" })
+    return "graphify"
+  } catch {}
+
+  try {
+    execSync("python3 -m graphify --help", { stdio: "ignore" })
+    return "python3 -m graphify"
+  } catch {}
+
+  try {
+    execSync("python -m graphify --help", { stdio: "ignore" })
+    return "python -m graphify"
+  } catch {}
+
+  return null
 }
 
 export default tool({
@@ -35,8 +45,10 @@ export default tool({
     const graphPath = path.join(outputDir, "graph.json")
     const reportPath = path.join(outputDir, "GRAPH_REPORT.md")
 
+    const workingCmd = getWorkingGraphifyCommand()
+
     if (args.action === "status") {
-      const installed = isGraphifyInstalled()
+      const installed = workingCmd !== null
       const exists = fs.existsSync(graphPath)
       let info = {}
       if (exists) {
@@ -54,6 +66,7 @@ export default tool({
       return JSON.stringify({
         status: "SUCCESS",
         graphify_installed: installed,
+        working_command: workingCmd,
         graph_exists: exists,
         details: info,
         install_instruction: installed ? undefined : "Puedes instalarlo con: pip install graphifyy o uv tool install graphifyy"
@@ -61,7 +74,7 @@ export default tool({
     }
 
     if (args.action === "run") {
-      if (!isGraphifyInstalled()) {
+      if (!workingCmd) {
         return JSON.stringify({
           status: "FAILED",
           reason: "La CLI 'graphify' no está instalada en el sistema. Para usar esta funcionalidad, instálala primero usando: pip install graphifyy o uv tool install graphifyy"
@@ -86,14 +99,14 @@ export default tool({
       }
 
       try {
-        // Ejecutar graphify. Graphify maneja de forma inteligente cache interna.
-        execSync("graphify", { cwd: projectRoot, encoding: "utf-8" })
+        // Ejecutar graphify usando el comando detectado
+        execSync(workingCmd, { cwd: projectRoot, encoding: "utf-8" })
         
         const exists = fs.existsSync(graphPath)
         if (!exists) {
           return JSON.stringify({
             status: "FAILED",
-            reason: "Se ejecutó graphify pero no se generó el archivo graph.json esperado."
+            reason: `Se ejecutó ${workingCmd} pero no se generó el archivo graph.json esperado.`
           }, null, 2)
         }
 
@@ -106,7 +119,7 @@ export default tool({
       } catch (e: any) {
         return JSON.stringify({
           status: "FAILED",
-          reason: `Error al ejecutar graphify: ${e.message || e}`
+          reason: `Error al ejecutar ${workingCmd}: ${e.message || e}`
         }, null, 2)
       }
     }
