@@ -13,7 +13,23 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
         const [sessionIds, setSessionIds] = createSignal<string[]>([props.session_id])
 
         // --- Constantes del lockfile v2 (deben coincidir con tools/sdd_transition.ts) ---
-        const ZUGBOT_VERSION = "2.0.9"
+        const getZugzbotVersion = (): string => {
+          const fallback = "2.0.12"
+          try {
+            const localPkgPath = path.join(process.cwd(), "package.json")
+            if (fs.existsSync(localPkgPath)) {
+              const pkg = JSON.parse(fs.readFileSync(localPkgPath, "utf-8"))
+              if (pkg.name === "zugzbot-sdd") return pkg.version
+            }
+            const depPkgPath = path.join(process.cwd(), "node_modules/zugzbot-sdd/package.json")
+            if (fs.existsSync(depPkgPath)) {
+              const pkg = JSON.parse(fs.readFileSync(depPkgPath, "utf-8"))
+              return pkg.version || fallback
+            }
+          } catch {}
+          return fallback
+        }
+        const ZUGBOT_VERSION = getZugzbotVersion()
 
         const PHASE_ORDER = [
           "F0",
