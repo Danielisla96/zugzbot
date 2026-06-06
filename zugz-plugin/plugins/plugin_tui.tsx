@@ -9,10 +9,8 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
     order: 100,
     slots: {
       sidebar_content(_ctx, props: { session_id: string; children?: any }) {
-        // --- Estado reactivo y Polling de IDs de Sesión ---
         const [sessionIds, setSessionIds] = createSignal<string[]>([props.session_id])
 
-        // --- Constantes del lockfile v2 (deben coincidir con tools/sdd_transition.ts) ---
         const getZugzbotVersion = (): string => {
           const fallback = "2.0.18"
           try {
@@ -26,7 +24,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
               const pkg = JSON.parse(fs.readFileSync(depPkgPath, "utf-8"))
               return pkg.version || fallback
             }
-          } catch { }
+          } catch {}
           return fallback
         }
         const ZUGBOT_VERSION = getZugzbotVersion()
@@ -74,7 +72,6 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
           "DONE": "DONE Completado",
         }
 
-        // --- Helper para leer el progreso SDD (lockfile v2) ---
         interface SddProgress {
           changeName: string
           workflow: string
@@ -140,7 +137,6 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
           return null
         }
 
-        // Función para actualizar recursivamente la lista de sesión IDs usando api.client
         const updateSessionIds = async () => {
           try {
             const results: string[] = []
@@ -165,7 +161,6 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
 
             await traverse(props.session_id)
 
-            // Solo actualizamos el signal si el conjunto de IDs cambió, para evitar re-renderizados innecesarios
             if (JSON.stringify(results) !== JSON.stringify(sessionIds())) {
               setSessionIds(results)
             }
@@ -295,33 +290,28 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
           }
         }
 
-        // --- Estado reactivo y Polling ---
         const [metrics, setMetrics] = createSignal<TotalMetrics>(getMetrics([props.session_id]))
         const [sddProgress, setSddProgress] = createSignal<SddProgress | null>(getSddProgress())
         const [colorIndex, setColorIndex] = createSignal(0)
 
-        // Actualizamos los IDs de las sesiones cada 2 segundos
         const idsInterval = setInterval(() => {
           updateSessionIds()
           setSddProgress(getSddProgress())
         }, 2000)
 
-        // Actualizamos las métricas cada segundo basadas en el signal de sesión IDs
         const metricsInterval = setInterval(() => {
           setMetrics(getMetrics(sessionIds()))
         }, 1000)
 
-        // Ticker lento para una animación de ola vertical suave
         const colorInterval = setInterval(() => {
           setColorIndex((prev) => (prev + 1) % 100)
         }, 500)
 
-        // Paleta premium de naranjas fuertes, ámbar y cobrizos
         const orangePalette = [
-          "#E04F00", // Naranjo oscuro / Fuego
-          "#FF7300", // Naranjo brillante / Ámbar
-          "#B33600", // Siena tostado / Óxido
-          "#FF8C00", // Ámbar oscuro
+          "#E04F00",
+          "#FF7300",
+          "#B33600",
+          "#FF8C00",
         ]
 
         const getLineColor = (lineIdx: number) => {
@@ -338,7 +328,6 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
           "╚══════╝ ╚═════╝  ╚═════╝ ╚══════╝"
         ]
 
-        // Ejecutar inmediatamente al inicio
         updateSessionIds()
         setSddProgress(getSddProgress())
 
@@ -348,7 +337,6 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
           clearInterval(colorInterval)
         })
 
-        // Helper: índice numérico de la fase actual para comparar con PHASE_ORDER
         const phaseIndex = (phase: string): number => {
           const idx = PHASE_ORDER.indexOf(phase as any)
           return idx === -1 ? 0 : idx
@@ -356,7 +344,6 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
 
         return (
           <box gap={0}>
-            {/* Cabecera Logo ZUGZ con Efecto Ola Vertical Naranja */}
             <box gap={0} paddingTop={1} paddingLeft={1}>
               {logoLines.map((line, idx) => (
                 <text fg={getLineColor(idx)}>
@@ -368,13 +355,12 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
               </text>
             </box>
 
-            {/* Progreso SDD v2: 12 estaciones (F0, F1, F1.5, HIL-A, F2-RED/GREEN/REFACTOR, F3, F4, HIL-B, F5, DONE) */}
             {sddProgress() ? (
               <box gap={0} paddingLeft={1} paddingTop={1} paddingBottom={0}>
                 <text fg="#FF7300">
                   {`SDD: ${sddProgress()?.changeName ?? "—"}`}
                 </text>
-                <text fg={api.theme.current.textMuted}>
+                 <text fg={api.theme.current.textMuted}>
                   {`Stack: ${sddProgress()?.stackProfile ?? "unknown"}`}
                 </text>
                 <text fg={api.theme.current.textMuted}>
@@ -399,7 +385,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                     }
                     if (phase === "HIL-A") {
                       isActive = (current === "F1.5" && status === "awaiting_hil")
-                      isCompleted = curIdx > phaseIndex("HIL-A") || (current === "F1.5" && status === "spec_approved")
+                      isCompleted = curIdx > phaseIndex("F1.5") || (current === "F1.5" && status === "spec_approved")
                     }
                     if (phase === "F4" && status === "awaiting_hil") {
                       isActive = false
@@ -407,7 +393,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                     }
                     if (phase === "HIL-B") {
                       isActive = (current === "F4" && status === "awaiting_hil")
-                      isCompleted = curIdx > phaseIndex("HIL-B") || (current === "F4" && status === "qa_validated")
+                      isCompleted = curIdx > phaseIndex("F4") || (current === "F4" && status === "qa_validated")
                     }
 
                     const isHil = phase === "HIL-A" || phase === "HIL-B"
@@ -430,7 +416,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                         <text fg={fgColor}>
                           {`${prefix}${label}`}
                         </text>
-                        {(isActive && agent) ? (
+                        {isActive && agent ? (
                           <text fg="#FFAA00">
                             {`   └─ ${agent}`}
                           </text>
@@ -440,7 +426,6 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                   })}
                 </box>
 
-                {/* TDD progress */}
                 {(() => {
                   const tdd = sddProgress()?.tdd
                   if (!tdd) return null
@@ -450,11 +435,11 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
 
                   let tddColor = api.theme.current.textMuted
                   if (tdd.refactor.completed || tdd.refactor.linterClean) {
-                    tddColor = "#0A84FF" // Azul
+                    tddColor = api.theme.current.success
                   } else if (tdd.green.completed) {
-                    tddColor = "#34C759" // Verde
+                    tddColor = "#5AC8FA"
                   } else if (tdd.red.completed) {
-                    tddColor = "#FF3B30" // Rojo
+                    tddColor = "#FF3B30"
                   }
 
                   return (
@@ -464,7 +449,6 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                   )
                 })()}
 
-                {/* Git branch */}
                 {(sddProgress()?.git?.branch && sddProgress()?.git?.branch !== "—") ? (
                   <text fg={sddProgress()?.git?.workingTreeClean ? api.theme.current.success : "#FF7300"}>
                     {`Git: ${sddProgress()?.git?.branch ?? "—"}${sddProgress()?.git?.workingTreeClean ? " (clean)" : " (dirty)"}`}
@@ -475,9 +459,8 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                   {"────────────────────────────────────"}
                 </text>
               </box>
-            )}
+            ) : null}
 
-            {/* Monitor de Agentes Compacto y Plano (Efecto Sándwich) */}
             <box gap={0} paddingLeft={1} paddingTop={1} paddingBottom={0}>
               {metrics().agents.map((agent) => (
                 <text fg={agent.isSubagent ? api.theme.current.textMuted : api.theme.current.text}>
@@ -492,7 +475,6 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
               </text>
             </box>
 
-            {/* Chat original de OpenCode */}
             {props.children}
           </box>
         )
