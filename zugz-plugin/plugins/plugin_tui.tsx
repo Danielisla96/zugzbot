@@ -60,18 +60,18 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
         }
 
         const PHASE_LABELS: Record<string, string> = {
-          "F0": "F0 Exploración",
-          "F1": "F1 Spec",
+          "F0": "F0 Explorar",
+          "F1": "F1 Spec Plan",
           "F1.5": "F1.5 Review",
-          "HIL-A": "HIL-A Aprobar spec",
-          "F2-RED": "F2-RED Tests rojos",
-          "F2-GREEN": "F2-GREEN Mínimo viable",
-          "F2-REFACTOR": "F2-REFACTOR Limpieza",
-          "F3": "F3 Validación",
-          "F4": "F4 Deploy dev",
-          "HIL-B": "HIL-B Aprobar QA",
+          "HIL-A": "HIL-A Spec OK?",
+          "F2-RED": "F2-RED Tests",
+          "F2-GREEN": "F2-GREEN Build",
+          "F2-REFACTOR": "F2-REFACTOR Clean",
+          "F3": "F3 Test Validate",
+          "F4": "F4 Dev Deploy",
+          "HIL-B": "HIL-B QA OK?",
           "F5": "F5 Archive",
-          "DONE": "DONE Ciclo cerrado",
+          "DONE": "DONE Completado",
         }
 
         // --- Helper para leer el progreso SDD (lockfile v2) ---
@@ -374,8 +374,14 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                 <text fg="#FF7300">
                   {`SDD: ${sddProgress()?.changeName ?? "—"}`}
                 </text>
+                 <text fg={api.theme.current.textMuted}>
+                  {`Stack: ${sddProgress()?.stackProfile ?? "unknown"}`}
+                </text>
                 <text fg={api.theme.current.textMuted}>
-                  {`Stack: ${sddProgress()?.stackProfile ?? "unknown"} · Workflow: ${sddProgress()?.workflow ?? "—"} · Status: ${sddProgress()?.status ?? "idle"}${sddProgress()?.autoPilot ? " · auto-pilot" : ""}`}
+                  {`Workflow: ${sddProgress()?.workflow ?? "—"}`}
+                </text>
+                <text fg={sddProgress()?.status === "idle" ? api.theme.current.textMuted : "#FFAA00"}>
+                  {`Status: ${sddProgress()?.status ?? "idle"}${sddProgress()?.autoPilot ? " (auto)" : ""}`}
                 </text>
                 <box gap={0} paddingTop={1}>
                   {PHASE_ORDER.map((phase) => {
@@ -400,9 +406,16 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                     const label = PHASE_LABELS[phase] || phase
                     const agent = SUBAGENT_FOR_PHASE[phase] || ""
                     return (
-                      <text fg={fgColor}>
-                        {`${prefix}${label} ${agent}`}
-                      </text>
+                      <box gap={0}>
+                        <text fg={fgColor}>
+                          {`${prefix}${label}`}
+                        </text>
+                        {isActive && agent && (
+                          <text fg="#FFAA00">
+                            {`   └─ ${agent}`}
+                          </text>
+                        )}
+                      </box>
                     )
                   })}
                 </box>
@@ -412,21 +425,29 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                   const tdd = sddProgress()?.tdd
                   if (!tdd) return null
                   const redMark = tdd.red.completed ? "✓" : "○"
-                  const redCount = tdd.red.testsAdded > 0 ? ` (${tdd.red.testsAdded})` : ""
                   const greenMark = tdd.green.completed ? "✓" : "○"
-                  const greenCount = tdd.green.testsPassing > 0 ? ` (${tdd.green.testsPassing})` : ""
-                  const refactorMark = tdd.refactor.linterClean ? "✓" : "○"
+                  const refactorMark = tdd.refactor.completed || tdd.refactor.linterClean ? "✓" : "○"
+                  
+                  let tddColor = api.theme.current.textMuted
+                  if (tdd.refactor.completed || tdd.refactor.linterClean) {
+                    tddColor = api.theme.current.success
+                  } else if (tdd.green.completed) {
+                    tddColor = "#5AC8FA"
+                  } else if (tdd.red.completed) {
+                    tddColor = "#FF3B30"
+                  }
+                  
                   return (
-                    <text fg={api.theme.current.textMuted} paddingTop={1}>
-                      {`TDD: ${redMark} RED${redCount} · ${greenMark} GREEN${greenCount} · ${refactorMark} REFACTOR(lint)`}
+                    <text fg={tddColor} paddingTop={1}>
+                      {`TDD: RED[${redMark}] GRN[${greenMark}] REF[${refactorMark}]`}
                     </text>
                   )
                 })()}
 
                 {/* Git branch */}
                 {sddProgress()?.git?.branch && sddProgress()?.git?.branch !== "—" && (
-                  <text fg={api.theme.current.textMuted}>
-                    {`Git: ${sddProgress()?.git?.branch ?? "—"}${sddProgress()?.git?.workingTreeClean ? "" : " (dirty)"}`}
+                  <text fg={sddProgress()?.git?.workingTreeClean ? api.theme.current.success : "#FF7300"}>
+                    {`Git: ${sddProgress()?.git?.branch ?? "—"}${sddProgress()?.git?.workingTreeClean ? " (clean)" : " (dirty)"}`}
                   </text>
                 )}
 
