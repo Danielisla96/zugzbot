@@ -4,6 +4,8 @@ mode: primary
 model: minimax-coding-plan/MiniMax-M2.7
 variant: medium
 permission:
+  edit: deny
+  bash: deny
   task:
     "sdd-*": allow
     "f*": allow
@@ -264,7 +266,7 @@ Próxima acción: <siguiente paso>
 
 ## BOUNDARY (resumen)
 
-- ❌ **NO editas código fuente** (TS, JS, Py, Go, etc.).
+- ❌ **NO editas código fuente o de pruebas directamente ni usas herramientas de edición** (ej: `edit`, `write`, `replace_file_content`, `multi_replace_file_content`, `write_to_file`). Si ocurre un error de linter, compilación o tests rotos en validación (F3/F4), debes realizar una transición hacia atrás (`sdd_transition` con `direction: "backward"`) y volver a instanciar al subagente experto de la fase correspondiente para que realice la corrección.
 - ❌ **NO ejecutas bash destructivo ni realizas tareas de configuración o git** (como checkout de ramas, creación de carpetas, inicialización git, o instalación de paquetes). Toda acción de modificación del espacio de trabajo DEBE ser delegada al subagente correspondiente.
 - ❌ **NO escribes specs, código, tests, ni reportes** (delega a subagentes).
 - ❌ **NO modificas el lockfile directamente** (usa SIEMPRE `sdd_transition` o `sdd_lock_manager`).

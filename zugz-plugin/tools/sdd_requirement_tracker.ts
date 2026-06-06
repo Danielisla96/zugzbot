@@ -15,6 +15,7 @@ export default tool({
     let changeName = args.changeName;
     let isManualQa = false;
 
+    let stackProfile = "";
     // 1. Detectar cambio activo y verificar si hay QA manual configurado en el lockfile
     const lockfilePath = path.join(projectRoot, ".openspec/sdd-lock.json");
     const altLockPath = path.join(projectRoot, "openspec/sdd-lock.json");
@@ -27,6 +28,9 @@ export default tool({
         }
         if (lockObj.qa_manual === true || lockObj.manual_qa === true) {
           isManualQa = true;
+        }
+        if (lockObj.stack_profile) {
+          stackProfile = lockObj.stack_profile;
         }
       } catch (e) {}
     }
@@ -143,7 +147,21 @@ export default tool({
         } else {
           const lowerFile = entry.toLowerCase();
           const ext = path.extname(entry).toLowerCase();
-          const validTestExtensions = [".ts", ".tsx", ".js", ".jsx", ".py", ".go", ".rs", ".java", ".cs"];
+          let validTestExtensions = [".ts", ".tsx", ".js", ".jsx", ".py", ".go", ".rs", ".java", ".cs"];
+          if (stackProfile) {
+            const sp = stackProfile.toLowerCase();
+            if (sp.includes("node") || sp.includes("react") || sp.includes("vue") || sp.includes("svelte") || sp.includes("next") || sp.includes("express") || sp.includes("javascript") || sp.includes("typescript")) {
+              validTestExtensions = [".ts", ".tsx", ".js", ".jsx"];
+            } else if (sp.includes("python") || sp.includes("django") || sp.includes("fastapi") || sp.includes("flask")) {
+              validTestExtensions = [".py"];
+            } else if (sp.includes("go")) {
+              validTestExtensions = [".go"];
+            } else if (sp.includes("rust") || sp.includes("cargo")) {
+              validTestExtensions = [".rs"];
+            } else if (sp.includes("gas") || sp.includes("google-apps-script")) {
+              validTestExtensions = [".gs", ".ts", ".js"];
+            }
+          }
           const isTestFile = 
             validTestExtensions.includes(ext) && (
               lowerFile.includes(".test.") || 
@@ -220,7 +238,22 @@ export default tool({
           "linter": ["linter", "ruff", "eslint"],
           "limpio": ["clean", "passed"],
           "faltante": ["missing", "none", "null"],
-          "falta": ["missing", "none", "null"]
+          "falta": ["missing", "none", "null"],
+          "formulario": ["form"],
+          "botón": ["button", "btn"],
+          "envío": ["submit", "send"],
+          "enviar": ["submit", "send"],
+          "campo": ["input", "field"],
+          "campos": ["inputs", "fields"],
+          "resultado": ["result", "output"],
+          "conexión": ["connection", "connect", "fetch"],
+          "conectado": ["connected", "online"],
+          "desconectado": ["disconnected", "offline"],
+          "carga": ["loading", "spinner", "load"],
+          "mensaje": ["message", "text"],
+          "interfaz": ["ui", "interface", "layout"],
+          "pantalla": ["screen", "view"],
+          "diseño": ["design", "style", "css"]
         };
 
         const baseKeywords = crit

@@ -15,6 +15,8 @@
       "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/zugzbot.md}",
       "permission": {
+        "edit": "deny",
+        "bash": "deny",
         "task": {
           "sdd-*": "allow",
           "f*": "allow",

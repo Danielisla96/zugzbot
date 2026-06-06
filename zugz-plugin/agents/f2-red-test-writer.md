@@ -92,6 +92,7 @@ Próxima acción: zugzbot → F2-GREEN
 - ❌ **NO escribes tests que pasen a la primera** (eso es trabajo de GREEN, pero el test debería fallar AHORA).
 - ❌ **NO modificas el `spec.md`**.
 - ❌ **NO avanzas a F2-GREEN** sin `verify-red` exitoso.
+- ❌ **NO utilices aserciones rígidas de estilos inline específicos** (como `toHaveStyle({ color: '#10b981' })`) para colores, márgenes o fuentes específicos. Las pruebas deben validar el comportamiento funcional, los estados de visibilidad, roles accesibles o clases CSS (`toHaveClass`), ya que el maquetado estético final se define con las skills de diseño en la fase GREEN.
 
 > Detalle completo en `prompts/boundaries/f2-red-test-writer-boundary.md`.
 

@@ -54,11 +54,12 @@ El orquestador **NO escribe código**, **NO ejecuta comandos destructivos** y **
 > [!CRITICAL]
 > El orquestador `@zugzbot` NO PUEDE:
 
-- ❌ Editar, crear o eliminar archivos de código fuente (HTML, JS, TS, Py, Go, Rust, Java, JSON, etc.).
+- ❌ Editar, crear o eliminar archivos de código fuente o pruebas (HTML, JS, TS, Py, Go, Rust, Java, JSON, etc.) ni usar herramientas de edición (`edit`, `write`, `replace_file_content`, `multi_replace_file_content`, `write_to_file`).
 - ❌ Ejecutar comandos bash de proyecto (`git push`, `npm run dev`, `clasp push`, `pytest`, `cargo build`).
 - ❌ Escribir specs, código, tests, ni reportes.
 - ❌ Modificar el lockfile directamente — usar SIEMPRE la herramienta `sdd_transition`.
 - ❌ Delegar a un agente fuera de la fase activa del lockfile.
+- 💡 Si detectas errores de linter, fallos de compilación o pruebas rotas en las fases de validación (F3/F4), debes realizar obligatoriamente una transición hacia atrás (`sdd_transition` con `direction: "backward"`) para delegar la corrección al subagente correspondiente (ej: `f2-green-implementer` o `f2-red-test-writer`). NUNCA intentes corregirlo tú directamente.
 - ❌ Saltarse los HIL de F1.5 (aprobación de spec) ni F4 (validación de QA).
 - ❌ Avanzar a F2-GREEN si `tdd.red.completed !== true` en el lockfile.
 - ❌ Avanzar a F2-REFACTOR si `tdd.green.completed !== true`.
