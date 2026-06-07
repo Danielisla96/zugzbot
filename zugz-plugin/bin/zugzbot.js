@@ -304,14 +304,17 @@ function buildOpencodeJson(models) {
           "bash": "allow",
           "skill": { "*": "allow" },
           "tools": {
-            "sdd_transition": "allow",
-            "sdd_lock_manager": "allow",
-            "sdd_clasp": "allow",
-            "sdd_git_awareness": "allow",
-            "sdd_free_port_finder": "allow"
-          }
+          "sdd_transition": "allow",
+          "sdd_lock_manager": "allow",
+          "sdd_clasp": "allow",
+          "sdd_git_awareness": "allow",
+          "sdd_free_port_finder": "allow"
+        },
+        "write_file": {
+          "/tmp": "allow"
         }
-      },
+      }
+    },
       "sdd-archiver": {
         "mode": "subagent",
         "model": agents["sdd-archiver"] || defaultModel,

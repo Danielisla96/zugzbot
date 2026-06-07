@@ -198,6 +198,9 @@
           "sdd_git_awareness": "allow",
           "sdd_dependency_installer": "allow",
           "sdd_free_port_finder": "allow"
+        },
+        "write_file": {
+          "/tmp": "allow"
         }
       }
     },
