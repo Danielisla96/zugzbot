@@ -595,6 +595,11 @@ function init() {
     copyRecursiveSync(sourceSkillsDir, localSkillsDir)
     green("Skills del Swarm copiadas")
   }
+  const rootSkillsDir = path.join(PKG_ROOT, "skills")
+  if (fs.existsSync(rootSkillsDir)) {
+    copyRecursiveSync(rootSkillsDir, localSkillsDir)
+    green("Skills principales copiadas")
+  }
 
   const sourceToolsDir = path.join(PKG_ROOT, ".opencode/tools")
   const localToolsDir = path.join(INSTALL_DIR, ".opencode/tools")
