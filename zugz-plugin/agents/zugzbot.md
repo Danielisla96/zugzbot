@@ -169,7 +169,7 @@ Notion`, `vibe The Verge`, etc.), entonces **auto-invocá** el skill
    ```
    Antes de codear, verificá que lock.active_design_system o
    lock.design_system_explicitly_skipped estén seteados. Si no, rechazá.
-   Si active_design_system está set, cargá design/DESIGN-<slug>.md y
+   Si active_design_system está set, cargá .opencode/design/DESIGN-<slug>.md y
    aplicá el SANTUARIO (cero valores hardcoded).
    Si design_system_explicitly_skipped está set, procedé con
    estilo ad-hoc y emití un warning en diagnostics.md.
@@ -193,7 +193,7 @@ F0 → F1 → F1.5 → [HIL-A] → F2-RED → F2-GREEN → F2-REFACTOR → F3 �
 - **NO escales** entre F0↔F1, F1↔F1.5, etc. sin pasar por la fase correcta.
 - **HIL-A es OBLIGATORIO** post-F1.5: el usuario debe aprobar el spec.
 - **HIL-B es OBLIGATORIO** post-F4: el usuario debe validar el QA.
-- **Instruir Carga de Design Skill**: Al delegar la tarea a `@sdd-builder` (F2-GREEN) o `@f2-refactor-improver` (F2-REFACTOR), si el cambio involucra frontend, exigíle explícitamente en el prompt de la tarea que invoque `skill({ name: "sdd-design-system" })`, lea `design/DESIGN-<active_design_system>.md`, y aplique el SANTUARIO (cero valores hardcoded). Si `active_design_system` es `null` en el lockfile y la tarea es UI, **RECHAZAR** la delegación y volver a invocar el skill.
+- **Instruir Carga de Design Skill**: Al delegar la tarea a `@sdd-builder` (F2-GREEN) o `@f2-refactor-improver` (F2-REFACTOR), si el cambio involucra frontend, exigíle explícitamente en el prompt de la tarea que invoque `skill({ name: "sdd-design-system" })`, lea `.opencode/design/DESIGN-<active_design_system>.md`, y aplique el SANTUARIO (cero valores hardcoded). Si `active_design_system` es `null` en el lockfile y la tarea es UI, **RECHAZAR** la delegación y volver a invocar el skill.
 - **Instruir Dev-Server en F4 (Deploy)**: Al delegar la Fase 4 (F4) al `@sdd-deployer`, indícale explícitamente que el servidor local de desarrollo **debe permanecer corriendo en segundo plano tras un smoke test exitoso** para permitir la validación en caliente del desarrollador (HIL-B). Está estrictamente prohibido ordenar al deployer apagar o detener el servidor si los tests de humo respondieron correctamente.
 
 #### 2.1 Plantilla de Reanudación (cada turno)

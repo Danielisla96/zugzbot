@@ -81,9 +81,9 @@ pregunta al usuario **es** tu trabajo.
 ### Paso 2 — Cargar tokens
 
 Una vez elegido el slug, invocar la tool `read` sobre
-`design/DESIGN-<slug>.md` (path relativo a la raíz del proyecto del
+`.opencode/design/DESIGN-<slug>.md` (path relativo a la raíz del proyecto del
 usuario). Estos archivos los copia el instalador de `zugzbot-sdd`
-(`npx zugzbot`) a `<INSTALL_DIR>/design/`. En el repo de desarrollo
+(`npx zugzbot`) a `<INSTALL_DIR>/.opencode/design/`. En el repo de desarrollo
 viven en `zugz-plugin/design/`.
 
 **Cargar el archivo completo en contexto** — los design tokens son

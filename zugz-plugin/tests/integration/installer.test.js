@@ -102,7 +102,7 @@ describe('installer: zugz-models.json editable + overlay', () => {
 
   test('primer install: copia design/ con los 10 design systems al proyecto del usuario', () => {
     runInstaller(projectDir);
-    const designDir = path.join(projectDir, 'design');
+    const designDir = path.join(projectDir, '.opencode/design');
     expect(fs.existsSync(designDir)).toBe(true);
     const files = fs.readdirSync(designDir).filter(f => f.startsWith('DESIGN-') && f.endsWith('.md'));
     expect(files.length).toBeGreaterThanOrEqual(10);
@@ -112,7 +112,7 @@ describe('installer: zugz-models.json editable + overlay', () => {
   });
 
   test('segundo install: design/ del usuario NO se sobreescribe (preserva customizaciones)', () => {
-    const designDir = path.join(projectDir, 'design');
+    const designDir = path.join(projectDir, '.opencode/design');
     const customPath = path.join(designDir, 'DESIGN-custom.md');
     fs.writeFileSync(customPath, '# Mi design system custom\ncolors: { primary: "#abc123" }');
 

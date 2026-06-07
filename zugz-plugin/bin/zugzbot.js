@@ -618,7 +618,7 @@ function init() {
 
   const sourceDesignDir = path.join(PKG_ROOT, "design")
   if (fs.existsSync(sourceDesignDir)) {
-    const localDesignDir = path.join(INSTALL_DIR, "design")
+    const localDesignDir = path.join(INSTALL_DIR, ".opencode/design")
     fs.mkdirSync(localDesignDir, { recursive: true })
     copyRecursiveSync(sourceDesignDir, localDesignDir)
     green("Design systems copiados (10 disponibles para el skill sdd-design-system)")
@@ -641,8 +641,8 @@ function init() {
    │   ├── profiles/              (8 profiles: node-ts, python, go, rust, java, gas, static-site)
    │   ├── plugins/               (TUI + SDD core)
    │   ├── skills/                (12 skills premium, incluye sdd-design-system)
-   │   └── tools/                 (33 herramientas SRP)
-   ├── design/                    (10 design systems: airbnb, apple, meta, nike, notion, renault, theverge, uber, voltagent, x.ai)
+   │   ├── tools/                 (33 herramientas SRP)
+   │   └── design/                (10 design systems: airbnb, apple, meta, nike, notion, renault, theverge, uber, voltagent, x.ai)
    └── prompts/                   (contratos y boundaries de cada fase)
 
    TDD Discipline: Red → Green → Refactor enforced

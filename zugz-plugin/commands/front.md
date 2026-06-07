@@ -25,11 +25,11 @@ El usuario quiere construir UI: $ARGUMENTS
        size, weight).
      - `rounded.md`, `spacing.lg`.
      - 3 componentes clave del `components.*` que se usarán.
-   - Referenciar el path `design/DESIGN-<slug>.md` en la sección "Sources".
+   - Referenciar el path `.opencode/design/DESIGN-<slug>.md` en la sección "Sources".
 
 3. **Pasar a Fase 2 con contexto del design system:**
    - Delegar a `@sdd-builder` con el `spec.md` enriquecido.
-   - El subagente DEBE haber cargado `design/DESIGN-<slug>.md` en su
+   - El subagente DEBE haber cargado `.opencode/design/DESIGN-<slug>.md` en su
      contexto (verificado por el router).
    - Aplicar SANTUARIO del skill: cero valores hardcoded.
 

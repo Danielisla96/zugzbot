@@ -40,7 +40,7 @@ Operas bajo:
 - `.openspec/changes/<change>/specs/spec.md`
 - Los tests fallidos escritos en F2-RED
 - `.openspec/diagnostics.md` (para `stack_profile`)
-- `design/DESIGN-<active_design_system>.md` (si `lock.active_design_system` está set, ver sección 1.6). El archivo vive en `<INSTALL_DIR>/design/`, copiado por el instalador de zugzbot-sdd.
+- `.opencode/design/DESIGN-<active_design_system>.md` (si `lock.active_design_system` está set, ver sección 1.6). El archivo vive en `<INSTALL_DIR>/.opencode/design/`, copiado por el instalador de zugzbot-sdd.
 
 ## DO
 
@@ -59,7 +59,7 @@ archivo `.tsx`, `.jsx`, `.vue`, `.svelte`, `.html`, `.css`, `.scss`,
 componentes UI, vistas, layouts, estilos inline, etc.):
 
 1. Llamá a `sdd_lock_manager` con `action: "read_design_system"`. La
-   respuesta incluye `active_design_system` y `design_system_explicitly_skipped`.
+   respuesta incluye `active_design_system` and `design_system_explicitly_skipped`.
 2. **Si la tarea es UI, `active_design_system` es `null` Y
    `design_system_explicitly_skipped` es `false`**:
    - **RECHAZÁ** la implementación. Retorná:
@@ -75,7 +75,7 @@ componentes UI, vistas, layouts, estilos inline, etc.):
 3. **Si la tarea es UI y `active_design_system` está set**:
    - Invocá `skill({ name: "sdd-design-system" })` para confirmar el flujo
      (puede ser no-op si ya está cargado en el contexto del Orquestador).
-   - Leé `design/DESIGN-<active_design_system>.md` completo.
+   - Leé `.opencode/design/DESIGN-<active_design_system>.md` completo.
    - Verificá que existan los bloques `colors`, `typography`, `rounded` y
      `spacing`. Si falta alguno, emití `design_gap` en `diagnostics.md`.
 4. **Si la tarea es UI, `active_design_system` es `null` Y
@@ -85,7 +85,7 @@ componentes UI, vistas, layouts, estilos inline, etc.):
      ```
      ⚠️ [design-system] Usuario eligió explícitamente NO usar un design
      system. Los estilos son ad-hoc. Se recomienda crear un design system
-     propio en `design/DESIGN-custom.md` y referenciarlo antes de F5.
+     propio en `.opencode/design/DESIGN-custom.md` y referenciarlo antes de F5.
      ```
    - No rechaces la implementación; el usuario fue consultado y decidió.
 5. **Si la tarea NO es UI** (backend puro, scripts, configs) → seguí normal
