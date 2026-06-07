@@ -105,6 +105,8 @@ literalmente del YAML del design system cargado:
 | `padding: var(--ds-spacing-lg)` | `padding: 23px` libre |
 | `<Button variant="primary" />` mapeado a `components.button-primary` | `<button style={{ ... ad-hoc }}>` |
 
+- **Uso Obligatorio de Componentes HeroUI (Aceleración de UI)**: El design system (Apple, Notion, etc.) es una referencia para el estilo estético (colores, fuentes, radios, espaciados). Sin embargo, **debes usar siempre los componentes nativos de HeroUI** (ej. `<Button>`, `<Card>`, `<Input>`, `<Link>`, `<Drawer>`, `<Avatar>`, etc.) para construir la estructura, en lugar de maquetar con etiquetas HTML nativas. Esto es crítico para acelerar el desarrollo. Mapea los tokens del design system al styling o className de los componentes de HeroUI.
+
 Si el código de producción contiene valores hardcoded detectables, es un
 **fallo de compliance**. `sdd_spec_compliance_linter` lo detectará en F3.
 
