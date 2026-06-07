@@ -324,10 +324,8 @@ export default tool({
           retry_count: 0,
           corrective_loop_active: false,
           fresh_task: false,
-          checkpoints: [],
-          tasks: [],
-          complexity: "low"
-        }
+          checkpoints: []
+        };
         fs.writeFileSync(lockfilePath, JSON.stringify(lockfile, null, 2), "utf-8")
         report.push(`✓ Lockfile .openspec/sdd-lock.json restablecido a 'idle' con valores limpios`)
       } catch (e: any) {
@@ -345,17 +343,96 @@ export default tool({
         let totalInput = 0;
         let totalOutput = 0;
         const models = new Set<string>();
-        
-        entries.forEach((e: any) => {
-          if (e.analytics) {
-            totalCost = Math.max(totalCost, e.analytics.cumulative_cost_usd || 0);
-            totalInput = Math.max(totalInput, e.analytics.cumulative_tokens_input || 0);
-            totalOutput = Math.max(totalOutput, e.analytics.cumulative_tokens_output || 0);
-            if (Array.isArray(e.analytics.models_used)) {
-              e.analytics.models_used.forEach((m: string) => models.add(m));
+
+        // Intenta obtener la telemetría real desde la base de datos de OpenCode
+        try {
+          const os = await import("os");
+          const dbPath = path.join(os.homedir(), ".local/share/opencode/opencode.db");
+          if (fs.existsSync(dbPath)) {
+            const pythonCmd = `python3 -c "
+import sqlite3, json, sys, os
+db_path = sys.argv[1]
+start_sid = sys.argv[2]
+if not os.path.exists(db_path):
+    print(json.dumps({}))
+    sys.exit(0)
+conn = sqlite3.connect(db_path)
+conn.row_factory = sqlite3.Row
+cursor = conn.cursor()
+
+curr_sid = start_sid
+while True:
+    cursor.execute('SELECT parent_id FROM session WHERE id = ?', (curr_sid,))
+    row = cursor.fetchone()
+    if row and row['parent_id']:
+        curr_sid = row['parent_id']
+    else:
+        break
+root_sid = curr_sid
+
+def get_descendants(sid):
+    cursor.execute('SELECT id, tokens_input, tokens_output, cost, model FROM session WHERE parent_id = ?', (sid,))
+    children = cursor.fetchall()
+    res = [dict(c) for c in children]
+    for c in children:
+        res.extend(get_descendants(c['id']))
+    return res
+
+cursor.execute('SELECT id, tokens_input, tokens_output, cost, model FROM session WHERE id = ?', (root_sid,))
+root = cursor.fetchone()
+sessions = [dict(root)] if root else []
+sessions.extend(get_descendants(root_sid))
+
+total_input = sum(s.get('tokens_input') or 0 for s in sessions)
+total_output = sum(s.get('tokens_output') or 0 for s in sessions)
+total_cost = sum(s.get('cost') or 0.0 for s in sessions)
+
+models = set()
+for s in sessions:
+    m_val = s.get('model')
+    if m_val:
+        try:
+            m_json = json.loads(m_val)
+            models.add(m_json.get('id') or m_val)
+        except Exception:
+            models.add(m_val)
+
+print(json.dumps({
+    'total_input': total_input,
+    'total_output': total_output,
+    'total_cost': total_cost,
+    'models': list(models)
+}))
+" "${dbPath}" "${context.sessionID}"`;
+
+            const output = execSync(pythonCmd, { encoding: "utf-8" });
+            const data = JSON.parse(output);
+            if (data.total_input !== undefined) {
+              totalInput = data.total_input;
+              totalOutput = data.total_output;
+              totalCost = data.total_cost;
+              if (Array.isArray(data.models)) {
+                data.models.forEach((m: string) => models.add(m));
+              }
             }
           }
-        });
+        } catch (e: any) {
+          report.push(`⚠️ Falló la consulta directa a opencode.db: ${e.message}. Usando fallback de historial.`);
+        }
+
+        // Fallback/acumulación si la consulta no arrojó resultados o falló
+        if (totalInput === 0 && totalOutput === 0) {
+          entries.forEach((e: any) => {
+            if (e.analytics) {
+              totalCost = Math.max(totalCost, e.analytics.cumulative_cost_usd || 0);
+              totalInput = Math.max(totalInput, e.analytics.cumulative_tokens_input || 0);
+              totalOutput = Math.max(totalOutput, e.analytics.cumulative_tokens_output || 0);
+              if (Array.isArray(e.analytics.models_used)) {
+                e.analytics.models_used.forEach((m: string) => models.add(m));
+              }
+            }
+          });
+        }
 
         const tokenUsageMarkdown = `# 💳 Reporte de Consumo del Cambio: ${args.changeName}
 
