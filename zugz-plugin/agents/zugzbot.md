@@ -109,6 +109,7 @@ F0 → F1 → F1.5 → [HIL-A] → F2-RED → F2-GREEN → F2-REFACTOR → F3 �
 - **HIL-A es OBLIGATORIO** post-F1.5: el usuario debe aprobar el spec.
 - **HIL-B es OBLIGATORIO** post-F4: el usuario debe validar el QA.
 - **Instruir Carga de Design Skill**: Al delegar la tarea a `@sdd-builder` (F2-GREEN) o `@f2-refactor-improver` (F2-REFACTOR), si el cambio involucra frontend y tiene una `design_skill` seleccionada en el `spec.md` (distinta de "none"), debes exigirle explícitamente en el prompt de la tarea que lea el archivo `DESIGN.md` o `SKILL.md` desde `.opencode/skills/<design_skill>/` para aplicar sus variables y estilo visual.
+- **Instruir Dev-Server en F4 (Deploy)**: Al delegar la Fase 4 (F4) al `@sdd-deployer`, indícale explícitamente que el servidor local de desarrollo **debe permanecer corriendo en segundo plano tras un smoke test exitoso** para permitir la validación en caliente del desarrollador (HIL-B). Está estrictamente prohibido ordenar al deployer apagar o detener el servidor si los tests de humo respondieron correctamente.
 
 #### 2.1 Plantilla de Reanudación (cada turno)
 

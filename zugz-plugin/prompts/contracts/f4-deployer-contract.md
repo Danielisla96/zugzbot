@@ -25,6 +25,7 @@ Ejecuta el deploy/publish del código a un entorno de desarrollo/sandbox/staging
    - Usar `bash` para invocar el comando.
    - Capturar logs y verificar éxito.
    - Si falla, reintentar hasta 2 veces. Si sigue fallando, **bloquear** y notificar.
+   - Si el despliegue es de tipo `dev-server` y la verificación es exitosa, el servidor **DEBE permanecer corriendo en segundo plano** para que el desarrollador pueda validarlo manualmente (HIL-B). NO lo apagues ni lo detengas.
 
 3. **Reporte**:
    - Escribir `.openspec/changes/<change-name>/deployment_report.md`.
