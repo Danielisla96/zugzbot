@@ -1,59 +1,13 @@
 import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
-import { StackProfile, findProfilesDir, loadProfileFromDisk, loadAllProfiles } from "./sdd_stack_detector_lib.js"
-
-function fileExistsIn(projectRoot: string, rel: string, deep: boolean): boolean {
-  const fullPath = path.join(projectRoot, rel)
-  if (fs.existsSync(fullPath)) {
-    if (!deep) return true
-    try {
-      return fs.statSync(fullPath).isFile()
-    } catch {
-      return false
-    }
-  }
-  return false
-}
-
-function globExists(projectRoot: string, pattern: string): boolean {
-  const fullPath = path.join(projectRoot, pattern)
-  if (fs.existsSync(fullPath)) return true
-  if (pattern.includes("*")) {
-    try {
-      const segs = pattern.split("/")
-      let dir = projectRoot
-      for (let i = 0; i < segs.length - 1; i++) {
-        dir = path.join(dir, segs[i])
-      }
-      if (!fs.existsSync(dir)) return false
-      const lastSeg = segs[segs.length - 1]
-      const isGlob = lastSeg.includes("*")
-      if (!isGlob) return false
-      const prefix = lastSeg.split("*")[0]
-      const entries = fs.readdirSync(dir)
-      return entries.some(e => e.startsWith(prefix))
-    } catch {
-      return false
-    }
-  }
-  return false
-}
-
-function matchProfile(projectRoot: string, profile: StackProfile): { matched: boolean; matchedBy: string[] } {
-  const matchedBy: string[] = []
-  for (const f of profile.detect.files_any) {
-    if (fileExistsIn(projectRoot, f, false)) {
-      matchedBy.push(`files_any: ${f}`)
-    }
-  }
-  for (const pattern of profile.detect.files_any_deep) {
-    if (globExists(projectRoot, pattern)) {
-      matchedBy.push(`files_any_deep: ${pattern}`)
-    }
-  }
-  return { matched: matchedBy.length > 0, matchedBy }
-}
+import {
+  StackProfile,
+  findProfilesDir,
+  loadProfileFromDisk,
+  loadAllProfiles,
+  matchProfileInRoot
+} from "./sdd_stack_detector_lib.js"
 
 export default tool({
   description: `Detector y gestor de stack profile. Identifica el stack del proyecto (Node/TS, Python, Go, Rust, Java, GAS, static-site, etc.) leyendo los profiles en profiles/*.json.
@@ -63,6 +17,7 @@ export default tool({
   - "list": Lista todos los profiles disponibles.
   - "get": Obtiene la definición completa de un profile por ID.
   - "match": Lista todos los profiles que matchean el proyecto (útil para desambiguar).
+  - "matchForChange": Resuelve el stack_profile para un change_name específico, opcionalmente acotado a una subcarpeta (subprojectCwd). Soluciona el caso de proyectos políglotas donde el root tiene un stack pero el cambio ocurre en un subdirectorio con otro stack.
 
   Los profiles están en profiles/<id>.json y siguen el formato:
   {
@@ -73,10 +28,14 @@ export default tool({
     "deploy": { "kind": "dev-server", "dev_cmd": "npm run dev" }
   }`,
   args: {
-    action: tool.schema.enum(["detect", "list", "get", "match"])
+    action: tool.schema.enum(["detect", "list", "get", "match", "matchForChange"])
       .describe("Acción a ejecutar"),
     profileId: tool.schema.string().optional()
-      .describe("ID del profile (para action=get)")
+      .describe("ID del profile (para action=get)"),
+    changeName: tool.schema.string().optional()
+      .describe("Nombre del change (kebab-case). Para action=matchForChange."),
+    subprojectCwd: tool.schema.string().optional()
+      .describe("Ruta relativa al subproyecto (e.g., 'backend'). Para action=matchForChange.")
   },
   async execute(args, context) {
     let projectRoot = context.worktree || context.directory || process.cwd()
@@ -128,7 +87,7 @@ export default tool({
       const profiles = loadAllProfiles(projectRoot)
       const matches: Array<{ id: string; matchedBy: string[] }> = []
       for (const p of profiles) {
-        const result = matchProfile(projectRoot, p)
+        const result = matchProfileInRoot(projectRoot, p)
         if (result.matched) {
           matches.push({ id: p.id, matchedBy: result.matchedBy })
         }
@@ -143,7 +102,7 @@ export default tool({
       const profiles = loadAllProfiles(projectRoot)
       const allMatches: Array<{ id: string; score: number; matchedBy: string[] }> = []
       for (const p of profiles) {
-        const result = matchProfile(projectRoot, p)
+        const result = matchProfileInRoot(projectRoot, p)
         if (result.matched) {
           allMatches.push({
             id: p.id,
@@ -169,9 +128,141 @@ export default tool({
       }, null, 2)
     }
 
+    if (args.action === "matchForChange") {
+      const changeName = args.changeName || ""
+      const subprojectCwd = args.subprojectCwd || ""
+      const profiles = loadAllProfiles(projectRoot)
+
+      let resolvedAt = ""
+      let targetRoot = projectRoot
+
+      if (subprojectCwd) {
+        const candidate = path.join(projectRoot, subprojectCwd)
+        if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+          targetRoot = candidate
+          resolvedAt = subprojectCwd
+        } else {
+          return JSON.stringify({
+            status: "SUCCESS",
+            change_name: changeName,
+            subproject_cwd: subprojectCwd,
+            resolved_at: "",
+            stack_profile: bestMatchAt(projectRoot, profiles).id,
+            candidates: candidatesAt(projectRoot, profiles),
+            warning: `subprojectCwd '${subprojectCwd}' no existe. Fallback a root.`
+          }, null, 2)
+        }
+      } else {
+        // Sin subprojectCwd: deducir del change_name o escanear subdirs.
+        // Solo escanear subdirs si el change_name tiene un prefijo "scoping" (add-, fix-, feat-, update-).
+        const inferred = inferSubdirFromChangeName(changeName, projectRoot)
+        if (inferred) {
+          targetRoot = path.join(projectRoot, inferred)
+          resolvedAt = inferred
+        } else if (isScopingChangeName(changeName)) {
+          // Fallback: si el root matchea un stack pero existe una subcarpeta con
+          // un stack diferente, preferir el stack de la subcarpeta (proyectos políglotas).
+          const rootBest = bestMatchAt(projectRoot, profiles)
+          if (rootBest.id !== "unknown") {
+            const otherInSubdirs = firstSubdirWithDifferentProfile(projectRoot, profiles, rootBest.id)
+            if (otherInSubdirs) {
+              targetRoot = path.join(projectRoot, otherInSubdirs)
+              resolvedAt = otherInSubdirs
+            }
+          }
+        }
+      }
+
+      const best = bestMatchAt(targetRoot, profiles)
+      return JSON.stringify({
+        status: "SUCCESS",
+        change_name: changeName,
+        subproject_cwd: subprojectCwd,
+        resolved_at: resolvedAt,
+        stack_profile: best.id,
+        candidates: candidatesAt(targetRoot, profiles)
+      }, null, 2)
+    }
+
     return JSON.stringify({
       status: "FAILED",
       reason: `Acción '${args.action}' no reconocida.`
     }, null, 2)
   }
 })
+
+function bestMatchAt(root: string, profiles: StackProfile[]): { id: string; score: number } {
+  const allMatches: Array<{ id: string; score: number }> = []
+  for (const p of profiles) {
+    const result = matchProfileInRoot(root, p)
+    if (result.matched) {
+      allMatches.push({ id: p.id, score: result.matchedBy.length })
+    }
+  }
+  if (allMatches.length === 0) {
+    return { id: "unknown", score: 0 }
+  }
+  allMatches.sort((a, b) => b.score - a.score)
+  return allMatches[0]
+}
+
+function candidatesAt(root: string, profiles: StackProfile[]) {
+  const allMatches: Array<{ id: string; score: number; matchedBy: string[] }> = []
+  for (const p of profiles) {
+    const result = matchProfileInRoot(root, p)
+    if (result.matched) {
+      allMatches.push({
+        id: p.id,
+        score: result.matchedBy.length,
+        matchedBy: result.matchedBy
+      })
+    }
+  }
+  return allMatches
+}
+
+function inferSubdirFromChangeName(changeName: string, projectRoot: string): string | null {
+  if (!changeName) return null
+  // Convención: si el change_name empieza con "add-<subdir>-..." y esa subdir existe
+  // en el proyecto, devolverla. Útil para que zugzbot no tenga que pasar subprojectCwd
+  // explícitamente en casos comunes.
+  const m = changeName.match(/^(?:add|fix|feat|update|refactor|remove)-([a-z0-9-]+?)-(?:to-|for-|on-)?/i)
+  if (!m) return null
+  const candidate = m[1]
+  const full = path.join(projectRoot, candidate)
+  if (fs.existsSync(full) && fs.statSync(full).isDirectory()) {
+    return candidate
+  }
+  return null
+}
+
+function isScopingChangeName(changeName: string): boolean {
+  if (!changeName) return false
+  return /^(?:add|fix|feat|update|refactor|remove)-/i.test(changeName)
+}
+
+function firstSubdirWithDifferentProfile(projectRoot: string, profiles: StackProfile[], rootProfileId: string): string | null {
+  const excludeDirs = ["node_modules", ".git", ".openspec", ".opencode", "dist", "build", ".next", "coverage", "venv", ".venv"]
+  let entries: string[] = []
+  try {
+    entries = fs.readdirSync(projectRoot)
+  } catch {
+    return null
+  }
+  for (const entry of entries) {
+    if (excludeDirs.includes(entry)) continue
+    const fullPath = path.join(projectRoot, entry)
+    let stat
+    try {
+      stat = fs.statSync(fullPath)
+    } catch {
+      continue
+    }
+    if (!stat.isDirectory()) continue
+    const subBest = bestMatchAt(fullPath, profiles)
+    if (subBest.id !== "unknown" && subBest.id !== rootProfileId) {
+      return entry
+    }
+  }
+  return null
+}

@@ -2,6 +2,7 @@ import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
 import { execSync } from "child_process"
+import { matchBddScenarios } from "./sdd_spec_template.js"
 
 export default tool({
   description: "Traductor de Living Specs BDD: Parsea escenarios 'Given-When-Then' en spec.md y genera automáticamente esqueletos de pruebas reales en la suite del proyecto destino.",
@@ -42,33 +43,16 @@ export default tool({
       return `[BDD Tester Blocked] Error: No se pudo localizar el archivo de especificación en '${path.relative(projectRoot, specPath)}'.`;
     }
 
-    // 3. Parsear escenarios Given-When-Then
+    // 3. Parsear escenarios BDD usando el parser v4 unificado (Dado/Cuando/Entonces/Y)
     const specContent = fs.readFileSync(specPath, "utf-8");
-    const scenarios: Array<{ title: string; steps: string[] }> = [];
-    
-    let currentScenarioTitle = "";
-    let currentSteps: string[] = [];
-
-    const lines = specContent.split("\n");
-    lines.forEach(line => {
-      const trimmed = line.trim();
-      if (trimmed.startsWith("Scenario:")) {
-        if (currentScenarioTitle) {
-          scenarios.push({ title: currentScenarioTitle, steps: currentSteps });
-        }
-        currentScenarioTitle = trimmed.substring(trimmed.indexOf(":") + 1).trim();
-        currentSteps = [];
-      } else if (currentScenarioTitle && (trimmed.startsWith("Given") || trimmed.startsWith("When") || trimmed.startsWith("Then") || trimmed.startsWith("And"))) {
-        currentSteps.push(trimmed);
-      }
-    });
-
-    if (currentScenarioTitle) {
-      scenarios.push({ title: currentScenarioTitle, steps: currentSteps });
-    }
+    const parsedScenarios = matchBddScenarios(specContent);
+    const scenarios: Array<{ title: string; steps: string[] }> = parsedScenarios.map((s) => ({
+      title: s.titulo,
+      steps: s.pasos
+    }));
 
     if (scenarios.length === 0) {
-      return `[BDD Tester Complete] Escaneo terminado: No se encontraron bloques estructurados 'Scenario:' o 'Given-When-Then' en spec.md.`;
+      return `[BDD Tester Complete] Escaneo terminado: No se encontraron bloques estructurados 'Escenario:' con cláusulas Dado/Cuando/Entonces en spec.md. El template v4 requiere español.`;
     }
 
     // 4. Identificar Entorno y Autogenerar Pruebas

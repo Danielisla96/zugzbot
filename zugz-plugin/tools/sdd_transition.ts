@@ -74,7 +74,11 @@ export default tool({
   Maneja la máquina de estados de fases: F0 → F1 → F1.5 → F2-RED → F2-GREEN → F2-REFACTOR → F3 → F4 → F5 → DONE.
   Enforces TDD: no se puede avanzar a F2-GREEN sin F2-RED completo, ni a F2-REFACTOR sin F2-GREEN, etc.
   Valida que change_name sea kebab-case descriptivo.
-  Integra control automático de Git (rama sdd/change-<name>, commits de artefactos .openspec/).`,
+  Integra control automático de Git (rama sdd/change-<name>, commits de artefactos .openspec/).
+
+  Bypass formal: 'bypassAudit' permite saltar las validaciones de gates (TDD, requirement_tracker)
+  con una razón obligatoria que queda auditada en phase_history.jsonl. Usar solo cuando el Orquestador
+  tiene certeza de que el gate es un falso positivo del auditor automatizado.`,
   args: {
     nextPhase: tool.schema.string()
       .describe("Siguiente fase del ciclo SDD (F0 | F1 | F1.5 | F2-RED | F2-GREEN | F2-REFACTOR | F3 | F4 | F5 | DONE)"),
@@ -91,7 +95,12 @@ export default tool({
     workflow: tool.schema.enum(["full-sdd-tdd", "quick-fix", "audit", "refactor", "explain", "oracle"]).optional()
       .describe("Workflow activo (opcional)"),
     direction: tool.schema.enum(["forward", "backward", "repeat"]).optional().default("forward")
-      .describe("Dirección: forward (normal), backward (corregir), repeat (reintentar)")
+      .describe("Dirección: forward (normal), backward (corregir), repeat (reintentar)"),
+    bypassAudit: tool.schema.object({
+      reason: tool.schema.string(),
+      expectedResolutionDate: tool.schema.string().optional()
+    }).optional()
+      .describe("Bypass formal de gates con audit trail. Especifica { reason: '...' } para saltar la auditoría. La razón queda registrada en phase_history.jsonl.")
   },
   async execute(args, context) {
     let projectRoot = context.worktree || context.directory || process.cwd()
@@ -269,7 +278,9 @@ export default tool({
       try {
         const result = JSON.parse(regressionResultStr)
         if (result.status && result.status.startsWith("FAILED")) {
-          return `[SDD Transition Blocked] Regresión detectada:\n\n${result.message}`
+          if (!args.bypassAudit) {
+            return `[SDD Transition Blocked] Regresión detectada:\n\n${result.message}\n\nSi consideras que es un falso positivo, pasa 'bypassAudit: { reason: "..." }' con justificación.`
+          }
         }
       } catch {}
 
@@ -280,7 +291,9 @@ export default tool({
       try {
         const result = JSON.parse(requirementResultStr)
         if (result.status === "FAILED") {
-          return `[SDD Transition Blocked] Cobertura insuficiente:\n\n${result.message}`
+          if (!args.bypassAudit) {
+            return `[SDD Transition Blocked] Cobertura insuficiente:\n\n${result.message}\n\nSi consideras que el auditor es un falso positivo, pasa 'bypassAudit: { reason: "..." }' con justificación detallada. La razón será auditada.`
+          }
         }
       } catch {}
 
@@ -343,7 +356,7 @@ export default tool({
       const changeDir = path.join(projectRoot, ".openspec/changes", lock.change_name)
       if (fs.existsSync(changeDir)) {
         const historyPath = path.join(changeDir, "phase_history.jsonl")
-        const logEntry = {
+        const logEntry: any = {
           timestamp: new Date().toISOString(),
           phase: args.nextPhase,
           subagent: lock.active_subagent,
@@ -351,6 +364,13 @@ export default tool({
           reason: args.reason,
           iteration: lock.iteration || 0,
           schema_version: SCHEMA_VERSION
+        }
+        if (args.bypassAudit) {
+          logEntry.bypass_audit = {
+            reason: args.bypassAudit.reason,
+            timestamp: new Date().toISOString(),
+            expected_resolution_date: args.bypassAudit.expectedResolutionDate || null
+          }
         }
         try {
           fs.appendFileSync(historyPath, JSON.stringify(logEntry) + "\n", "utf-8")

@@ -3,7 +3,42 @@ import { execSync, exec } from "child_process"
 import fs from "fs"
 import path from "path"
 import { readLockfile } from "./sdd_lock_manager.js"
-import { getProfileById, loadAllProfiles, StackProfile } from "./sdd_stack_detector_lib.js"
+import { getProfileById, loadAllProfiles, StackProfile, fileExistsIn, globExists } from "./sdd_stack_detector_lib.js"
+
+const STACK_PROFILE_ALIASES: Record<string, string> = {
+  "python-fastapi": "python",
+  "python-django": "python",
+  "python-flask": "python",
+  "node-react": "node-typescript",
+  "node-next": "node-typescript",
+  "node-express": "node-javascript"
+}
+
+function resolveStackProfile(profileId: string): { resolved: string; wasAlias: boolean } {
+  if (STACK_PROFILE_ALIASES[profileId]) {
+    return { resolved: STACK_PROFILE_ALIASES[profileId], wasAlias: true }
+  }
+  return { resolved: profileId, wasAlias: false }
+}
+
+function bestMatchAtRoot(targetRoot: string, profiles: StackProfile[]): { id: string; score: number } {
+  const allMatches: Array<{ id: string; score: number }> = []
+  for (const p of profiles) {
+    let score = 0
+    for (const f of p.detect.files_any) {
+      if (fileExistsIn(targetRoot, f, false)) score++
+    }
+    for (const pattern of p.detect.files_any_deep) {
+      if (globExists(targetRoot, pattern)) score++
+    }
+    if (score > 0) {
+      allMatches.push({ id: p.id, score })
+    }
+  }
+  if (allMatches.length === 0) return { id: "unknown", score: 0 }
+  allMatches.sort((a, b) => b.score - a.score)
+  return allMatches[0]
+}
 
 function safeExec(cmd: string, cwd: string, timeoutMs = 120000): { ok: true; stdout: string; code: number } | { ok: false; stderr: string; code: number } {
   try {
@@ -152,43 +187,6 @@ function findDetectFile(dir: string, pattern: string, maxDepth = 3): string | nu
   return null
 }
 
-function fileExistsIn(projectRoot: string, rel: string, deep: boolean): boolean {
-  const fullPath = path.join(projectRoot, rel)
-  if (fs.existsSync(fullPath)) {
-    if (!deep) return true
-    try {
-      return fs.statSync(fullPath).isFile()
-    } catch {
-      return false
-    }
-  }
-  return false
-}
-
-function globExists(projectRoot: string, pattern: string): boolean {
-  const fullPath = path.join(projectRoot, pattern)
-  if (fs.existsSync(fullPath)) return true
-  if (pattern.includes("*")) {
-    try {
-      const segs = pattern.split("/")
-      let dir = projectRoot
-      for (let i = 0; i < segs.length - 1; i++) {
-        dir = path.join(dir, segs[i])
-      }
-      if (!fs.existsSync(dir)) return false
-      const lastSeg = segs[segs.length - 1]
-      const isGlob = lastSeg.includes("*")
-      if (!isGlob) return false
-      const prefix = lastSeg.split("*")[0]
-      const entries = fs.readdirSync(dir)
-      return entries.some(e => e.startsWith(prefix))
-    } catch {
-      return false
-    }
-  }
-  return false
-}
-
 function matchProfileSubdirs(projectRoot: string, profile: StackProfile): boolean {
   for (const f of profile.detect.files_any) {
     if (fileExistsIn(projectRoot, f, false)) return true
@@ -218,7 +216,7 @@ function matchProfileSubdirs(projectRoot: string, profile: StackProfile): boolea
 }
 
 function detectActiveTestRunner(projectRoot: string, profile: StackProfile): DetectedTestRunner | null {
-  // First pass: try to detect specific test runners
+  // First pass: try to detect specific test runners via their detect file
   for (const runner of profile.test_runners) {
     if (runner.detect !== null) {
       const detectedDir = findDetectFile(projectRoot, runner.detect)
@@ -227,16 +225,47 @@ function detectActiveTestRunner(projectRoot: string, profile: StackProfile): Det
       }
     }
   }
-  // Second pass: fallback to any runner without detection criteria (detect === null)
-  for (const runner of profile.test_runners) {
-    if (runner.detect === null) {
-      return { ...runner, cwd: projectRoot }
+  // Second pass: si el profile tiene manifests requeridos, fallback a runner sin detect
+  if (hasProfileManifest(projectRoot, profile)) {
+    for (const runner of profile.test_runners) {
+      if (runner.detect === null) {
+        return { ...runner, cwd: projectRoot }
+      }
     }
   }
-  if (profile.test_runners.length > 0) {
-    return { ...profile.test_runners[0], cwd: projectRoot }
-  }
+  // No hay manifests del profile en el proyecto → retornar null para que el caller
+  // reporte un error claro en lugar de ejecutar un runner genérico (mvn test fantasma).
   return null
+}
+
+function hasProfileManifest(projectRoot: string, profile: StackProfile): boolean {
+  // Buscar cualquiera de los archivos de detección del profile
+  for (const f of profile.detect.files_any) {
+    if (fs.existsSync(path.join(projectRoot, f))) return true
+  }
+  for (const pattern of profile.detect.files_any_deep) {
+    const segs = pattern.split("/")
+    const lastSeg = segs[segs.length - 1]
+    if (!lastSeg.includes("*")) {
+      if (fs.existsSync(path.join(projectRoot, pattern))) return true
+    }
+  }
+  // Heurística adicional: si el profile es Python y existe al menos un archivo .py
+  // bajo un directorio tests/ o test/, considerarlo un proyecto Python válido
+  // (puede no tener pyproject.toml pero sí tests).
+  if (profile.id === "python") {
+    const testDirs = ["tests", "test"]
+    for (const td of testDirs) {
+      const fullPath = path.join(projectRoot, td)
+      if (fs.existsSync(fullPath) && fs.statSync(fullPath).isDirectory()) {
+        try {
+          const entries = fs.readdirSync(fullPath)
+          if (entries.some(e => e.endsWith(".py"))) return true
+        } catch {}
+      }
+    }
+  }
+  return false
 }
 
 export default tool({
@@ -244,12 +273,13 @@ export default tool({
   
   Acciones:
   - "run": Ejecuta los tests y reporta resultados (passes, failures, total).
-  - "detect": Detecta qué test runner usará el profile activo.
-  - "verify-red": Verifica que los tests fallen (usado en F2-RED).
+  - "detect": Detecta qué test runner usará el profile activo (resuelve aliases como python-fastapi → python).
+  - "verify-red": Verifica que los tests fallen (usado en F2-RED). Falla con razón clara si no hay runner.
   - "verify-green": Verifica que los tests pasen (usado en F2-GREEN).
   - "verify-all-passing": Verifica que TODOS los tests pasen (usado al cerrar F2-REFACTOR).
 
-  Esta herramienta usa la convención del profile activo (vitest, jest, pytest, go test, cargo test, mvn test, etc.) sin hardcodear.`,
+  Esta herramienta usa la convención del profile activo (vitest, jest, pytest, go test, cargo test, mvn test, etc.) sin hardcodear.
+  Si el lockfile tiene subproject_cwd, los tests se ejecutan en esa subcarpeta.`,
   args: {
     action: tool.schema.enum(["run", "detect", "verify-red", "verify-green", "verify-all-passing"])
       .describe("Acción a ejecutar"),
@@ -264,20 +294,44 @@ export default tool({
       projectRoot = process.cwd()
     }
     const lock = readLockfile(projectRoot)
+    const subprojectCwd = lock.subproject_cwd || ""
+    const effectiveCwd = subprojectCwd
+      ? path.join(projectRoot, subprojectCwd)
+      : projectRoot
     const profileId = lock.stack_profile || "unknown"
-    const profile = getProfileById(projectRoot, profileId) || loadAllProfiles(projectRoot).find(() => true)
+    const { resolved: resolvedProfileId, wasAlias } = resolveStackProfile(profileId)
+    const profile = getProfileById(projectRoot, resolvedProfileId) || loadAllProfiles(projectRoot).find(() => true)
 
     if (args.action === "detect") {
-      if (!profile) {
+      // Si el lockfile no tiene stack_profile (o es "unknown"), auto-detectar
+      let actualProfile = profile
+      let actualProfileId = resolvedProfileId
+      let actualWasAlias = wasAlias
+      let detectedFrom: string | undefined
+
+      if (!actualProfile || actualProfileId === "unknown") {
+        const allProfiles = loadAllProfiles(projectRoot)
+        const rootBest = bestMatchAtRoot(effectiveCwd, allProfiles)
+        if (rootBest.id !== "unknown") {
+          actualProfile = getProfileById(projectRoot, rootBest.id) || actualProfile
+          actualProfileId = rootBest.id
+          actualWasAlias = false
+          detectedFrom = "auto"
+        }
+      }
+
+      if (!actualProfile) {
         return JSON.stringify({
           status: "FAILED",
-          reason: `No se pudo cargar el profile '${profileId}'.`
+          reason: `No se pudo cargar el profile '${profileId}' (resolved: '${actualProfileId}'). Si es un alias (e.g., python-fastapi), verifica que esté en STACK_PROFILE_ALIASES.`
         }, null, 2)
       }
-      const runner = detectActiveTestRunner(projectRoot, profile)
+      const runner = detectActiveTestRunner(effectiveCwd, actualProfile)
       return JSON.stringify({
         status: "SUCCESS",
-        active_profile: profileId,
+        active_profile: actualProfileId,
+        resolved_from: actualWasAlias ? profileId : actualProfileId,
+        detected_from: detectedFrom,
         test_runner: runner
       }, null, 2)
     }
@@ -285,17 +339,17 @@ export default tool({
     if (!profile) {
       return JSON.stringify({
         status: "FAILED",
-        reason: "No hay profile activo. Ejecuta F0-explorer primero para detectar el stack."
+        reason: `No hay profile activo. Lockfile stack_profile='${profileId}' (resolved: '${resolvedProfileId}'). Ejecuta F0-explorer primero.`
       }, null, 2)
     }
 
     const runnersToRun: DetectedTestRunner[] = []
-    
+
     // Agregar el runner principal
     const mainRunner = args.testRunner
-      ? profile.test_runners.find(r => r.name === args.testRunner) ? { ...profile.test_runners.find(r => r.name === args.testRunner)!, cwd: projectRoot } : null
-      : detectActiveTestRunner(projectRoot, profile)
-    
+      ? profile.test_runners.find(r => r.name === args.testRunner) ? { ...profile.test_runners.find(r => r.name === args.testRunner)!, cwd: effectiveCwd } : null
+      : detectActiveTestRunner(effectiveCwd, profile)
+
     if (mainRunner) {
       runnersToRun.push(mainRunner)
     }
@@ -304,7 +358,7 @@ export default tool({
     if (!args.testRunner) {
       const allProfiles = loadAllProfiles(projectRoot)
       for (const p of allProfiles) {
-        if (p.id === profileId) continue
+        if (p.id === resolvedProfileId) continue
         if (matchProfileSubdirs(projectRoot, p)) {
           const otherRunner = detectActiveTestRunner(projectRoot, p)
           if (otherRunner && otherRunner.detect !== null) {
@@ -320,9 +374,14 @@ export default tool({
     }
 
     if (runnersToRun.length === 0) {
+      // Mejor error: explica por qué no se detectó runner y qué hacer
+      const firstRunner = profile.test_runners[0]
+      const detectHints = firstRunner?.detect
+        ? ` (busca '${firstRunner.detect}' en el proyecto)`
+        : ""
       return JSON.stringify({
         status: "FAILED",
-        reason: "No hay test runner configurado ni detectado en el profile."
+        reason: `No se detectó ningún test runner para el profile '${resolvedProfileId}'${detectHints}. Verifica que existan archivos como pytest.ini, pyproject.toml, package.json, go.mod, Cargo.toml, etc. en '${subprojectCwd || "."}'.`
       }, null, 2)
     }
 
@@ -357,10 +416,14 @@ export default tool({
       return JSON.stringify({
         status: allPassed ? "FAILED" : "SUCCESS",
         check: "verify-red",
+        reason: allPassed
+          ? "Los tests PASAN cuando deberían FALLAR. Bug: spec mal definido o test ya implementado."
+          : undefined,
         message: allPassed
           ? "⚠️ Los tests PASAN cuando deberían FALLAR. Bug: spec mal definido o test ya implementado."
           : "✅ Tests fallan correctamente (estado RED confirmado).",
-        results
+        results,
+        cwd: subprojectCwd
       }, null, 2)
     }
 
@@ -368,16 +431,19 @@ export default tool({
       return JSON.stringify({
         status: allPassed ? "SUCCESS" : "FAILED",
         check: args.action,
+        reason: allPassed ? undefined : "Hay tests fallando. Revisa el output.",
         message: allPassed
           ? "✅ Todos los tests pasan."
           : "❌ Hay tests fallando. Revisa el output.",
-        results
+        results,
+        cwd: subprojectCwd
       }, null, 2)
     }
 
     return JSON.stringify({
       status: allPassed ? "SUCCESS" : "FAILED",
-      results
+      results,
+      cwd: subprojectCwd
     }, null, 2)
   }
 })

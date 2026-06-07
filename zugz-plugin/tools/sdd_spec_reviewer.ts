@@ -1,6 +1,16 @@
 import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
+import {
+  SPEC_TEMPLATE_V1,
+  SECTIONS,
+  SPEC_TITLE,
+  parseFrontmatter as parseFrontmatterV4,
+  parseCriterios as parseCriteriosV4,
+  matchBddScenarios,
+  validateSpec,
+  type SpecFrontmatter
+} from "./sdd_spec_template.js"
 
 interface SpecCheck {
   name: string
@@ -14,20 +24,21 @@ function readSpec(specPath: string): string {
   return fs.readFileSync(specPath, "utf-8")
 }
 
-function parseFrontmatter(spec: string): { frontmatter: any; markdown: string } {
+function parseLegacyFrontmatter(spec: string): { frontmatter: any; markdown: string } {
   const match = spec.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/)
   if (!match) return { frontmatter: null, markdown: spec }
-  
+
   const yamlText = match[1]
   const markdown = match[2]
   const frontmatter: any = {}
-  
+
   const lines = yamlText.split(/\r?\n/)
   let currentKey = ""
+
   for (const line of lines) {
     const trimmed = line.trim()
     if (!trimmed || trimmed.startsWith("#")) continue
-    
+
     if (trimmed.startsWith("-")) {
       const val = trimmed.replace(/^-\s*/, "").replace(/^['"](.*)['"]$/, "$1")
       if (currentKey) {
@@ -53,71 +64,111 @@ function parseFrontmatter(spec: string): { frontmatter: any; markdown: string } 
   return { frontmatter, markdown }
 }
 
-function checkHasTitle(spec: string, markdown: string): SpecCheck {
-  const hasTitle = /^#\s+Plano Técnico/m.test(markdown)
+function isV4Spec(frontmatter: any): boolean {
+  return frontmatter && frontmatter.spec_version === "1.0"
+}
+
+function checkHasTitle(markdown: string): SpecCheck {
+  const hasTitle = markdown.includes(`# ${SPEC_TITLE}`)
   return {
     name: "title",
-    description: "El spec debe tener un título '# Plano Técnico'",
+    description: `El spec debe tener un título '# ${SPEC_TITLE}'`,
     pass: hasTitle,
-    details: hasTitle ? "Título presente" : "Falta el título '# Plano Técnico'"
+    details: hasTitle ? "Título presente" : `Falta el título '# ${SPEC_TITLE}'`
   }
 }
 
-function checkHasAffectedFiles(spec: string, frontmatter: any, markdown: string): SpecCheck {
-  let hasFiles = false
-  if (frontmatter && Array.isArray(frontmatter.affected_files) && frontmatter.affected_files.length > 0) {
-    hasFiles = true
-  } else {
-    hasFiles = /##\s*1\s*[.\s-]?\s*Diagn[oó]stico/i.test(markdown) &&
-      /`[^`]+\.\w+`/.test(markdown)
+function checkStrictTitlesV4(markdown: string): SpecCheck {
+  const failed: string[] = []
+  for (const section of SECTIONS) {
+    const headerRegex = new RegExp(`^##\\s*${section.n}\\.\\s*${section.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`, "m")
+    if (!headerRegex.test(markdown)) {
+      failed.push(`## ${section.n}. ${section.title}`)
+    }
   }
   return {
-    name: "affected_files",
-    description: "El spec debe listar archivos afectados con paths concretos",
-    pass: hasFiles,
-    details: hasFiles ? "Archivos listados" : "Falta la sección de archivos afectados o no hay paths concretos"
+    name: "strict_titles_v4",
+    description: "Los títulos de las 5 secciones deben ser exactos (sin sufijos como 'y Calidad (QA)').",
+    pass: failed.length === 0,
+    details: failed.length === 0
+      ? "Títulos de sección exactos"
+      : `Títulos mutados o faltantes: ${failed.join(", ")}`
   }
 }
 
-function checkHasBDDScenarios(spec: string, markdown: string): SpecCheck {
-  const hasBddSection = /##\s*4\s*[.\s-]?\s*Especificaciones\s+BDD/i.test(markdown)
-  const hasGiven = /Given\s+/i.test(markdown)
-  const hasWhen = /When\s+/i.test(markdown)
-  const hasThen = /Then\s+/i.test(markdown)
-  const pass = hasBddSection && hasGiven && hasWhen && hasThen
+function checkBddSpanishOnly(markdown: string): SpecCheck {
+  const scenarios = matchBddScenarios(`dummy\n---\n${markdown}`)
+  if (scenarios.length === 0) {
+    return {
+      name: "bdd_scenarios",
+      description: "El spec debe tener escenarios BDD con cláusulas Dado/Cuando/Entonces",
+      pass: false,
+      details: "No se encontraron escenarios 'Escenario:' en la sección 4."
+    }
+  }
+  for (const sc of scenarios) {
+    if (sc.pasos.length === 0) {
+      return {
+        name: "bdd_scenarios",
+        description: "El spec debe tener escenarios BDD con cláusulas Dado/Cuando/Entonces",
+        pass: false,
+        details: `El escenario '${sc.titulo}' no tiene pasos Dado/Cuando/Entonces.`
+      }
+    }
+  }
+  const hasEnglish = /^\s*(Given|When|Then|And)\s+/m.test(markdown)
   return {
     name: "bdd_scenarios",
-    description: "El spec debe tener escenarios BDD con Given/When/Then",
-    pass,
-    details: !hasBddSection
-      ? "Falta la sección de Especificaciones BDD"
-      : (!hasGiven ? "Faltan cláusulas Given" : !hasWhen ? "Faltan cláusulas When" : !hasThen ? "Faltan cláusulas Then" : "BDD presente")
+    description: "El spec debe tener escenarios BDD con cláusulas Dado/Cuando/Entonces en español",
+    pass: !hasEnglish,
+    details: hasEnglish
+      ? "Se detectaron keywords BDD en inglés (Given/When/Then/And). El spec v4 requiere español: Dado/Cuando/Entonces/Y."
+      : "BDD en español correcto"
   }
 }
 
-function checkAcceptanceCriteria(spec: string, frontmatter: any, markdown: string): SpecCheck {
-  let pass = false
-  let count = 0
-  if (frontmatter && Array.isArray(frontmatter.acceptance_criteria) && frontmatter.acceptance_criteria.length > 0) {
-    pass = true
-    count = frontmatter.acceptance_criteria.length
-  } else {
-    const hasSection = /##\s*5\s*[.\s-]?\s*Criterios/i.test(markdown)
-    const hasCheckboxes = /-\s*\[\s*\]/m.test(markdown)
-    count = (markdown.match(/-\s*\[\s*\]/g) || []).length
-    pass = hasSection && hasCheckboxes && count >= 1
+function checkAcceptanceCriteria(frontmatter: any, markdown: string): SpecCheck {
+  const declared: any[] = Array.isArray(frontmatter?.criterios_aceptacion) ? frontmatter.criterios_aceptacion : []
+  if (declared.length === 0) {
+    const checkboxMatches = markdown.match(/-\s*\[\s*[xX ]\s*\]\s*\*\*CA\d+\*\*:/g)
+    if (!checkboxMatches || checkboxMatches.length === 0) {
+      return {
+        name: "acceptance_criteria",
+        description: "El spec debe tener al menos 1 criterio de aceptación con checkbox '**CA<n>**'",
+        pass: false,
+        details: "Falta frontmatter.criterios_aceptacion y no hay criterios con formato - [ ] **CA<n>** en sección 5."
+      }
+    }
+    return {
+      name: "acceptance_criteria",
+      description: "El spec debe tener al menos 1 criterio de aceptación con checkbox '**CA<n>**'",
+      pass: true,
+      details: `OK (${checkboxMatches.length} criterios en sección 5, sin frontmatter)`
+    }
+  }
+  const parsed = parseCriteriosV4(`dummy\n---\n${markdown}`)
+  const declaredIds = new Set(declared.map((c: any) => c.id))
+  const parsedIds = new Set(parsed.map((p) => p.id))
+  const missing = [...declaredIds].filter((id) => !parsedIds.has(id))
+  if (missing.length > 0) {
+    return {
+      name: "acceptance_criteria",
+      description: "Los criterios del frontmatter deben aparecer en la sección 5 con formato '- [ ] **CA<n>**: ...'",
+      pass: false,
+      details: `Faltan en sección 5: ${missing.join(", ")}`
+    }
   }
   return {
     name: "acceptance_criteria",
-    description: "El spec debe tener al menos 1 criterio de aceptación con checkbox",
-    pass,
-    details: pass ? `OK (${count} criterios)` : "Falta la sección de Criterios de Aceptación o checkboxes"
+    description: "El spec debe tener al menos 1 criterio de aceptación con checkbox '**CA<n>**'",
+    pass: true,
+    details: `OK (${declared.length} criterios, declarados en frontmatter y presentes en sección 5)`
   }
 }
 
-function checkTestability(spec: string): SpecCheck {
+function checkTestability(markdown: string): SpecCheck {
   const vagueWords = /\b(mejorar\s+un\s+poco|optimizar\s+si\s+se\s+puede|limpiar\s+en\s+general|mejor\s+experiencia)\b/gi
-  const hasVague = vagueWords.test(spec)
+  const hasVague = vagueWords.test(markdown)
   return {
     name: "testability",
     description: "Los criterios deben ser objetivos y testeables (sin vaguedades)",
@@ -128,37 +179,9 @@ function checkTestability(spec: string): SpecCheck {
   }
 }
 
-function checkFilesHaveLineRanges(spec: string, frontmatter: any, markdown: string): SpecCheck {
-  let hasLines = false
-  // Check markdown first to see if ranges are present anywhere in the document
-  hasLines = /\(L[ií]neas?\s+\d+/i.test(markdown) || /\(L\d+-?\d*\)/i.test(markdown) || /L[ií]neas?\s+\d+/i.test(markdown)
-  
-  if (!hasLines && frontmatter && Array.isArray(frontmatter.affected_files)) {
-    hasLines = frontmatter.affected_files.some((f: string) => /\(L[ií]neas?\s+\d+/i.test(f) || /\(L\d+-?\d*\)/i.test(f) || /lines:/i.test(f) || /:\s*\d+/i.test(f))
-    if (!hasLines) {
-      const yamlPart = spec.match(/^---\r?\n([\s\S]*?)\r?\n---/)
-      if (yamlPart && (/\d+-\d+/.test(yamlPart[1]) || /lines:/i.test(yamlPart[1]))) {
-        hasLines = true
-      }
-    }
-  }
-  return {
-    name: "line_ranges",
-    description: "Los archivos afectados deben especificar rangos de líneas",
-    pass: hasLines,
-    details: hasLines
-      ? "Rangos de líneas presentes"
-      : "Considera agregar rangos de líneas a los archivos afectados (ej: 'Líneas 10-35')"
-  }
-}
-
-function checkChangeNameInSpec(spec: string, frontmatter: any, markdown: string): SpecCheck {
-  let isGeneric = false
-  if (frontmatter && frontmatter.change_name) {
-    isGeneric = /nuevo[-_]cambio/i.test(frontmatter.change_name)
-  } else {
-    isGeneric = /nuevo[-_]cambio/i.test(markdown)
-  }
+function checkChangeNameInSpec(frontmatter: any): SpecCheck {
+  const name = frontmatter?.change_name || ""
+  const isGeneric = !name || /nuevo[-_]cambio/i.test(name)
   return {
     name: "change_name_specific",
     description: "El change_name no debe ser genérico",
@@ -169,73 +192,56 @@ function checkChangeNameInSpec(spec: string, frontmatter: any, markdown: string)
   }
 }
 
-function checkArchitectureDescription(spec: string, markdown: string): SpecCheck {
-  const hasSection = /##\s*3\s*[.\s-]?\s*Propuesta/i.test(markdown)
-  const hasText = hasSection && markdown.split(/##\s*3/i)[1]?.split("##")[0]?.trim().length > 50
+function checkArchitectureDescription(markdown: string): SpecCheck {
+  const section3 = SECTIONS.find((s) => s.n === 3)!
+  const headerRegex = new RegExp(`^##\\s*3\\.\\s*${section3.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "m")
+  const match = markdown.match(headerRegex)
+  if (!match) {
+    return {
+      name: "architecture",
+      description: "El spec debe describir la arquitectura propuesta con suficiente detalle",
+      pass: false,
+      details: "Falta la sección 3 (Propuesta de Solución)"
+    }
+  }
+  const after = markdown.split(headerRegex)[1] || ""
+  const beforeNext = after.split(/^##\s*\d/m)[0] || ""
+  const hasText = beforeNext.trim().length > 50
   return {
     name: "architecture",
     description: "El spec debe describir la arquitectura propuesta con suficiente detalle",
-    pass: !!hasText,
-    details: !hasSection
-      ? "Falta la sección de Propuesta de Solución"
-      : "Sección presente"
+    pass: hasText,
+    details: hasText ? "Sección 3 con suficiente detalle" : "Sección 3 demasiado corta (mínimo 50 caracteres)"
   }
 }
 
-function checkUIDesignSkill(spec: string, frontmatter: any, markdown: string): SpecCheck {
-  let isUI = false
-  let files: string[] = []
-  if (frontmatter && Array.isArray(frontmatter.affected_files)) {
-    files = frontmatter.affected_files
-  } else {
-    const fileMatches = [...markdown.matchAll(/`([^`]+\.\w+)`/g)]
-    files = fileMatches.map(m => m[1])
-  }
-
-  const uiExtensions = /\.(tsx|jsx|css|html|svelte|vue)(?:\s+\([^)]+\))?\s*$/i
-  isUI = files.some(f => uiExtensions.test(f))
-
-  if (!isUI) {
+function checkModoQaValid(frontmatter: any): SpecCheck {
+  const modo = frontmatter?.modo_qa
+  if (!modo) {
     return {
-      name: "ui_design_skill",
-      description: "Si el cambio es backend/no-UI, no se requiere Design Skill",
-      pass: true,
-      details: "No se detectaron archivos de Frontend o estilos"
+      name: "modo_qa_valid",
+      description: "El frontmatter debe declarar modo_qa ∈ {automatizado, manual}",
+      pass: false,
+      details: "Falta el campo modo_qa en el frontmatter"
     }
   }
-
-  // Verificar si menciona alguna Design Skill en el frontmatter o en el cuerpo del Markdown
-  // Comprobamos si hay una propiedad "design_skill" o si el texto menciona "Design Skill: <nombre>"
-  let hasDesignSkill = false
-  let skillName = ""
-  if (frontmatter && typeof frontmatter.design_skill === "string" && frontmatter.design_skill.trim() !== "") {
-    hasDesignSkill = true
-    skillName = frontmatter.design_skill.trim()
-  } else {
-    const match = markdown.match(/design[-_]skill:\s*(\w+)/i) || markdown.match(/design\s+skill:\s*(\w+)/i)
-    if (match && match[1] && match[1].trim() !== "") {
-      hasDesignSkill = true
-      skillName = match[1].trim()
-    }
-  }
-
+  const valid = modo === "automatizado" || modo === "manual"
   return {
-    name: "ui_design_skill",
-    description: "Si el cambio involucra UI, debe especificar una Design Skill (ej: glassmorphism, neobrutalism, bento)",
-    pass: hasDesignSkill,
-    details: hasDesignSkill 
-      ? `Diseño consistente usando la skill: ${skillName}`
-      : "❌ Se detectaron archivos UI pero no se especificó ninguna 'design_skill' en el Spec para asegurar un diseño consistente."
+    name: "modo_qa_valid",
+    description: "El frontmatter debe declarar modo_qa ∈ {automatizado, manual}",
+    pass: valid,
+    details: valid ? `modo_qa: ${modo}` : `modo_qa inválido: ${modo}. Solo se permite 'automatizado' o 'manual'.`
   }
 }
 
 export default tool({
-  description: `Validador de testeabilidad del spec (Fase 1.5). Lee el spec.md y verifica que cumpla las condiciones mínimas para que pueda derivarse en tests ejecutables. Supports YAML frontmatter and Markdown fallback.
+  description: `Validador de testeabilidad del spec (Fase 1.5). Lee el spec.md y verifica que cumpla las condiciones mínimas para que pueda derivarse en tests ejecutables. v4 unificado en español.
   
   Acciones:
   - "validate": Valida el spec y retorna lista de checks pass/fail.
   - "summary": Retorna un resumen ejecutivo del estado del spec.
-  - "fix": Formatea y re-estructura automáticamente el spec en el formato híbrido YAML Frontmatter + Markdown.`,
+  - "fix": Formatea y re-estructura automáticamente el spec al formato v4.
+  - "init": Inicializa el spec usando la plantilla oficial v4.`,
   args: {
     action: tool.schema.enum(["validate", "summary", "fix", "init"])
       .describe("Acción a ejecutar"),
@@ -269,44 +275,14 @@ export default tool({
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true })
       }
-      
-      const templateContent = [
-        "---",
-        `change_name: "${changeName}"`,
-        "design_skill: \"none\"",
-        "affected_files:",
-        "  - \"src/main.ts (Líneas 1-10)\"",
-        "acceptance_criteria:",
-        "  - \"[ ] CA1: Criterio de aceptación\"",
-        "---",
-        "",
-        "# Plano Técnico",
-        "",
-        "## 1. Diagnóstico y Archivos Afectados",
-        "[Escribe aquí el diagnóstico del problema y los archivos afectados]",
-        "",
-        "## 2. Consenso de Encuesta con el Usuario",
-        "El plan técnico y los criterios de aceptación han sido definidos de acuerdo con los requerimientos provistos por el usuario y validados formalmente.",
-        "",
-        "## 3. Propuesta de Solución",
-        "[Escribe aquí la propuesta técnica y de arquitectura]",
-        "",
-        "## 4. Especificaciones BDD (Comportamiento)",
-        "### Scenario: Escenario inicial",
-        "Given el sistema está inicializado",
-        "When se ejecuta la acción principal",
-        "Then el estado se actualiza correctamente",
-        "",
-        "## 5. Criterios de Aceptación",
-        "- [ ] CA1: Criterio de aceptación 1",
-        ""
-      ].join("\n")
-
-      fs.writeFileSync(specPath, templateContent, "utf-8")
+      const content = SPEC_TEMPLATE_V1
+        .replace("<kebab-case>", changeName)
+      fs.writeFileSync(specPath, content, "utf-8")
       return JSON.stringify({
         status: "SUCCESS",
-        message: `✅ Spec inicializado con la plantilla estándar en: ${specPath}`,
-        specPath
+        message: `✅ Spec inicializado con la plantilla v4 (unificada, en español) en: ${specPath}`,
+        specPath,
+        templateVersion: "v4"
       }, null, 2)
     }
 
@@ -318,196 +294,145 @@ export default tool({
       }, null, 2)
     }
 
-    let { frontmatter, markdown } = parseFrontmatter(spec)
+    const legacyParsed = parseLegacyFrontmatter(spec)
+    const v4Parsed = parseFrontmatterV4(spec)
+    const isV4 = isV4Spec(v4Parsed.frontmatter) || isV4Spec(legacyParsed.frontmatter)
+    const frontmatter = (v4Parsed.frontmatter || legacyParsed.frontmatter) as SpecFrontmatter | any
+    const markdown = v4Parsed.markdown || legacyParsed.markdown
 
     if (args.action === "fix") {
       let content = spec
+      const usingV4 = isV4Spec(v4Parsed.frontmatter)
+      const legacy = !usingV4 ? legacyParsed : { frontmatter: null, markdown }
 
-      // Extract details to generate Frontmatter if missing
-      if (!frontmatter) {
-        const affectedFilesMatches = [...markdown.matchAll(/`([^`]+\.\w+)`\s*(?:\(?L[ií]neas?\s*\d+(?:-\d+)?\)?)?/gi)]
-        const filesList = affectedFilesMatches.map(m => {
+      if (!usingV4) {
+        const files: string[] = []
+        const fileMatches = [...legacy.markdown.matchAll(/`([^`]+\.\w+)`\s*(?:\(?L[ií]neas?\s*\d+(?:-\d+)?\)?)?/gi)]
+        for (const m of fileMatches) {
           const file = m[1]
           const linesMatch = m[0].match(/L[ií]neas?\s*(\d+(?:-\d+)?)/i)
-          const range = linesMatch ? linesMatch[1] : ""
-          return range ? `${file} (Líneas ${range})` : file
-        })
-
-        const criteriaMatches = [...markdown.matchAll(/-\s*\[\s*\]\s*(.+)/g)]
-        const criteriaList = criteriaMatches.map(m => `"[ ] ${m[1].trim()}"`)
-
+          files.push(linesMatch ? `${file} (Líneas ${linesMatch[1]})` : file)
+        }
+        const criteriaMatches = [...legacy.markdown.matchAll(/-\s*\[\s*[xX ]\s*\]\s*\*\*(CA\d+)\*\*:\s*(.+)/g)]
+        const criterios = criteriaMatches.map((m) => ({ id: m[1], descripcion: m[2].trim() }))
+        if (criterios.length === 0) {
+          const plainCheckboxes = [...legacy.markdown.matchAll(/-\s*\[\s*[xX ]\s*\]\s*(.+)/g)]
+          plainCheckboxes.forEach((m, idx) => {
+            criterios.push({ id: `CA${idx + 1}`, descripcion: m[1].trim() })
+          })
+        }
         const yamlHeader = [
           "---",
-          `change_name: "${changeName}"`,
-          "affected_files:",
-          ...(filesList.length > 0 ? filesList.map(f => `  - "${f}"`) : ["  - \"src/\""]),
-          "acceptance_criteria:",
-          ...(criteriaList.length > 0 ? criteriaList.map(c => `  - ${c}`) : ["  - \"[ ] Criterio de aceptación inicial\""]),
+          `spec_version: "1.0"`,
+          `change_name: "${frontmatter?.change_name || changeName}"`,
+          `modo_qa: "automatizado"`,
+          `design_skill: "${frontmatter?.design_skill || "ninguna"}"`,
+          "archivos_afectados:",
+          ...(files.length > 0 ? files.map((f) => `  - "${f}"`) : ["  - \"src/\""]),
+          "criterios_aceptacion:",
+          ...(criterios.length > 0
+            ? criterios.map((c) => `  - id: "${c.id}"\n    descripcion: "${c.descripcion.replace(/"/g, "'")}"`)
+            : ["  - id: \"CA1\"\n    descripcion: \"Criterio de aceptación\""]),
           "---",
           ""
         ].join("\n")
-
-        content = yamlHeader + markdown
+        content = yamlHeader + legacy.markdown
       }
 
-      // Re-parse with newly generated frontmatter if needed
-      const parsed = parseFrontmatter(content)
-      frontmatter = parsed.frontmatter
-      markdown = parsed.markdown
+      const reparsed = parseFrontmatterV4(content)
+      let fm = reparsed.frontmatter
+      let md = reparsed.markdown
 
-      // Re-structure the markdown content into a strict template
-      const sections: Record<number, string[]> = {
-        1: [],
-        2: [],
-        3: [],
-        4: [],
-        5: []
-      }
-      let currentSectionIdx = 0 // 0 means title or intro
-
-      const lines = markdown.split(/\r?\n/)
-      for (const line of lines) {
-        const trimmed = line.trim()
-        if (trimmed.startsWith("#") && !trimmed.startsWith("##")) {
-          // It's the title '# Plano Técnico', skip or ignore as we write it at the top
-          continue
-        }
-        
-        if (line.match(/^##\s*1\s*[.\s-]?\s*Diagn[oó]stico/i)) {
-          currentSectionIdx = 1
-          continue
-        } else if (line.match(/^##\s*2\s*[.\s-]?\s*Consenso/i)) {
-          currentSectionIdx = 2
-          continue
-        } else if (line.match(/^##\s*3\s*[.\s-]?\s*Propuesta/i)) {
-          currentSectionIdx = 3
-          continue
-        } else if (line.match(/^##\s*4\s*[.\s-]?\s*Especificaciones/i)) {
-          currentSectionIdx = 4
-          continue
-        } else if (line.match(/^##\s*5\s*[.\s-]?\s*Criterios/i)) {
-          currentSectionIdx = 5
-          continue
-        } else if (line.match(/^##\s*\d+\s*[.\s-]?/)) {
-          // Other main heading, ignore heading line but keep content
-          continue
-        }
-
-        if (currentSectionIdx > 0) {
-          sections[currentSectionIdx].push(line)
-        } else if (trimmed.length > 0) {
-          // Capture intro text into section 1
-          sections[1].push(line)
-        }
+      if (!fm?.modo_qa) {
+        content = content.replace(/^(---\n[\s\S]*?)(---)/m, `$1modo_qa: "automatizado"\n$2`)
       }
 
-      // Default contents if sections are empty
-      if (sections[1].length === 0) {
-        sections[1] = ["Se requiere analizar y documentar el diagnóstico y los archivos afectados para este cambio."]
-      }
-      if (sections[2].length === 0) {
-        sections[2] = ["El plan técnico y los criterios de aceptación han sido definidos de acuerdo con los requerimientos provistos por el usuario y validados formalmente."]
-      }
-      if (sections[3].length === 0) {
-        sections[3] = ["Se requiere detallar la propuesta de solución técnica y de arquitectura."]
-      }
-      if (sections[4].length === 0) {
-        sections[4] = [
-          "### Scenario: Initial scenario",
-          "Given the system is initialized",
-          "When the primary action is executed",
-          "Then the system state is updated successfully"
-        ]
-      }
-      if (sections[5].length === 0) {
-        sections[5] = ["- [ ] CA1: Criterio de aceptación inicial"]
+      if (!md.includes(`# ${SPEC_TITLE}`)) {
+        const cleaned = md.replace(/^#\s+.+?\n/, "")
+        md = `# ${SPEC_TITLE}\n` + cleaned
       }
 
-      // Rebuild markdown with clean normalized headings
-      const cleanMarkdownLines: string[] = []
-      cleanMarkdownLines.push("# Plano Técnico\n")
-
-      cleanMarkdownLines.push("## 1. Diagnóstico y Archivos Afectados")
-      cleanMarkdownLines.push(sections[1].join("\n").trim() + "\n")
-
-      cleanMarkdownLines.push("## 2. Consenso de Encuesta con el Usuario")
-      cleanMarkdownLines.push(sections[2].join("\n").trim() + "\n")
-
-      cleanMarkdownLines.push("## 3. Propuesta de Solución")
-      cleanMarkdownLines.push(sections[3].join("\n").trim() + "\n")
-
-      cleanMarkdownLines.push("## 4. Especificaciones BDD (Comportamiento)")
-      
-      // Clean BDD scenarios in section 4
-      let sec4Text = sections[4].join("\n")
-      // Translate BDD keywords in section 4
-      sec4Text = sec4Text.replace(/^(?<indent>\s*)(?:Dado|Dada)(?:\s+que)?\b/gim, "$1Given")
-      sec4Text = sec4Text.replace(/^(?<indent>\s*)Cuando\b/gim, "$1When")
-      sec4Text = sec4Text.replace(/^(?<indent>\s*)Entonces\b/gim, "$1Then")
-      sec4Text = sec4Text.replace(/^(?<indent>\s*)Y\b/gim, "$1And")
-      sec4Text = sec4Text.replace(/###\s*(Scenario|Escenario)\s*\d*\s*:?/gi, "### Scenario:")
-      
-      cleanMarkdownLines.push(sec4Text.trim() + "\n")
-
-      cleanMarkdownLines.push("## 5. Criterios de Aceptación")
-      cleanMarkdownLines.push(sections[5].join("\n").trim())
-
-      markdown = cleanMarkdownLines.join("\n")
-
-      // 4. Line Ranges Auto-parenthesizing
-      markdown = markdown.replace(/(?<!\()\b(L[ií]neas?\s+\d+(?:-\d+)?|L\d+-\d+|L\d+)\b(?!\))/gi, "($1)")
-
-      // 5. Auto-renumber subheadings to match their parent section number
-      const finalLines = markdown.split("\n")
-      let currentSectionNumber: string | null = null
-      for (let i = 0; i < finalLines.length; i++) {
-        const sectionMatch = finalLines[i].match(/^##\s*(\d+)\./)
-        if (sectionMatch) {
-          currentSectionNumber = sectionMatch[1]
-        } else if (currentSectionNumber) {
-          const subMatch = finalLines[i].match(/^(###\s*)(\d+)(\.\d+\s+.*)$/)
-          if (subMatch && subMatch[2] !== currentSectionNumber) {
-            finalLines[i] = `${subMatch[1]}${currentSectionNumber}${subMatch[3]}`
+      const sectionsPresent = new Set<number>()
+      for (const sec of SECTIONS) {
+        const re = new RegExp(`^##\\s*${sec.n}\\.\\s*`, "m")
+        if (re.test(md)) sectionsPresent.add(sec.n)
+      }
+      const missing = SECTIONS.filter((s) => !sectionsPresent.has(s.n))
+      if (missing.length > 0) {
+        for (const sec of missing) {
+          const headerRegex = new RegExp(`^##\\s*${sec.n}\\.\\s*.*$`, "m")
+          if (headerRegex.test(md)) {
+            md = md.replace(headerRegex, `## ${sec.n}. ${sec.title}`)
           }
         }
       }
-      markdown = finalLines.join("\n")
 
-      // Write everything back
-      const yamlPart = [
-        "---",
-        `change_name: "${frontmatter?.change_name || changeName}"`,
-        `design_skill: "${frontmatter?.design_skill || ""}"`,
-        "affected_files:",
-        ...(Array.isArray(frontmatter?.affected_files) ? frontmatter.affected_files.map((f: string) => `  - "${f}"`) : ["  - \"src/\""]),
-        "acceptance_criteria:",
-        ...(Array.isArray(frontmatter?.acceptance_criteria) ? frontmatter.acceptance_criteria.map((c: string) => `  - "${c}"`) : ["  - \"[ ] Criterio de aceptación\""]),
-        "---",
-        ""
-      ].join("\n")
+      const strictTitleRe = (n: number, t: string) =>
+        new RegExp(`^##\\s*${n}\\.\\s*${t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`, "m")
+      for (const sec of SECTIONS) {
+        const re = new RegExp(`^##\\s*${sec.n}\\.\\s*.+$`, "gm")
+        md = md.replace(re, (match) => {
+          if (strictTitleRe(sec.n, sec.title).test(match)) return match
+          return `## ${sec.n}. ${sec.title}`
+        })
+      }
 
-      content = yamlPart + markdown
+      md = md.replace(/(?<![\(\w])(L[ií]neas?\s+\d+(?:-\d+)?|L\d+-\d+|L\d+)(?![\w\)])/gi, "($1)") // eslint-disable-line no-useless-escape
+
+      md = md.replace(/(?<=^|\n)\s*Given\s+/g, "Dado ")
+      md = md.replace(/(?<=^|\n)\s*When\s+/g, "Cuando ")
+      md = md.replace(/(?<=^|\n)\s*Then\s+/g, "Entonces ")
+      md = md.replace(/(?<=^|\n)\s*And\s+/g, "Y ")
+
+      const finalFmMatch = content.match(/^---\r?\n[\s\S]*?\r?\n---/)
+      const yamlHeaderFinal = finalFmMatch ? finalFmMatch[0] + "\n" : ""
+      content = yamlHeaderFinal + md
       fs.writeFileSync(specPath, content, "utf-8")
       spec = content
-      const reparsed = parseFrontmatter(spec)
-      frontmatter = reparsed.frontmatter
-      markdown = reparsed.markdown
+      const postFixValidation = validateSpec(spec)
+      const fixVerdict = postFixValidation.ok ? "APPROVED" : "REJECTED"
+      const fixStatus = postFixValidation.ok ? "SUCCESS" : "FAILED"
+      return JSON.stringify({
+        status: fixStatus,
+        verdict: fixVerdict,
+        message: postFixValidation.ok
+          ? `✅ Spec migrado al formato v4 (español unificado) y validado en: ${specPath}`
+          : `⚠️ Spec migrado al formato v4 pero aún tiene ${postFixValidation.errors.length} errores. Revisar manualmente en: ${specPath}`,
+        specPath,
+        remaining_errors: postFixValidation.ok ? [] : postFixValidation.errors
+      }, null, 2)
+    }
+
+    if (isV4) {
+      const strictResult = validateSpec(spec)
+      if (!strictResult.ok) {
+        const failedNames = strictResult.errors.map((e) => e.rule).filter((v, i, a) => a.indexOf(v) === i)
+        return JSON.stringify({
+          status: "FAILED",
+          verdict: "REJECTED",
+          score: `0/1`,
+          spec_path: specPath,
+          message: `❌ Spec v4 rechazado: ${strictResult.errors.length} reglas inmutables violadas.`,
+          errors: strictResult.errors,
+          failed_rules: failedNames,
+          failed_checks: strictResult.errors.map((e) => ({ name: e.rule, details: e.message }))
+        }, null, 2)
+      }
     }
 
     const checks: SpecCheck[] = [
-      checkHasTitle(spec, markdown),
-      checkHasAffectedFiles(spec, frontmatter, markdown),
-      checkHasBDDScenarios(spec, markdown),
-      checkAcceptanceCriteria(spec, frontmatter, markdown),
-      checkTestability(spec),
-      checkFilesHaveLineRanges(spec, frontmatter, markdown),
-      checkChangeNameInSpec(spec, frontmatter, markdown),
-      checkArchitectureDescription(spec, markdown),
-      checkUIDesignSkill(spec, frontmatter, markdown)
+      checkHasTitle(markdown),
+      checkStrictTitlesV4(markdown),
+      checkBddSpanishOnly(markdown),
+      checkAcceptanceCriteria(frontmatter, markdown),
+      checkTestability(markdown),
+      checkChangeNameInSpec(frontmatter),
+      checkArchitectureDescription(markdown),
+      checkModoQaValid(frontmatter)
     ]
 
-    const passed = checks.filter(c => c.pass).length
-    const failed = checks.filter(c => !c.pass)
+    const passed = checks.filter((c) => c.pass).length
+    const failed = checks.filter((c) => !c.pass)
     const verdict = failed.length === 0 ? "APPROVED" : "REJECTED"
 
     if (args.action === "summary") {
@@ -527,9 +452,9 @@ export default tool({
       spec_path: specPath,
       checks,
       message: verdict === "APPROVED"
-        ? "✅ Spec aprobado. Cumple todos los requisitos de testeabilidad."
+        ? "✅ Spec aprobado. Cumple todos los requisitos del template v4 (unificado, en español)."
         : `❌ Spec rechazado. ${failed.length} checks fallaron. Volver a F1.`,
-      failed_checks: failed.map(c => ({ name: c.name, details: c.details }))
+      failed_checks: failed.map((c) => ({ name: c.name, details: c.details }))
     }, null, 2)
   }
 })

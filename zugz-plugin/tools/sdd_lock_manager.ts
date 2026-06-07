@@ -2,7 +2,7 @@ import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
 
-export const SCHEMA_VERSION = 2
+export const SCHEMA_VERSION = 4
 
 export interface SddLockfile {
   schema_version: number
@@ -36,6 +36,8 @@ export interface SddLockfile {
   last_checkpoint_id: string | null
   last_restored_from: string | null
   complexity: "low" | "medium" | "high"
+  subproject_cwd: string
+  modo_qa: "automatizado" | "manual"
 }
 
 export const DEFAULT_LOCKFILE: SddLockfile = {
@@ -69,7 +71,9 @@ export const DEFAULT_LOCKFILE: SddLockfile = {
   checkpoints: [],
   last_checkpoint_id: null,
   last_restored_from: null,
-  complexity: "medium"
+  complexity: "medium",
+  subproject_cwd: "",
+  modo_qa: "automatizado"
 }
 
 export function resolveLockfilePath(projectRoot: string): string {
@@ -102,10 +106,46 @@ export function writeLockfile(projectRoot: string, lock: SddLockfile): void {
 }
 
 export function migrateToV2(raw: any): SddLockfile {
-  if (raw.schema_version === SCHEMA_VERSION) {
-    return { ...DEFAULT_LOCKFILE, ...raw }
+  const legacyQaManual = raw.qa_manual === true || raw.manual_qa === true
+  const rawCopy = { ...raw }
+  delete rawCopy.qa_manual
+  delete rawCopy.manual_qa
+
+  if (rawCopy.schema_version === SCHEMA_VERSION) {
+    return { ...DEFAULT_LOCKFILE, ...rawCopy, schema_version: SCHEMA_VERSION }
+  }
+  if (rawCopy.schema_version === 3) {
+    return {
+      ...DEFAULT_LOCKFILE,
+      ...rawCopy,
+      subproject_cwd: rawCopy.subproject_cwd ?? "",
+      modo_qa: rawCopy.modo_qa ?? (legacyQaManual ? "manual" : "automatizado"),
+      schema_version: SCHEMA_VERSION
+    }
+  }
+  if (rawCopy.schema_version === 2) {
+    return {
+      ...DEFAULT_LOCKFILE,
+      ...rawCopy,
+      subproject_cwd: rawCopy.subproject_cwd ?? "",
+      modo_qa: legacyQaManual ? "manual" : "automatizado",
+      schema_version: SCHEMA_VERSION
+    }
+  }
+  if (rawCopy.schema_version === 1) {
+    return {
+      ...DEFAULT_LOCKFILE,
+      ...rawCopy,
+      subproject_cwd: "",
+      modo_qa: legacyQaManual ? "manual" : "automatizado",
+      schema_version: SCHEMA_VERSION
+    }
   }
   return { ...DEFAULT_LOCKFILE }
+}
+
+export function migrateToV4(raw: any): SddLockfile {
+  return migrateToV2(raw)
 }
 
 export function setNestedValue(obj: any, pathStr: string, value: any): void {
@@ -250,6 +290,12 @@ export default tool({
         }
         if (lock.active_phase !== "F0" && !isValidChangeName(lock.change_name)) {
           issues.push(`change_name inválido o genérico: "${lock.change_name}"`)
+        }
+        if (lock.subproject_cwd && lock.subproject_cwd.startsWith("/")) {
+          issues.push(`subproject_cwd debe ser ruta relativa, no absoluta: "${lock.subproject_cwd}"`)
+        }
+        if (lock.modo_qa !== "automatizado" && lock.modo_qa !== "manual") {
+          issues.push(`modo_qa inválido: "${lock.modo_qa}". Valores permitidos: automatizado, manual.`)
         }
         if (issues.length === 0) {
           return JSON.stringify({

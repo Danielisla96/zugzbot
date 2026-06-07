@@ -220,7 +220,7 @@ describe('Lockfile with stack_profile (v2)', () => {
     const readResult = await lockManager.execute({ action: 'read' }, ctx(projectPath));
     const lock = JSON.parse(readResult).lockfile;
     expect(lock.stack_profile).toBe('node-typescript');
-    expect(lock.schema_version).toBe(2);
+    expect(lock.schema_version).toBe(4);
   });
 
   test('lock_manager validates v2 schema correctly', async () => {

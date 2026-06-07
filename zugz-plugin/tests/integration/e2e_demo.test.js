@@ -89,41 +89,59 @@ describe('E2E: Zugzbot v2.0.0 Demo Flow', () => {
     const specPath = path.join(projectPath, '.openspec/changes', changeName, 'specs/spec.md');
     fs.mkdirSync(path.dirname(specPath), { recursive: true });
 
-    const specContent = `# Plano Técnico de Especificación: ${changeName}
+    const specContent = `---
+spec_version: "1.0"
+change_name: "${changeName}"
+modo_qa: "automatizado"
+design_skill: "ninguna"
+archivos_afectados:
+  - "src/validators.ts (Líneas 1-50)"
+  - "tests/unit/validators.test.ts (Líneas 1-1)"
+criterios_aceptacion:
+  - id: "CA1"
+    descripcion: 'validateEmail("user@example.com") retorna true'
+  - id: "CA2"
+    descripcion: 'validateEmail("not-an-email") retorna false'
+  - id: "CA3"
+    descripcion: 'validateEmail("") retorna false'
+  - id: "CA4"
+    descripcion: "validateEmail(null) retorna false sin throw"
+---
+
+# Especificación Técnica del Cambio
 
 ## 1. Diagnóstico y Archivos Afectados
 - \`src/validators.ts\` (Líneas 1-50: nueva función validateEmail)
 - \`tests/unit/validators.test.ts\` (Líneas 1-1: nuevo test file)
 
-## 2. Consenso de Encuesta con el Usuario
+## 2. Consenso con el Usuario
 - **Pregunta A**: Decisión adoptada: regex simplificado (no RFC 5322 completo).
 
-## 3. Propuesta de Solución y Arquitectura
+## 3. Propuesta de Solución
 Función pura \`validateEmail(email: string): boolean\` que retorna true si el email tiene formato válido.
 Estrategia: regex estándar para casos comunes (user@domain.tld), rechaza strings vacíos y formatos sin @.
 
-## 4. Especificaciones BDD (Comportamiento)
-Feature: Validación de email
-  Scenario: Email válido estándar
-    Given un email "user@example.com"
-    When valido con validateEmail
-    Then retorna true
+## 4. Especificaciones de Comportamiento (BDD)
+Escenario: Email válido estándar
+  Dado un email "user@example.com"
+  Cuando valido con validateEmail
+  Entonces retorna true
 
-  Scenario: Email inválido sin @
-    Given un email "not-an-email"
-    When valido con validateEmail
-    Then retorna false
+Escenario: Email inválido sin @
+  Dado un email "not-an-email"
+  Cuando valido con validateEmail
+  Entonces retorna false
 
-  Scenario: String vacío
-    Given un email ""
-    When valido con validateEmail
-    Then retorna false
+Escenario: String vacío
+  Dado un email ""
+  Cuando valido con validateEmail
+  Entonces retorna false
 
-## 5. Criterios de Aceptación y Calidad (QA)
-- [ ] Criterio 1: validateEmail("user@example.com") retorna true
-- [ ] Criterio 2: validateEmail("not-an-email") retorna false
-- [ ] Criterio 3: validateEmail("") retorna false
-- [ ] Criterio 4: validateEmail(null) retorna false sin throw
+## 5. Criterios de Aceptación
+- [ ] **CA1**: validateEmail("user@example.com") retorna true
+- [ ] **CA2**: validateEmail("not-an-email") retorna false
+- [ ] **CA3**: validateEmail("") retorna false
+- [ ] **CA4**: validateEmail(null) retorna false sin throw
 `;
     fs.writeFileSync(specPath, specContent);
 
@@ -141,7 +159,7 @@ Feature: Validación de email
       await specReviewer.execute({ action: 'validate' }, context)
     );
     expect(review.verdict).toBe('APPROVED');
-    expect(review.score).toMatch(/9\/9/);
+    expect(review.score).toMatch(/8\/8/);
 
     await sddTransition.execute({
       nextPhase: 'F1.5', status: 'in_progress', reason: 'Spec listo para revisión'
@@ -227,12 +245,12 @@ describe('validateEmail', () => {
     expect(fs.existsSync(testPath)).toBe(true);
     expect(fs.existsSync(specPath)).toBe(true);
 
-    // === STEP 12: Verify spec content quality ===
+    // === STEP 12: Verify spec content quality (template v4) ===
     const savedSpec = fs.readFileSync(specPath, 'utf-8');
     expect(savedSpec).toContain('validateEmail');
-    expect(savedSpec).toContain('Given');
-    expect(savedSpec).toContain('When');
-    expect(savedSpec).toContain('Then');
+    expect(savedSpec).toContain('Dado');
+    expect(savedSpec).toContain('Cuando');
+    expect(savedSpec).toContain('Entonces');
   });
 
   test('Demo: "arregla typo en README" → quick-fix workflow', async () => {

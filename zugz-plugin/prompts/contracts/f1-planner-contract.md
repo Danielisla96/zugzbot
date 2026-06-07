@@ -25,35 +25,20 @@ Planificador e interrogador. Recopila requisitos del usuario, consulta el cerebr
 3. **Consulta de cooldown de dependencias**:
    - Si el spec requiere nuevas dependencias, validar `check_dependency_cooldown` para cada una (3+ días publicadas).
 
-4. **Generación del spec**:
-   - Crear `.openspec/changes/<change-name>/specs/spec.md` con la estructura híbrida (YAML Frontmatter + Markdown):
-     ```markdown
-     ---
-     change_name: "<change-name>"
-     design_skill: "none"
-     affected_files:
-       - "ruta/completa/archivo.ext (Líneas 10-35)"
-     acceptance_criteria:
-       - "[ ] Criterio de aceptación 1"
-     ---
-     
-     # Plano Técnico
-     
-     ## 1. Diagnóstico y Archivos Afectados
-     (Detalle del diagnóstico técnico y justificación de afectación)
-     
-     ## 2. Consenso de Encuesta con el Usuario
-     (Resumen de las aclaraciones y decisiones tomadas en consenso con el usuario)
-     
-     ## 3. Propuesta de Solución
-     (Detalle de arquitectura, > 50 caracteres)
-     
-     ## 4. Especificaciones BDD (Comportamiento)
-     (Casos BDD con Given/When/Then en inglés)
-     
-     ## 5. Criterios de Aceptación
-     (Listado rápido de criterios)
-     ```
+4. **Generación del spec (template v4 unificado, en español)**:
+   - **OBLIGATORIO**: usar `sdd_spec_reviewer action=init` para crear la plantilla oficial v4 en `.openspec/changes/<change-name>/specs/spec.md`.
+   - **NO** escribir el spec a mano ni usar variantes. La única fuente de verdad es el template v4 definido en `tools/sdd_spec_template.ts` (`SPEC_TEMPLATE_V1`).
+   - El spec v4 tiene:
+     - **YAML Frontmatter en español**: `spec_version`, `change_name`, `modo_qa` (`automatizado` | `manual`), `design_skill`, `archivos_afectados`, `criterios_aceptacion` (con `id: "CA<n>"` y `descripcion`).
+     - **5 secciones exactas** (títulos inmutables, no agregar sufijos como "y Calidad (QA)"):
+       1. Diagnóstico y Archivos Afectados
+       2. Consenso con el Usuario
+       3. Propuesta de Solución
+       4. Especificaciones de Comportamiento (BDD)
+       5. Criterios de Aceptación
+     - **BDD en español**: cláusulas `Dado` / `Cuando` / `Entonces` / `Y` (NUNCA `Given` / `When` / `Then` / `And`).
+     - **Criterios en sección 5** con formato `- [ ] **CA<n>**: <descripción>`. Cada `CA<n>` debe estar declarado en el frontmatter.
+     - **QA Manual**: solo se permite el flag `[manual]` por criterio individual. Para QA manual global, usar `modo_qa: "manual"` en el frontmatter o en `.openspec/sdd-lock.json`.
    - **CRÍTICO**: los criterios de aceptación deben ser **testeables** (verificables por un test automatizado).
    - Incluir diagrama Mermaid si hay >3 componentes involucrados.
 

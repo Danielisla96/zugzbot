@@ -65,26 +65,32 @@ Si el Grafo de Conocimiento (`graphify-out/graph.json`) existe, puedes llamar a 
 
 Si el spec requiere nuevas deps, valida con `check_dependency_cooldown` cada una (3+ días publicadas).
 
-**Inicialización obligatoria del Spec:**
-- Llama a `sdd_spec_reviewer` con `action: "init"` para crear el archivo plantilla `.openspec/changes/<change-name>/specs/spec.md` con el formato e inicializaciones estandarizadas y exactas de la metodología SDD.
-- A continuación, lee la plantilla creada y **rellena o edita** cada sección con los requerimientos específicos de la tarea, asegurando mantener la estructura y los nombres de las secciones tal como fueron generados en la plantilla:
-- **YAML Frontmatter**: Al inicio del archivo, delimitado por `---`, con los campos exactos:
+**Inicialización obligatoria del Spec (template v4 unificado):**
+- Llama a `sdd_spec_reviewer` con `action: "init"` para crear el archivo plantilla `.openspec/changes/<change-name>/specs/spec.md` con el formato v4 (única fuente de verdad, en español).
+- A continuación, lee la plantilla creada y **rellena o edita** cada sección con los requerimientos específicos de la tarea, manteniendo la estructura y los nombres de las secciones EXACTAMENTE como fueron generados.
+- **NO modifiques los títulos de las secciones** (regla inmutable del template v4).
+- **YAML Frontmatter** (al inicio, delimitado por `---`):
   ```yaml
   ---
+  spec_version: "1.0"
   change_name: "<change-name>"
-  design_skill: "<design-skill-name>"
-  affected_files:
+  modo_qa: "automatizado"    # o "manual" para QA global
+  design_skill: "<design-skill-name>"  # o "ninguna" si no aplica
+  archivos_afectados:
     - "ruta/completa/archivo.ext (Líneas 10-35)"
-  acceptance_criteria:
-    - "[ ] Criterio de aceptación 1"
+  criterios_aceptacion:
+    - id: "CA1"
+      descripcion: "Descripción testeable del criterio"
+    - id: "CA2"
+      descripcion: "Otra condición verificable"
   ---
   ```
-- **Título principal exacto**: `# Plano Técnico`
-- **Sección 1**: `## 1. Diagnóstico y Archivos Afectados` (Lista los archivos involucrados usando backticks y especifica el rango de líneas, ej. `main.ts` (Líneas 10-35)).
-- **Sección 2**: `## 2. Consenso de Encuesta con el Usuario` (Resume brevemente las decisiones y aclaraciones conversadas con el usuario).
-- **Sección 3**: `## 3. Propuesta de Solución` (Describe la arquitectura detalladamente con más de 50 caracteres).
-- **Sección 4**: `## 4. Especificaciones BDD (Comportamiento)` (Escenarios detallados iniciando obligatoriamente con la cláusula `Scenario:` —no `Escenario:`— y los pasos Given / When / Then / And en inglés).
-- **Sección 5**: `## 5. Criterios de Aceptación` (Listado rápido con casillas `- [ ]` para referencia).
+- **Título principal exacto**: `# Especificación Técnica del Cambio`
+- **Sección 1**: `## 1. Diagnóstico y Archivos Afectados` (lista archivos con backticks y rangos, ej. `main.ts` (Líneas 10-35)).
+- **Sección 2**: `## 2. Consenso con el Usuario` (resume decisiones y aclaraciones).
+- **Sección 3**: `## 3. Propuesta de Solución` (arquitectura, > 50 caracteres).
+- **Sección 4**: `## 4. Especificaciones de Comportamiento (BDD)` (escenarios con cláusula `Escenario:` y pasos `Dado` / `Cuando` / `Entonces` / `Y` **en español**, NUNCA en inglés).
+- **Sección 5**: `## 5. Criterios de Aceptación` (formato `- [ ] **CA<n>**: <descripción>`, debe coincidir 1-a-1 con `criterios_aceptacion` del frontmatter).
 
 ### 5. Criterios TESTEABLES (CRÍTICO para F1.5)
 

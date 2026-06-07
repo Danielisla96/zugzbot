@@ -56,37 +56,52 @@ describe('TDD Cycle Enforcement (v2)', () => {
       patch: JSON.stringify({ stack_profile: 'node-typescript' })
     }, context);
 
-    // F1: Crear spec
+    // F1: Crear spec (template v4 unificado)
     const changeName = 'agregar-validacion-email';
     const specPath = path.join(projectPath, '.openspec/changes', changeName, 'specs/spec.md');
     fs.mkdirSync(path.dirname(specPath), { recursive: true });
-    fs.writeFileSync(specPath, `# Plano Técnico de Especificación: ${changeName}
+    fs.writeFileSync(specPath, `---
+spec_version: "1.0"
+change_name: "${changeName}"
+modo_qa: "automatizado"
+design_skill: "ninguna"
+archivos_afectados:
+  - "src/validators.ts (Líneas 1-50)"
+criterios_aceptacion:
+  - id: "CA1"
+    descripcion: "validateEmail retorna true para user@example.com"
+  - id: "CA2"
+    descripcion: "validateEmail retorna false para not-an-email"
+  - id: "CA3"
+    descripcion: "validateEmail retorna false para string vacío"
+---
+
+# Especificación Técnica del Cambio
 
 ## 1. Diagnóstico y Archivos Afectados
 - \`src/validators.ts\` (Líneas 1-50: agregar función validateEmail)
 
-## 2. Consenso de Encuesta con el Usuario
+## 2. Consenso con el Usuario
 - **Pregunta A**: Decisión: usar regex estándar RFC 5322 simplificado.
 
-## 3. Propuesta de Solución y Arquitectura
-Función pura validateEmail(email: string): boolean que retorna true si el email es válido sintácticamente.
+## 3. Propuesta de Solución
+Función pura validateEmail(email: string): boolean que retorna true si el email es válido sintácticamente. La implementación usa regex estándar y manejo explícito de casos borde.
 
-## 4. Especificaciones BDD (Comportamiento)
-Feature: Validación de email
-  Scenario: Email válido
-    Given un email "user@example.com"
-    When valido con validateEmail
-    Then retorna true
+## 4. Especificaciones de Comportamiento (BDD)
+Escenario: Email válido
+  Dado un email "user@example.com"
+  Cuando valido con validateEmail
+  Entonces retorna true
 
-  Scenario: Email inválido
-    Given un email "not-an-email"
-    When valido con validateEmail
-    Then retorna false
+Escenario: Email inválido
+  Dado un email "not-an-email"
+  Cuando valido con validateEmail
+  Entonces retorna false
 
-## 5. Criterios de Aceptación y Calidad (QA)
-- [ ] Criterio 1: validateEmail retorna true para "user@example.com"
-- [ ] Criterio 2: validateEmail retorna false para "not-an-email"
-- [ ] Criterio 3: validateEmail retorna false para string vacío
+## 5. Criterios de Aceptación
+- [ ] **CA1**: validateEmail retorna true para "user@example.com"
+- [ ] **CA2**: validateEmail retorna false para "not-an-email"
+- [ ] **CA3**: validateEmail retorna false para string vacío
 `);
 
     await lockManager.execute({
@@ -111,7 +126,7 @@ Feature: Validación de email
     const reviewParsed = JSON.parse(review);
     expect(reviewParsed.status).toBe('SUCCESS');
     expect(reviewParsed.verdict).toBe('APPROVED');
-    expect(reviewParsed.score).toMatch(/9\/9/);
+    expect(reviewParsed.score).toMatch(/8\/8/);
 
     // F1.5 → F2-RED
     r = await sddTransition.execute({
@@ -294,27 +309,40 @@ Mejorar un poco la experiencia del usuario y optimizar si se puede el rendimient
 
     const specPath = path.join(projectPath, 'specs/good.md');
     fs.mkdirSync(path.dirname(specPath), { recursive: true });
-    fs.writeFileSync(specPath, `# Plano Técnico de Especificación: my-feature
+    fs.writeFileSync(specPath, `---
+spec_version: "1.0"
+change_name: "my-feature"
+modo_qa: "automatizado"
+design_skill: "ninguna"
+archivos_afectados:
+  - "src/api.ts (Líneas 10-50)"
+criterios_aceptacion:
+  - id: "CA1"
+    descripcion: "POST /login con credenciales válidas retorna 200 con JWT"
+  - id: "CA2"
+    descripcion: "POST /login con password incorrecto retorna 401"
+---
+
+# Especificación Técnica del Cambio
 
 ## 1. Diagnóstico y Archivos Afectados
 - \`src/api.ts\` (Líneas 10-50: agregar handler)
 
-## 2. Consenso de Encuesta con el Usuario
+## 2. Consenso con el Usuario
 - **Pregunta A**: Decisión: usar JWT.
 
-## 3. Propuesta de Solución y Arquitectura
-Endpoint POST /login que retorna JWT.
+## 3. Propuesta de Solución
+Endpoint POST /login que retorna JWT firmado. La implementación usa hash bcrypt para passwords y firma HS256 para el token.
 
-## 4. Especificaciones BDD (Comportamiento)
-Feature: Login
-  Scenario: Login exitoso
-    Given credenciales válidas
-    When POST /login
-    Then retorna 200 con JWT
+## 4. Especificaciones de Comportamiento (BDD)
+Escenario: Login exitoso
+  Dado credenciales válidas
+  Cuando POST /login
+  Entonces retorna 200 con JWT
 
-## 5. Criterios de Aceptación y Calidad (QA)
-- [ ] Criterio 1: POST /login con credenciales válidas retorna 200
-- [ ] Criterio 2: POST /login con password incorrecto retorna 401
+## 5. Criterios de Aceptación
+- [ ] **CA1**: POST /login con credenciales válidas retorna 200 con JWT
+- [ ] **CA2**: POST /login con password incorrecto retorna 401
 `);
 
     const result = await specReviewer.execute({ action: 'validate', specPath }, context);
@@ -334,26 +362,27 @@ Feature: Login
 ## 1. Diagnóstico
 - \`src/api.ts\` Líneas 10-50: agregar handler
 
-### 3.1 Principios Arquitectónicos bajo Diagnóstico
+### 1.1 Principios Arquitectónicos bajo Diagnóstico
 
 ## 2. Consenso de Encuesta con el Usuario
 - **Pregunta A**: Decisión: usar JWT.
 
 ## 3. Propuesta
-Endpoint POST /login que retorna JWT.
+Endpoint POST /login que retorna JWT. La implementación usa bcrypt para passwords y firma HS256 para el token JWT.
 
-### 4.1 Detalle de Propuesta
+### 3.1 Detalle de Propuesta
 
 ## 4. Especificaciones
-Dado un usuario registrado
-Cuando hace POST
-Entonces recibe token
-Y status 200
+Escenario: Login exitoso
+  Dado un usuario registrado
+  Cuando hace POST
+  Entonces recibe token
+  Y status 200
 
-### 3.1 Escenario Detallado
+### 4.1 Escenario Detallado
 
 ## 5. Criterios
-- [ ] Criterio 1: POST /login con credenciales válidas retorna 200
+- [ ] **CA1**: POST /login con credenciales válidas retorna 200
 `);
 
     // First, validate should fail
@@ -367,51 +396,59 @@ Y status 200
     expect(fixParsed.status).toBe('SUCCESS');
     expect(fixParsed.verdict).toBe('APPROVED');
 
-    // Verify file content was corrected
+    // Verify file content was corrected to v4
     const fixedContent = fs.readFileSync(specPath, 'utf-8');
-    expect(fixedContent).toContain('# Plano Técnico');
+    expect(fixedContent).toContain('# Especificación Técnica del Cambio');
     expect(fixedContent).toContain('## 1. Diagnóstico y Archivos Afectados');
     expect(fixedContent).toContain('(Líneas 10-50)');
     expect(fixedContent).toContain('### 1.1 Principios Arquitectónicos bajo Diagnóstico');
     expect(fixedContent).toContain('## 3. Propuesta de Solución');
     expect(fixedContent).toContain('### 3.1 Detalle de Propuesta');
-    expect(fixedContent).toContain('## 4. Especificaciones BDD');
+    expect(fixedContent).toContain('## 4. Especificaciones de Comportamiento (BDD)');
     expect(fixedContent).toContain('### 4.1 Escenario Detallado');
-    expect(fixedContent).toContain('Given');
-    expect(fixedContent).toContain('When');
-    expect(fixedContent).toContain('Then');
-    expect(fixedContent).toContain('And');
+    expect(fixedContent).toContain('Dado');
+    expect(fixedContent).toContain('Cuando');
+    expect(fixedContent).toContain('Entonces');
+    expect(fixedContent).toContain('Y');
   });
 
-  test('validates spec with YAML Frontmatter + Markdown hybrid format', async () => {
+  test('validates spec with YAML Frontmatter v4 + Markdown', async () => {
     const projectPath = makeProject('spec-yaml-hybrid');
     const context = ctx(projectPath);
 
     const specPath = path.join(projectPath, 'specs/hybrid.md');
     fs.mkdirSync(path.dirname(specPath), { recursive: true });
     fs.writeFileSync(specPath, `---
+spec_version: "1.0"
 change_name: "jwt-authentication"
-affected_files:
+modo_qa: "automatizado"
+design_skill: "ninguna"
+archivos_afectados:
   - "src/api.ts (Líneas 10-50)"
-acceptance_criteria:
-  - "[ ] El login con credenciales válidas debe retornar 200 y token JWT"
+criterios_aceptacion:
+  - id: "CA1"
+    descripcion: "El login con credenciales válidas debe retornar 200 y token JWT"
 ---
 
-# Plano Técnico
+# Especificación Técnica del Cambio
 
 ## 1. Diagnóstico y Archivos Afectados
-Diagnosticamos la necesidad de validar usuarios.
+Diagnosticamos la necesidad de validar usuarios contra el endpoint /login con JWT firmado.
+
+## 2. Consenso con el Usuario
+- **Pregunta A**: Decisión: usar JWT con HS256.
 
 ## 3. Propuesta de Solución
-Implementaremos un endpoint POST /login y retornaremos un token JWT firmado.
+Implementaremos un endpoint POST /login y retornaremos un token JWT firmado con HS256. La verificación se hace con middleware dedicado en src/api.ts.
 
-## 4. Especificaciones BDD
-Given credenciales válidas
-When hace POST
-Then recibe status 200
+## 4. Especificaciones de Comportamiento (BDD)
+Escenario: Login exitoso
+  Dado credenciales válidas
+  Cuando hace POST
+  Entonces recibe status 200
 
 ## 5. Criterios de Aceptación
-- [ ] El login con credenciales válidas debe retornar 200 y token JWT
+- [ ] **CA1**: El login con credenciales válidas debe retornar 200 y token JWT
 `);
 
     const result = await specReviewer.execute({ action: 'validate', specPath }, context);
