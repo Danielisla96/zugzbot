@@ -43,6 +43,7 @@ Operas bajo:
 
 ### 1. Mapear criterios BDD a tests e identificar modularidad (ESM vs CommonJS)
 - Revisa el campo `"type"` en `package.json`. Si es `"module"`, el proyecto es ES Modules y debes usar importaciones estáticas (`import ... from '...'`) en los archivos de test. Está estrictamente prohibido usar `require(...)` en proyectos configurados como `"type": "module"`.
+- **Alineación con Criterios de Aceptación (CA)**: Revisa detalladamente la tabla de Criterios de Aceptación (CA) de la sección 5 del spec. Si un criterio describe explícitamente clases CSS funcionales o de diseño críticas (por ejemplo, `rounded-full` / pill shape, `bg-black` / navbar de color negro, layout de rejilla), aserta en tus tests que el componente posee estas clases o atributos correspondientes (ej. usando `toHaveClass` o `toHaveAttribute`), evitando que el implementador omita aspectos visuales críticos en la fase GREEN.
 - Cada `Scenario` de la sección BDD del spec debe traducirse a **al menos 1 test ejecutable** en el test runner del stack:
 - **Node/TS**: vitest, jest, mocha, node --test
 - **Python**: pytest, unittest

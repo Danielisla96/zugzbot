@@ -173,7 +173,7 @@ export function parseCriterios(spec: string): CriterioParsed[] {
       inSection = true
       continue
     }
-    if (inSection && trimmed.startsWith("##")) break
+    if (inSection && /^##\s+\d+\./.test(trimmed)) break
     if (!inSection) continue
 
     const m = trimmed.match(/^-\s*\[\s*[xX ]\s*\]\s*\*\*(CA\d+)\*\*:\s*(.+)$/)
@@ -208,7 +208,7 @@ export function matchBddScenarios(spec: string): BddScenario[] {
       inSection = true
       continue
     }
-    if (inSection && trimmed.startsWith("##")) break
+    if (inSection && /^##\s+\d+\./.test(trimmed)) break
     if (!inSection) continue
 
     const escenarioMatch = trimmed.match(/^Escenario:\s*(.+)$/i)

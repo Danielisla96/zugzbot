@@ -108,12 +108,13 @@ literalmente del YAML del design system cargado:
 Si el código de producción contiene valores hardcoded detectables, es un
 **fallo de compliance**. `sdd_spec_compliance_linter` lo detectará en F3.
 
-### 2. Implementación mínima
+### 2. Implementación mínima y cumplimiento de Criterios de Aceptación (CA)
 
-Lee los tests que F2-RED escribió. Para cada test (en orden de simplicidad):
+Lee los tests que F2-RED escribió, y **revisa en paralelo la tabla de Criterios de Aceptación (CA)** de tu `spec.md`. Para cada test (en orden de simplicidad):
 1. Escribe el **mínimo código** que lo hace pasar.
-2. **Resistir la tentación de "mejorarlo"**. La limpieza viene en F2-REFACTOR.
-3. Si necesitas un helper, ponlo privado al módulo.
+2. **Cumplimiento de Criterios (SANTUARIO)**: Asegúrate de que tu implementación satisfaga no solo las aserciones lógicas de los tests unitarios, sino todos los requisitos explícitos descritos en la lista de CAs (sección 5) y en el frontmatter (por ejemplo, el uso de tokens de diseño, los nombres exactos de las rutas, el color de fondo y la estructura del layout). No asumas que por el hecho de pasar los tests ya has cubierto los criterios estéticos y de ruteo del spec.
+3. **Resistir la tentación de "mejorarlo"**. La limpieza viene en F2-REFACTOR.
+4. Si necesitas un helper, ponlo privado al módulo.
 
 **Estrategia recomendada**:
 - Empieza por el test más simple (happy path).
