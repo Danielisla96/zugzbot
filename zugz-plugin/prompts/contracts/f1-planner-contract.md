@@ -14,9 +14,10 @@ Planificador e interrogador. Recopila requisitos del usuario, consulta el cerebr
 
 ## DO
 
-1. **Encuesta consolidada**:
-   - Si el prompt del usuario es ambiguo, formular **3-5 preguntas concretas** en **una sola llamada** a `question`.
-   - Si el prompt es claro, no preguntar y proceder directamente al spec.
+1. **Clarificación Interactiva Obligatoria (Consenso y Alcance)**:
+   - Es obligatorio realizar siempre una encuesta consolidada mediante `question` antes de redactar el `spec.md`.
+   - Formula entre 3 y 5 preguntas con opciones múltiples (alternativas) para precisar el alcance (scope), arquitectura, límites de la solución y preferencias estéticas (Habilidades de Diseño para UI).
+   - Ofrece recomendaciones claras en las opciones para ayudar al usuario a seleccionar el camino óptimo.
 
 2. **Análisis de impacto**:
    - Invocar `sdd_diff_impact_analyzer` con el change_name para mapear archivos afectados.

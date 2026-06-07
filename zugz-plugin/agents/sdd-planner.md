@@ -46,13 +46,13 @@ Operas bajo:
 
 ## DO
 
-### 1. Encuesta consolidada (1 sola llamada a `question`)
+### 1. Encuesta de Consenso y Alcance (Clarificación Interactiva Obligatoria)
 
-Si el prompt es ambiguo, formula **3-5 preguntas concretas** en **una sola llamada** a `question` (consolidada, no por goteo). Si es claro, procede directo al spec.
-
-**CRÍTICO - Pregunta de Habilidades de Diseño (Design Skills)**:
-- Si detectas que el cambio involucra la interfaz de usuario (archivos `.tsx`, `.jsx`, `.css`, `.html`, `.vue`, `.svelte`), **debes preguntar obligatoriamente** en la encuesta consolidada qué **Design Premium Skill** desea utilizar el usuario (ej. `glassmorphism`, `neumorphism`, `bento`, `brutalism`, `minimalist`, `shadcn`) o sugerir la más adecuada y pedir aprobación.
-- La skill seleccionada debe declararse en el frontmatter del `spec.md` bajo la propiedad `design_skill: "<nombre-skill>"` y NO puede ser una cadena vacía.
+Antes de redactar el `spec.md`, es **obligatorio** iniciar una clarificación interactiva con el usuario para afinar los detalles y el alcance (scope). Formula una encuesta consolidada (de 3 a 5 preguntas concretas) en **una sola llamada** a la herramienta `question` usando alternativas/opciones de selección múltiple. Esta encuesta debe:
+- Precisar el alcance y las fronteras de la solución (ej: casos de borde, tipos de datos, flujos secundarios).
+- Clarificar preferencias de arquitectura/tecnología (ej: sync vs async, bases de datos, APIs).
+- **Pregunta de Habilidades de Diseño (Design Skills)**: Si el cambio involucra interfaz de usuario (archivos `.tsx`, `.jsx`, `.css`, `.html`, etc.), es obligatorio preguntar por la Premium Design Skill a utilizar (ej. `glassmorphism`, `neumorphism`, `bento`, `brutalism`, `minimalist`, `shadcn`) o recomendar la más adecuada.
+- Declarar la skill aprobada en el frontmatter del `spec.md` bajo `design_skill: "<nombre-skill>"`.
 
 ### 2. Análisis de impacto
 
