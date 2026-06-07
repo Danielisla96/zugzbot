@@ -35,7 +35,7 @@ export default tool({
     changeName: tool.schema.string().optional()
       .describe("Nombre del change (kebab-case). Para action=matchForChange."),
     subprojectCwd: tool.schema.string().optional()
-      .describe("Ruta relativa al subproyecto (e.g., 'backend'). Para action=matchForChange.")
+      .describe("Ruta relativa al subproyecto (e.g., 'backend'). Aplica a detect y matchForChange. Si se omite, detecta en root.")
   },
   async execute(args, context) {
     let projectRoot = context.worktree || context.directory || process.cwd()
@@ -99,10 +99,20 @@ export default tool({
     }
 
     if (args.action === "detect") {
+      const subprojectCwd = args.subprojectCwd || ""
+      const targetRoot = subprojectCwd
+        ? (() => {
+            const candidate = path.join(projectRoot, subprojectCwd)
+            if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+              return candidate
+            }
+            return projectRoot
+          })()
+        : projectRoot
       const profiles = loadAllProfiles(projectRoot)
       const allMatches: Array<{ id: string; score: number; matchedBy: string[] }> = []
       for (const p of profiles) {
-        const result = matchProfileInRoot(projectRoot, p)
+        const result = matchProfileInRoot(targetRoot, p)
         if (result.matched) {
           allMatches.push({
             id: p.id,
@@ -116,6 +126,7 @@ export default tool({
           status: "SUCCESS",
           stack_profile: "unknown",
           reason: "Ningún profile matcheó. Revisar profiles/ o crear uno custom.",
+          detected_at: subprojectCwd || ".",
           candidates: []
         }, null, 2)
       }
@@ -124,6 +135,7 @@ export default tool({
         status: "SUCCESS",
         stack_profile: allMatches[0].id,
         score: allMatches[0].score,
+        detected_at: subprojectCwd || ".",
         candidates: allMatches
       }, null, 2)
     }

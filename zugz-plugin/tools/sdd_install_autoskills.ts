@@ -158,7 +158,21 @@ export default tool({
         report.push(...lines.slice(0, 30).map((l: string) => `  ${l}`))
         if (lines.length > 30) report.push(`  ... (${lines.length - 30} líneas más)`)
       } catch (e: any) {
-        report.push(`❌ Error ejecutando autoskills: ${e.message || e}`)
+        const errMsg: string = e?.message || String(e)
+        const stdout: string = e?.stdout?.toString() || ""
+        const combined = `${errMsg}\n${stdout}`
+        const isMissing =
+          e?.status === 127 ||
+          /not found|enoent|no such file|command not found/i.test(combined)
+        const isRuntimeIncompatible = /requires Node\.js|engine|EBADENGINE/i.test(stdout) ||
+          /requires Node\.js|engine|EBADENGINE/i.test(errMsg)
+        if (isMissing || isRuntimeIncompatible) {
+          report.push("ℹ️  autoskills no disponible (opcional, no bloqueante) — se omite sync.")
+          report.push("   Razón: " + (isMissing ? "binario no encontrado." : "runtime incompatible (Node.js)."))
+          report.push("   Para habilitarlo: `npm i -g autoskills` y usa Node >= 22.6 si requiere esa versión.")
+        } else {
+          report.push(`❌ Error ejecutando autoskills: ${errMsg}`)
+        }
         return report.join("\n")
       }
     }

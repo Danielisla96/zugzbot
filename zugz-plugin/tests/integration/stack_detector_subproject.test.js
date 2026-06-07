@@ -129,4 +129,22 @@ describe('Stack detector matchForChange (v3)', () => {
     expect(parsed.status).toBe('SUCCESS');
     expect(parsed.stack_profile).toBe('node-javascript');
   });
+
+  test('H1 fix: detect con subprojectCwd="backend" resuelve al subdir y retorna python', async () => {
+    const projectPath = makeProject('h1-detect-subdir', {
+      'package.json': '{}',
+      'backend/requirements.txt': 'fastapi>=0.115.0',
+      'backend/pyproject.toml': '[project]\nname = "b"'
+    });
+    copyProfilesTo(projectPath);
+
+    const result = await stackDetector.execute(
+      { action: 'detect', subprojectCwd: 'backend' },
+      ctx(projectPath)
+    );
+    const parsed = JSON.parse(result);
+    expect(parsed.status).toBe('SUCCESS');
+    expect(parsed.stack_profile).toBe('python');
+    expect(parsed.detected_at).toBe('backend');
+  });
 });

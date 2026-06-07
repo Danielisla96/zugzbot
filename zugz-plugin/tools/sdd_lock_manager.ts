@@ -2,7 +2,7 @@ import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
 
-export const SCHEMA_VERSION = 4
+export const SCHEMA_VERSION = 5
 
 export interface SddLockfile {
   schema_version: number
@@ -22,6 +22,7 @@ export interface SddLockfile {
   corrective_loop_active: boolean
   fresh_task: boolean
   tasks: Array<{ id: number; desc: string; status: "pending" | "completed" | "blocked" }>
+  acceptance_criteria: Array<{ id: string; desc: string; covered: boolean; test_refs: string[]; matched_in_file: string | null }>
   tdd: {
     red: { completed: boolean; tests_added: number; all_failing: boolean }
     green: { completed: boolean; tests_passing: number }
@@ -58,6 +59,7 @@ export const DEFAULT_LOCKFILE: SddLockfile = {
   corrective_loop_active: false,
   fresh_task: true,
   tasks: [],
+  acceptance_criteria: [],
   tdd: {
     red: { completed: false, tests_added: 0, all_failing: false },
     green: { completed: false, tests_passing: 0 },
@@ -114,6 +116,17 @@ export function migrateToV2(raw: any): SddLockfile {
   if (rawCopy.schema_version === SCHEMA_VERSION) {
     return { ...DEFAULT_LOCKFILE, ...rawCopy, schema_version: SCHEMA_VERSION }
   }
+  if (rawCopy.schema_version === 4) {
+    const migrated: SddLockfile = {
+      ...DEFAULT_LOCKFILE,
+      ...rawCopy,
+      acceptance_criteria: Array.isArray(rawCopy.acceptance_criteria) ? rawCopy.acceptance_criteria : [],
+      subproject_cwd: rawCopy.subproject_cwd ?? "",
+      modo_qa: rawCopy.modo_qa ?? (legacyQaManual ? "manual" : "automatizado"),
+      schema_version: SCHEMA_VERSION
+    }
+    return migrated
+  }
   if (rawCopy.schema_version === 3) {
     return {
       ...DEFAULT_LOCKFILE,
@@ -145,6 +158,10 @@ export function migrateToV2(raw: any): SddLockfile {
 }
 
 export function migrateToV4(raw: any): SddLockfile {
+  return migrateToV2(raw)
+}
+
+export function migrateToV5(raw: any): SddLockfile {
   return migrateToV2(raw)
 }
 
@@ -192,6 +209,8 @@ export default tool({
       "set_git",
       "add_task",
       "mark_task",
+      "set_acceptance_criteria",
+      "mark_criterion",
       "reset"
     ]).describe("Operación a realizar sobre el lockfile"),
     patch: tool.schema.string().optional()
@@ -202,6 +221,16 @@ export default tool({
       .describe("ID de la tarea (para mark_task)"),
     taskStatus: tool.schema.enum(["pending", "completed", "blocked"]).optional()
       .describe("Nuevo estado de la tarea (para mark_task)"),
+    criteria: tool.schema.string().optional()
+      .describe("JSON string con array de acceptance_criteria (para set_acceptance_criteria)"),
+    criterionId: tool.schema.string().optional()
+      .describe("ID del criterio (CA1, CA2, ...) (para mark_criterion)"),
+    covered: tool.schema.boolean().optional()
+      .describe("Si el criterio está cubierto por tests (para mark_criterion)"),
+    testRef: tool.schema.string().optional()
+      .describe("Referencia al test que cubre el criterio (para mark_criterion)"),
+    matchedInFile: tool.schema.string().optional()
+      .describe("Archivo donde se encontró cobertura (para mark_criterion)"),
     fullLockfile: tool.schema.string().optional()
       .describe("JSON string del lockfile completo (para write)"),
     confirm: tool.schema.boolean().optional().default(false)
@@ -418,6 +447,66 @@ export default tool({
         return JSON.stringify({
           status: "SUCCESS",
           message: "Lockfile reseteado al estado inicial."
+        }, null, 2)
+      }
+
+      case "set_acceptance_criteria": {
+        if (!args.criteria) {
+          return JSON.stringify({
+            status: "FAILED",
+            reason: "Falta 'criteria' (JSON string con array)."
+          }, null, 2)
+        }
+        try {
+          const lock = readLockfile(projectRoot)
+          const arr = JSON.parse(args.criteria) as Array<{ id: string; desc: string }>
+          lock.acceptance_criteria = arr.map(c => ({
+            id: c.id,
+            desc: c.desc,
+            covered: false,
+            test_refs: [],
+            matched_in_file: null
+          }))
+          writeLockfile(projectRoot, lock)
+          return JSON.stringify({
+            status: "SUCCESS",
+            count: lock.acceptance_criteria.length,
+            acceptance_criteria: lock.acceptance_criteria
+          }, null, 2)
+        } catch (e: any) {
+          return JSON.stringify({
+            status: "FAILED",
+            reason: `Error: ${e.message}`
+          }, null, 2)
+        }
+      }
+
+      case "mark_criterion": {
+        if (!args.criterionId) {
+          return JSON.stringify({
+            status: "FAILED",
+            reason: "Falta 'criterionId'."
+          }, null, 2)
+        }
+        const lock = readLockfile(projectRoot)
+        const criterion = lock.acceptance_criteria.find(c => c.id === args.criterionId)
+        if (!criterion) {
+          return JSON.stringify({
+            status: "FAILED",
+            reason: `No existe criterio con id ${args.criterionId}`
+          }, null, 2)
+        }
+        if (args.covered !== undefined) criterion.covered = args.covered
+        if (args.testRef) {
+          if (!criterion.test_refs.includes(args.testRef)) {
+            criterion.test_refs.push(args.testRef)
+          }
+        }
+        if (args.matchedInFile) criterion.matched_in_file = args.matchedInFile
+        writeLockfile(projectRoot, lock)
+        return JSON.stringify({
+          status: "SUCCESS",
+          criterion
         }, null, 2)
       }
 

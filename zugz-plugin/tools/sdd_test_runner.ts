@@ -69,6 +69,44 @@ function safeExecAsync(cmd: string, cwd: string, timeoutMs = 180000): Promise<{ 
   })
 }
 
+function parseTestCounts(runnerName: string, output: string): { total: number; failed: number; errors: number } {
+  if (!output) return { total: 0, failed: 0, errors: 0 }
+  let total = 0
+  let failed = 0
+  let errors = 0
+
+  if (runnerName === "pytest" || runnerName === "tox") {
+    const summary = output.match(/=+\s*(?:.+?)?\s*(\d+)\s*(?:failed|passed|error)/i)
+    const collected = output.match(/collected\s+(\d+)\s+item/i)
+    if (collected) total = parseInt(collected[1], 10)
+    const failedMatch = output.match(/(\d+)\s+failed/i)
+    const passedMatch = output.match(/(\d+)\s+passed/i)
+    const errorMatch = output.match(/(\d+)\s+error/i)
+    if (failedMatch) failed = parseInt(failedMatch[1], 10)
+    if (errorMatch) errors = parseInt(errorMatch[1], 10)
+    if (!total && (passedMatch || failedMatch || errorMatch)) {
+      total = (passedMatch ? parseInt(passedMatch[1], 10) : 0) + failed + errors
+    }
+    return { total, failed, errors }
+  }
+
+  if (runnerName === "jest" || runnerName === "vitest" || runnerName === "mocha") {
+    const testsMatch = output.match(/Tests:\s+(\d+)\s+passed.*?(?:(\d+)\s+failed)?/i)
+    const testsTotal = output.match(/Tests:\s+(?:(\d+)\s+passed,?\s*)?(?:(\d+)\s+failed,?\s*)?(?:(\d+)\s+total)?/i)
+    if (testsTotal) {
+      const passed = testsTotal[1] ? parseInt(testsTotal[1], 10) : 0
+      const f = testsTotal[2] ? parseInt(testsTotal[2], 10) : 0
+      const t = testsTotal[3] ? parseInt(testsTotal[3], 10) : 0
+      if (t) total = t
+      else if (passed || f) total = passed + f
+      failed = f
+    }
+    return { total, failed, errors }
+  }
+
+  return { total, failed, errors }
+}
+
 function isMissingCommandError(stderr: string, code: number): boolean {
   const lower = stderr.toLowerCase()
   return (
@@ -398,13 +436,18 @@ export default tool({
         }
       }
       const passed = result.ok && result.code === 0
+      const outputText = result.ok ? result.stdout : result.stderr
+      const counts = parseTestCounts(runner.name, outputText)
       return {
         runner: runner.name,
         cmd,
         cwd: runner.cwd,
         passed,
         exit_code: result.code,
-        output: result.ok ? result.stdout : result.stderr
+        output: outputText,
+        total_count: counts.total,
+        failed_count: counts.failed,
+        error_count: counts.errors
       }
     })
 
@@ -413,6 +456,9 @@ export default tool({
 
     if (args.action === "verify-red") {
       // Para RED, se espera que los tests fallen (allPassed sea falso)
+      const totalTests = results.reduce((s, r: any) => s + (r.total_count || 0), 0)
+      const failedTests = results.reduce((s, r: any) => s + (r.failed_count || 0), 0)
+      const errorTests = results.reduce((s, r: any) => s + (r.error_count || 0), 0)
       return JSON.stringify({
         status: allPassed ? "FAILED" : "SUCCESS",
         check: "verify-red",
@@ -422,6 +468,9 @@ export default tool({
         message: allPassed
           ? "⚠️ Los tests PASAN cuando deberían FALLAR. Bug: spec mal definido o test ya implementado."
           : "✅ Tests fallan correctamente (estado RED confirmado).",
+        total_count: totalTests,
+        failed_count: failedTests,
+        error_count: errorTests,
         results,
         cwd: subprojectCwd
       }, null, 2)

@@ -57,7 +57,7 @@ describe('Lockfile subproject_cwd (v3)', () => {
 
     const readResult = await lockManager.execute({ action: 'read' }, context);
     const lock = JSON.parse(readResult).lockfile;
-    expect(lock.schema_version).toBe(4);
+    expect(lock.schema_version).toBe(5);
   });
 
   test('default lockfile has schema_version 4 and subproject_cwd empty', async () => {
@@ -66,7 +66,7 @@ describe('Lockfile subproject_cwd (v3)', () => {
 
     const readResult = await lockManager.execute({ action: 'read' }, context);
     const lock = JSON.parse(readResult).lockfile;
-    expect(lock.schema_version).toBe(4);
+    expect(lock.schema_version).toBe(5);
     expect(lock.subproject_cwd).toBe('');
   });
 
@@ -111,7 +111,7 @@ describe('Lockfile subproject_cwd (v3)', () => {
 
     const readResult = await lockManager.execute({ action: 'read' }, context);
     const lock = JSON.parse(readResult).lockfile;
-    expect(lock.schema_version).toBe(4);
+    expect(lock.schema_version).toBe(5);
     expect(lock.subproject_cwd).toBe('');
     expect(lock.change_name).toBe('legacy-change');
     expect(lock.stack_profile).toBe('python');

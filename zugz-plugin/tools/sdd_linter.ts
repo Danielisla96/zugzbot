@@ -217,6 +217,39 @@ export default tool({
       else if (linter.name === "rustfmt") cmd = `cargo fmt ${args.specificPath || ""}`
     }
 
+    const LINTER_HANDLED_EXTENSIONS: Record<string, string[]> = {
+      eslint: [".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".vue", ".svelte"],
+      biome: [".js", ".jsx", ".ts", ".tsx", ".json", ".css", ".html"],
+      tsc: [".ts", ".tsx"],
+      ruff: [".py", ".pyi"],
+      flake8: [".py"],
+      pylint: [".py"],
+      mypy: [".py"],
+      black: [".py"],
+      gofmt: [".go"],
+      "go vet": [".go"],
+      clippy: [".rs"],
+      "golangci-lint": [".go"]
+    }
+    const handledExts = LINTER_HANDLED_EXTENSIONS[linter.name] || null
+    if (args.specificPath && handledExts) {
+      const targetExt = "." + (args.specificPath.split(".").pop() || "").toLowerCase()
+      if (!handledExts.includes(targetExt)) {
+        return JSON.stringify({
+          status: "SKIPPED",
+          linter: linter.name,
+          action: args.action,
+          command: cmd,
+          reason: `Linter '${linter.name}' no maneja la extensión '${targetExt}'. Extensiones soportadas: ${handledExts.join(", ")}.`,
+          handled_extensions: handledExts,
+          exit_code: 0,
+          errors_found: false,
+          stdout: "",
+          stderr: ""
+        }, null, 2)
+      }
+    }
+
     let result = safeExec(cmd, linter.cwd)
 
     if (!result.ok && isMissingCommandError(result.stderr, result.code)) {
@@ -233,7 +266,8 @@ export default tool({
       command: cmd,
       exit_code: result.code,
       errors_found: !result.ok,
-      output: result.ok ? result.stdout : result.stderr
+      stdout: result.ok ? result.stdout : "",
+      stderr: result.ok ? "" : result.stderr
     }, null, 2)
   }
 })

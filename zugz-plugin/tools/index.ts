@@ -35,4 +35,6 @@ export { default as sdd_auto_healer } from './sdd_auto_healer.js';
 export { default as sdd_graphify } from './sdd_graphify.js';
 export { default as sdd_dependency_installer } from './sdd_dependency_installer.js';
 export { default as sdd_create_custom_skill } from './sdd_create_custom_skill.js';
+export { default as sdd_destructive_guard } from './sdd_destructive_guard.js';
+export { default as sdd_runtime_dryrun } from './sdd_runtime_dryrun.js';
 
