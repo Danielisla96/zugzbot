@@ -7,6 +7,7 @@ export const SCHEMA_VERSION = 7
 export const DESIGN_SYSTEM_SLUGS = [
   "airbnb",
   "apple",
+  "heroui",
   "meta",
   "nike",
   "notion",

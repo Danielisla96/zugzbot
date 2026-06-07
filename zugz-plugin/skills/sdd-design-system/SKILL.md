@@ -1,6 +1,6 @@
 ---
 name: sdd-design-system
-description: Carga y aplica design tokens estrictos (Airbnb, Apple, Meta, Nike, Notion, Renault, The Verge, Uber, Voltagent, x.ai) al crear UI. Usar cuando el pedido involucre crear vistas, componentes, landing, dashboard, página web, formulario, modal, navbar, footer, card, botón, formulario, tabla o cualquier frontend. También usar cuando el prompt mencione explícitamente una de las marcas soportadas (estilo Apple, como Notion, vibe de The Verge, etc.).
+description: Carga y aplica design tokens estrictos (Airbnb, Apple, HeroUI, Meta, Nike, Notion, Renault, The Verge, Uber, Voltagent, x.ai) al crear UI. Usar cuando el pedido involucre crear vistas, componentes, landing, dashboard, página web, formulario, modal, navbar, footer, card, botón, formulario, tabla o cualquier frontend. También usar cuando el prompt mencione explícitamente una de las marcas soportadas (estilo Apple, como Notion, vibe de The Verge, etc.).
 ---
 
 # SDD Design System Loader
@@ -50,27 +50,28 @@ pregunta al usuario **es** tu trabajo.
    ```
    ¿Qué design system querés usar como base para este frontend?
 
-   1. airbnb — marketplace cálido, primary #ff385c
-   2. apple — minimal premium, photography-first
-   3. meta — utility-first, blue brand
-   4. nike — bold sports, black/white editorial
-   5. notion — productivity, off-white canvas
-   6. renault — automotive, dark + sunlight yellow
-   7. theverge — editorial tech media, dark + oversized headlines
-   8. uber — clean utilitarian, geometric sans + pill
-   9. voltagent — devtool, near-black + electric green
-   10. x.ai — AI brand, near-black + cosmic gradients
-   11. (skip) — sin design system, estilo ad-hoc
+    1. airbnb — marketplace cálido, primary #ff385c
+    2. apple — minimal premium, photography-first
+    3. heroui — clean modern, Tailwind-based components
+    4. meta — utility-first, blue brand
+    5. nike — bold sports, black/white editorial
+    6. notion — productivity, off-white canvas
+    7. renault — automotive, dark + sunlight yellow
+    8. theverge — editorial tech media, dark + oversized headlines
+    9. uber — clean utilitarian, geometric sans + pill
+    10. voltagent — devtool, near-black + electric green
+    11. x.ai — AI brand, near-black + cosmic gradients
+    12. (skip) — sin design system, estilo ad-hoc
 
    (Por defecto: el último usado. Respondé con el número o el slug.)
    ```
 
-4. **Si el usuario eligió un slug (1-10)** → persistir vía
+4. **Si el usuario eligió un slug (1-11)** → persistir vía
    `sdd_lock_manager` con `action: "set_design_system"`,
    `patch: { slug: "<slug>" }`. Eso setea
    `active_design_system: "<slug>"` y `design_system_explicitly_skipped: false`.
 
-5. **Si el usuario eligió "skip" (opción 11)** → persistir vía
+5. **Si el usuario eligió "skip" (opción 12)** → persistir vía
    `sdd_lock_manager` con `action: "skip_design_system"`. Eso setea
    `active_design_system: null` y `design_system_explicitly_skipped: true`.
    El sdd-builder procederá con estilo ad-hoc y emitirá un warning.

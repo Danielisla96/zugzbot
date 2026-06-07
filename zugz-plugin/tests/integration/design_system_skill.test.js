@@ -27,7 +27,7 @@ describe("sdd-design-system skill — estructura", () => {
     expect(frontmatter).toMatch(/^description:\s*.+/m)
   })
 
-  test("existe catalog.md con tabla de los 10 design systems", () => {
+  test("existe catalog.md con tabla de los 11 design systems", () => {
     expect(fs.existsSync(CATALOG_PATH)).toBe(true)
     const raw = fs.readFileSync(CATALOG_PATH, "utf-8")
     for (const slug of DESIGN_SYSTEM_SLUGS) {
@@ -72,11 +72,11 @@ describe("sdd-design-system skill — coherencia con DESIGN-*.md reales", () => 
     expect(fs.existsSync(designDir)).toBe(true)
   })
 
-  test("hay al menos 10 archivos DESIGN-*.md (uno por slug del catálogo)", () => {
-    expect(designFiles.length).toBeGreaterThanOrEqual(10)
+  test("hay al menos 11 archivos DESIGN-*.md (uno por slug del catálogo)", () => {
+    expect(designFiles.length).toBeGreaterThanOrEqual(11)
   })
 
-  test("los 10 slugs del catálogo tienen un DESIGN-<slug>.md correspondiente", () => {
+  test("los 11 slugs del catálogo tienen un DESIGN-<slug>.md correspondiente", () => {
     if (designFiles.length === 0) return
     for (const slug of DESIGN_SYSTEM_SLUGS) {
       const candidates = [

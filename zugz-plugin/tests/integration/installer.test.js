@@ -100,15 +100,16 @@ describe('installer: zugz-models.json editable + overlay', () => {
     expect(after).toEqual(custom);
   });
 
-  test('primer install: copia design/ con los 10 design systems al proyecto del usuario', () => {
+  test('primer install: copia design/ con los 11 design systems al proyecto del usuario', () => {
     runInstaller(projectDir);
     const designDir = path.join(projectDir, '.opencode/design');
     expect(fs.existsSync(designDir)).toBe(true);
     const files = fs.readdirSync(designDir).filter(f => f.startsWith('DESIGN-') && f.endsWith('.md'));
-    expect(files.length).toBeGreaterThanOrEqual(10);
+    expect(files.length).toBeGreaterThanOrEqual(11);
     expect(files).toContain('DESIGN-airbnb.md');
     expect(files).toContain('DESIGN-theverge.md');
     expect(files).toContain('DESIGN-x.ai.md');
+    expect(files).toContain('DESIGN-heroui.md');
   });
 
   test('segundo install: design/ del usuario NO se sobreescribe (preserva customizaciones)', () => {

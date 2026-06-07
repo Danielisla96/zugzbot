@@ -16,14 +16,15 @@ desarrollo (este repo), viven en `zugz-plugin/design/`.
 |---|------|--------|------|---------|------|
 | 1 | airbnb | Airbnb | `.opencode/design/DESIGN-airbnb.md` | `#ff385c` | Marketplace cálido, pill-shaped, fotos primero |
 | 2 | apple | Apple | `.opencode/design/DESIGN-apple.md` | `#0066cc` | Minimal premium, monochrome, system font, edge-to-edge |
-| 3 | meta | Meta | `.opencode/design/DESIGN-meta.md` | `#0064e0` | Utility-first, blue brand, hairline borders, dual-CTA |
-| 4 | nike | Nike | `.opencode/design/DESIGN-nike.md` | `#111111` | Bold sports, black/white, Futura uppercase, editorial |
-| 5 | notion | Notion | `.opencode/design/DESIGN-notion.md` | `#0075de` | Editorial productivity, off-white canvas, Inter, stickers |
-| 6 | renault | Renault | `.opencode/design/DESIGN-renault.md` | Sunlight Yellow | Automotive, dark, NouvelR display, diamond mark |
-| 7 | theverge | The Verge | `.opencode/design/DESIGN-theverge.md` | `#3cffd0` (jelly mint) | Editorial tech media, dark, oversized Manuka, timeline |
-| 8 | uber | Uber | `.opencode/design/DESIGN-uber.md` | `#000000` | Clean utilitarian, black/white, geometric sans, full-pill |
-| 9 | voltagent | Voltagent | `.opencode/design/DESIGN-voltagent.md` | `#00d992` | Devtool, near-black canvas, mono accents, code-mock hero |
-| 10 | x.ai | xAI | `.opencode/design/DESIGN-x.ai.md` | `#ffffff` | AI brand, near-black canvas, geometric sans, cosmic |
+| 3 | heroui | HeroUI | `.opencode/design/DESIGN-heroui.md` | `#006fee` | Clean modern, Tailwind CSS-based components, vibrant blue |
+| 4 | meta | Meta | `.opencode/design/DESIGN-meta.md` | `#0064e0` | Utility-first, blue brand, hairline borders, dual-CTA |
+| 5 | nike | Nike | `.opencode/design/DESIGN-nike.md` | `#111111` | Bold sports, black/white, Futura uppercase, editorial |
+| 6 | notion | Notion | `.opencode/design/DESIGN-notion.md` | `#0075de` | Editorial productivity, off-white canvas, Inter, stickers |
+| 7 | renault | Renault | `.opencode/design/DESIGN-renault.md` | Sunlight Yellow | Automotive, dark, NouvelR display, diamond mark |
+| 8 | theverge | The Verge | `.opencode/design/DESIGN-theverge.md` | `#3cffd0` (jelly mint) | Editorial tech media, dark, oversized Manuka, timeline |
+| 9 | uber | Uber | `.opencode/design/DESIGN-uber.md` | `#000000` | Clean utilitarian, black/white, geometric sans, full-pill |
+| 10 | voltagent | Voltagent | `.opencode/design/DESIGN-voltagent.md` | `#00d992` | Devtool, near-black canvas, mono accents, code-mock hero |
+| 11 | x.ai | xAI | `.opencode/design/DESIGN-x.ai.md` | `#ffffff` | AI brand, near-black canvas, geometric sans, cosmic |
 
 ## Reglas de elección
 

@@ -13,10 +13,11 @@ describe("sdd_lock_manager v7 (active_design_system)", () => {
     expect(SCHEMA_VERSION).toBe(7)
   })
 
-  test("DESIGN_SYSTEM_SLUGS contiene los 10 esperados", () => {
+  test("DESIGN_SYSTEM_SLUGS contiene los 11 esperados", () => {
     expect(DESIGN_SYSTEM_SLUGS).toEqual([
       "airbnb",
       "apple",
+      "heroui",
       "meta",
       "nike",
       "notion",
