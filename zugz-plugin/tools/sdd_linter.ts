@@ -63,6 +63,83 @@ function tryInstallLinter(linterName: string, cwd: string): boolean {
   return false
 }
 
+function hasEslintConfig(dir: string): boolean {
+  const configNames = [
+    ".eslintrc",
+    ".eslintrc.js",
+    ".eslintrc.json",
+    ".eslintrc.yaml",
+    ".eslintrc.yml",
+    "eslint.config.js",
+    "eslint.config.mjs",
+    "eslint.config.cjs",
+    "eslint.config.ts"
+  ]
+  let checkDir = dir
+  for (let i = 0; i < 4; i++) {
+    for (const name of configNames) {
+      if (fs.existsSync(path.join(checkDir, name))) {
+        return true
+      }
+    }
+    const parent = path.dirname(checkDir)
+    if (parent === checkDir) break
+    checkDir = parent
+  }
+  return false
+}
+
+function ensureEslintConfig(cwd: string) {
+  if (hasEslintConfig(cwd)) return
+
+  let checkDir = cwd
+  let isEsm = false
+  let packageJsonDir = cwd
+  for (let i = 0; i < 4; i++) {
+    const p = path.join(checkDir, "package.json")
+    if (fs.existsSync(p)) {
+      try {
+        const pkg = JSON.parse(fs.readFileSync(p, "utf-8"))
+        isEsm = pkg.type === "module"
+        packageJsonDir = checkDir
+      } catch {}
+      break
+    }
+    const parent = path.dirname(checkDir)
+    if (parent === checkDir) break
+    checkDir = parent
+  }
+
+  const configPath = path.join(packageJsonDir, "eslint.config.js")
+  if (isEsm) {
+    fs.writeFileSync(configPath, `import js from "@eslint/js";
+
+export default [
+  js.configs.recommended,
+  {
+    rules: {
+      "no-unused-vars": "warn",
+      "no-undef": "warn"
+    }
+  }
+];
+`, "utf-8")
+  } else {
+    fs.writeFileSync(configPath, `const js = require("@eslint/js");
+
+module.exports = [
+  js.configs.recommended,
+  {
+    rules: {
+      "no-unused-vars": "warn",
+      "no-undef": "warn"
+    }
+  }
+];
+`, "utf-8")
+  }
+}
+
 
 function findDetectFile(dir: string, pattern: string, maxDepth = 3): string | null {
   if (maxDepth < 0) return null
@@ -208,6 +285,12 @@ export default tool({
         status: "FAILED",
         reason: "No hay linter configurado en el profile."
       }, null, 2)
+    }
+
+    if (linter.name === "eslint") {
+      try {
+        ensureEslintConfig(linter.cwd)
+      } catch {}
     }
 
     let cmd = linter.cmd

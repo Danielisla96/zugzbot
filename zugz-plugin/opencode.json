@@ -37,7 +37,8 @@
           "sdd_compact_context": "allow",
           "sdd_context_pruner": "allow",
           "sdd_clasp": "allow",
-          "sdd_session_features": "allow"
+          "sdd_session_features": "allow",
+          "sdd_free_port_finder": "allow"
         }
       }
     },
@@ -195,7 +196,8 @@
           "sdd_lock_manager": "allow",
           "sdd_clasp": "allow",
           "sdd_git_awareness": "allow",
-          "sdd_dependency_installer": "allow"
+          "sdd_dependency_installer": "allow",
+          "sdd_free_port_finder": "allow"
         }
       }
     },

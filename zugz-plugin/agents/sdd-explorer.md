@@ -57,7 +57,8 @@ Llama a `sdd_lock_manager` con `action: "update"` y `patch: { "stack_profile": "
 
 Llama a `sdd_git_awareness` con `action: "status"`.
 - Si el resultado es `FAILED` indicando que no es un repositorio Git, **llama inmediatamente a `sdd_git_awareness` con `action: "init", confirm: true, branchName: "sdd/change-<change-name>"`** (donde `<change-name>` es el nombre del cambio obtenido del lockfile) para inicializar el repositorio Git con la rama principal `main`, un `.gitignore` por defecto, e inmediatamente crear y moverte a la rama de trabajo actual.
-- Una vez inicializado o si ya existía, lee `action: "status"` y persiste la información en el lockfile con `action: "set_git"`.
+- Una vez inicializado o si ya existía, lee `action: "status"`. **Si el árbol de trabajo de Git no está limpio (uncommitted changes), emite una advertencia clara al usuario sugiriendo realizar un git checkpoint o guardar los cambios pendientes para evitar polución de código antes de transicionar a F1**.
+- Persiste la información en el lockfile con `action: "set_git"`.
 
 ### 3.5. Ejecutar autoskills para obtener mejores prácticas y soporte (GATED)
 

@@ -13,6 +13,7 @@ permission:
     "sdd_test_runner": allow
     "sdd_linter": allow
     "sdd_brain_sync": allow
+    "sdd_auto_healer": allow
 ---
 
 # @f2-refactor-improver 🔵
@@ -49,19 +50,20 @@ Revisa el código escrito en F2-GREEN buscando:
 - Patrones del stack no aprovechados (early return, immutability, etc.).
 - Comentarios innecesarios o código muerto.
 
-### 2. Refactor atómico (1 cambio → 1 corrida de tests)
+### 2. Refactor atómico y focalizado (1 cambio → 1 corrida de tests)
 
 Por cada mejora identificada:
 1. Aplica el cambio con `edit` (quirúrgico).
-2. Corre `sdd_test_runner` con `action: "verify-all-passing"`.
+2. Corre `sdd_test_runner` con `action: "verify-all-passing"` y pasa el parámetro `specificPath` apuntando únicamente al archivo de tests de la funcionalidad editada para validar de forma instantánea.
 3. Si un test falla → **rollback** del cambio y reintentar.
 4. Si pasa → siguiente mejora.
+5. Al concluir todo el proceso de refactorización, ejecuta `sdd_test_runner` con `action: "verify-all-passing"` (sin `specificPath`) como compuerta final para validar todo el subproyecto.
 
 ### 3. Linter y Formateo Unificado
 
 Al final, ejecuta el linter y el formateador de forma integrada para evitar loops o discrepancias estilísticas:
 1. Llama a `sdd_linter` con `action: "check"`.
-2. Si `errors_found: true`, aplica `action: "fix"` si está disponible, o corrige manualmente.
+2. Si `errors_found: true`, utiliza la herramienta `sdd_auto_healer` para resolver automáticamente errores de sintaxis comunes, o aplica `action: "fix"` si está disponible. Si persisten, corrige manualmente.
 3. Si el profile tiene un formateador (ej: Prettier, Black, gofmt), ejecútalo inmediatamente después de corregir el linter para asegurar que el formateo del código cumpla con los estándares.
 4. Vuelve a correr `sdd_linter` con `action: "check"` para asegurar que el formateador no haya introducido advertencias de estilo o linter. Repite hasta que `errors: 0` y el formateo sea consistente.
 

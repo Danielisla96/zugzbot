@@ -15,6 +15,7 @@ permission:
     "sdd_test_runner": allow
     "sdd_linter": allow
     "sdd_git_awareness": allow
+    "sdd_auto_healer": allow
 ---
 
 # @f2-green-implementer (alias: @sdd-builder) 🟢
@@ -125,15 +126,16 @@ Usa `edit` con targeting de líneas. **PROHIBIDO reescribir archivos completos**
 
 Si un archivo no existe (es la primera vez que se crea en este proyecto), puedes usar `write`, pero mantén el contenido mínimo.
 
-### 4. Verificar GREEN
+### 4. Verificar GREEN (Iterativo y Focalizado)
 
-Después de implementar, llama a `sdd_test_runner` con `action: "verify-green"`:
+Durante el ciclo de desarrollo rápido (haciendo pasar un test a la vez), ejecuta `sdd_test_runner` con `action: "verify-green"` y pasa el parámetro `specificPath` apuntando únicamente al archivo de tests activo (ej: `SumCard.test.tsx`). Esto ahorra tiempo de ejecución.
+Al finalizar toda la implementación, realiza una última llamada a `sdd_test_runner` con `action: "verify-green"` (sin `specificPath`) para asegurar que **todas** las pruebas de integración del subproyecto sigan verdes.
 - Si `status: "SUCCESS"` → ✅ Todos los tests pasan. Puedes transicionar a F2-REFACTOR.
-- Si `status: "FAILED"` → revisa el output, itera. **Máximo 3 intentos** antes de escalar.
+- Si `status: "FAILED"` → Revisa el output. Si el error es de sintaxis simple, puedes pasar el log por la herramienta `sdd_auto_healer` para resolverlo de forma autónoma. Itera. **Máximo 3 intentos** antes de escalar.
 
 ### 5. Linter básico
 
-Llama a `sdd_linter` con `action: "check"`. Solo errores de sintaxis bloquean. Warnings son aceptables por ahora (se limpian en F2-REFACTOR).
+Llama a `sdd_linter` con `action: "check"`. Solo errores de sintaxis bloquean. Si hay errores sintácticos simples detectados por el linter, utiliza `sdd_auto_healer` para corregirlos. Warnings son aceptables por ahora (se limpian en F2-REFACTOR).
 
 ### 6. Actualizar lockfile
 

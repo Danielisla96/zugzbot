@@ -36,13 +36,14 @@ Operas bajo:
 ## READ
 - `.openspec/changes/<change>/specs/spec.md` (especialmente sección BDD)
 - `.openspec/diagnostics.md` (para `stack_profile` y convenciones)
+- `package.json` (en proyectos Node/JS/TS para identificar el tipo de módulo: ESM vs CommonJS)
 - Tests existentes (solo para entender convenciones de naming, NO para modificarlos)
 
 ## DO
 
-### 1. Mapear criterios BDD a tests
-
-Cada `Scenario` de la sección BDD del spec debe traducirse a **al menos 1 test ejecutable** en el test runner del stack:
+### 1. Mapear criterios BDD a tests e identificar modularidad (ESM vs CommonJS)
+- Revisa el campo `"type"` en `package.json`. Si es `"module"`, el proyecto es ES Modules y debes usar importaciones estáticas (`import ... from '...'`) en los archivos de test. Está estrictamente prohibido usar `require(...)` en proyectos configurados como `"type": "module"`.
+- Cada `Scenario` de la sección BDD del spec debe traducirse a **al menos 1 test ejecutable** en el test runner del stack:
 - **Node/TS**: vitest, jest, mocha, node --test
 - **Python**: pytest, unittest
 - **Go**: go test

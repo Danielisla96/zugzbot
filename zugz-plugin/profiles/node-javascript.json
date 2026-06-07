@@ -13,6 +13,7 @@
   ],
   "linters": [
     { "name": "eslint", "cmd": "npx eslint .", "detect": ".eslintrc*" },
+    { "name": "eslint", "cmd": "npx eslint .", "detect": "eslint.config.*" },
     { "name": "biome", "cmd": "npx biome check", "detect": "biome.json" }
   ],
   "formatters": [

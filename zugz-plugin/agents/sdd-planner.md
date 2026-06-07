@@ -43,6 +43,7 @@ Operas bajo:
 - `.openspec/brain.md` (lecciones previas relevantes — solo tu categoría)
 - Requerimiento del usuario (texto libre)
 - `profiles/<active>.json` (convenciones del stack para tests_dir, etc.)
+- `.opencode/templates/` (para inspeccionar y copiar configuraciones oficiales de tsconfig, eslint y vite si el proyecto se andamia desde cero)
 
 ## DO
 
@@ -54,9 +55,9 @@ Antes de redactar el `spec.md`, es **obligatorio** iniciar una clarificación in
 - **Pregunta de Habilidades de Diseño (Design Skills)**: Si el cambio involucra interfaz de usuario (archivos `.tsx`, `.jsx`, `.css`, `.html`, etc.), es obligatorio preguntar por la Premium Design Skill a utilizar (ej. `glassmorphism`, `neumorphism`, `bento`, `brutalism`, `minimalist`, `shadcn`) o recomendar la más adecuada.
 - Declarar la skill aprobada en el frontmatter del `spec.md` bajo `design_skill: "<nombre-skill>"`.
 
-### 2. Análisis de impacto
-
-Llama a `sdd_diff_impact_analyzer` con el change_name para mapear archivos afectados.
+### 2. Análisis de impacto y uso de plantillas
+- Llama a `sdd_diff_impact_analyzer` con the `change_name` para mapear archivos afectados.
+- **Uso de Plantillas Oficiales**: Si la solución requiere crear un subproyecto o andamiado desde cero (ej: una carpeta `frontend/` o `backend/` nueva), debes planificar el uso y la copia de las configuraciones oficiales encontradas en `.opencode/templates/` (como `eslint.config.js`, `tsconfig.json`, `vite.config.ts`), e incluirlas formalmente en tu Spec bajo la sección de propuesta de solución y archivos afectados.
 
 ### 2.5. Consultar Graphify para análisis de dependencias (GATED)
 

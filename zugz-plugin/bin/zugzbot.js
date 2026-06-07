@@ -200,7 +200,8 @@ function buildOpencodeJson(models) {
             "sdd_context_pruner": "allow",
             "sdd_clasp": "allow",
             "sdd_graphify": "allow",
-            "sdd_session_features": "allow"
+            "sdd_session_features": "allow",
+            "sdd_free_port_finder": "allow"
           }
         }
       },
@@ -306,7 +307,8 @@ function buildOpencodeJson(models) {
             "sdd_transition": "allow",
             "sdd_lock_manager": "allow",
             "sdd_clasp": "allow",
-            "sdd_git_awareness": "allow"
+            "sdd_git_awareness": "allow",
+            "sdd_free_port_finder": "allow"
           }
         }
       },
@@ -624,6 +626,15 @@ function init() {
     green("Design systems copiados (10 disponibles para el skill sdd-design-system)")
   }
 
+  const sourceTemplatesDir = path.join(PKG_ROOT, "templates")
+  if (fs.existsSync(sourceTemplatesDir)) {
+    const localTemplatesDir = path.join(INSTALL_DIR, ".opencode/templates")
+    fs.mkdirSync(localTemplatesDir, { recursive: true })
+    copyRecursiveSync(sourceTemplatesDir, localTemplatesDir)
+    green("Plantillas de scaffolding copiadas")
+  }
+
+
   console.log(`
 ╔══════════════════════════════════════════════════════════╗
 ║  ✅ Zugzbot v${PKG_VERSION.padEnd(36)} instalado correctamente!  ║
@@ -637,13 +648,14 @@ function init() {
    ├── .openspec/
    │   ├── sdd-lock.json          (schema v7 con bloque tdd, git, session_features y design system)
    │   └── brain.md
-   ├── .opencode/
-   │   ├── profiles/              (8 profiles: node-ts, python, go, rust, java, gas, static-site)
-   │   ├── plugins/               (TUI + SDD core)
-   │   ├── skills/                (12 skills premium, incluye sdd-design-system)
-   │   ├── tools/                 (33 herramientas SRP)
-   │   └── design/                (10 design systems: airbnb, apple, meta, nike, notion, renault, theverge, uber, voltagent, x.ai)
-   └── prompts/                   (contratos y boundaries de cada fase)
+    ├── .opencode/
+    │   ├── profiles/              (8 profiles: node-ts, python, go, rust, java, gas, static-site)
+    │   ├── plugins/               (TUI + SDD core)
+    │   ├── skills/                (12 skills premium, incluye sdd-design-system)
+    │   ├── tools/                 (33 herramientas SRP)
+    │   ├── design/                (10 design systems: airbnb, apple, meta, nike, notion, renault, theverge, uber, voltagent, x.ai)
+    │   └── templates/             (Plantillas oficiales de scaffolding para frontend y backend)
+    └── prompts/                   (contratos y boundaries de cada fase)
 
    TDD Discipline: Red → Green → Refactor enforced
    Stack-agnostic: detecta automáticamente Node/TS, Python, Go, Rust, Java, GAS

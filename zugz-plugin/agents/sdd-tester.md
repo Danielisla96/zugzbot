@@ -81,6 +81,7 @@ Si alguno es `false`, **detente**: F2 no terminó correctamente.
 
 ### 6. Validaciones condicionales según stack
 
+- **Auditoría Estética UI (Obligatorio si aplica)**: Si los archivos modificados contienen cambios visuales (`.css`, `.html`, `.tsx`, `.jsx`), ejecuta de manera obligatoria `sdd_ui_auditor`. Si el reporte contiene advertencias de diseño no premium (como colores genéricos hardcodificados, tipografía no recomendada o falta de transiciones suaves en elementos interactivos), **bloquea la validación de F3 y retorna error, obligando a una transición backward a F2-REFACTOR para resolver el compliance estético antes de proceder al deploy**.
 - **Frontend/GAS**: `sdd_ui_auditor` (balance de tags), `sdd_visual_regression_diff` (diff visual).
 - **Performance crítico**: `sdd_performance_regress_profiler`.
 
