@@ -64,6 +64,7 @@
       "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-planner.md}",
       "permission": {
+        "question": "allow",
         "edit": "allow",
         "bash": "allow",
         "lsp": "allow",
@@ -150,6 +151,7 @@
       "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-tester.md}",
       "permission": {
+        "question": "allow",
         "edit": "allow",
         "bash": "allow",
         "lsp": "allow",
@@ -294,6 +296,7 @@
       "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-explainer.md}",
       "permission": {
+        "question": "allow",
         "edit": "deny",
         "bash": "deny",
         "lsp": "allow",

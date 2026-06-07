@@ -338,7 +338,11 @@ export default tool({
       : projectRoot
     const profileId = lock.stack_profile || "unknown"
     const { resolved: resolvedProfileId, wasAlias } = resolveStackProfile(profileId)
-    const profile = getProfileById(projectRoot, resolvedProfileId) || loadAllProfiles(projectRoot).find(() => true)
+    let profile = getProfileById(projectRoot, resolvedProfileId)
+    if (!profile && resolvedProfileId.includes("-")) {
+      const baseProfileId = resolvedProfileId.split("-")[0]
+      profile = getProfileById(projectRoot, baseProfileId)
+    }
 
     if (args.action === "detect") {
       // Si el lockfile no tiene stack_profile (o es "unknown"), auto-detectar

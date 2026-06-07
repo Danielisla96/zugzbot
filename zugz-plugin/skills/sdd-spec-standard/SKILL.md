@@ -38,12 +38,12 @@ Breve resumen de las aclaraciones y decisiones tomadas en consenso con el usuari
 ## 3. Propuesta de Solución
 Detalle preciso de la arquitectura propuesta, cambios lógicos y diseño técnico (debe tener al menos 50 caracteres).
 
-## 4. Especificaciones BDD (Comportamiento)
-Casos de prueba BDD escritos estrictamente en inglés e iniciados obligatoriamente con `Scenario:` (no `Escenario:`), usando las cláusulas:
-- Given
-- When
-- Then
-- And (opcional)
+## 4. Especificaciones de Comportamiento (BDD)
+Casos de prueba BDD redactados estrictamente en español, iniciados obligatoriamente con la cláusula `Escenario:`, usando las cláusulas:
+- Dado
+- Cuando
+- Entonces
+- Y (opcional)
 
 ## 5. Criterios de Aceptación
 Breve listado que repite los criterios del frontmatter para referencia del usuario.
@@ -57,7 +57,7 @@ Breve listado que repite los criterios del frontmatter para referencia del usuar
 2. **change_name**: Debe ser el slug en kebab-case exacto definido en el lockfile. No puede ser genérico ni usar "nuevo-cambio".
 3. **affected_files**: Lista de rutas de archivos relativas al proyecto. Cada elemento debe llevar su rango de líneas especificado (ej: `(Líneas 10-35)`).
 4. **acceptance_criteria**: Lista de oraciones objetivas y testeables. Deben incluir el checkbox vacío `[ ]`.
-5. **Palabras Clave BDD**: Los escenarios BDD deben ser redactados estrictamente en inglés (`Scenario:`, `Given`, `When`, `Then`, `And`).
+5. **Palabras Clave BDD**: Los escenarios BDD deben ser redactados estrictamente en español (`Escenario:`, `Dado`, `Cuando`, `Entonces`, `Y`).
 
 ## Auto-corrección (Fixing)
 
@@ -69,7 +69,7 @@ Si el archivo `spec.md` no cumple con la rigidez necesaria, tiene inconsistencia
 }
 ```
 
-Esta herramienta programática creará el frontmatter basándose en el contenido existente, traducirá palabras clave BDD al inglés, normalizará encabezados y corregirá la numeración de sub-secciones automáticamente.
+Esta herramienta programática creará el frontmatter basándose en el contenido existente, traducirá palabras clave BDD al español, normalizará encabezados y corregirá la numeración de sub-secciones automáticamente.
 
 ## Tags
 

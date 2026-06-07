@@ -1,6 +1,8 @@
 import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
+import { readLockfile } from "./sdd_lock_manager.js"
+import { getProfileById } from "./sdd_stack_detector_lib.js"
 
 export default tool({
   description: "Compara semánticamente el archivo spec.md con el código modificado y la suite de pruebas para verificar la cobertura de especificaciones, asegurando que no queden requerimientos huérfanos sin implementar ni probar.",
@@ -12,6 +14,16 @@ export default tool({
     if (projectRoot === "/") {
       projectRoot = process.cwd()
     }
+    const lock = readLockfile(projectRoot)
+    const profileId = lock.stack_profile || "unknown"
+    let profile = getProfileById(projectRoot, profileId)
+    if (!profile && profileId.includes("-")) {
+      const baseProfileId = profileId.split("-")[0]
+      profile = getProfileById(projectRoot, baseProfileId)
+    }
+    const sourceDirName = profile?.conventions?.source_dir || "src"
+    const testDirName = profile?.conventions?.test_dir || "tests"
+
     const report: string[] = []
     report.push(`━━━ sdd_spec_compliance_linter: ${args.changeName} ━━━`)
 
@@ -180,8 +192,13 @@ export default tool({
         try {
           const content = fs.readFileSync(filePath, "utf-8").toLowerCase()
           
-          // Buscar indicio directo por índice
-          const directMatch = content.includes(`requerimiento #${idx + 1}`) || content.includes(`req #${idx + 1}`)
+          // Buscar indicio directo por índice o etiqueta de criterio
+          const idxStr = String(idx + 1)
+          const directMatch = content.includes(`requerimiento #${idxStr}`) ||
+                              content.includes(`req #${idxStr}`) ||
+                              content.includes(`ca${idxStr}`) ||
+                              content.includes(`ca #${idxStr}`) ||
+                              content.includes(`criterio ${idxStr}`)
           
           // Buscar palabras clave
           let keywordHits = 0
@@ -206,8 +223,8 @@ export default tool({
         report.push(`  [x] Req #${idx + 1}: "${req.substring(0, 50)}..." -> Totalmente Cubierto.`)
       } else {
         const statuses = []
-        if (!isImplemented) statuses.push("Falta Implementación en /src")
-        if (!isTested) statuses.push("Falta Prueba Asociada en /tests")
+        if (!isImplemented) statuses.push(`Falta Implementación en /${sourceDirName}`)
+        if (!isTested) statuses.push(`Falta Prueba Asociada en /${testDirName}`)
         report.push(`  [ ] Req #${idx + 1}: "${req.substring(0, 50)}..." -> ⚠ Huérfano (${statuses.join(", ")})`)
       }
     })

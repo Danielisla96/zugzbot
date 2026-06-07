@@ -176,12 +176,17 @@ export default tool({
     }
     const lock = readLockfile(projectRoot)
     const profileId = lock.stack_profile || "unknown"
-    const profile = getProfileById(projectRoot, profileId) || loadAllProfiles(projectRoot).find(() => true)
+    let profile = getProfileById(projectRoot, profileId)
+
+    if (!profile && profileId.includes("-")) {
+      const baseProfileId = profileId.split("-")[0]
+      profile = getProfileById(projectRoot, baseProfileId)
+    }
 
     if (!profile) {
       return JSON.stringify({
         status: "FAILED",
-        reason: "No hay profile activo. Ejecuta F0-explorer primero."
+        reason: `No se encontró el perfil de stack '${profileId}' (ni el perfil base correspondiente) configurado en el proyecto. Por favor, asegúrate de que el perfil exista en el directorio de perfiles.`
       }, null, 2)
     }
 
