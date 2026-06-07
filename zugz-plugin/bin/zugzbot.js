@@ -577,8 +577,8 @@ function init() {
     green(".gitignore creado")
   }
 
-  const pluginTuiPath = path.join(PKG_ROOT, ".opencode/plugins/plugin_tui.tsx")
-  const pluginCorePath = path.join(PKG_ROOT, ".opencode/plugins/plugin_sdd_core.ts")
+  const pluginTuiPath = path.join(PKG_ROOT, "plugins/plugin_tui.tsx")
+  const pluginCorePath = path.join(PKG_ROOT, "plugins/plugin_sdd_core.ts")
   const localPluginDir = path.join(INSTALL_DIR, ".opencode/plugins")
   if (fs.existsSync(pluginTuiPath)) {
     copyRecursiveSync(pluginTuiPath, path.join(localPluginDir, "plugin_tui.tsx"))
