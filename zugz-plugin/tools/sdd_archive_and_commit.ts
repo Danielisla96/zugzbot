@@ -345,6 +345,7 @@ export default tool({
         const models = new Set<string>();
 
         // Intenta obtener la telemetría real desde la base de datos de OpenCode
+        let sessionList: any[] = [];
         try {
           const os = await import("os");
           const dbPath = path.join(os.homedir(), ".local/share/opencode/opencode.db");
@@ -371,14 +372,14 @@ while True:
 root_sid = curr_sid
 
 def get_descendants(sid):
-    cursor.execute('SELECT id, tokens_input, tokens_output, cost, model FROM session WHERE parent_id = ?', (sid,))
+    cursor.execute('SELECT id, parent_id, agent, title, model, cost, tokens_input, tokens_output FROM session WHERE parent_id = ?', (sid,))
     children = cursor.fetchall()
     res = [dict(c) for c in children]
     for c in children:
         res.extend(get_descendants(c['id']))
     return res
 
-cursor.execute('SELECT id, tokens_input, tokens_output, cost, model FROM session WHERE id = ?', (root_sid,))
+cursor.execute('SELECT id, parent_id, agent, title, model, cost, tokens_input, tokens_output FROM session WHERE id = ?', (root_sid,))
 root = cursor.fetchone()
 sessions = [dict(root)] if root else []
 sessions.extend(get_descendants(root_sid))
@@ -388,20 +389,34 @@ total_output = sum(s.get('tokens_output') or 0 for s in sessions)
 total_cost = sum(s.get('cost') or 0.0 for s in sessions)
 
 models = set()
+formatted_sessions = []
 for s in sessions:
     m_val = s.get('model')
+    model_name = m_val
     if m_val:
         try:
             m_json = json.loads(m_val)
-            models.add(m_json.get('id') or m_val)
+            model_name = m_json.get('id') or m_val
+            models.add(model_name)
         except Exception:
             models.add(m_val)
+    formatted_sessions.append({
+        'id': s.get('id'),
+        'parent_id': s.get('parent_id'),
+        'agent': s.get('agent'),
+        'title': s.get('title'),
+        'model': model_name,
+        'tokens_input': s.get('tokens_input') or 0,
+        'tokens_output': s.get('tokens_output') or 0,
+        'cost': s.get('cost') or 0.0
+    })
 
 print(json.dumps({
     'total_input': total_input,
     'total_output': total_output,
     'total_cost': total_cost,
-    'models': list(models)
+    'models': list(models),
+    'sessions': formatted_sessions
 }))
 " "${dbPath}" "${context.sessionID}"`;
 
@@ -413,6 +428,9 @@ print(json.dumps({
               totalCost = data.total_cost;
               if (Array.isArray(data.models)) {
                 data.models.forEach((m: string) => models.add(m));
+              }
+              if (Array.isArray(data.sessions)) {
+                sessionList = data.sessions;
               }
             }
           }
@@ -434,16 +452,37 @@ print(json.dumps({
           });
         }
 
+        let sessionTable = "";
+        if (sessionList.length > 0) {
+          sessionTable = `
+## 🕵️ Detalle de Ejecución por Agente y Subagente
+
+| Agente / Subagente | Tarea / Título | Modelo | Tokens Entrada | Tokens Salida | Costo (USD) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+`;
+          sessionList.forEach((s: any) => {
+            const agentName = s.agent ? `\`${s.agent}\`` : "—";
+            const titleStr = s.title || "—";
+            const modelStr = s.model ? `\`${s.model}\`` : "—";
+            const inputTokens = (s.tokens_input || 0).toLocaleString();
+            const outputTokens = (s.tokens_output || 0).toLocaleString();
+            const costStr = s.cost !== undefined ? `$${s.cost.toFixed(6)}` : "—";
+            sessionTable += `| ${agentName} | ${titleStr} | ${modelStr} | ${inputTokens} | ${outputTokens} | ${costStr} |\n`;
+          });
+          
+          sessionTable += `| **Total Acumulado** | | | **${totalInput.toLocaleString()}** | **${totalOutput.toLocaleString()}** | **$${totalCost.toFixed(4)}** |\n`;
+        }
+
         const tokenUsageMarkdown = `# 💳 Reporte de Consumo del Cambio: ${args.changeName}
 
 Este reporte detalla la telemetría de tokens y coste financiero en USD acumulado por el enjambre de agentes durante el desarrollo de esta tarea.
 
-## 📊 Métricas de Consumo
+## 📊 Métricas de Consumo General
 - **Coste Total de la Sesión:** $${totalCost.toFixed(4)} USD
 - **Tokens de Entrada (Prompt):** ${totalInput.toLocaleString()} tokens
 - **Tokens de Salida (Completion):** ${totalOutput.toLocaleString()} tokens
 - **Modelos de IA Participantes:** ${Array.from(models).join(", ") || "Ninguno registrado"}
-
+${sessionTable}
 ---
 *Reporte autogenerado de forma atómica al cierre de la tarea por sdd_archive_and_commit.*
 `;
