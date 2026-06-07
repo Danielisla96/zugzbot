@@ -103,7 +103,8 @@ export default tool({
         })
       }
     }
-    recurse(projectRoot)
+    const searchRoot = lock.subproject_cwd ? path.join(projectRoot, lock.subproject_cwd) : projectRoot
+    recurse(searchRoot)
 
     const TRANSLATION_MAP: Record<string, string[]> = {
       "suma": ["sum", "add"],

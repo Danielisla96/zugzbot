@@ -135,4 +135,59 @@ describe('Lockfile subproject_cwd (v3)', () => {
     readResult = await lockManager.execute({ action: 'read' }, context);
     expect(JSON.parse(readResult).lockfile.subproject_cwd).toBe('');
   });
+
+  test('mark_all_criteria marks all criteria covered at once', async () => {
+    const projectPath = makeProject('subproject-mark-all');
+    const context = ctx(projectPath);
+
+    await lockManager.execute({
+      action: 'set_acceptance_criteria',
+      criteria: JSON.stringify([
+        { id: 'CA1', desc: 'First' },
+        { id: 'CA2', desc: 'Second' }
+      ])
+    }, context);
+
+    const markResult = await lockManager.execute({
+      action: 'mark_all_criteria',
+      covered: true,
+      testRef: 'my-test-suite',
+      matchedInFile: 'my-test-file.js'
+    }, context);
+
+    const parsed = JSON.parse(markResult);
+    expect(parsed.status).toBe('SUCCESS');
+    expect(parsed.count).toBe(2);
+    expect(parsed.acceptance_criteria[0].covered).toBe(true);
+    expect(parsed.acceptance_criteria[0].test_refs).toContain('my-test-suite');
+    expect(parsed.acceptance_criteria[1].covered).toBe(true);
+    expect(parsed.acceptance_criteria[1].test_refs).toContain('my-test-suite');
+  });
+
+  test('mark_all_criteria with specific JSON patch', async () => {
+    const projectPath = makeProject('subproject-mark-all-patch');
+    const context = ctx(projectPath);
+
+    await lockManager.execute({
+      action: 'set_acceptance_criteria',
+      criteria: JSON.stringify([
+        { id: 'CA1', desc: 'First' },
+        { id: 'CA2', desc: 'Second' }
+      ])
+    }, context);
+
+    const markResult = await lockManager.execute({
+      action: 'mark_all_criteria',
+      criteria: JSON.stringify([
+        { id: 'CA1', covered: true, testRef: 'test1', matchedInFile: 'file1.js' }
+      ])
+    }, context);
+
+    const parsed = JSON.parse(markResult);
+    expect(parsed.status).toBe('SUCCESS');
+    expect(parsed.acceptance_criteria[0].covered).toBe(true);
+    expect(parsed.acceptance_criteria[0].test_refs).toContain('test1');
+    expect(parsed.acceptance_criteria[1].covered).toBe(false);
+  });
 });
+

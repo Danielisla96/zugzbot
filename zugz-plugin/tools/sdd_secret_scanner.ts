@@ -3,6 +3,7 @@ import fs from "fs"
 import path from "path"
 import { execSync } from "child_process"
 import { sanitizeGitPath } from "./git_utils.js"
+import { readLockfile } from "./sdd_lock_manager.js"
 
 export default tool({
   description: "Escanea archivos modificados o listados en Git en busca de posibles fugas de secretos (tokens, llaves privadas, contraseñas en caliente) antes del commit de cierre de la Fase 3.",
@@ -20,6 +21,8 @@ export default tool({
         reason: "No se permite escanear directorios raíz del sistema para evitar fuga de tokens en el escaneo de secretos."
       }, null, 2);
     }
+    const lock = readLockfile(projectRoot);
+    const targetRoot = lock.subproject_cwd ? path.join(projectRoot, lock.subproject_cwd) : projectRoot;
     const findings: Array<{ file: string; line: number; type: string; snippet: string }> = [];
 
     // 1. Obtener la lista de archivos a escanear
@@ -54,7 +57,7 @@ export default tool({
           }
         });
       }
-      scanDirRecursive(projectRoot);
+      scanDirRecursive(targetRoot);
     } else {
       // Buscar solo archivos modificados o sin trackear usando Git de forma robusta
       if (fs.existsSync(path.join(projectRoot, ".git"))) {
@@ -63,6 +66,9 @@ export default tool({
           gitOutput.split("\n").forEach(line => {
             if (!line || line.length < 4) return;
             const filePathRel = sanitizeGitPath(line);
+            if (lock.subproject_cwd && !filePathRel.startsWith(lock.subproject_cwd)) {
+              return;
+            }
             const fullPath = path.join(projectRoot, filePathRel);
             if (fs.existsSync(fullPath)) {
               let stat;

@@ -267,8 +267,10 @@ export default tool({
       }, null, 2)
     }
 
+    const targetRoot = lock.subproject_cwd ? path.join(projectRoot, lock.subproject_cwd) : projectRoot
+
     if (args.action === "detect") {
-      const linter = detectActiveLinter(projectRoot, profile)
+      const linter = detectActiveLinter(targetRoot, profile)
       return JSON.stringify({
         status: "SUCCESS",
         active_profile: profileId,
@@ -277,8 +279,8 @@ export default tool({
     }
 
     const linter = args.linter
-      ? (profile.linters.find(l => l.name === args.linter) ? { name: args.linter, cmd: profile.linters.find(l => l.name === args.linter)!.cmd, cwd: projectRoot } : null)
-      : detectActiveLinter(projectRoot, profile)
+      ? (profile.linters.find(l => l.name === args.linter) ? { name: args.linter, cmd: profile.linters.find(l => l.name === args.linter)!.cmd, cwd: targetRoot } : null)
+      : detectActiveLinter(targetRoot, profile)
 
     if (!linter) {
       return JSON.stringify({

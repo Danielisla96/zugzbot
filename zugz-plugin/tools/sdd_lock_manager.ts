@@ -344,6 +344,7 @@ export default tool({
       "mark_task",
       "set_acceptance_criteria",
       "mark_criterion",
+      "mark_all_criteria",
       "reset",
       "set_design_system",
       "read_design_system",
@@ -643,6 +644,51 @@ export default tool({
         return JSON.stringify({
           status: "SUCCESS",
           criterion
+        }, null, 2)
+      }
+
+      case "mark_all_criteria": {
+        const lock = readLockfile(projectRoot)
+        if (args.criteria) {
+          try {
+            const updates = JSON.parse(args.criteria)
+            if (Array.isArray(updates)) {
+              updates.forEach((u: any) => {
+                const criterion = lock.acceptance_criteria.find(c => c.id === u.id)
+                if (criterion) {
+                  if (u.covered !== undefined) criterion.covered = u.covered
+                  if (u.testRef) {
+                    if (!criterion.test_refs.includes(u.testRef)) {
+                      criterion.test_refs.push(u.testRef)
+                    }
+                  }
+                  if (u.matchedInFile) criterion.matched_in_file = u.matchedInFile
+                }
+              })
+            }
+          } catch (e: any) {
+            return JSON.stringify({
+              status: "FAILED",
+              reason: `JSON de criteria inválido: ${e.message}`
+            }, null, 2)
+          }
+        } else {
+          // If no specific criteria list is passed, update all criteria globally with whatever params are provided
+          lock.acceptance_criteria.forEach(criterion => {
+            if (args.covered !== undefined) criterion.covered = args.covered
+            if (args.testRef) {
+              if (!criterion.test_refs.includes(args.testRef)) {
+                criterion.test_refs.push(args.testRef)
+              }
+            }
+            if (args.matchedInFile) criterion.matched_in_file = args.matchedInFile
+          })
+        }
+        writeLockfile(projectRoot, lock)
+        return JSON.stringify({
+          status: "SUCCESS",
+          count: lock.acceptance_criteria.length,
+          acceptance_criteria: lock.acceptance_criteria
         }, null, 2)
       }
 

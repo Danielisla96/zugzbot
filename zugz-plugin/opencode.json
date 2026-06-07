@@ -9,6 +9,13 @@
       "*": "allow"
     }
   },
+  "mcp": {
+    "heroui-react": {
+      "type": "local",
+      "command": ["npx", "-y", "@heroui/react-mcp@latest"],
+      "enabled": true
+    }
+  },
   "agent": {
     "zugzbot": {
       "mode": "primary",
@@ -85,7 +92,8 @@
           "sdd_context_pruner": "allow",
           "sdd_stack_detector": "allow",
           "sdd_spec_reviewer": "allow",
-          "sdd_heroui_lookup": "allow"
+          "sdd_heroui_lookup": "allow",
+          "heroui-react_*": "allow"
         }
       }
     },
@@ -126,7 +134,8 @@
           "sdd_test_runner": "allow",
           "sdd_git_awareness": "allow",
           "sdd_dependency_installer": "allow",
-          "sdd_heroui_lookup": "allow"
+          "sdd_heroui_lookup": "allow",
+          "heroui-react_*": "allow"
         }
       }
     },
@@ -147,7 +156,8 @@
           "sdd_test_runner": "allow",
           "sdd_linter": "allow",
           "sdd_brain_sync": "allow",
-          "sdd_heroui_lookup": "allow"
+          "sdd_heroui_lookup": "allow",
+          "heroui-react_*": "allow"
         }
       }
     },
@@ -182,7 +192,8 @@
           "sdd_test_runner": "allow",
           "sdd_sandbox_patcher": "allow",
           "sdd_dependency_installer": "allow",
-          "sdd_heroui_lookup": "allow"
+          "sdd_heroui_lookup": "allow",
+          "heroui-react_*": "allow"
         }
       }
     },
@@ -298,7 +309,8 @@
           "sdd_lock_manager": "allow",
           "sdd_git_awareness": "allow",
           "sdd_brain_sync": "allow",
-          "sdd_heroui_lookup": "allow"
+          "sdd_heroui_lookup": "allow",
+          "heroui-react_*": "allow"
         }
       }
     },

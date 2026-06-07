@@ -521,6 +521,33 @@ function init() {
         green("Permiso sdd_session_features añadido al agente zugzbot")
       }
     }
+
+    {
+      if (!opencodeBase.mcp) opencodeBase.mcp = {}
+      if (!opencodeBase.mcp["heroui-react"]) {
+        opencodeBase.mcp["heroui-react"] = {
+          type: "local",
+          command: ["npx", "-y", "@heroui/react-mcp@latest"],
+          enabled: true
+        }
+        green("MCP server heroui-react añadido a opencode.json")
+      }
+      const uiAgents = ["sdd-planner", "sdd-builder", "f2-refactor-improver", "sdd-tester", "aux-refactor"]
+      let mcpAgentsApplied = 0
+      for (const agentName of uiAgents) {
+        const ag = opencodeBase.agent && opencodeBase.agent[agentName]
+        if (!ag) continue
+        if (!ag.permission) ag.permission = {}
+        if (!ag.permission.tools) ag.permission.tools = {}
+        if (ag.permission.tools["heroui-react_*"] !== "allow") {
+          ag.permission.tools["heroui-react_*"] = "allow"
+          mcpAgentsApplied += 1
+        }
+      }
+      if (mcpAgentsApplied > 0) {
+        green(`Permiso heroui-react_* añadido a ${mcpAgentsApplied} agentes UI`)
+      }
+    }
   if (models && models.agents && opencodeBase.agent) {
     let applied = 0
     for (const [agentName, model] of Object.entries(models.agents)) {
@@ -637,6 +664,12 @@ function init() {
     green("Plantillas de scaffolding copiadas")
   }
 
+  const hasOfficialHeroUISkills = ["heroui-react", "heroui-migration", "heroui-native"]
+    .every(s => fs.existsSync(path.join(PKG_ROOT, "skills", s, "SKILL.md")))
+  if (hasOfficialHeroUISkills) {
+    green("Skills oficiales de HeroUI empaquetados (heroui-react, heroui-migration, heroui-native)")
+  }
+
 
   console.log(`
 ╔══════════════════════════════════════════════════════════╗
@@ -654,7 +687,7 @@ function init() {
     ├── .opencode/
     │   ├── profiles/              (8 profiles: node-ts, python, go, rust, java, gas, static-site)
     │   ├── plugins/               (TUI + SDD core)
-    │   ├── skills/                (12 skills premium, incluye sdd-design-system)
+    │   ├── skills/                (16 skills: 12 premium + sdd-design-system + 3 oficiales HeroUI)
     │   ├── tools/                 (33 herramientas SRP)
     │   ├── design/                (10 design systems: airbnb, apple, meta, nike, notion, renault, theverge, uber, voltagent, x.ai)
     │   └── templates/             (Plantillas oficiales de scaffolding para frontend y backend)
@@ -665,6 +698,7 @@ function init() {
    Workflows: full-sdd-tdd, quick-fix, audit, refactor, explain, oracle
    Agents: 14 (zugzbot + 8 core SDD/TDD + 4 aux + 1 sdd-tester legacy alias)
    Design systems: el skill sdd-design-system carga el catálogo y persiste la elección en el lockfile (schema v7)
+   HeroUI: 3 skills oficiales (heroui-react con scripts Node para fetchear docs en vivo, heroui-migration v2→v3, heroui-native mobile) ya copiados a .opencode/skills/. Para tenerlos también a nivel global (~/.agents/skills/): npx skills add heroui-inc/heroui -y -g
 `)
 }
 

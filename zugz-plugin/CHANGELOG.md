@@ -5,6 +5,29 @@ Todas las versiones notables del proyecto Zugzbot SDD se documentan aquí.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.1.8] - 2026-06-07 — HeroUI MCP server preconfigurado en agentes UI
+
+### ✨ Features
+- **`mcp.heroui-react` preconfigurado** en `opencode.json` del plugin: bloque con `type: "local"`, `command: ["npx", "-y", "@heroui/react-mcp@latest"]`, `enabled: true`. Se propaga al `opencode.json` del proyecto del usuario vía `bin/zugzbot.js`.
+- **Scope por agente UI**: `heroui-react_*: "allow"` añadido a los 5 agentes que tocan código de UI:
+  - `sdd-planner` (F1)
+  - `sdd-builder` (F2-GREEN)
+  - `f2-refactor-improver` (F2-REFACTOR)
+  - `sdd-tester` (F3)
+  - `aux-refactor`
+- **Router `zugzbot` y agentes non-UI** (`sdd-explorer`, `f2-red-test-writer`, `sdd-deployer`, `sdd-archiver`, `aux-handyman`, `aux-oracle`, `aux-auditor`, `aux-explainer`) **NO** reciben el MCP para no sumar contexto innecesario.
+- **`bin/zugzbot.js` smart-merge del bloque `mcp`**: cuando detecta un `opencode.json` existente, respeta los MCPs del usuario y solo agrega `heroui-react` si no existe. Lo mismo para los permisos por agente.
+- **`sdd-heroui/SKILL.md` sección 7** actualizada con nota de preconfig + 3 opciones de opt-out (server completo / global / por agente).
+- **`sdd-heroui/docs/mcp-server.md`** ahora tiene preamble apuntando a zugzbot-sdd v2.1.8+ con link a SKILL.md.
+
+### 🔁 Compatibilidad
+- El tool local `sdd_heroui_lookup` (con los 70 docs de HeroUI v3 empaquetados) **se mantiene** como fallback offline/instantáneo. MCP y tool conviven.
+- Los 3 skills oficiales de HeroUI (`heroui-react`, `heroui-migration`, `heroui-native`) ya estaban empaquetados desde v2.1.7.
+- Sin breaking changes: proyectos que no usan HeroUI no se ven afectados (el MCP solo se carga on-demand, ~6KB de tool descriptions en el contexto de los 5 agentes UI).
+
+### 📋 Requirements
+- Node.js 22+ para que el MCP funcione (en runtime, no en install). Si el proyecto tiene Node < 22, OpenCode loguea el fallo y los agentes caen al fallback `sdd_heroui_lookup`.
+
 ## [2.1.0] - 2026-06-07 — Design systems persistidos en el lockfile (schema v7)
 
 ### ✨ Features
