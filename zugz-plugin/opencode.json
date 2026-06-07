@@ -36,7 +36,8 @@
           "sdd_checkpoint": "allow",
           "sdd_compact_context": "allow",
           "sdd_context_pruner": "allow",
-          "sdd_clasp": "allow"
+          "sdd_clasp": "allow",
+          "sdd_session_features": "allow"
         }
       }
     },

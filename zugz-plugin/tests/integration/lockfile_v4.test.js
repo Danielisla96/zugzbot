@@ -2,18 +2,59 @@ import { describe, test, expect } from "vitest"
 import {
   migrateToV4,
   migrateToV5,
+  migrateToV6,
   SCHEMA_VERSION
 } from "../../.opencode/tools/sdd_lock_manager.js"
 
-describe("sdd_lock_manager v5 (workflow_tasks vs acceptance_criteria)", () => {
-  test("SCHEMA_VERSION es 5", () => {
-    expect(SCHEMA_VERSION).toBe(5)
+describe("sdd_lock_manager v6 (session_features opt-in)", () => {
+  test("SCHEMA_VERSION es 7 (v6 quedó como back-compat)", () => {
+    expect(SCHEMA_VERSION).toBe(7)
   })
 
+  test("migrateToV6 preserva session_features si existían en v5", () => {
+    const v5Raw = {
+      schema_version: 5,
+      change_name: "feat-x",
+      stack_profile: "python",
+      session_features: { autoskills: true, graphify: false }
+    }
+    const migrated = migrateToV6(v5Raw)
+    expect(migrated.schema_version).toBe(7)
+    expect(migrated.session_features).toEqual({ autoskills: true, graphify: false })
+  })
+
+  test("migrateToV6 sin session_features inicializa defaults {false, false}", () => {
+    const v5Raw = {
+      schema_version: 5,
+      change_name: "feat-x",
+      stack_profile: "python"
+    }
+    const migrated = migrateToV6(v5Raw)
+    expect(migrated.schema_version).toBe(7)
+    expect(migrated.session_features).toEqual({ autoskills: false, graphify: false })
+  })
+
+  test("migrateToV6 desde v4 inicializa session_features=defaults", () => {
+    const v4Raw = { schema_version: 4, change_name: "feat-old", stack_profile: "node-typescript" }
+    const migrated = migrateToV6(v4Raw)
+    expect(migrated.schema_version).toBe(7)
+    expect(migrated.session_features).toEqual({ autoskills: false, graphify: false })
+  })
+
+  test("migrateToV6 desde v2 inicializa session_features=defaults y conserva subproject_cwd", () => {
+    const v2Raw = { schema_version: 2, change_name: "feat-old2", subproject_cwd: "apps/web" }
+    const migrated = migrateToV6(v2Raw)
+    expect(migrated.schema_version).toBe(7)
+    expect(migrated.subproject_cwd).toBe("apps/web")
+    expect(migrated.session_features).toEqual({ autoskills: false, graphify: false })
+  })
+})
+
+describe("sdd_lock_manager v5 (workflow_tasks vs acceptance_criteria)", () => {
   test("migrateToV4 sigue siendo alias de migrateToV2 (back-compat)", () => {
     const v3Raw = { schema_version: 3, change_name: "x", qa_manual: true, stack_profile: "python" }
     const migrated = migrateToV4(v3Raw)
-    expect(migrated.schema_version).toBe(5)
+    expect(migrated.schema_version).toBe(7)
     expect(migrated.modo_qa).toBe("manual")
   })
 
@@ -28,7 +69,7 @@ describe("sdd_lock_manager v5 (workflow_tasks vs acceptance_criteria)", () => {
       ]
     }
     const migrated = migrateToV5(v4Raw)
-    expect(migrated.schema_version).toBe(5)
+    expect(migrated.schema_version).toBe(7)
     expect(migrated.tasks).toHaveLength(2)
     expect(migrated.acceptance_criteria).toEqual([])
   })
@@ -36,14 +77,14 @@ describe("sdd_lock_manager v5 (workflow_tasks vs acceptance_criteria)", () => {
   test("migrateToV5 con v3 sin modo_qa asume automatizado", () => {
     const v3Raw = { schema_version: 3, change_name: "x", stack_profile: "python" }
     const migrated = migrateToV5(v3Raw)
-    expect(migrated.schema_version).toBe(5)
+    expect(migrated.schema_version).toBe(7)
     expect(migrated.modo_qa).toBe("automatizado")
   })
 
   test("migrateToV5 con lockfile v2 preserva subproject_cwd", () => {
     const v2Raw = { schema_version: 2, change_name: "x", stack_profile: "python", subproject_cwd: "backend" }
     const migrated = migrateToV5(v2Raw)
-    expect(migrated.schema_version).toBe(5)
+    expect(migrated.schema_version).toBe(7)
     expect(migrated.subproject_cwd).toBe("backend")
   })
 
@@ -75,7 +116,7 @@ describe("sdd_lock_manager v4 (legacy migration path)", () => {
     expect(migrated.change_name).toBe("feature-x")
   })
 
-  test("migra v3 con qa_manual:true → modo_qa: 'manual' y schema_version: 4", () => {
+  test("migra v3 con qa_manual:true → modo_qa: 'manual' y schema_version: 7", () => {
     const v3Raw = {
       schema_version: 3,
       change_name: "feature-x",
@@ -83,7 +124,7 @@ describe("sdd_lock_manager v4 (legacy migration path)", () => {
       stack_profile: "python"
     }
     const migrated = migrateToV4(v3Raw)
-    expect(migrated.schema_version).toBe(5)
+    expect(migrated.schema_version).toBe(7)
     expect(migrated.modo_qa).toBe("manual")
     expect(migrated.change_name).toBe("feature-x")
     expect(migrated.stack_profile).toBe("python")
@@ -108,24 +149,24 @@ describe("sdd_lock_manager v4 (legacy migration path)", () => {
     expect(migrated.modo_qa).toBe("automatizado")
   })
 
-  test("migra v2 con qa_manual:true → v4 con modo_qa: 'manual'", () => {
+  test("migra v2 con qa_manual:true → v7 con modo_qa: 'manual'", () => {
     const v2Raw = {
       schema_version: 2,
       change_name: "old-feature",
       qa_manual: true
     }
     const migrated = migrateToV4(v2Raw)
-    expect(migrated.schema_version).toBe(5)
+    expect(migrated.schema_version).toBe(7)
     expect(migrated.modo_qa).toBe("manual")
   })
 
-  test("migra v1 → v4 con modo_qa default 'automatizado'", () => {
+  test("migra v1 → v7 con modo_qa default 'automatizado'", () => {
     const v1Raw = {
       schema_version: 1,
       change_name: "ancient"
     }
     const migrated = migrateToV4(v1Raw)
-    expect(migrated.schema_version).toBe(5)
+    expect(migrated.schema_version).toBe(7)
     expect(migrated.modo_qa).toBe("automatizado")
   })
 

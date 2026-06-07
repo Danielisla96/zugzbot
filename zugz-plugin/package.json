@@ -1,12 +1,26 @@
 {
   "name": "zugzbot-sdd",
-  "version": "2.0.62",
+  "version": "2.1.0",
   "description": "Zugzbot v2.0.0 - Stack-Agnostic SDD Harness with TDD Discipline for OpenCode",
   "main": "index.js",
   "type": "module",
   "bin": {
     "zugzbot": "./bin/zugzbot.js"
   },
+  "files": [
+    ".opencode/",
+    "agents/",
+    "bin/",
+    "commands/",
+    "design/",
+    "opencode.json",
+    "plugins/",
+    "profiles/",
+    "prompts/",
+    "skills/",
+    "tools/",
+    "index.js"
+  ],
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx,.jsx,.html",
     "lint:fix": "eslint . --ext .js,.ts,.tsx,.jsx,.html --fix",
@@ -25,7 +39,8 @@
     "multi-agent",
     "router",
     "stack-agnostic",
-    "orchestration"
+    "orchestration",
+    "design-system"
   ],
   "author": "Danielisla96",
   "license": "MIT",

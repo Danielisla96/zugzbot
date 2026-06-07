@@ -3,6 +3,7 @@ import fs from "fs"
 import path from "path"
 import { execSync } from "child_process"
 import sddInstallAutoskills from "./sdd_install_autoskills"
+import { readSessionFeatures } from "./sdd_lock_manager.js"
 import { BrainEntry, today, nextId, buildFullBrain, readBrainFile } from "./brain-utils.js"
 
 function bumpVersion(version: string, type: "major" | "minor" | "patch"): string {
@@ -290,19 +291,24 @@ export default tool({
       }
     }
 
-    // 3.5. Sincronizar habilidades de IA (Autoskills) de forma automática
-    try {
-      report.push("▶ Buscando y sincronizando habilidades de IA nuevas en base a tus cambios...")
-      const skillsOutputObj: any = await sddInstallAutoskills.execute({ action: "install", dryRun: false }, context)
-      const skillsOutputStr = typeof skillsOutputObj === "string" ? skillsOutputObj : (skillsOutputObj?.output || "")
-      const shortSkillsOutput = skillsOutputStr
-        .split("\n")
-        .filter((l: string) => l.trim() && !l.startsWith("▶") && !l.startsWith("━━━"))
-        .map((l: string) => `  ${l}`)
-        .join("\n")
-      report.push(`✓ Sincronización de Habilidades Finalizada:\n${shortSkillsOutput || "  No se encontraron nuevas habilidades que instalar."}`)
-    } catch (e: any) {
-      report.push(`⚠️ Sincronización automática de habilidades fallida o no disponible: ${e.message || e}`)
+    // 3.5. Sincronizar habilidades de IA (Autoskills) de forma automática — GATED por session_features.autoskills
+    const features = readSessionFeatures(projectRoot)
+    if (features.autoskills === true) {
+      try {
+        report.push("▶ Buscando y sincronizando habilidades de IA nuevas en base a tus cambios...")
+        const skillsOutputObj: any = await sddInstallAutoskills.execute({ action: "install", dryRun: false }, context)
+        const skillsOutputStr = typeof skillsOutputObj === "string" ? skillsOutputObj : (skillsOutputObj?.output || "")
+        const shortSkillsOutput = skillsOutputStr
+          .split("\n")
+          .filter((l: string) => l.trim() && !l.startsWith("▶") && !l.startsWith("━━━"))
+          .map((l: string) => `  ${l}`)
+          .join("\n")
+        report.push(`✓ Sincronización de Habilidades Finalizada:\n${shortSkillsOutput || "  No se encontraron nuevas habilidades que instalar."}`)
+      } catch (e: any) {
+        report.push(`⚠️ Sincronización automática de habilidades fallida o no disponible: ${e.message || e}`)
+      }
+    } else {
+      report.push("ℹ️  autoskills: deshabilitado por sesión (session_features.autoskills=false); se omite sync en F5.")
     }
 
     // 4. No temporary file is needed on disk, we feed it directly to git commit stdin in step 7.

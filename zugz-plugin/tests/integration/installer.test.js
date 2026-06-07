@@ -57,6 +57,21 @@ describe('installer: zugz-models.json editable + overlay', () => {
     expect(projectModels.agents.zugzbot).toBeTypeOf('string');
   });
 
+  test('primer install: sdd-lock.json contiene session_features y schema_version 7', () => {
+    runInstaller(projectDir);
+    const lock = readJson(path.join(projectDir, '.openspec/sdd-lock.json'));
+    expect(lock.schema_version).toBe(7);
+    expect(lock.session_features).toEqual({ autoskills: false, graphify: false });
+    expect(lock.active_design_system).toBe(null);
+    expect(lock.design_system_explicitly_skipped).toBe(false);
+  });
+
+  test('primer install: opencode.json del zugzbot incluye sdd_session_features en tools', () => {
+    runInstaller(projectDir);
+    const opencode = readJson(path.join(projectDir, 'opencode.json'));
+    expect(opencode.agent.zugzbot.permission.tools['sdd_session_features']).toBe('allow');
+  });
+
   test('primer install: opencode.json refleja zugz-models.json', () => {
     const projectModels = readJson(path.join(projectDir, 'zugz-models.json'));
     const opencode = readJson(path.join(projectDir, 'opencode.json'));
@@ -83,6 +98,28 @@ describe('installer: zugz-models.json editable + overlay', () => {
 
     const after = readJson(modelsPath);
     expect(after).toEqual(custom);
+  });
+
+  test('primer install: copia design/ con los 10 design systems al proyecto del usuario', () => {
+    runInstaller(projectDir);
+    const designDir = path.join(projectDir, 'design');
+    expect(fs.existsSync(designDir)).toBe(true);
+    const files = fs.readdirSync(designDir).filter(f => f.startsWith('DESIGN-') && f.endsWith('.md'));
+    expect(files.length).toBeGreaterThanOrEqual(10);
+    expect(files).toContain('DESIGN-airbnb.md');
+    expect(files).toContain('DESIGN-theverge.md');
+    expect(files).toContain('DESIGN-x.ai.md');
+  });
+
+  test('segundo install: design/ del usuario NO se sobreescribe (preserva customizaciones)', () => {
+    const designDir = path.join(projectDir, 'design');
+    const customPath = path.join(designDir, 'DESIGN-custom.md');
+    fs.writeFileSync(customPath, '# Mi design system custom\ncolors: { primary: "#abc123" }');
+
+    runInstaller(projectDir);
+
+    expect(fs.existsSync(customPath)).toBe(true);
+    expect(fs.readFileSync(customPath, 'utf-8')).toContain('Mi design system custom');
   });
 
   test('segundo install: opencode.json se actualiza con modelos del usuario', () => {

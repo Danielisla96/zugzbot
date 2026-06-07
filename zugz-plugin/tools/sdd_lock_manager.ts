@@ -2,7 +2,41 @@ import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
 
-export const SCHEMA_VERSION = 5
+export const SCHEMA_VERSION = 7
+
+export const DESIGN_SYSTEM_SLUGS = [
+  "airbnb",
+  "apple",
+  "meta",
+  "nike",
+  "notion",
+  "renault",
+  "theverge",
+  "uber",
+  "voltagent",
+  "x.ai"
+] as const
+
+export type DesignSystemSlug = (typeof DESIGN_SYSTEM_SLUGS)[number]
+
+export function isValidDesignSystemSlug(value: unknown): value is DesignSystemSlug {
+  return typeof value === "string" && (DESIGN_SYSTEM_SLUGS as readonly string[]).includes(value)
+}
+
+export function normalizeDesignSystemSlug(raw: unknown): DesignSystemSlug | null {
+  if (raw === null || raw === undefined || raw === "") return null
+  const candidate = String(raw).trim().toLowerCase()
+  if (candidate === "" || candidate === "none" || candidate === "null") return null
+  if (isValidDesignSystemSlug(candidate)) return candidate
+  const compact = candidate.replace(/[^a-z0-9]/g, "")
+  if (isValidDesignSystemSlug(compact)) return compact
+  return null
+}
+
+export interface SessionFeatures {
+  autoskills: boolean
+  graphify: boolean
+}
 
 export interface SddLockfile {
   schema_version: number
@@ -39,6 +73,14 @@ export interface SddLockfile {
   complexity: "low" | "medium" | "high"
   subproject_cwd: string
   modo_qa: "automatizado" | "manual"
+  session_features: SessionFeatures
+  active_design_system: DesignSystemSlug | null
+  design_system_explicitly_skipped: boolean
+}
+
+export const DEFAULT_SESSION_FEATURES: SessionFeatures = {
+  autoskills: false,
+  graphify: false
 }
 
 export const DEFAULT_LOCKFILE: SddLockfile = {
@@ -75,7 +117,10 @@ export const DEFAULT_LOCKFILE: SddLockfile = {
   last_restored_from: null,
   complexity: "medium",
   subproject_cwd: "",
-  modo_qa: "automatizado"
+  modo_qa: "automatizado",
+  session_features: { ...DEFAULT_SESSION_FEATURES },
+  active_design_system: null,
+  design_system_explicitly_skipped: false
 }
 
 export function resolveLockfilePath(projectRoot: string): string {
@@ -113,44 +158,72 @@ export function migrateToV2(raw: any): SddLockfile {
   delete rawCopy.qa_manual
   delete rawCopy.manual_qa
 
+  const mergedFeatures: SessionFeatures = {
+    autoskills: rawCopy.session_features?.autoskills === true,
+    graphify: rawCopy.session_features?.graphify === true
+  }
+
+  const baseTemplate: SddLockfile = {
+    ...DEFAULT_LOCKFILE,
+    ...rawCopy,
+    session_features: mergedFeatures,
+    active_design_system: normalizeDesignSystemSlug(rawCopy.active_design_system),
+    design_system_explicitly_skipped: rawCopy.design_system_explicitly_skipped === true
+  } as SddLockfile
+
   if (rawCopy.schema_version === SCHEMA_VERSION) {
-    return { ...DEFAULT_LOCKFILE, ...rawCopy, schema_version: SCHEMA_VERSION }
+    return {
+      ...baseTemplate,
+      schema_version: SCHEMA_VERSION
+    }
+  }
+  if (rawCopy.schema_version === 6) {
+    return {
+      ...baseTemplate,
+      schema_version: SCHEMA_VERSION
+    }
+  }
+  if (rawCopy.schema_version === 5) {
+    return {
+      ...baseTemplate,
+      schema_version: SCHEMA_VERSION
+    }
   }
   if (rawCopy.schema_version === 4) {
     const migrated: SddLockfile = {
-      ...DEFAULT_LOCKFILE,
-      ...rawCopy,
+      ...baseTemplate,
       acceptance_criteria: Array.isArray(rawCopy.acceptance_criteria) ? rawCopy.acceptance_criteria : [],
       subproject_cwd: rawCopy.subproject_cwd ?? "",
       modo_qa: rawCopy.modo_qa ?? (legacyQaManual ? "manual" : "automatizado"),
+      session_features: mergedFeatures,
       schema_version: SCHEMA_VERSION
     }
     return migrated
   }
   if (rawCopy.schema_version === 3) {
     return {
-      ...DEFAULT_LOCKFILE,
-      ...rawCopy,
+      ...baseTemplate,
       subproject_cwd: rawCopy.subproject_cwd ?? "",
       modo_qa: rawCopy.modo_qa ?? (legacyQaManual ? "manual" : "automatizado"),
+      session_features: mergedFeatures,
       schema_version: SCHEMA_VERSION
     }
   }
   if (rawCopy.schema_version === 2) {
     return {
-      ...DEFAULT_LOCKFILE,
-      ...rawCopy,
+      ...baseTemplate,
       subproject_cwd: rawCopy.subproject_cwd ?? "",
       modo_qa: legacyQaManual ? "manual" : "automatizado",
+      session_features: mergedFeatures,
       schema_version: SCHEMA_VERSION
     }
   }
   if (rawCopy.schema_version === 1) {
     return {
-      ...DEFAULT_LOCKFILE,
-      ...rawCopy,
+      ...baseTemplate,
       subproject_cwd: "",
       modo_qa: legacyQaManual ? "manual" : "automatizado",
+      session_features: mergedFeatures,
       schema_version: SCHEMA_VERSION
     }
   }
@@ -163,6 +236,61 @@ export function migrateToV4(raw: any): SddLockfile {
 
 export function migrateToV5(raw: any): SddLockfile {
   return migrateToV2(raw)
+}
+
+export function migrateToV6(raw: any): SddLockfile {
+  return migrateToV2(raw)
+}
+
+export function migrateToV7(raw: any): SddLockfile {
+  return migrateToV2(raw)
+}
+
+export function readSessionFeatures(projectRoot: string): SessionFeatures {
+  const lock = readLockfile(projectRoot)
+  return { ...DEFAULT_SESSION_FEATURES, ...(lock.session_features || {}) }
+}
+
+export function writeSessionFeatures(projectRoot: string, patch: Partial<SessionFeatures>): SessionFeatures {
+  const lock = readLockfile(projectRoot)
+  const current: SessionFeatures = { ...DEFAULT_SESSION_FEATURES, ...(lock.session_features || {}) }
+  const next: SessionFeatures = {
+    autoskills: patch.autoskills !== undefined ? patch.autoskills : current.autoskills,
+    graphify: patch.graphify !== undefined ? patch.graphify : current.graphify
+  }
+  lock.session_features = next
+  writeLockfile(projectRoot, lock)
+  return next
+}
+
+export function readActiveDesignSystem(projectRoot: string): DesignSystemSlug | null {
+  const lock = readLockfile(projectRoot)
+  return lock.active_design_system ?? null
+}
+
+export function writeActiveDesignSystem(projectRoot: string, slug: string | null): DesignSystemSlug | null {
+  const lock = readLockfile(projectRoot)
+  const normalized = normalizeDesignSystemSlug(slug)
+  lock.active_design_system = normalized
+  if (normalized !== null) {
+    lock.design_system_explicitly_skipped = false
+  }
+  writeLockfile(projectRoot, lock)
+  return normalized
+}
+
+export function skipDesignSystem(projectRoot: string, reason?: string): void {
+  const lock = readLockfile(projectRoot)
+  lock.active_design_system = null
+  lock.design_system_explicitly_skipped = true
+  writeLockfile(projectRoot, lock)
+  void reason
+}
+
+export function isDesignSystemReady(lock: Pick<SddLockfile, "active_design_system" | "design_system_explicitly_skipped">): { ready: boolean; reason: "set" | "skipped" | "uninitialized" } {
+  if (lock.active_design_system !== null) return { ready: true, reason: "set" }
+  if (lock.design_system_explicitly_skipped === true) return { ready: true, reason: "skipped" }
+  return { ready: false, reason: "uninitialized" }
 }
 
 export function setNestedValue(obj: any, pathStr: string, value: any): void {
@@ -198,7 +326,12 @@ export default tool({
   - "mark_task": Marca una tarea como completed/blocked.
   - "reset": Resetea el lockfile al estado inicial (usar con aprobación del Orquestador).
 
-  Esta herramienta es la ÚNICA autorizada a leer/escribir .openspec/sdd-lock.json. Los subagentes NO deben usar write/edit directamente sobre el lockfile.`,
+  Esta herramienta es la ÚNICA autorizada a leer/escribir .openspec/sdd-lock.json. Los subagentes NO deben usar write/edit directamente sobre el lockfile.
+
+  Acciones adicionales (v7):
+  - "set_design_system": Persiste el slug del design system activo (o null para limpiar). Acepta 'airbnb' | 'apple' | 'meta' | 'nike' | 'notion' | 'renault' | 'theverge' | 'uber' | 'voltagent' | 'x.ai' | null.
+  - "read_design_system": Lee el slug activo actualmente en el lockfile.
+  - "skip_design_system": Marca \`design_system_explicitly_skipped: true\` y limpia \`active_design_system\`. Le indica al sdd-builder que el usuario fue consultado y eligió explícitamente no usar un design system.`,
   args: {
     action: tool.schema.enum([
       "read",
@@ -211,7 +344,10 @@ export default tool({
       "mark_task",
       "set_acceptance_criteria",
       "mark_criterion",
-      "reset"
+      "reset",
+      "set_design_system",
+      "read_design_system",
+      "skip_design_system"
     ]).describe("Operación a realizar sobre el lockfile"),
     patch: tool.schema.string().optional()
       .describe("JSON string con el patch a aplicar (para update, set_tdd, set_git)"),
@@ -507,6 +643,53 @@ export default tool({
         return JSON.stringify({
           status: "SUCCESS",
           criterion
+        }, null, 2)
+      }
+
+      case "set_design_system": {
+        const slugInput = args.patch
+        let slug: unknown = null
+        if (typeof slugInput === "string" && slugInput.trim() !== "") {
+          try {
+            const parsed = JSON.parse(slugInput)
+            slug = parsed && typeof parsed === "object"
+              ? (parsed as any).slug ?? (parsed as any).active_design_system ?? null
+              : parsed
+          } catch {
+            slug = slugInput.trim()
+          }
+        }
+        const normalized = writeActiveDesignSystem(projectRoot, slug as any)
+        if (slug !== null && normalized === null) {
+          return JSON.stringify({
+            status: "FAILED",
+            reason: `Slug de design system inválido: '${String(slug)}'. Permitidos: ${DESIGN_SYSTEM_SLUGS.join(", ")}, null.`
+          }, null, 2)
+        }
+        return JSON.stringify({
+          status: "SUCCESS",
+          active_design_system: normalized
+        }, null, 2)
+      }
+
+      case "read_design_system": {
+        const current = readActiveDesignSystem(projectRoot)
+        const lock = readLockfile(projectRoot)
+        return JSON.stringify({
+          status: "SUCCESS",
+          active_design_system: current,
+          design_system_explicitly_skipped: lock.design_system_explicitly_skipped,
+          available: [...DESIGN_SYSTEM_SLUGS]
+        }, null, 2)
+      }
+
+      case "skip_design_system": {
+        skipDesignSystem(projectRoot, args.patch)
+        return JSON.stringify({
+          status: "SUCCESS",
+          message: "Design system explícitamente omitido. El sdd-builder procederá con estilo ad-hoc y emitirá un warning.",
+          active_design_system: null,
+          design_system_explicitly_skipped: true
         }, null, 2)
       }
 

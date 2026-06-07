@@ -59,12 +59,30 @@ Llama a `sdd_git_awareness` con `action: "status"`.
 - Si el resultado es `FAILED` indicando que no es un repositorio Git, **llama inmediatamente a `sdd_git_awareness` con `action: "init", confirm: true, branchName: "sdd/change-<change-name>"`** (donde `<change-name>` es el nombre del cambio obtenido del lockfile) para inicializar el repositorio Git con la rama principal `main`, un `.gitignore` por defecto, e inmediatamente crear y moverte a la rama de trabajo actual.
 - Una vez inicializado o si ya existía, lee `action: "status"` y persiste la información en el lockfile con `action: "set_git"`.
 
-### 3.5. Ejecutar autoskills para obtener mejores prácticas y soporte
+### 3.5. Ejecutar autoskills para obtener mejores prácticas y soporte (GATED)
 
-Si detectas que la carpeta `skills/` en `.opencode/` o en la raíz no contiene las skills del ecosistema del proyecto (o quieres actualizarlas debido a nuevas dependencias detectadas), ejecuta la herramienta correspondiente para correr `npx autoskills --yes`. Esto instalará y actualizará de forma dinámica y silenciosa las skills alineadas con el `stack_profile` detectado. Las Design Skills estarán disponibles para cualquier edición de UI subsiguiente.
+**GATE de opt-in**: antes de invocar `sdd_install_autoskills`, llama a `sdd_session_features` con `action: "read"`.
 
-### 3.7. Ejecutar Graphify si está disponible
-Llama a `sdd_graphify` con `action: "status"`. Si el campo `graphify_installed` es `true`, ejecuta `sdd_graphify` con `action: "run"` para mapear la arquitectura completa del proyecto en un Grafo de Conocimiento (`graphify-out/graph.json` y `GRAPH_REPORT.md`). Esto agiliza masivamente las búsquedas del swarm en las fases siguientes.
+- Si `session_features.autoskills === true`:
+  - Si la carpeta `skills/` en `.opencode/` o en la raíz no contiene las skills del ecosistema del proyecto (o quieres actualizarlas debido a nuevas dependencias detectadas), ejecuta la herramienta correspondiente para correr `npx autoskills --yes`.
+  - El tool `sdd_install_autoskills` siempre escribe/migra las skills resultantes a `.opencode/skills/` (nunca quedan en `.agents/skills/`). Las Design Skills estarán disponibles para cualquier edición de UI subsiguiente.
+- Si `session_features.autoskills === false` (o el lockfile no tiene la feature definida):
+  - **Omite** la invocación por completo.
+  - Registra una línea en `.openspec/diagnostics.md` con el formato: `ℹ️  autoskills: deshabilitado por sesión (session_features.autoskills=false)`.
+  - Continúa con el flujo normal de F0 sin bloquear.
+
+### 3.7. Ejecutar Graphify si está disponible (GATED)
+
+**GATE de opt-in**: llama a `sdd_session_features` con `action: "read"` antes de invocar `sdd_graphify`.
+
+- Si `session_features.graphify === true`:
+  1. Llama a `sdd_graphify` con `action: "status"`.
+  2. Si `graphify_installed === true`: ejecuta `sdd_graphify` con `action: "run"` para mapear la arquitectura completa del proyecto en un Grafo de Conocimiento (`graphify-out/graph.json` y `GRAPH_REPORT.md`).
+  3. Si `graphify_installed === false`: ejecuta `sdd_graphify` con `action: "install"` (esto intentará `uv tool install graphifyy` o `pip install --user graphifyy` con confirmación previa del usuario). Si la instalación es exitosa, vuelve a llamar `action: "run"`. Si el usuario rechaza o la instalación falla, registra el motivo en `diagnostics.md` y continúa.
+- Si `session_features.graphify === false` (o no está definido):
+  - **Omite** la invocación por completo.
+  - Registra una línea en `.openspec/diagnostics.md` con el formato: `ℹ️  graphify: deshabilitado por sesión (session_features.graphify=false)`.
+  - Continúa con el flujo normal de F0 sin bloquear.
 
 ### 4. Escanear estructura del proyecto
 

@@ -21,7 +21,8 @@ describe('Tool Scripts Existence (v2)', () => {
     'sdd_archive_and_commit.js',
     'sdd_brain_sync.js',
     'sdd_auto_healer.js',
-    'sdd_dependency_installer.js'
+    'sdd_dependency_installer.js',
+    'sdd_session_features.js'
   ];
 
   tools.forEach(tool => {
@@ -102,16 +103,18 @@ describe('v2 Prompts Structure', () => {
 });
 
 describe('v2 Lockfile Schema', () => {
-  test('sdd-lock.json should have schema_version 2', () => {
+  test('sdd-lock.json should have schema_version 6 and session_features', () => {
     const lockPath = path.join(rootDir, '.openspec/sdd-lock.json');
     if (fs.existsSync(lockPath)) {
       const lock = JSON.parse(fs.readFileSync(lockPath, 'utf-8'));
-      expect(lock.schema_version).toBe(2);
+      expect(lock.schema_version).toBe(6);
       expect(lock.active_phase).toMatch(/^F[0-5]/);
       expect(lock.tdd).toBeDefined();
       expect(lock.tdd.red).toBeDefined();
       expect(lock.tdd.green).toBeDefined();
       expect(lock.tdd.refactor).toBeDefined();
+      expect(lock.session_features).toBeDefined();
+      expect(lock.session_features).toEqual({ autoskills: expect.any(Boolean), graphify: expect.any(Boolean) });
     }
   });
 });

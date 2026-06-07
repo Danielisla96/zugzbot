@@ -309,7 +309,9 @@ Una herramienta = un trabajo. Componentes por categoría:
 - `sdd_git_awareness` — estado de Git (rama, SHA, working tree).
 - `sdd_generate_tree` — árbol de archivos.
 - `sdd_archive_and_commit` — git semántico (bump + CHANGELOG + commit + archive).
-- `sdd_install_autoskills` — auto-instala skills desde registry.
+- `sdd_install_autoskills` — auto-instala skills desde registry a `.opencode/skills/` (gated por `session_features.autoskills`).
+- `sdd_graphify` — genera y consulta el Grafo de Conocimiento del proyecto (`graphify-out/`). Acción `install` opcional con `uv`/`pip` (gated por `session_features.graphify`).
+- `sdd_session_features` — gestiona los feature flags opt-in persistidos en el lockfile v6.
 
 ---
 

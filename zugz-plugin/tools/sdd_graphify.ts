@@ -30,10 +30,14 @@ function getWorkingGraphifyCommand(): string | null {
 export default tool({
   description: "Administra, genera y consulta el Grafo de Conocimiento del proyecto usando Graphify. Permite obtener dependencias de componentes, imports y llamadas estructurales de forma local.",
   args: {
-    action: tool.schema.enum(["run", "status", "query"])
-      .describe("Acción a realizar: 'run' para generar/actualizar el grafo, 'status' para verificar si existe, 'query' para buscar dependencias"),
+    action: tool.schema.enum(["run", "status", "query", "install"])
+      .describe("Acción a realizar: 'run' para generar/actualizar el grafo, 'status' para verificar si existe, 'query' para buscar dependencias, 'install' para instalar la CLI graphify (uv/pip)"),
     query: tool.schema.string().optional()
-      .describe("Término de búsqueda, nombre de archivo o entidad (requerido para action='query')")
+      .describe("Término de búsqueda, nombre de archivo o entidad (requerido para action='query')"),
+    installCommand: tool.schema.string().optional()
+      .describe("Comando explícito a ejecutar para instalar (requerido para action='install' con confirm=true). Ej: 'pip install --user graphifyy'"),
+    confirm: tool.schema.boolean().optional().default(false)
+      .describe("Confirmación explícita requerida para action='install'. Si falta, retorna el comando propuesto sin ejecutarlo.")
   },
   async execute(args, context) {
     let projectRoot = context.worktree || context.directory || process.cwd()
@@ -120,6 +124,60 @@ export default tool({
         return JSON.stringify({
           status: "FAILED",
           reason: `Error al ejecutar ${workingCmd}: ${e.message || e}`
+        }, null, 2)
+      }
+    }
+
+    if (args.action === "install") {
+      if (workingCmd) {
+        return JSON.stringify({
+          status: "SUCCESS",
+          message: "graphify ya está instalado.",
+          working_command: workingCmd
+        }, null, 2)
+      }
+
+      const candidates: string[] = []
+      try { execSync("which uv", { stdio: "ignore" }); candidates.push("uv tool install graphifyy") } catch {}
+      try { execSync("which pipx", { stdio: "ignore" }); candidates.push("pipx install graphifyy") } catch {}
+      try { execSync("which pip3", { stdio: "ignore" }); candidates.push("pip3 install --user graphifyy") } catch {}
+      try { execSync("which pip", { stdio: "ignore" }); candidates.push("pip install --user graphifyy") } catch {}
+
+      if (candidates.length === 0) {
+        return JSON.stringify({
+          status: "FAILED",
+          reason: "No se encontró uv, pipx, pip3 ni pip en el sistema. Instala uno de ellos para usar graphifyy."
+        }, null, 2)
+      }
+
+      const preferred = args.installCommand && candidates.includes(args.installCommand)
+        ? args.installCommand
+        : candidates[0]
+
+      if (!args.confirm) {
+        return JSON.stringify({
+          status: "AWAITING_CONFIRMATION",
+          proposed_command: preferred,
+          candidates,
+          message: "graphify no está instalado. Re-llama con confirm=true e installCommand=<comando> para proceder."
+        }, null, 2)
+      }
+
+      try {
+        const output = execSync(preferred, { cwd: projectRoot, encoding: "utf-8", timeout: 180000 })
+        const refreshedCmd = getWorkingGraphifyCommand()
+        return JSON.stringify({
+          status: "SUCCESS",
+          message: "graphify instalado correctamente.",
+          command: preferred,
+          output: (output || "").split("\n").slice(0, 20).join("\n"),
+          working_command: refreshedCmd
+        }, null, 2)
+      } catch (e: any) {
+        return JSON.stringify({
+          status: "FAILED",
+          reason: `Error instalando graphify con '${preferred}': ${e?.message || e}`,
+          command: preferred
         }, null, 2)
       }
     }

@@ -58,8 +58,12 @@ Antes de redactar el `spec.md`, es **obligatorio** iniciar una clarificación in
 
 Llama a `sdd_diff_impact_analyzer` con el change_name para mapear archivos afectados.
 
-### 2.5. Consultar Graphify para análisis de dependencias
-Si el Grafo de Conocimiento (`graphify-out/graph.json`) existe, puedes llamar a `sdd_graphify` con `action: "query"` pasando el nombre de archivos o módulos críticos para mapear con precisión quirúrgica las dependencias, llamadas y potenciales colaterales. Úsalo para poblar el listado de `affected_files` y documentar la arquitectura en el Spec.
+### 2.5. Consultar Graphify para análisis de dependencias (GATED)
+
+**GATE de opt-in**: llama a `sdd_session_features` con `action: "read"` antes de usar `sdd_graphify`.
+
+- Si `session_features.graphify === true` y el Grafo de Conocimiento (`graphify-out/graph.json`) existe, llama a `sdd_graphify` con `action: "query"` pasando el nombre de archivos o módulos críticos para mapear con precisión quirúrgica las dependencias, llamadas y potenciales colaterales. Úsalo para poblar el listado de `affected_files` y documentar la arquitectura en el Spec.
+- Si `session_features.graphify === false` (o no está definido): omite la consulta y usa únicamente `sdd_diff_impact_analyzer` para poblar `affected_files`. No bloquees la planificación.
 
 ### 3. Cooldown de dependencias (si aplica)
 

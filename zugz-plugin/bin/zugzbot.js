@@ -16,7 +16,7 @@ try {
 const INSTALL_DIR = process.cwd()
 
 const TEMPLATE_SDD_LOCK_V2 = {
-  schema_version: 2,
+  schema_version: 7,
   change_name: "",
   workflow: "full-sdd-tdd",
   stack_profile: "unknown",
@@ -46,7 +46,15 @@ const TEMPLATE_SDD_LOCK_V2 = {
   checkpoints: [],
   last_checkpoint_id: null,
   last_restored_from: null,
-  complexity: "medium"
+  complexity: "medium",
+  subproject_cwd: "",
+  modo_qa: "automatizado",
+  session_features: {
+    autoskills: false,
+    graphify: false
+  },
+  active_design_system: null,
+  design_system_explicitly_skipped: false
 }
 
 const TEMPLATE_TUI_JSON = {
@@ -191,7 +199,8 @@ function buildOpencodeJson(models) {
             "sdd_compact_context": "allow",
             "sdd_context_pruner": "allow",
             "sdd_clasp": "allow",
-            "sdd_graphify": "allow"
+            "sdd_graphify": "allow",
+            "sdd_session_features": "allow"
           }
         }
       },
@@ -491,13 +500,22 @@ function init() {
       red("opencode.json existe pero es inválido, se regenerará desde el paquete")
     }
   }
-  if (!opencodeBase) {
-    if (fs.existsSync(templateOpencodePath)) {
-      opencodeBase = JSON.parse(fs.readFileSync(templateOpencodePath, "utf-8"))
-    } else {
-      opencodeBase = buildOpencodeJson(models)
+    if (!opencodeBase) {
+      if (fs.existsSync(templateOpencodePath)) {
+        opencodeBase = JSON.parse(fs.readFileSync(templateOpencodePath, "utf-8"))
+      } else {
+        opencodeBase = buildOpencodeJson(models)
+      }
     }
-  }
+
+    if (opencodeBase.agent && opencodeBase.agent.zugzbot && opencodeBase.agent.zugzbot.permission) {
+      const zugzbotTools = opencodeBase.agent.zugzbot.permission.tools || {}
+      if (!zugzbotTools["sdd_session_features"]) {
+        zugzbotTools["sdd_session_features"] = "allow"
+        opencodeBase.agent.zugzbot.permission.tools = zugzbotTools
+        green("Permiso sdd_session_features añadido al agente zugzbot")
+      }
+    }
   if (models && models.agents && opencodeBase.agent) {
     let applied = 0
     for (const [agentName, model] of Object.entries(models.agents)) {
@@ -534,7 +552,7 @@ function init() {
   const sddLockPath = path.join(INSTALL_DIR, ".openspec/sdd-lock.json")
   if (!fs.existsSync(sddLockPath)) {
     fs.writeFileSync(sddLockPath, JSON.stringify(TEMPLATE_SDD_LOCK_V2, null, 2), "utf-8")
-    green(".openspec/sdd-lock.json v2 creado (con bloque tdd y git)")
+    green(".openspec/sdd-lock.json v7 creado (con bloque tdd, git, session_features y design system)")
   } else {
     yellow("sdd-lock.json ya existe, preservado")
   }
@@ -593,6 +611,14 @@ function init() {
     green("Profiles de stack copiados")
   }
 
+  const sourceDesignDir = path.join(PKG_ROOT, "design")
+  if (fs.existsSync(sourceDesignDir)) {
+    const localDesignDir = path.join(INSTALL_DIR, "design")
+    fs.mkdirSync(localDesignDir, { recursive: true })
+    copyRecursiveSync(sourceDesignDir, localDesignDir)
+    green("Design systems copiados (10 disponibles para el skill sdd-design-system)")
+  }
+
   console.log(`
 ╔══════════════════════════════════════════════════════════╗
 ║  ✅ Zugzbot v${PKG_VERSION.padEnd(36)} instalado correctamente!  ║
@@ -604,19 +630,21 @@ function init() {
    ├── opencode.json              (14 agentes: zugzbot, f0-f5, aux-*)
    ├── tui.json
    ├── .openspec/
-   │   ├── sdd-lock.json          (schema v2 con bloque tdd y git)
+   │   ├── sdd-lock.json          (schema v7 con bloque tdd, git, session_features y design system)
    │   └── brain.md
    ├── .opencode/
    │   ├── profiles/              (8 profiles: node-ts, python, go, rust, java, gas, static-site)
    │   ├── plugins/               (TUI + SDD core)
-   │   ├── skills/                (11 skills premium)
+   │   ├── skills/                (12 skills premium, incluye sdd-design-system)
    │   └── tools/                 (33 herramientas SRP)
+   ├── design/                    (10 design systems: airbnb, apple, meta, nike, notion, renault, theverge, uber, voltagent, x.ai)
    └── prompts/                   (contratos y boundaries de cada fase)
 
    TDD Discipline: Red → Green → Refactor enforced
    Stack-agnostic: detecta automáticamente Node/TS, Python, Go, Rust, Java, GAS
    Workflows: full-sdd-tdd, quick-fix, audit, refactor, explain, oracle
    Agents: 14 (zugzbot + 8 core SDD/TDD + 4 aux + 1 sdd-tester legacy alias)
+   Design systems: el skill sdd-design-system carga el catálogo y persiste la elección en el lockfile (schema v7)
 `)
 }
 

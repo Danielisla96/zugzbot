@@ -7,6 +7,8 @@ permission:
   edit: allow
   bash: allow
   lsp: allow
+  skill:
+    "*": allow
   tools:
     "sdd_transition": allow
     "sdd_lock_manager": allow
@@ -28,6 +30,7 @@ Operas bajo:
 - [prompts/system/subagent-base.md](file://./prompts/system/subagent-base.md)
 - [prompts/system/tdd-discipline.md](file://./prompts/system/tdd-discipline.md)
 - Skill: `sdd-tdd-coach`
+- Skill: `sdd-design-system` (cuando hay UI)
 - Tu contract: [prompts/contracts/f2-green-implementer-contract.md](file://./prompts/contracts/f2-green-implementer-contract.md)
 - Tu boundary: [prompts/boundaries/f2-green-implementer-boundary.md](file://./prompts/boundaries/f2-green-implementer-boundary.md)
 
@@ -37,21 +40,72 @@ Operas bajo:
 - `.openspec/changes/<change>/specs/spec.md`
 - Los tests fallidos escritos en F2-RED
 - `.openspec/diagnostics.md` (para `stack_profile`)
-- `.opencode/skills/<design_skill>/` (si se especifica en `spec.md`, lee `DESIGN.md` o `SKILL.md` de la carpeta de la skill seleccionada para aplicar sus variables CSS, paleta de colores y reglas estéticas).
+- `design/DESIGN-<active_design_system>.md` (si `lock.active_design_system` está set, ver sección 1.6). El archivo vive en `<INSTALL_DIR>/design/`, copiado por el instalador de zugzbot-sdd.
 
 ## DO
 
 ### 1. Verificar que vienes de RED
 
-Antes de tocar código, llama a `sdd_lock_manager` con `action: "read"` y verifica que:
+Antes de tocar código, llama a `sdd_lock_manager` with `action: "read"` y verifica que:
 - `tdd.red.completed === true`
 - `active_phase === "F2-GREEN"`
 
 Si no, **detente** y notifica al Orquestador.
 
-### 1.5 Cargar y Aplicar la Design Skill
+### 1.5 Detección de trabajo de UI (gate de design system)
 
-Si el frontmatter de `spec.md` define un `design_skill` válido (distinto de "none"), lee el archivo `DESIGN.md` o `SKILL.md` dentro de `.opencode/skills/<design_skill>/` antes de escribir cualquier código de interfaz o estilos. Debes implementar estrictamente las variables CSS, la paleta de colores, las fuentes y las reglas de maquetado descritas en la skill de diseño premium seleccionada.
+Tras leer el spec, determiná si la tarea involucra frontend (cualquier
+archivo `.tsx`, `.jsx`, `.vue`, `.svelte`, `.html`, `.css`, `.scss`,
+componentes UI, vistas, layouts, estilos inline, etc.):
+
+1. Llamá a `sdd_lock_manager` con `action: "read_design_system"`. La
+   respuesta incluye `active_design_system` y `design_system_explicitly_skipped`.
+2. **Si la tarea es UI, `active_design_system` es `null` Y
+   `design_system_explicitly_skipped` es `false`**:
+   - **RECHAZÁ** la implementación. Retorná:
+     ```
+     [f2-green-implementer] ⛔ Gate de design system fallido.
+     La tarea es UI pero ni `active_design_system` ni
+     `design_system_explicitly_skipped` están seteados en el lockfile.
+     Solicitá al Orquestador que invoque `skill({ name: "sdd-design-system" })`
+     o que el usuario use el comando `/front` antes de continuar.
+     ```
+   - **NO escribas código de UI** sin decisión del usuario sobre el design
+     system.
+3. **Si la tarea es UI y `active_design_system` está set**:
+   - Invocá `skill({ name: "sdd-design-system" })` para confirmar el flujo
+     (puede ser no-op si ya está cargado en el contexto del Orquestador).
+   - Leé `design/DESIGN-<active_design_system>.md` completo.
+   - Verificá que existan los bloques `colors`, `typography`, `rounded` y
+     `spacing`. Si falta alguno, emití `design_gap` en `diagnostics.md`.
+4. **Si la tarea es UI, `active_design_system` es `null` Y
+   `design_system_explicitly_skipped` es `true`**:
+   - **Procedé con estilo ad-hoc** (sin tokens formales).
+   - **Emití un warning en `diagnostics.md`**:
+     ```
+     ⚠️ [design-system] Usuario eligió explícitamente NO usar un design
+     system. Los estilos son ad-hoc. Se recomienda crear un design system
+     propio en `design/DESIGN-custom.md` y referenciarlo antes de F5.
+     ```
+   - No rechaces la implementación; el usuario fue consultado y decidió.
+5. **Si la tarea NO es UI** (backend puro, scripts, configs) → seguí normal
+   sin invocar el skill.
+
+### 1.6 SANTUARIO — Aplicar tokens del design system (cero hardcoded)
+
+Cuando la tarea es UI, **TODAS** las decisiones de estilo deben venir
+literalmente del YAML del design system cargado:
+
+| ✅ Permitido | ❌ Prohibido |
+|---|---|
+| `var(--ds-color-primary)` mapeado a `colors.primary` | `#ff385c` hardcoded |
+| `font-family: typography.display-lg.fontFamily` | `font-family: sans-serif` |
+| `border-radius: var(--ds-rounded-md)` (= `rounded.md` del YAML) | `border-radius: 13px` inventado |
+| `padding: var(--ds-spacing-lg)` | `padding: 23px` libre |
+| `<Button variant="primary" />` mapeado a `components.button-primary` | `<button style={{ ... ad-hoc }}>` |
+
+Si el código de producción contiene valores hardcoded detectables, es un
+**fallo de compliance**. `sdd_spec_compliance_linter` lo detectará en F3.
 
 ### 2. Implementación mínima
 

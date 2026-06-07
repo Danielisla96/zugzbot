@@ -12,6 +12,8 @@ npm install zugzbot-sdd@latest && npx zugzbot
 opencode .
 ```
 
+> 🆕 Al lanzar la primera sesión, `@zugzbot` te preguntará si quieres habilitar **autoskills** (descarga Design Skills desde el registry npm) y **graphify** (genera un Grafo de Conocimiento del proyecto). La decisión se persiste en `.openspec/sdd-lock.json` y puedes reconfigurarla con "configurar features" en cualquier momento.
+
 ---
 
 ## 🎯 6 workflows (dile a @zugzbot)
@@ -103,7 +105,7 @@ El lockfile rechaza transiciones inválidas. **No hay atajos**.
 ```bash
 npx tsc         # 0 errores
 npx eslint .    # 0 errores
-npx vitest run  # 97/97 tests
+npx vitest run  # 100+ tests (incluye los nuevos de session_features)
 ```
 
 ---

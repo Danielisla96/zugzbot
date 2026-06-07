@@ -11,13 +11,14 @@
 zugz-plugin/
 ├── agents/                # 14 agentes (prompt files)
 ├── tools/                 # 33 herramientas SRP (TypeScript)
-├── skills/                # 11 skills premium
+├── design/                # 10 design systems (airbnb, apple, meta, nike, notion, renault, theverge, uber, voltagent, x.ai) — shippeado con el npm
+├── skills/                # 12 skills premium (11 base + sdd-design-system)
 ├── profiles/              # 8 profiles de stack
 ├── prompts/               # Prompts modulares
 │   ├── system/            # Base regulatoria (orchestrator, subagent, tdd, router)
 │   ├── contracts/         # QUÉ hace cada fase
 │   └── boundaries/        # QUÉ NO hace cada fase
-├── tests/                 # Vitest (87 tests)
+├── tests/                 # Vitest (289 tests)
 ├── opencode.json          # Config dev
 ├── package.json
 ├── bin/zugzbot.js         # Instalador v2
@@ -76,7 +77,7 @@ NO escribir prompts monolíticos.
 ```bash
 npx tsc         # TypeScript compilation
 npx eslint .    # Linter
-npx vitest run  # 87 tests
+npx vitest run  # 289 tests
 ```
 
 - **Unit** (30): estructura, schema, contratos.
@@ -156,12 +157,12 @@ El instalador `bin/zugzbot.js` corre con `node bin/zugzbot.js` (no requiere buil
 
 ## 📋 Checklist antes de Merge
 
-- [ ] Tests pasan: `npx vitest run` → 87/87
+- [ ] Tests pasan: `npx vitest run` → 289/289
 - [ ] TypeScript compila: `npx tsc` → 0 errores
 - [ ] Linter limpio: `npx eslint .` → 0 errores
 - [ ] Si cambiaste `tools/`: actualizaste `tools/index.ts` y `.opencode/tools/index.js`
 - [ ] Si añadiste agente: actualizaste `opencode.json` y `bin/zugzbot.js`
-- [ ] Si cambiaste schema: actualizaste `migrateToV2` y tests
+- [ ] Si cambiaste schema: actualizaste `migrateToV7` y tests
 - [ ] Si añadiste profile: documentaste en `README.md` y `ZUGZ.md`
 - [ ] CHANGELOG.md actualizado con el cambio
 
