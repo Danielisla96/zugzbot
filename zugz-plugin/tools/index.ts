@@ -39,3 +39,4 @@ export { default as sdd_destructive_guard } from './sdd_destructive_guard.js';
 export { default as sdd_runtime_dryrun } from './sdd_runtime_dryrun.js';
 export { default as sdd_session_features } from './sdd_session_features.js';
 export { default as sdd_free_port_finder } from './sdd_free_port_finder.js';
+export { default as sdd_heroui_lookup } from './sdd_heroui_lookup.js';

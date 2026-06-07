@@ -8,6 +8,8 @@ export interface SpecFrontmatter {
   change_name: string
   modo_qa: "automatizado" | "manual"
   design_skill: string
+  base_framework?: string
+  ui_framework?: string
   archivos_afectados: string[]
   criterios_aceptacion: Array<{
     id: string
@@ -48,6 +50,8 @@ spec_version: "1.0"
 change_name: "<kebab-case>"
 modo_qa: "automatizado"
 design_skill: "ninguna"
+base_framework: "ninguno"
+ui_framework: "ninguno"
 archivos_afectados:
   - "ruta/archivo.ext (Líneas 10-35)"
 criterios_aceptacion:

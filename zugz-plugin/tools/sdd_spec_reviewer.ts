@@ -327,6 +327,8 @@ export default tool({
           `change_name: "${frontmatter?.change_name || changeName}"`,
           `modo_qa: "automatizado"`,
           `design_skill: "${frontmatter?.design_skill || "ninguna"}"`,
+          `base_framework: "${frontmatter?.base_framework || "ninguno"}"`,
+          `ui_framework: "${frontmatter?.ui_framework || "ninguno"}"`,
           "archivos_afectados:",
           ...(files.length > 0 ? files.map((f) => `  - "${f}"`) : ["  - \"src/\""]),
           "criterios_aceptacion:",

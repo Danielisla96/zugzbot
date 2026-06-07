@@ -54,6 +54,7 @@ Antes de redactar el `spec.md`, es **obligatorio** iniciar una clarificación in
 - Clarificar preferencias de arquitectura/tecnología (ej: sync vs async, bases de datos, APIs).
 - **Pregunta de Habilidades de Diseño (Design Skills)**: Si el cambio involucra interfaz de usuario (archivos `.tsx`, `.jsx`, `.css`, `.html`, etc.), es obligatorio preguntar por la Premium Design Skill a utilizar (ej. `glassmorphism`, `neumorphism`, `bento`, `brutalism`, `minimalist`, `shadcn`) o recomendar la más adecuada.
 - Declarar la skill aprobada en el frontmatter del `spec.md` bajo `design_skill: "<nombre-skill>"`.
+- **Framework Base y Biblioteca de UI (Web/Frontend)**: Si el cambio involucra desarrollo web o creación de interfaces de usuario, es obligatorio preguntar por el Framework Base (`base_framework`: ej. `vanilla`, `nextjs`, `vite-react`) y la Biblioteca de UI/Componentes (`ui_framework`: ej. `shadcn`, `heroui`, `tailwind`, `vanilla-css`). Declarar las opciones seleccionadas en el frontmatter del `spec.md` bajo `base_framework: "<valor>"` y `ui_framework: "<valor>"`.
 
 ### 2. Análisis de impacto y uso de plantillas
 - Llama a `sdd_diff_impact_analyzer` con the `change_name` para mapear archivos afectados.
