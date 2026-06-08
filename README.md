@@ -13,9 +13,6 @@ El plugin incluye una interfaz gráfica de Terminal (TUI) integrada directamente
 | :---: | :---: |
 | ![OpenCode Main](docs/images/opencode_main.png) | ![OpenCode Chat TUI](docs/images/opencode_chat.png) |
 
-> [!TIP]
-> *Nota para el desarrollador:* Guarda las capturas de pantalla de tu interfaz en la carpeta `docs/images/` con los nombres `opencode_main.png` y `opencode_chat.png` para visualizarlas correctamente en GitHub o en tu visor de Markdown.
-
 ---
 
 ## 🚀 Quickstart (3 pasos)
