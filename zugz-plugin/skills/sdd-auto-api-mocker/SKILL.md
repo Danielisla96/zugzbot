@@ -1,3 +1,8 @@
+---
+name: sdd-auto-api-mocker
+description: Autogenera simulaciones (mocks) locales inteligentes de APIs de terceros y objetos globales difíciles de simular.
+---
+
 # Skill: SDD Automatic API Mocker
 
 Esta habilidad permite al enjambre (`@sdd-builder`, `@sdd-tester`) autogenerar simulaciones (mocks) locales inteligentes de APIs de terceros y objetos globales difíciles de simular (ej. Google Apps Script como `SpreadsheetApp`, clasp, APIs de pago o servicios externos).

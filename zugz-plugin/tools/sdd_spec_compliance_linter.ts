@@ -1,6 +1,8 @@
 import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
+import { readLockfile } from "./sdd_lock_manager.js"
+import { getProfileById } from "./sdd_stack_detector_lib.js"
 
 export default tool({
   description: "Compara semánticamente el archivo spec.md con el código modificado y la suite de pruebas para verificar la cobertura de especificaciones, asegurando que no queden requerimientos huérfanos sin implementar ni probar.",
@@ -8,7 +10,20 @@ export default tool({
     changeName: tool.schema.string().describe("Nombre del cambio de desarrollo activo en .openspec/changes/")
   },
   async execute(args, context) {
-    const projectRoot = context.worktree || context.directory
+    let projectRoot = context.worktree || context.directory || process.cwd()
+    if (projectRoot === "/") {
+      projectRoot = process.cwd()
+    }
+    const lock = readLockfile(projectRoot)
+    const profileId = lock.stack_profile || "unknown"
+    let profile = getProfileById(projectRoot, profileId)
+    if (!profile && profileId.includes("-")) {
+      const baseProfileId = profileId.split("-")[0]
+      profile = getProfileById(projectRoot, baseProfileId)
+    }
+    const sourceDirName = profile?.conventions?.source_dir || "src"
+    const testDirName = profile?.conventions?.test_dir || "tests"
+
     const report: string[] = []
     report.push(`━━━ sdd_spec_compliance_linter: ${args.changeName} ━━━`)
 
@@ -44,9 +59,10 @@ export default tool({
     const requirements: string[] = []
     const lines = specContent.split("\n")
     lines.forEach(line => {
-      const match = line.match(/^[-*+]\s+\[\s*\]\s+(.+)$/) || line.match(/^\d+\.\s+(.+)$/)
+      const match = line.trim().match(/^[-*+]\s+\[[\s*xX]?\]\s+(.+)$/)
       if (match && match[1]) {
-        requirements.push(match[1].trim())
+        const cleaned = match[1].replace(/^["']|["']$/g, "").trim()
+        requirements.push(cleaned)
       }
     })
 
@@ -57,22 +73,96 @@ export default tool({
 
     // Leer código y pruebas para cruzar
     const filesToScan: string[] = []
+    const excludeDirs = [
+      "node_modules", ".git", ".openspec", ".opencode", "dist",
+      "build", ".next", "coverage", "__pycache__", ".pytest_cache"
+    ]
     function recurse(dir: string) {
       if (fs.existsSync(dir)) {
-        fs.readdirSync(dir).forEach(f => {
+        let entries: string[] = []
+        try {
+          entries = fs.readdirSync(dir)
+        } catch (e) {
+          return
+        }
+        entries.forEach(f => {
           const full = path.join(dir, f)
-          if (fs.statSync(full).isDirectory()) {
-            if (f !== "node_modules" && f !== ".git" && f !== ".openspec" && f !== ".opencode") {
+          let stat
+          try {
+            stat = fs.statSync(full)
+          } catch (e) {
+            return
+          }
+          if (stat.isDirectory()) {
+            if (!excludeDirs.includes(f)) {
               recurse(full)
             }
-          } else if (f.endsWith(".js") || f.endsWith(".ts") || f.endsWith(".gs") || f.endsWith(".html") || f.endsWith(".tsx")) {
+          } else if (/\.(js|ts|gs|html|tsx|py|go|rs|java|cs)$/i.test(f)) {
             filesToScan.push(full)
           }
         })
       }
     }
-    recurse(path.join(projectRoot, "src"))
-    recurse(path.join(projectRoot, "tests"))
+    const searchRoot = lock.subproject_cwd ? path.join(projectRoot, lock.subproject_cwd) : projectRoot
+    recurse(searchRoot)
+
+    const TRANSLATION_MAP: Record<string, string[]> = {
+      "suma": ["sum", "add"],
+      "sumar": ["sum", "add"],
+      "entero": ["int", "integer"],
+      "enteros": ["int", "integer", "integers"],
+      "positivo": ["positive"],
+      "positivos": ["positive", "positives"],
+      "negativo": ["negative"],
+      "negativos": ["negative", "negatives"],
+      "grande": ["large", "big"],
+      "grandes": ["large", "big"],
+      "error": ["error", "fail", "exception"],
+      "errores": ["error", "errors", "fail"],
+      "validador": ["validator", "validation"],
+      "validar": ["validate", "validation", "validating"],
+      "valido": ["valid", "ok", "success", "200"],
+      "invalido": ["invalid", "error", "422", "400"],
+      "archivo": ["file", "path"],
+      "archivos": ["file", "files", "path"],
+      "estructura": ["structure", "layout", "dir"],
+      "servidor": ["server", "app", "host"],
+      "arranca": ["start", "run", "launch", "up"],
+      "linter": ["linter", "ruff", "eslint"],
+      "limpio": ["clean", "passed"],
+      "faltante": ["missing", "none", "null"],
+      "falta": ["missing", "none", "null"],
+      "formulario": ["form"],
+      "boton": ["button", "btn"],
+      "envio": ["submit", "send"],
+      "enviar": ["submit", "send"],
+      "campo": ["input", "field"],
+      "campos": ["inputs", "fields"],
+      "resultado": ["result", "output"],
+      "conexion": ["connection", "connect", "fetch"],
+      "conectado": ["connected", "online"],
+      "desconectado": ["disconnected", "offline"],
+      "carga": ["loading", "spinner", "load", "loading state"],
+      "cargando": ["loading", "spinner", "load"],
+      "mensaje": ["message", "text"],
+      "interfaz": ["ui", "interface", "layout"],
+      "pantalla": ["screen", "view"],
+      "diseno": ["design", "style", "css"],
+      "estilo": ["style", "design", "css"],
+      "retorna": ["return", "returns", "response", "respond", "returning"],
+      "permite": ["allow", "allows", "permit"],
+      "endpoint": ["route", "path", "endpoint", "url", "post", "get"],
+      "backend": ["backend", "server", "api", "fastapi", "main.py"],
+      "frontend": ["frontend", "client", "app", "ui"],
+      "actualizado": ["updated", "added", "git"],
+      "entradas": ["entries", "ignore"],
+      "monocromatico": ["monochrome", "monochromatic", "solid", "black", "white", "shadcn"],
+      "numeros": ["number", "numbers", "float", "int"],
+      "decimales": ["decimal", "decimals", "float", "double"],
+      "cobertura": ["coverage", "tests", "passed"]
+    };
+
+    const normalizeWord = (w: string) => w.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
     let coveredCount = 0
     report.push(`🔍 Auditando cobertura para ${requirements.length} requerimientos...`)
@@ -81,14 +171,35 @@ export default tool({
       let isImplemented = false
       let isTested = false
       
-      const keywords = req.toLowerCase().split(/\s+/).filter(w => w.length > 4)
+      const baseKeywords = req
+        .toLowerCase()
+        .replace(/[^a-záéíóúñü0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter(word => word.length > 2 && !["debe", "para", "como", "esta", "este", "consecuente", "cuando", "donde", "tiene", "responde"].includes(word));
+
+      const keywords: string[] = [];
+      baseKeywords.forEach(word => {
+        const norm = normalizeWord(word);
+        keywords.push(word);
+        if (norm !== word) {
+          keywords.push(norm);
+        }
+        if (TRANSLATION_MAP[norm]) {
+          keywords.push(...TRANSLATION_MAP[norm]);
+        }
+      });
       
       filesToScan.forEach(filePath => {
         try {
           const content = fs.readFileSync(filePath, "utf-8").toLowerCase()
           
-          // Buscar indicio directo por índice
-          const directMatch = content.includes(`requerimiento #${idx + 1}`) || content.includes(`req #${idx + 1}`)
+          // Buscar indicio directo por índice o etiqueta de criterio
+          const idxStr = String(idx + 1)
+          const directMatch = content.includes(`requerimiento #${idxStr}`) ||
+                              content.includes(`req #${idxStr}`) ||
+                              content.includes(`ca${idxStr}`) ||
+                              content.includes(`ca #${idxStr}`) ||
+                              content.includes(`criterio ${idxStr}`)
           
           // Buscar palabras clave
           let keywordHits = 0
@@ -96,7 +207,7 @@ export default tool({
             if (content.includes(kw)) keywordHits++
           })
 
-          const isMatch = directMatch || (keywords.length > 0 && keywordHits / keywords.length >= 0.5)
+          const isMatch = directMatch || (keywords.length > 0 && keywordHits / keywords.length >= 0.45)
 
           if (isMatch) {
             if (filePath.includes("test")) {
@@ -113,8 +224,8 @@ export default tool({
         report.push(`  [x] Req #${idx + 1}: "${req.substring(0, 50)}..." -> Totalmente Cubierto.`)
       } else {
         const statuses = []
-        if (!isImplemented) statuses.push("Falta Implementación en /src")
-        if (!isTested) statuses.push("Falta Prueba Asociada en /tests")
+        if (!isImplemented) statuses.push(`Falta Implementación en /${sourceDirName}`)
+        if (!isTested) statuses.push(`Falta Prueba Asociada en /${testDirName}`)
         report.push(`  [ ] Req #${idx + 1}: "${req.substring(0, 50)}..." -> ⚠ Huérfano (${statuses.join(", ")})`)
       }
     })

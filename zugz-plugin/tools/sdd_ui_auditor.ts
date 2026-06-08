@@ -2,6 +2,7 @@ import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
 import { execSync } from "child_process"
+import os from "os"
 
 function decodeGitPath(gitPath: string): string {
   let cleaned = gitPath.replace(/^"|"$/g, "")
@@ -37,7 +38,7 @@ function decodeGitPath(gitPath: string): string {
         }
       }
       return Buffer.from(bytes).toString("utf-8")
-    } catch (e) {
+    } catch {
       return cleaned.replace(/\\([0-7]{3})/g, (match, octal) => {
         return String.fromCharCode(parseInt(octal, 8))
       })
@@ -73,7 +74,7 @@ function checkHtmlTagBalance(filePath: string, content: string): string[] {
 
   // Strip TypeScript generic type arguments from function calls or declarations (e.g. createSignal<string[]>)
   // JSX tags are never directly preceded by a word character (like \w+), whereas TS generics are.
-  cleaned = cleaned.replace(/(\w+)<([A-Za-z0-9_\[\]\s|]+)>/g, '$1');
+  cleaned = cleaned.replace(/(\w+)<([A-Za-z0-9_[\]\s|]+)>/g, '$1');
 
   const tagRegex = /<(\/?[a-zA-Z0-9:-]+)(?:\s+[^>]*?)?>/g;
   const stack: string[] = [];
@@ -112,6 +113,31 @@ function checkHtmlTagBalance(filePath: string, content: string): string[] {
   return issues;
 }
 
+function detectLocalDevPort(projectRoot: string): number | null {
+  try {
+    const lsofOut = execSync("lsof -iTCP -sTCP:LISTEN -P -n", { encoding: "utf-8", stdio: "pipe" });
+    const lines = lsofOut.split("\n");
+    const commonPorts = [5173, 3000, 8000, 8080, 3001, 5174];
+    for (const port of commonPorts) {
+      if (lines.some(l => l.includes(`:${port} `) || l.includes(`*:${port} `))) {
+        return port;
+      }
+    }
+  } catch (e) {}
+
+  try {
+    const viteConfigPath = path.join(projectRoot, "frontend/vite.config.js");
+    if (fs.existsSync(viteConfigPath)) {
+      const content = fs.readFileSync(viteConfigPath, "utf-8");
+      const portMatch = content.match(/port:\s*(\d+)/);
+      if (portMatch) return parseInt(portMatch[1]);
+    }
+  } catch (e) {}
+
+  return null;
+}
+
+
 export default tool({
   description: "Audita la estética de la interfaz de usuario en busca de colores genéricos, fuentes predeterminadas del navegador y verifica el cumplimiento de las directrices visuales premium (sdd-ux-premium) de forma localizada.",
   args: {
@@ -119,7 +145,10 @@ export default tool({
     localPort: tool.schema.number().optional().describe("Puerto del servidor de desarrollo local (ej: 3000) para intentar capturar screenshot opcional.")
   },
   async execute(args, context) {
-    const projectRoot = context.worktree || context.directory;
+    let projectRoot = context.worktree || context.directory || process.cwd()
+    if (projectRoot === "/") {
+      projectRoot = process.cwd()
+    }
     
     // 1. Detectar el cambio activo
     let changeName = args.changeName;
@@ -133,7 +162,9 @@ export default tool({
           if (lockObj.change_name && lockObj.change_name !== "nuevo-cambio") {
             changeName = lockObj.change_name;
           }
-        } catch (e) {}
+        } catch {
+          // Ignorar error de lectura de lock
+        }
       }
     }
 
@@ -141,12 +172,26 @@ export default tool({
       changeName = "nuevo-cambio";
     }
 
-    const reportDir = path.join(projectRoot, ".openspec/changes", changeName);
-    if (!fs.existsSync(reportDir)) {
-      fs.mkdirSync(reportDir, { recursive: true });
-    }
+    let reportDir = path.join(projectRoot, ".openspec/changes", changeName);
+    let reportPath = path.join(reportDir, "ui_report.md");
+    let usingFallbackPath = false;
 
-    const reportPath = path.join(reportDir, "ui_report.md");
+    try {
+      if (!fs.existsSync(reportDir)) {
+        fs.mkdirSync(reportDir, { recursive: true });
+      }
+    } catch (e) {
+      usingFallbackPath = true;
+      reportDir = path.join(os.tmpdir(), "openspec-ui-reports", changeName);
+      try {
+        if (!fs.existsSync(reportDir)) {
+          fs.mkdirSync(reportDir, { recursive: true });
+        }
+        reportPath = path.join(reportDir, "ui_report.md");
+      } catch (err) {
+        // Fallback final silencioso
+      }
+    }
 
     // 2. Recopilar archivos a auditar de forma localizada (Regla de Impacto Localizado)
     const filesToAudit = new Set<string>();
@@ -163,7 +208,9 @@ export default tool({
             filesToAudit.add(filePathRel);
           }
         });
-      } catch (e) {}
+      } catch {
+        // Ignorar error de git status
+      }
     }
 
     // B. Buscar archivos listados en el spec.md activo
@@ -183,7 +230,9 @@ export default tool({
             filesToAudit.add(matchedFile);
           }
         }
-      } catch (e) {}
+      } catch {
+        // Ignorar error de lectura de spec
+      }
     }
 
     // 3. Escaneo de las clases y estilos UI
@@ -252,22 +301,25 @@ export default tool({
             structuralIssues
           });
         }
-      } catch (e) {}
+      } catch {
+        // Ignorar error de lectura de archivo a auditar
+      }
     });
 
-    // 4. Intento de Screenshot Headless (Opcional si provee puerto)
-    let screenshotStatus = "No ejecutado (Puerto no provisto o dev server inactivo)";
+    // 4. Intento de Screenshot Headless (Opcional si provee o detecta puerto)
+    let screenshotStatus = "No ejecutado (Puerto no provisto/detectado o dev server inactivo)";
     let screenshotPathRel = "";
-    if (args.localPort) {
+    const targetPort = args.localPort || detectLocalDevPort(projectRoot);
+    if (targetPort) {
       try {
         const screenshotFile = path.join(reportDir, "screenshot_ui.png");
-        execSync(`npx -y playwright-cli screenshot http://localhost:${args.localPort} ${screenshotFile} --timeout 5000`, { stdio: "ignore" });
+        execSync(`npx -y playwright-cli screenshot http://localhost:${targetPort} ${screenshotFile} --timeout 5000`, { stdio: "ignore" });
         if (fs.existsSync(screenshotFile)) {
-          screenshotStatus = `Captura realizada con éxito en puerto ${args.localPort}!`;
+          screenshotStatus = `Captura realizada con éxito en puerto ${targetPort}!`;
           screenshotPathRel = `./screenshot_ui.png`;
         }
       } catch (e: any) {
-        screenshotStatus = `Intento fallido de captura: ${e.message || e}`;
+        screenshotStatus = `Intento fallido de captura en puerto ${targetPort}: ${e.message || e}`;
       }
     }
 
@@ -321,8 +373,13 @@ ${f.fontIssues.length > 0 ? `- **Estilo Tipográfico:**\n${f.fontIssues.map(fi =
      \`\`\`
 `;
 
-    fs.writeFileSync(reportPath, markdown, "utf-8");
+    try {
+      fs.writeFileSync(reportPath, markdown, "utf-8");
+    } catch (e: any) {
+      return `[SDD UI Auditor Error] No se pudo escribir el reporte debido a restricciones de permisos: ${e.message}. Total advertencias: ${totalIssues}.`;
+    }
 
-    return `[SDD UI Auditor] Reporte de estética UI generado con éxito en ${path.relative(projectRoot, reportPath)}. Total advertencias: ${totalIssues}.`;
+    const finalPath = usingFallbackPath ? reportPath : path.relative(projectRoot, reportPath);
+    return `[SDD UI Auditor] Reporte de estética UI generado con éxito en ${finalPath}. Total advertencias: ${totalIssues}.`;
   }
 })

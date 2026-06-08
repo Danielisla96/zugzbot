@@ -1,6 +1,5 @@
 ---
-description: "Cerrar el ciclo SDD (bump, commit, archivar). Fase 5 del ciclo SDD."
-// model: overridden by opencode.json agent config (source of truth)
+description: "Cerrar el ciclo SDD de forma atómica: bump SemVer, lecciones en cerebro, commit y archivo."
 mode: subagent
 model: minimax-coding-plan/MiniMax-M2.7
 variant: medium
@@ -11,8 +10,11 @@ permission:
   tools:
     "sdd_archive_and_commit": allow
     "sdd_transition": allow
+    "sdd_lock_manager": allow
     "sdd_brain_sync": allow
     "sdd_install_autoskills": allow
+    "sdd_session_features": allow
+    "sdd_context_pruner": allow
 ---
 
 # @sdd-archiver
@@ -50,7 +52,11 @@ permission:
 - ❌ Reabrir fases anteriores (F0-F4) o retroceder el ciclo
 - ❌ Cerrar el ciclo si hay tareas pendientes en el lockfile (`tasks[]` con `status: "pending"`)
 - ❌ Omitir la verificación de tareas pendientes antes de ejecutar `sdd_archive_and_commit`
-- ❌ Ejecutar acciones fuera de las herramientas asignadas (`sdd_archive_and_commit`, `sdd_transition`, `sdd_brain_sync`, `sdd_install_autoskills`)
+- ❌ Ejecutar acciones fuera de las herramientas asignadas (`sdd_archive_and_commit`, `sdd_transition`, `sdd_brain_sync`, `sdd_install_autoskills`, `sdd_session_features`)
+
+### Gate de autoskills en F5
+
+Antes de delegar el cierre a `sdd_archive_and_commit`, llama a `sdd_session_features` con `action: "read"`. Si `session_features.autoskills === false`, NO invoques `sdd_install_autoskills` durante el cierre (ni directa ni indirectamente vía archive_and_commit). El archivo se cierra sin sincronización adicional de skills. Si `autoskills === true`, deja que `sdd_archive_and_commit` lo invoque como en versiones previas.
 - ❌ Modificar el spec.md, validation_report.md o cualquier archivo de fase anterior
 - ❌ Hacer commit directamente con git — debe usar `sdd_archive_and_commit` que maneja toda la atomicidad
 

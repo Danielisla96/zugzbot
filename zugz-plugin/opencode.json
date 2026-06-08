@@ -9,14 +9,24 @@
       "*": "allow"
     }
   },
+  "mcp": {
+    "heroui-react": {
+      "type": "local",
+      "command": ["npx", "-y", "@heroui/react-mcp@latest"],
+      "enabled": true
+    }
+  },
   "agent": {
     "zugzbot": {
       "mode": "primary",
-      "model": "deepseek/deepseek-v4-pro",
+      "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/zugzbot.md}",
       "permission": {
+        "edit": "deny",
+        "bash": "deny",
         "task": {
           "sdd-*": "allow",
+          "f*": "allow",
           "aux-*": "allow"
         },
         "question": "allow",
@@ -26,10 +36,16 @@
         },
         "tools": {
           "sdd_transition": "allow",
+          "sdd_lock_manager": "allow",
+          "sdd_stack_detector": "allow",
+          "sdd_router": "allow",
+          "sdd_git_awareness": "allow",
           "sdd_checkpoint": "allow",
           "sdd_compact_context": "allow",
           "sdd_context_pruner": "allow",
-          "gas_clasp_tools": "allow"
+          "sdd_clasp": "allow",
+          "sdd_session_features": "allow",
+          "sdd_free_port_finder": "allow"
         }
       }
     },
@@ -45,36 +61,64 @@
         },
         "tools": {
           "sdd_transition": "allow",
-          "sdd_generate_tree": "allow"
+          "sdd_lock_manager": "allow",
+          "sdd_stack_detector": "allow",
+          "sdd_generate_tree": "allow",
+          "sdd_git_awareness": "allow"
         }
       }
     },
     "sdd-planner": {
       "mode": "subagent",
-      "model": "deepseek/deepseek-v4-pro",
+      "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-planner.md}",
       "permission": {
+        "question": "allow",
         "edit": "allow",
-        "bash": "ask",
+        "bash": "allow",
         "lsp": "allow",
         "skill": {
           "*": "allow"
         },
         "tools": {
           "sdd_transition": "allow",
+          "sdd_lock_manager": "allow",
           "sdd_brain_sync": "allow",
           "sdd_requirement_tracker": "allow",
           "check_dependency_cooldown": "allow",
           "sdd_diff_impact_analyzer": "allow",
           "sdd_auto_api_mocker": "allow",
           "sdd_test_scaffold_generator": "allow",
-          "sdd_context_pruner": "allow"
+          "sdd_context_pruner": "allow",
+          "sdd_stack_detector": "allow",
+          "sdd_spec_reviewer": "allow",
+          "sdd_heroui_lookup": "allow",
+          "heroui-react_*": "allow"
+        }
+      }
+    },
+    "f2-red-test-writer": {
+      "mode": "subagent",
+      "model": "deepseek/deepseek-v4-flash",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/f2-red-test-writer.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "lsp": "allow",
+        "skill": {
+          "*": "allow"
+        },
+        "tools": {
+          "sdd_transition": "allow",
+          "sdd_lock_manager": "allow",
+          "sdd_test_runner": "allow",
+          "sdd_brain_sync": "allow"
         }
       }
     },
     "sdd-builder": {
       "mode": "subagent",
-      "model": "minimax-coding-plan/MiniMax-M2.7",
+      "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-builder.md}",
       "permission": {
         "edit": "allow",
@@ -85,21 +129,20 @@
         },
         "tools": {
           "sdd_transition": "allow",
-          "sdd_ui_auditor": "allow",
-          "sdd_secret_scanner": "allow",
-          "sdd_security_vulnerability_scanner": "allow",
-          "sdd_visual_regression_diff": "allow",
-          "sdd_auto_api_mocker": "allow",
-          "sdd_spec_compliance_linter": "allow",
-          "sdd_syntax_and_linter_auditor": "allow",
-          "gas_clasp_tools": "allow"
+          "sdd_lock_manager": "allow",
+          "sdd_linter": "allow",
+          "sdd_test_runner": "allow",
+          "sdd_git_awareness": "allow",
+          "sdd_dependency_installer": "allow",
+          "sdd_heroui_lookup": "allow",
+          "heroui-react_*": "allow"
         }
       }
     },
-    "sdd-tester": {
+    "f2-refactor-improver": {
       "mode": "subagent",
-      "model": "minimax-coding-plan/MiniMax-M2.7",
-      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-tester.md}",
+      "model": "deepseek/deepseek-v4-flash",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/f2-refactor-improver.md}",
       "permission": {
         "edit": "allow",
         "bash": "allow",
@@ -109,8 +152,35 @@
         },
         "tools": {
           "sdd_transition": "allow",
+          "sdd_lock_manager": "allow",
+          "sdd_test_runner": "allow",
+          "sdd_linter": "allow",
+          "sdd_brain_sync": "allow",
+          "sdd_heroui_lookup": "allow",
+          "heroui-react_*": "allow"
+        }
+      }
+    },
+    "sdd-tester": {
+      "mode": "subagent",
+      "model": "deepseek/deepseek-v4-flash",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-tester.md}",
+      "permission": {
+        "question": "allow",
+        "edit": "allow",
+        "bash": "allow",
+        "lsp": "allow",
+        "skill": {
+          "*": "allow"
+        },
+        "tools": {
+          "sdd_transition": "allow",
+          "sdd_lock_manager": "allow",
+          "sdd_linter": "allow",
           "sdd_ui_auditor": "allow",
           "sdd_spec_validator": "allow",
+          "sdd_spec_reviewer": "allow",
+          "sdd_spec_compliance_linter": "allow",
           "sdd_regression_detector": "allow",
           "sdd_bdd_tester": "allow",
           "sdd_requirement_tracker": "allow",
@@ -118,11 +188,34 @@
           "sdd_security_vulnerability_scanner": "allow",
           "sdd_visual_regression_diff": "allow",
           "sdd_performance_regress_profiler": "allow",
-          "sdd_auto_api_mocker": "allow",
-          "sdd_test_scaffold_generator": "allow",
-          "sdd_spec_compliance_linter": "allow",
+          "sdd_secret_scanner": "allow",
+          "sdd_test_runner": "allow",
           "sdd_sandbox_patcher": "allow",
-          "sdd_syntax_and_linter_auditor": "allow"
+          "sdd_dependency_installer": "allow",
+          "sdd_heroui_lookup": "allow",
+          "heroui-react_*": "allow"
+        }
+      }
+    },
+    "sdd-deployer": {
+      "mode": "subagent",
+      "model": "deepseek/deepseek-v4-flash",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-deployer.md}",
+      "permission": {
+        "bash": "allow",
+        "skill": {
+          "*": "allow"
+        },
+        "tools": {
+          "sdd_transition": "allow",
+          "sdd_lock_manager": "allow",
+          "sdd_clasp": "allow",
+          "sdd_git_awareness": "allow",
+          "sdd_dependency_installer": "allow",
+          "sdd_free_port_finder": "allow"
+        },
+        "write_file": {
+          "/tmp": "allow"
         }
       }
     },
@@ -140,24 +233,10 @@
         "tools": {
           "sdd_archive_and_commit": "allow",
           "sdd_transition": "allow",
+          "sdd_lock_manager": "allow",
           "sdd_brain_sync": "allow",
           "sdd_install_autoskills": "allow",
           "sdd_context_pruner": "allow"
-        }
-      }
-    },
-    "sdd-deployer": {
-      "mode": "subagent",
-      "model": "minimax-coding-plan/MiniMax-M2.7",
-      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-deployer.md}",
-      "permission": {
-        "bash": "allow",
-        "skill": {
-          "*": "allow"
-        },
-        "tools": {
-          "sdd_transition": "allow",
-          "gas_clasp_tools": "allow"
         }
       }
     },
@@ -171,6 +250,10 @@
         "lsp": "allow",
         "skill": {
           "*": "allow"
+        },
+        "tools": {
+          "sdd_lock_manager": "allow",
+          "sdd_git_awareness": "allow"
         }
       }
     },
@@ -184,6 +267,67 @@
         "lsp": "deny",
         "skill": {
           "*": "deny"
+        }
+      }
+    },
+    "aux-auditor": {
+      "mode": "subagent",
+      "model": "deepseek/deepseek-v4-flash",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-auditor.md}",
+      "permission": {
+        "edit": "deny",
+        "bash": "allow",
+        "lsp": "allow",
+        "skill": {
+          "*": "allow"
+        },
+        "tools": {
+          "sdd_linter": "allow",
+          "sdd_secret_scanner": "allow",
+          "sdd_security_vulnerability_scanner": "allow",
+          "sdd_lock_manager": "allow",
+          "sdd_brain_sync": "allow",
+          "sdd_brain_curator": "allow",
+          "sdd_git_awareness": "allow"
+        }
+      }
+    },
+    "aux-refactor": {
+      "mode": "subagent",
+      "model": "deepseek/deepseek-v4-flash",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-refactor.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "lsp": "allow",
+        "skill": {
+          "*": "allow"
+        },
+        "tools": {
+          "sdd_test_runner": "allow",
+          "sdd_linter": "allow",
+          "sdd_lock_manager": "allow",
+          "sdd_git_awareness": "allow",
+          "sdd_brain_sync": "allow",
+          "sdd_heroui_lookup": "allow",
+          "heroui-react_*": "allow"
+        }
+      }
+    },
+    "aux-explainer": {
+      "mode": "subagent",
+      "model": "deepseek/deepseek-v4-flash",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-explainer.md}",
+      "permission": {
+        "question": "allow",
+        "edit": "deny",
+        "bash": "deny",
+        "lsp": "allow",
+        "skill": {
+          "*": "allow"
+        },
+        "tools": {
+          "sdd_lock_manager": "allow"
         }
       }
     }

@@ -1,3 +1,8 @@
+---
+name: sdd-tree-generator
+description: Genera un árbol de estructura del proyecto en milisegundos sin costo de tokens.
+---
+
 # Skill: SDD Tree Generator
 
 Genera un árbol de estructura del proyecto en milisegundos sin costo de tokens.

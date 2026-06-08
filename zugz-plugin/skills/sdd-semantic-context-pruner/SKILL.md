@@ -1,3 +1,8 @@
+---
+name: sdd-semantic-context-pruner
+description: Define las reglas y heurísticas de ingeniería de prompts para recortar selectivamente el código irrelevante en las solicitudes al LLM.
+---
+
 # Skill: SDD Semantic Context Pruning
 
 Esta habilidad define las reglas y heurísticas de ingeniería de prompts para recortar selectivamente los cuerpos de las funciones y código irrelevante en las solicitudes al LLM. Esto reduce el consumo de tokens de entrada hasta en un 70% y mejora sustancialmente la precisión y velocidad de los agentes.

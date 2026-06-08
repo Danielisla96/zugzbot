@@ -1,0 +1,276 @@
+import { tool } from "@opencode-ai/plugin"
+import { execSync } from "child_process"
+import fs from "fs"
+import path from "path"
+
+function getWorkingGraphifyCommand(): string | null {
+  try {
+    execSync("which graphify", { stdio: "ignore" })
+    return "graphify"
+  } catch {}
+  
+  try {
+    execSync("graphify --help", { stdio: "ignore" })
+    return "graphify"
+  } catch {}
+
+  try {
+    execSync("python3 -m graphify --help", { stdio: "ignore" })
+    return "python3 -m graphify"
+  } catch {}
+
+  try {
+    execSync("python -m graphify --help", { stdio: "ignore" })
+    return "python -m graphify"
+  } catch {}
+
+  return null
+}
+
+export default tool({
+  description: "Administra, genera y consulta el Grafo de Conocimiento del proyecto usando Graphify. Permite obtener dependencias de componentes, imports y llamadas estructurales de forma local.",
+  args: {
+    action: tool.schema.enum(["run", "status", "query", "install"])
+      .describe("Acción a realizar: 'run' para generar/actualizar el grafo, 'status' para verificar si existe, 'query' para buscar dependencias, 'install' para instalar la CLI graphify (uv/pip)"),
+    query: tool.schema.string().optional()
+      .describe("Término de búsqueda, nombre de archivo o entidad (requerido para action='query')"),
+    installCommand: tool.schema.string().optional()
+      .describe("Comando explícito a ejecutar para instalar (requerido para action='install' con confirm=true). Ej: 'pip install --user graphifyy'"),
+    confirm: tool.schema.boolean().optional().default(false)
+      .describe("Confirmación explícita requerida para action='install'. Si falta, retorna el comando propuesto sin ejecutarlo.")
+  },
+  async execute(args, context) {
+    let projectRoot = context.worktree || context.directory || process.cwd()
+    if (projectRoot === "/") {
+      projectRoot = process.cwd()
+    }
+
+    const outputDir = path.join(projectRoot, "graphify-out")
+    const graphPath = path.join(outputDir, "graph.json")
+    const reportPath = path.join(outputDir, "GRAPH_REPORT.md")
+
+    const workingCmd = getWorkingGraphifyCommand()
+
+    if (args.action === "status") {
+      const installed = workingCmd !== null
+      const exists = fs.existsSync(graphPath)
+      let info = {}
+      if (exists) {
+        try {
+          const stats = fs.statSync(graphPath)
+          const data = JSON.parse(fs.readFileSync(graphPath, "utf-8"))
+          info = {
+            last_updated: stats.mtime.toISOString(),
+            size_bytes: stats.size,
+            nodes_count: Array.isArray(data.nodes) ? data.nodes.length : 0,
+            edges_count: Array.isArray(data.edges) ? data.edges.length : 0
+          }
+        } catch {}
+      }
+      return JSON.stringify({
+        status: "SUCCESS",
+        graphify_installed: installed,
+        working_command: workingCmd,
+        graph_exists: exists,
+        details: info,
+        install_instruction: installed ? undefined : "Puedes instalarlo con: pip install graphifyy o uv tool install graphifyy"
+      }, null, 2)
+    }
+
+    if (args.action === "run") {
+      if (!workingCmd) {
+        return JSON.stringify({
+          status: "FAILED",
+          reason: "La CLI 'graphify' no está instalada en el sistema. Para usar esta funcionalidad, instálala primero usando: pip install graphifyy o uv tool install graphifyy"
+        }, null, 2)
+      }
+
+      // Crear un .graphifyignore por defecto para evitar indexar carpetas basura
+      const ignorePath = path.join(projectRoot, ".graphifyignore")
+      if (!fs.existsSync(ignorePath)) {
+        const defaultIgnore = [
+          "node_modules/",
+          "dist/",
+          "build/",
+          "out/",
+          "coverage/",
+          ".git/",
+          ".opencode/",
+          ".openspec/",
+          "graphify-out/"
+        ].join("\n")
+        fs.writeFileSync(ignorePath, defaultIgnore, "utf-8")
+      }
+
+      try {
+        // Ejecutar graphify usando el comando detectado
+        execSync(workingCmd, { cwd: projectRoot, encoding: "utf-8" })
+        
+        const exists = fs.existsSync(graphPath)
+        if (!exists) {
+          return JSON.stringify({
+            status: "FAILED",
+            reason: `Se ejecutó ${workingCmd} pero no se generó el archivo graph.json esperado.`
+          }, null, 2)
+        }
+
+        return JSON.stringify({
+          status: "SUCCESS",
+          message: "Grafo de Conocimiento actualizado correctamente.",
+          output_directory: "graphify-out/",
+          report_generated: fs.existsSync(reportPath)
+        }, null, 2)
+      } catch (e: any) {
+        return JSON.stringify({
+          status: "FAILED",
+          reason: `Error al ejecutar ${workingCmd}: ${e.message || e}`
+        }, null, 2)
+      }
+    }
+
+    if (args.action === "install") {
+      if (workingCmd) {
+        return JSON.stringify({
+          status: "SUCCESS",
+          message: "graphify ya está instalado.",
+          working_command: workingCmd
+        }, null, 2)
+      }
+
+      const candidates: string[] = []
+      try { execSync("which uv", { stdio: "ignore" }); candidates.push("uv tool install graphifyy") } catch {}
+      try { execSync("which pipx", { stdio: "ignore" }); candidates.push("pipx install graphifyy") } catch {}
+      try { execSync("which pip3", { stdio: "ignore" }); candidates.push("pip3 install --user graphifyy") } catch {}
+      try { execSync("which pip", { stdio: "ignore" }); candidates.push("pip install --user graphifyy") } catch {}
+
+      if (candidates.length === 0) {
+        return JSON.stringify({
+          status: "FAILED",
+          reason: "No se encontró uv, pipx, pip3 ni pip en el sistema. Instala uno de ellos para usar graphifyy."
+        }, null, 2)
+      }
+
+      const preferred = args.installCommand && candidates.includes(args.installCommand)
+        ? args.installCommand
+        : candidates[0]
+
+      if (!args.confirm) {
+        return JSON.stringify({
+          status: "AWAITING_CONFIRMATION",
+          proposed_command: preferred,
+          candidates,
+          message: "graphify no está instalado. Re-llama con confirm=true e installCommand=<comando> para proceder."
+        }, null, 2)
+      }
+
+      try {
+        const output = execSync(preferred, { cwd: projectRoot, encoding: "utf-8", timeout: 180000 })
+        const refreshedCmd = getWorkingGraphifyCommand()
+        return JSON.stringify({
+          status: "SUCCESS",
+          message: "graphify instalado correctamente.",
+          command: preferred,
+          output: (output || "").split("\n").slice(0, 20).join("\n"),
+          working_command: refreshedCmd
+        }, null, 2)
+      } catch (e: any) {
+        return JSON.stringify({
+          status: "FAILED",
+          reason: `Error instalando graphify con '${preferred}': ${e?.message || e}`,
+          command: preferred
+        }, null, 2)
+      }
+    }
+
+    if (args.action === "query") {
+      if (!fs.existsSync(graphPath)) {
+        return JSON.stringify({
+          status: "FAILED",
+          reason: "El archivo graph.json no existe. Ejecuta primero la acción 'run' para generarlo."
+        }, null, 2)
+      }
+
+      if (!args.query) {
+        return JSON.stringify({
+          status: "FAILED",
+          reason: "Se requiere especificar un término de búsqueda en 'query'."
+        }, null, 2)
+      }
+
+      try {
+        const data = JSON.parse(fs.readFileSync(graphPath, "utf-8"))
+        const nodes: any[] = data.nodes || []
+        const edges: any[] = data.edges || []
+
+        const searchTerm = args.query.toLowerCase()
+        
+        // Buscar nodos coincidentes
+        const matchedNodes = nodes.filter((node: any) => {
+          return (
+            node.id?.toLowerCase().includes(searchTerm) ||
+            node.label?.toLowerCase().includes(searchTerm) ||
+            node.source_file?.toLowerCase().includes(searchTerm)
+          )
+        })
+
+        if (matchedNodes.length === 0) {
+          return JSON.stringify({
+            status: "SUCCESS",
+            message: `No se encontraron nodos que coincidan con '${args.query}'`,
+            results: []
+          }, null, 2)
+        }
+
+        const matchedNodeIds = new Set(matchedNodes.map((n: any) => n.id))
+
+        // Encontrar relaciones directas (entrantes y salientes)
+        const matchedEdges = edges.filter((edge: any) => {
+          return matchedNodeIds.has(edge.source) || matchedNodeIds.has(edge.target)
+        })
+
+        // Encontrar nodos conectados
+        const connectedNodeIds = new Set<string>()
+        matchedEdges.forEach((edge: any) => {
+          connectedNodeIds.add(edge.source)
+          connectedNodeIds.add(edge.target)
+        })
+
+        const relatedNodes = nodes.filter((node: any) => {
+          return connectedNodeIds.has(node.id) && !matchedNodeIds.has(node.id)
+        })
+
+        return JSON.stringify({
+          status: "SUCCESS",
+          query: args.query,
+          matched_nodes: matchedNodes.map((n: any) => ({
+            id: n.id,
+            label: n.label,
+            file_type: n.file_type,
+            source_file: n.source_file
+          })),
+          relations: matchedEdges.map((e: any) => ({
+            source: e.source,
+            target: e.target,
+            relation: e.relation
+          })),
+          connected_components: relatedNodes.map((n: any) => ({
+            id: n.id,
+            label: n.label,
+            file_type: n.file_type,
+            source_file: n.source_file
+          }))
+        }, null, 2)
+      } catch (e: any) {
+        return JSON.stringify({
+          status: "FAILED",
+          reason: `Error al consultar el grafo: ${e.message || e}`
+        }, null, 2)
+      }
+    }
+
+    return JSON.stringify({
+      status: "FAILED",
+      reason: `Acción '${args.action}' no reconocida.`
+    }, null, 2)
+  }
+})

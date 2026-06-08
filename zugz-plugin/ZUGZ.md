@@ -1,91 +1,113 @@
-# 🚀 Desarrollo Guiado por Especificaciones (SDD) con Zugzbot
+# 🚀 ZUGZ — Cheat Sheet v2.0.0
 
-Este repositorio utiliza **Zugzbot**, un arnés de desarrollo basado en un enjambre de 5 agentes autónomos de Inteligencia Artificial que operan bajo la metodología **Spec-Driven Development (SDD)** Simplificada.
-
-Esto garantiza cambios de código quirúrgicos, sin errores, con especificaciones técnicas claras y validación manual obligatoria antes de consolidar cambios.
+> Una pantalla. Para detalles, ver `README.md`.
 
 ---
 
-## ⚡ Instalación Rápida (One-Step Setup)
+## ⚡ 3 pasos para empezar
 
-Si acabas de clonar este repositorio y quieres activar el arnés en tu máquina, sigue estos sencillos pasos:
-
-### 1. Requisitos Previos
-Debes tener instalado **OpenCode** (la terminal interactiva de IA). Si no la tienes, instálala ejecutando:
 ```bash
-npm install -g @opencode-ai/cli
+cd tu-proyecto
+npm install zugzbot-sdd@latest && npx zugzbot
+opencode .
 ```
 
-### 2. Hidratar el Arnés
-Ejecuta el instalador apuntando a la raíz de este proyecto. Puedes hacerlo de dos formas:
-
-* **Opción A (Desde tu repositorio local de Zugzbot):**
-  ```bash
-  /ruta/a/tu/zugzbot/zugz-plugin/install-plugin.sh .
-  ```
-* **Opción B (Mediante descarga directa rápida desde GitHub):**
-  Puedes descargar y ejecutar el instalador directamente desde la rama principal (`main`):
-  ```bash
-  rm -rf /tmp/zugzbot \
-    && git clone --depth=1 --branch main https://github.com/Danielisla96/zugzbot.git /tmp/zugzbot \
-    && /tmp/zugzbot/zugz-plugin/install-plugin.sh "$(pwd)" \
-    && rm -rf /tmp/zugzbot
-  ```
-
-Este comando:
-1. Creará tu directorio local oculto `.opencode/` con todo el motor de agentes y herramientas.
-2. Configurará tu cargador local de interfaz `tui.json`.
-3. Configurará automáticamente tu archivo `.gitignore` local para no subir archivos basura a Git.
-4. Instalará las dependencias necesarias de forma totalmente aislada.
+> 🆕 Al lanzar la primera sesión, `@zugzbot` te preguntará si quieres habilitar **autoskills** (descarga Design Skills desde el registry npm) y **graphify** (genera un Grafo de Conocimiento del proyecto). La decisión se persiste en `.openspec/sdd-lock.json` y puedes reconfigurarla con "configurar features" en cualquier momento.
 
 ---
 
-## 🔄 Flujo de Trabajo Diario (Ciclo SDD de 4 Fases)
+## 🎯 6 workflows (dile a @zugzbot)
 
-Para realizar cualquier modificación de código, arreglo de bug o agregar una nueva característica:
-
-1. **Abre OpenCode en la raíz del proyecto:**
-   ```bash
-   opencode
-   ```
-2. **Habla con `@zugzbot`** indicándole tu requerimiento.
-3. **Sigue las fases automatizadas del Swarm:**
-
-| Fase | Agente Activo | Tu Rol (Compañero Humano) |
-| :--- | :--- | :--- |
-| **F1: Planificación** | `@sdd-planner` | **Responder la encuesta consolidada** de 3-5 preguntas concretas. Dar el visto bueno a la especificación técnica en `.openspec/changes/.../specs/spec.md`. |
-| **F2: Construcción** | `@sdd-builder` | Esperar el despliegue automático del código. **Hacer QA manual** en caliente y dar tu feedback o visto bueno definitivo. |
-| **F3: Calidad** | `@sdd-tester` | Observar el reporte de validación estática y auditoría visual de DOM (`verification_report.md`). |
-| **F4: Cierre** | `@sdd-archiver` | Revisar el mensaje de Git sugerido, confirmar el bump de versión y consolidar el cambio a tu rama Git. |
+| Di... | Workflow | Agente |
+|---|---|---|
+| "agrega X", "implementa Y", "el bug es Z" | `full-sdd-tdd` | F0→F5 (ciclo completo) |
+| "arregla typo", "renombra", "bump versión" | `quick-fix` | `@aux-handyman` (≤3 archivos) |
+| "audita", "qué deuda técnica hay" | `audit` | `@aux-auditor` (read-only) |
+| "refactoriza", "limpia", "simplifica" | `refactor` | `@aux-refactor` (con tests) |
+| "explícame qué hace este archivo" | `explain` | `@aux-explainer` (read-only) |
+| "qué es un closure", "diferencia X vs Y" | `oracle` | `@aux-oracle` (teoría) |
 
 ---
 
-## 📂 Anatomía de Archivos (Compartidos vs Locales)
+## 🔄 Ciclo `full-sdd-tdd` (las 11 estaciones)
 
-Para mantener el repositorio host impecable y evitar subir archivos temporales de tu espacio de trabajo local, la estructura está dividida estrictamente:
+```
+F0 → F1 → F1.5 → HIL-A → F2-RED → F2-GREEN → F2-REFACTOR → F3 → F4(opt) → HIL-B → F5
+                            ↑                                          ↑
+                       Tú apruebas                              Tú validas QA
+```
 
-### 🟢 Archivos de Equipo (Se suben a Git - Versión Controlada)
-* `AGENTS.md`: Las directrices globales de IA y las convenciones del repositorio.
-* `opencode.json`: Declaración de agentes y permisos generales del equipo.
-* `.openspec/changes/`: El registro histórico de todas las especificaciones y reportes técnicos creados.
-* `.openspec/brain.md`: La base de conocimiento técnico acumulado del proyecto.
-
-### 🔴 Archivos Personales (Ignorados por `.gitignore` - Locales)
-* `.opencode/`: Todo el código motor del arnés de agentes, herramientas y node_modules locales.
-* `tui.json`: Archivo de configuración visual que enlaza el plugin TUI del desarrollador.
-* `.openspec/sdd-lock.json`: El archivo candado que bloquea y registra la fase activa del ciclo actual en tu máquina.
+| Fase | Quién hace | Tú |
+|---|---|---|
+| F0 | `@sdd-explorer` detecta stack | – |
+| F1 | `@sdd-planner` redacta `spec.md` (BDD) | Respondes 3-5 preguntas |
+| F1.5 | Spec reviewer valida testeabilidad | – |
+| **HIL-A** | – | **Aprobar / Rechazar / Pausar** |
+| F2-RED | `@f2-red-test-writer` escribe tests rojos | – |
+| F2-GREEN | `@sdd-builder` mínimo viable | – |
+| F2-REFACTOR | `@f2-refactor-improver` limpia | – |
+| F3 | `@sdd-tester` 15 validadores | – |
+| F4 | `@sdd-deployer` deploy a dev (opt) | – |
+| **HIL-B** | – | **Aprobar / Issues / Rollback** |
+| F5 | `@sdd-archiver` bump + commit + archive | – |
 
 ---
 
-## 🛠️ Personalización de Modelos
+## 🚦 HIL (formato A/B/C siempre)
 
-Por defecto, el swarm viene preconfigurado con un modelo ultra-rápido y eficiente (`gemini-3.5-flash`). Si necesitas cambiar los modelos para tu sesión local (por ejemplo, para usar Claude Sonnet o GPT-5 en tareas complejas):
+**HIL-A** (post-F1.5): `[A] ✅ Aprobar` / `[B] ❌ Rechazar` / `[C] ⏸ Pausar`
+**HIL-B** (post-F4): `[A] ✅ Aprobar` / `[B] 🐛 Issues` / `[C] ⏪ Rollback`
 
-1. **Abre `.opencode/agents/[agente].md`** correspondiente.
-2. Modifica el campo `model` en el encabezado (frontmatter):
-   ```markdown
-   ---
-   model: anthropic/claude-sonnet-4.5
-   ---
-   ```
-Al estar `.opencode/` en el `.gitignore`, **esta personalización de modelos se mantendrá local en tu máquina** y no afectará el presupuesto ni la configuración del resto del equipo.
+---
+
+## 🔁 Reanudar (amnesia cero)
+
+Cierra OpenCode. Vuelve otro día. Di lo que sea. `@zugzbot` lee `.openspec/sdd-lock.json` y continúa donde quedaste.
+
+---
+
+## ⚙️ Cambiar modelos por agente
+
+Edita `zugz-models.json` y re-ejecuta `npx zugzbot`:
+
+```json
+{
+  "default": "google/gemini-2.5-pro",
+  "agents": {
+    "zugzbot": "anthropic/claude-sonnet-4.5",
+    "sdd-explorer": "openai/gpt-5"
+  }
+}
+```
+
+---
+
+## 🌍 8 stacks auto-detectados
+
+Node/TS · Node/JS · Python · Go · Rust · Java · Google Apps Script · Static Site
+
+---
+
+## 🧠 TDD en 3 pasos
+
+```
+1. RED     → test que FALLA
+2. GREEN   → mínimo código que PASA
+3. REFACTOR → limpiar, tests siguen VERDES
+```
+
+El lockfile rechaza transiciones inválidas. **No hay atajos**.
+
+---
+
+## 🛠️ Validar el arnés (dev)
+
+```bash
+npx tsc         # 0 errores
+npx eslint .    # 0 errores
+npx vitest run  # 100+ tests (incluye los nuevos de session_features)
+```
+
+---
+
+## 📄 MIT © Danielisla96

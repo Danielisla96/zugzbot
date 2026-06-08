@@ -1,0 +1,53 @@
+{
+  "id": "gas",
+  "display_name": "Google Apps Script (clasp)",
+  "detect": {
+    "files_any": [".clasp.json", "appsscript.json"],
+    "files_any_deep": []
+  },
+  "test_runners": [
+    { "name": "gas-local-mock", "cmd": "node tools/run_gas_tests.js", "detect": "tools/run_gas_tests.js" },
+    { "name": "clasp-test", "cmd": "npx clasp run --nondev 'test()'", "detect": null }
+  ],
+  "linters": [
+    { "name": "eslint-gas", "cmd": "npx eslint .", "detect": ".eslintrc*" }
+  ],
+  "formatters": [
+    { "name": "prettier", "cmd": "npx prettier --write .", "detect": ".prettierrc*" }
+  ],
+  "deploy": {
+    "kind": "clasp",
+    "clasp_action": "push",
+    "build_cmd": "npx clasp push",
+    "publish_cmd": "npx clasp deploy"
+  },
+  "skip_tools": [],
+  "required_tools": [
+    "sdd_clasp",
+    "sdd_linter",
+    "sdd_test_runner",
+    "sdd_git_awareness",
+    "sdd_lock_manager",
+    "sdd_auto_api_mocker"
+  ],
+  "conventions": {
+    "test_dir": "tests",
+    "test_unit_dir": "tests/unit",
+    "test_integration_dir": "tests/integration",
+    "source_dir": "src",
+    "version_file": "appsscript.json"
+  },
+  "globals_to_mock": [
+    "SpreadsheetApp",
+    "DocumentApp",
+    "SlidesApp",
+    "FormApp",
+    "GmailApp",
+    "DriveApp",
+    "CalendarApp",
+    "UrlFetchApp",
+    "PropertiesService",
+    "ScriptApp",
+    "HtmlService"
+  ]
+}

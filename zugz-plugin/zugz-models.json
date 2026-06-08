@@ -3,13 +3,18 @@
   "agents": {
     "zugzbot": "deepseek/deepseek-v4-pro",
     "sdd-explorer": "deepseek/deepseek-v4-flash",
-    "sdd-planner": "deepseek/deepseek-v4-pro",
-    "sdd-builder": "minimax-coding-plan/MiniMax-M2.7",
-    "sdd-tester": "minimax-coding-plan/MiniMax-M2.7",
-    "sdd-deployer": "minimax-coding-plan/MiniMax-M2.7",
+    "sdd-planner": "deepseek/deepseek-v4-flash",
+    "sdd-builder": "deepseek/deepseek-v4-flash",
+    "sdd-tester": "deepseek/deepseek-v4-flash",
+    "sdd-deployer": "deepseek/deepseek-v4-flash",
     "sdd-archiver": "deepseek/deepseek-v4-flash",
+    "f2-red-test-writer": "deepseek/deepseek-v4-flash",
+    "f2-refactor-improver": "deepseek/deepseek-v4-flash",
     "aux-handyman": "deepseek/deepseek-v4-flash",
-    "aux-oracle": "deepseek/deepseek-v4-flash"
+    "aux-oracle": "deepseek/deepseek-v4-flash",
+    "aux-auditor": "deepseek/deepseek-v4-flash",
+    "aux-refactor": "deepseek/deepseek-v4-flash",
+    "aux-explainer": "deepseek/deepseek-v4-flash"
   },
   "default": "deepseek/deepseek-v4-flash"
 }

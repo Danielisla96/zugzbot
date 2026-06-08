@@ -1,178 +1,162 @@
-# 🤖 Zugzbot — Arnés SDD Multi-Agente para OpenCode
+# 🤖 Zugzbot v2.0.0 — Arnés SDD Multi-Agente Agnóstico al Stack
 
 > [!IMPORTANT]
-> **Zugzbot** es un arnés de orquestación industrial basado en **Spec-Driven Development (SDD) Simplificado** para [OpenCode](https://opencode.ai). Estructura el ciclo de vida del desarrollo de software en **6 fases secuenciales (F0 a F5)**, garantizando que ningún modelo de IA escriba código de producción sin planificación previa, revisión humana interactiva, validación estática de calidad y cierre documentado en Git.
+> **Zugzbot v2.0.0** es un potente arnés de orquestación para [OpenCode](https://opencode.ai) que implementa **Spec-Driven Development (SDD) con TDD puro (Red → Green → Refactor)**. Tú le dices QUÉ quieres en lenguaje natural; el sistema clasifica tu pedido, monta un equipo de subagentes especializados, ejecuta el ciclo de 11 fases, y te entrega un cambio versionado con commit semántico. **Tú solo apruebas en 2 momentos** (HIL-A y HIL-B); el resto es coreografía determinista.
 
 ---
 
-## 🧠 Filosofía: SDD Simplificado de 6 Fases
+## 📸 Interfaz Visual y TUI
 
-**Ningún agente toca código sin un plan aprobado.** El ciclo SDD de Zugzbot se compone de 6 hitos estructurados donde 6 agentes especializados se pasan el control entre sí de forma atómica:
+El plugin incluye una interfaz gráfica de Terminal (TUI) integrada directamente en OpenCode para que visualices el estado actual del ciclo SDD en tiempo real:
 
-```mermaid
-flowchart TD
-    classDef phase fill:#141724,stroke:#38bdf8,color:#f8fafc,stroke-width:1.5px
-    classDef user  fill:#1d1b30,stroke:#b175ff,color:#f3ebff,stroke-width:1.5px
-    classDef hil   fill:#2b161d,stroke:#fbbf24,color:#fff,stroke-width:1.5px
-
-    U1(["👤 Usuario pide feature"]):::user
-    F0["🔭 F0\nDiagnóstico\n@sdd-explorer"]:::phase
-    F1["📝 F1\nPlanificación\n@sdd-planner"]:::phase
-    HIL1{{"✋ Hito A\n¿Apruebas el Plan?"}}:::hil
-    F2["💻 F2\nConstrucción\n@sdd-builder"]:::phase
-    F3["🧪 F3\nValidación\n@sdd-tester"]:::phase
-    F4["📦 F4\nDeploy\n@sdd-deployer"]:::phase
-    HIL2{{"✋ Hito B\n¿Conforme con QA?"}}:::hil
-    F5["🏛️ F5\nCierre y Archive\n@sdd-archiver"]:::phase
-    U2(["🎉 Feature cerrada en Git"]):::user
-
-    U1 --> F0 --> F1 --> HIL1
-    HIL1 -- "Sí" --> F2 --> F3 --> F4 --> HIL2
-    HIL1 -- "No" --> F1
-    HIL2 -- "Sí" --> F5 --> U2
-    HIL2 -- "Detalles" --> F3
-```
-
-> [!NOTE]
-> La **Fase 0** se ejecuta **solo una vez por proyecto** (si `.openspec/diagnostics.md` no existe) para mapear el stack del repositorio. En ciclos posteriores de desarrollo, `@zugzbot` salta directamente a la Fase 1.
+| Pantalla de Inicio | Panel de Conversación y TUI Activo |
+| :---: | :---: |
+| ![OpenCode Main](docs/images/opencode_main.png) | ![OpenCode Chat TUI](docs/images/opencode_chat.png) |
 
 ---
 
-## 🤖 Elenco de Agentes y Roles Técnicos
-
-### Agentes del Ciclo Core SDD
-
-| Agente | Rol | Fase | Entregable principal |
-|:---|:---|:---:|:---|
-| **`zugzbot`** | **Orquestador Maestro** — coordina la metodología, delega a subagentes, fiscaliza sus límites y gestiona las pausas de visto bueno humano (HIL). | Permanente | Roadmap de 6 fases y delegaciones rápidas. |
-| **`sdd-explorer`** | **Diagnosticador e Indexador** — escanea la base de código, ejecuta análisis automáticos de habilidades y genera el mapa técnico del stack. | **F0** | `.openspec/diagnostics.md` + `skills_manifest.md` |
-| **`sdd-planner`** | **Planificador e Interrogador** — realiza una encuesta consolidada de 3-5 preguntas concretas y redacta la especificación técnica en formato BDD. | **F1** | `.openspec/changes/<change-name>/specs/spec.md` |
-| **`sdd-builder`** | **Constructor Lógico y Estético** — implementa el código en base a las especificaciones y asegura interfaces estéticamente modernas y balanceadas. | **F2** | Código funcional modificado de manera quirúrgica. |
-| **`sdd-tester`** | **Control de Calidad y Pruebas** — ejecuta las suites de tests automatizados de forma nativa y valida el balanceo de etiquetas de marcado (HTML/JSX). | **F3** | `.openspec/changes/<change-name>/validation_report.md` |
-| **`sdd-archiver`** | **Especialista de Cierre** — realiza el bump de versión del proyecto, consolida el CHANGELOG, prepara el commit semántico y archiva la carpeta del cambio. | **F4** | `commit_message.txt` y carpeta de cambio archivada. |
-
-### Agentes Auxiliares fuera del Ciclo Core
-
-| Agente | Rol | Limitación |
-|:---|:---|:---|
-| **`aux-oracle`** | Consultas conceptuales, arquitectura de sistemas y dudas sobre el código sin alterar archivos. | Edición y bash denegados. |
-| **`aux-handyman`** | Parches atómicos rápidos o correcciones menores que involucren un máximo de 3 archivos sin necesidad de abrir un ciclo SDD completo. | Limitado a ediciones pequeñas. |
-
----
-
-## 📂 Anatomía de Archivos (Compartidos vs Locales)
-
-```
-tu-proyecto/
-├── .gitignore             # Archivos locales ignorados
-├── AGENTS.md              # 🟢 Compartido: Reglamento y convenciones globales
-├── ZUGZ.md                # 🟢 Compartido: Manual de inducción rápida
-├── opencode.json          # 🟢 Compartido: Declaración de agentes y permisos
-├── tui.json               # 🔴 Local: Cargador visual del plugin TUI
-├── .opencode/             # 🔴 Local: Motor del arnés, herramientas, skills
-│   ├── tools/            # Herramientas CLI del arnés
-│   ├── plugins/          # Plugins del arnés
-│   └── agents/           # Prompts de agentes
-└── .openspec/
-    ├── brain.md           # 🟢 Compartido: Base de conocimiento técnico
-    ├── prompt_base.md     # 🟢 Compartido: Directrices de comportamiento
-    ├── sdd-lock.json      # 🔴 Local: Estado y fase activa del ciclo
-    └── changes/           # 🟢 Compartido: Historial de especificaciones
-        └── <change-name>/
-            ├── specs/spec.md
-            └── verification_report.md
-```
-
----
-
-## 🛠️ Utilidad CLI Local (`sdd`)
+## 🚀 Quickstart (3 pasos)
 
 ```bash
-# Ver el estado del ciclo activo
-./sdd status
+# 1) Instalar el arnés en tu proyecto
+cd mi-proyecto
+npm install zugzbot-sdd@latest
+npx zugzbot-sdd@latest   # Ejecuta el validador y bootstrapea .openspec/ y .opencode/
 
-# Auditar estructuralmente las especificaciones BDD
-./sdd validate
+# 2) Abrir OpenCode y hablarle
+opencode .
+# En el chat: @zugzbot "agrega un endpoint POST /api/logout que invalide JWT"
 
-# Ejecutar suites de tests del proyecto
-./sdd test
+# 3) Aprobar cuando te pregunte (2 momentos: HIL-A y HIL-B)
+```
 
-# Auditar sintaxis del linter y auditoria HTML
-./sdd lint
+No hay paso 4. **`@zugzbot`** hace el resto.
 
-# Limpiar logs y reiniciar el ciclo a Fase 0
-./sdd clean
+---
 
-# Descartar modificaciones locales y regresar al checkpoint
-./sdd rollback
+## 🧠 Cómo funciona (la mecánica)
 
-# Cambiar perfil de modelos (free / balanced / turbo)
-./sdd models preset turbo
+El arnés tiene 4 piezas que interactúan entre sí en cada turno:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  👤 TÚ escribes en lenguaje natural                          │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+               ┌──────────────────────┐
+               │  @zugzbot (router)   │  ← ÚNICO con mode: primary
+               │  Clasifica tu intent │
+               └──────────┬───────────┘
+                         │ delega vía "task" permission
+         ┌────────────────┼────────────────┬──────────────┐
+         ▼                ▼                ▼              ▼
+    @sdd-explorer   @sdd-builder     @aux-auditor   @aux-oracle
+    (F0: detectar)  (F2: codear)     (audit)        (teoría)
+         │                │                │              │
+         └────────────────┴────────────────┴──────────────┘
+                         │
+                         ▼
+               ┌──────────────────────┐
+               │  .openspec/          │  ← Única fuente de verdad
+               │  sdd-lock.json       │     entre turnos (v7)
+               └──────────────────────┘
+```
+
+### Los 4 componentes clave
+
+| Componente | Qué hace | Dónde vive |
+|---|---|---|
+| **`@zugzbot`** (router) | Clasifica tu prompt en uno de 6 workflows, lee el lockfile, delega al subagente correcto, fiscaliza transiciones y HIL. | `agents/zugzbot.md` (modo `primary`) |
+| **Subagentes** (14 total) | Cada uno hace UN trabajo: detectar el stack, escribir tests, implementar código mínimo, validar lints/seguridad, etc. SRP estricto. | `agents/sdd-*.md`, `agents/f*.md`, `agents/aux-*.md` |
+| **Lockfile (v7)** | Estado completo del ciclo activo: fase actual, stack detectado, TDD progress, rama git, tareas y design system seleccionado. Única vía de saber "dónde quedé". | `.openspec/sdd-lock.json` |
+| **Tools SRP** (34) | Herramientas atómicas compiladas: `sdd_transition`, `sdd_lock_manager` (con persistencia v7), `sdd_test_runner` (correr tests), `sdd_linter`, etc. | `tools/*.ts` + `.opencode/tools/*.js` |
+
+---
+
+## 📥 Diagnóstico Automático del Sistema (Pre-instalación)
+
+Al ejecutar `npx zugzbot-sdd@latest`, el instalador realiza una validación exhaustiva de tu entorno de desarrollo para asegurarse de que todo funcione de manera óptima:
+
+* **Node.js:** Valida que sea versión `>= v18.0.0` (Requerido).
+* **Git:** Requerido para la gestión de snapshots y control de versiones TDD.
+* **OpenCode CLI:** Requerido para la orquestación e invocación de subagentes.
+* **Docker:** Opcional recomendado para el levantamiento de bases de datos y contenedores en dev.
+* **Python / Go / Rust:** Detecta toolchains de compilación instalados para adaptar los agentes.
+
+---
+
+## 🎨 Catalog de Design Systems (11 Opciones con HeroUI)
+
+El skill `sdd-design-system` permite maquetar vistas de frontend alineadas estrictamente a un catálogo de diseño listo para usar:
+
+| # | Slug | Nombre | Path (relativo al proyecto) | Primary | Vibe / Estilo |
+|---|---|---|---|---|---|
+| 1 | airbnb | Airbnb | `.opencode/design/DESIGN-airbnb.md` | `#ff385c` | Marketplace cálido, pill-shaped, fotos primero |
+| 2 | apple | Apple | `.opencode/design/DESIGN-apple.md` | `#0066cc` | Minimal premium, monochrome, edge-to-edge |
+| 3 | **heroui** | **HeroUI** | `.opencode/design/DESIGN-heroui.md` | `#006fee` | Limpio moderno, Tailwind CSS, componentes vivos y vibrantes |
+| 4 | meta | Meta | `.opencode/design/DESIGN-meta.md` | `#0064e0` | Utility-first, blue brand, hairline borders, dual-CTA |
+| 5 | nike | Nike | `.opencode/design/DESIGN-nike.md` | `#111111` | Bold sports, black/white, Futura uppercase, editorial |
+| 6 | notion | Notion | `.opencode/design/DESIGN-notion.md` | `#0075de` | Editorial productivity, off-white canvas, Inter, stickers |
+| 7 | renault | Renault | `.opencode/design/DESIGN-renault.md` | Sunlight Yellow | Automotive, dark, NouvelR display, diamond mark |
+| 8 | theverge | The Verge | `.opencode/design/DESIGN-theverge.md` | `#3cffd0` | Editorial tech media, dark, oversized headlines, timeline |
+| 9 | uber | Uber | `.opencode/design/DESIGN-uber.md` | `#000000` | Clean utilitarian, black/white, geometric sans, full-pill |
+| 10 | voltagent | Voltagent | `.opencode/design/DESIGN-voltagent.md` | `#00d992` | Devtool, near-black canvas, mono accents, code-mock |
+| 11 | x.ai | xAI | `.opencode/design/DESIGN-x.ai.md` | `#ffffff` | AI brand, near-black canvas, geometric sans, cosmic |
+
+### Cómo seleccionar el Design System:
+- **Mención explícita:** `/front crear dashboard estilo HeroUI` (carga automáticamente).
+- **Interactive Picker:** Si no se menciona ninguno, se te presentará un menú numerado (HeroUI es la opción `3`).
+- **En el Lockfile:** Establece `"active_design_system": "heroui"` en tu `.openspec/sdd-lock.json`.
+
+---
+
+## 💳 Telemetría y Tiempos de Ejecución (`token_usage.md`)
+
+Al finalizar con éxito un ciclo F5 (Archive), el agente genera un reporte completo de coste de tokens en `.openspec/changes/archive/<cambio>/token_usage.md`:
+* **Duración de Ejecución:** Muestra exactamente cuántos segundos tardó cada agente y subagente en ejecutar sus tareas (obtenido en tiempo real desde la base de datos de OpenCode).
+* **Coste total de tokens:** Desglosado por tokens de entrada, salida y costo financiero en USD.
+* **Modelos involucrados:** Registra qué modelos respondieron durante el ciclo.
+
+---
+
+## ⚙️ Personalización de Modelos de IA (`zugz-models.json`)
+
+Cada desarrollador puede configurar sus propios modelos preferidos para los subagentes del enjambre sin alterar el repositorio central. 
+1. Edita el archivo `zugz-models.json` en la raíz de tu proyecto.
+2. Ejecuta `npx zugzbot-sdd@latest` para aplicar y sincronizar automáticamente las preferencias con `opencode.json`.
+
+```json
+{
+  "default": "deepseek/deepseek-v4-flash",
+  "agents": {
+    "zugzbot": "deepseek/deepseek-v4-pro",
+    "sdd-builder": "openai/gpt-4o",
+    "sdd-tester": "anthropic/claude-3-5-sonnet"
+  }
+}
 ```
 
 ---
 
-## 🔌 Monitor SDD en Tiempo Real (TUI Plugin)
+## 🚦 Cuándo me preguntará @zugzbot (los 2 HIL)
 
-El plugin `plugin_tui.tsx` inyecta un panel reactivo en el sidebar lateral de OpenCode (activable con la tecla **`b`**), permitiendo visualizar:
-* Un logo interactivo de ZUGZ con efectos estéticos degradados en naranja.
-* La barra de porcentaje y el estado de progreso de las **6 fases (F0-F5)** del ciclo activo.
-* El registro en tiempo real de las últimas transiciones y las tareas pendientes con su respectivo check.
+Solo en **2 momentos** del ciclo `full-sdd-tdd` se requiere tu aprobación. El resto es automático.
+
+### HIL-A (después de F1.5, antes de empezar a codear)
+El spec BDD está listo y pasó las validaciones de testeabilidad. Eliges aprobar para comenzar el TDD (F2-RED).
+
+### HIL-B (después de F4, antes de cerrar el ciclo)
+El deploy y las pruebas de regresión pasaron en dev. Revisas los resultados y apruebas el archivo del cambio a producción (F5).
 
 ---
 
-## 📦 Instalación en tu Proyecto (One-Step Setup)
+## 🧪 Validación del arnés (Desarrollo)
 
 ```bash
-rm -rf /tmp/zugzbot \
-  && git clone --depth=1 --branch main https://github.com/Danielisla96/zugzbot.git /tmp/zugzbot \
-  && /tmp/zugzbot/zugz-plugin/install-plugin.sh "$(pwd)" \
-  && rm -rf /tmp/zugzbot
+npm run build   # Compila TypeScript a .opencode/tools/
+npm test        # Corre los 291 tests de integración y unitarios
 ```
-
-### ¿Qué hace el instalador?
-1. Valida entorno (Node.js, Git, Bun/NPM).
-2. Copia el motor de agentes en `.opencode/`.
-3. Crea archivos compartidos (`AGENTS.md`, `ZUGZ.md`, `opencode.json`).
-4. Inyecta reglas en `.gitignore` para archivos locales.
-5. Instala dependencias aisladas.
-
----
-
-## 🤝 Contribuir al Arnés (Modo Desarrollo)
-
-1. Haz fork de este repositorio.
-2. Clona tu fork y ejecuta:
-   ```bash
-   ./zugz-plugin/install-plugin.sh
-   ```
-   *Esto crea symlinks en lugar de copiar, permitiendo desarrollo en tiempo real.*
-3. Corre `bun install` o `npm install` en la raíz.
-4. Envía un Pull Request con la especificación del cambio.
-
----
-
-## ⚙️ Modelo Oficial
-
-El modelo oficial del arnés es **`minimax-coding-plan/MiniMax-M2.7`**.
-
-Para cambiar modelos, edita el campo `model` en cada archivo de agente en `.opencode/agents/` o usa los presets en `zugz-models.json`.
-
-| Preset | Descripción |
-|:---|:---|
-| **default** | MiniMax-M2.7 para todos los agentes |
-| **free** | DeepSeek V4 Flash gratuito |
-| **balanced** | Gemini 3.5 Flash |
-| **turbo** | Claude 3.5 Sonnet para builder, Gemini para el resto |
-
----
-
-## 📋 Convenciones de Desarrollo
-
-1. **Fase 0 solo una vez**: El diagnóstico se realiza cuando `.openspec/diagnostics.md` no existe.
-2. **Carga perezosa**: Los agentes leen archivos solo bajo demanda (on a need-to-know basis).
-3. **QA Manual primero**: El usuario valida en caliente antes del cierre automático.
-4. **Tests de regresión**: Solo se ejecutan si existen en el proyecto (no se crean mocks).
 
 ---
 

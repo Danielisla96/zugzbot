@@ -3,7 +3,8 @@ import fs from "fs"
 import path from "path"
 import { execSync } from "child_process"
 import sddInstallAutoskills from "./sdd_install_autoskills"
-import { BrainEntry, parseEntries, today, nextId, buildFullBrain, buildIndex, buildEntryBlock, readBrainFile } from "./brain-utils.js"
+import { readSessionFeatures } from "./sdd_lock_manager.js"
+import { BrainEntry, today, nextId, buildFullBrain, readBrainFile } from "./brain-utils.js"
 
 function bumpVersion(version: string, type: "major" | "minor" | "patch"): string {
   const parts = version.split(".").map(x => parseInt(x, 10))
@@ -34,6 +35,136 @@ function moveRecursive(src: string, dest: string) {
   }
 }
 
+export function autoUpdateGitignore(projectRoot: string, report: string[]) {
+  const gitignorePath = path.join(projectRoot, ".gitignore")
+  let currentRules: string[] = []
+  
+  if (fs.existsSync(gitignorePath)) {
+    try {
+      currentRules = fs.readFileSync(gitignorePath, "utf-8")
+        .split("\n")
+        .map(line => line.trim())
+        .filter(line => line && !line.startsWith("#"))
+    } catch {}
+  }
+
+  let untrackedLines: string[] = []
+  try {
+    const stdout = execSync("git status --porcelain", { cwd: projectRoot, encoding: "utf-8" })
+    untrackedLines = stdout.split("\n")
+      .filter(line => line.startsWith("?? "))
+      .map(line => line.substring(3).trim())
+  } catch (err) {
+    return
+  }
+
+  if (untrackedLines.length === 0) return
+
+  const rules = [
+    { test: /(^|\/)\.DS_Store$/, pattern: ".DS_Store" },
+    { test: /(^|\/)node_modules\/?$/, pattern: "node_modules/" },
+    { test: /(^|\/)dist\/?$/, pattern: "dist/" },
+    { test: /(^|\/)build\/?$/, pattern: "build/" },
+    { test: /(^|\/)out\/?$/, pattern: "out/" },
+    { test: /(^|\/)target\/?$/, pattern: "target/" },
+    { test: /(^|\/)coverage\/?$/, pattern: "coverage/" },
+    { test: /(^|\/)\.nyc_output\/?$/, pattern: ".nyc_output/" },
+    { test: /\.log$/, pattern: "*.log" },
+    { test: /\.tmp$/, pattern: "*.tmp" },
+    { test: /\.temp$/, pattern: "*.temp" },
+    { test: /(^|\/)\.env(\..+)?$/, pattern: ".env\n.env.*\n.env.local" },
+    { test: /(^|\/)__pycache__\/?$/, pattern: "__pycache__/" },
+    { test: /\.py[cod]$/, pattern: "*.py[cod]" },
+    { test: /(^|\/)\.venv\/?$/, pattern: ".venv/" },
+    { test: /(^|\/)venv\/?$/, pattern: "venv/" },
+    { test: /(^|\/)env\/?$/, pattern: "env/" },
+    { test: /(^|\/)\.pytest_cache\/?$/, pattern: ".pytest_cache/" },
+    { test: /(^|\/)\.ruff_cache\/?$/, pattern: ".ruff_cache/" },
+    { test: /\.pem$/, pattern: "*.pem" },
+    { test: /\.key$/, pattern: "*.key" },
+    { test: /\.eslintcache$/, pattern: ".eslintcache" },
+    { test: /\.tsbuildinfo$/, pattern: "*.tsbuildinfo" },
+    { test: /(^|\/)\.parcel-cache\/?$/, pattern: ".parcel-cache/" },
+    { test: /(^|\/)\.next\/?$/, pattern: ".next/" },
+    { test: /(^|\/)\.nuxt\/?$/, pattern: ".nuxt/" },
+    { test: /(^|\/)\.turbo\/?$/, pattern: ".turbo/" },
+    { test: /(^|\/)\.cache\/?$/, pattern: ".cache/" },
+    { test: /(^|\/)\.swc\/?$/, pattern: ".swc/" },
+    { test: /(^|\/)\.vitest-cache\/?$/, pattern: ".vitest-cache/" },
+    { test: /(^|\/)npm-debug\.log*$/, pattern: "npm-debug.log*" },
+    { test: /(^|\/)yarn-debug\.log*$/, pattern: "yarn-debug.log*" },
+    { test: /(^|\/)yarn-error\.log*$/, pattern: "yarn-error.log*" },
+    { test: /(^|\/)pnpm-debug\.log*$/, pattern: "pnpm-debug.log*" }
+  ]
+
+  const addedPatterns = new Set<string>()
+
+  for (const item of untrackedLines) {
+    if (item.startsWith(".openspec/") || item.startsWith(".openspec") || item.startsWith(".git/") || item.startsWith(".git")) {
+      continue
+    }
+    let matched = false
+    for (const rule of rules) {
+      if (rule.test.test(item)) {
+        matched = true
+        const gitignorePatterns = rule.pattern.split("\n")
+        for (const gp of gitignorePatterns) {
+          if (!currentRules.includes(gp) && !addedPatterns.has(gp)) {
+            addedPatterns.add(gp)
+          }
+        }
+        break
+      }
+    }
+
+    if (!matched) {
+      const basename = path.basename(item)
+      if (
+        basename.toLowerCase().includes("cache") ||
+        basename.toLowerCase().includes("tmp") ||
+        basename.toLowerCase().includes("temp") ||
+        basename.toLowerCase().endsWith(".log") ||
+        (basename.startsWith(".") && (item.includes("/") || fs.existsSync(path.join(projectRoot, item)) && fs.statSync(path.join(projectRoot, item)).isDirectory()))
+      ) {
+        let isDir = false
+        try {
+          isDir = fs.statSync(path.join(projectRoot, item)).isDirectory()
+        } catch {}
+        const pattern = isDir ? `${item}/` : item
+        if (!currentRules.includes(pattern) && !addedPatterns.has(pattern)) {
+          addedPatterns.add(pattern)
+        }
+        matched = true
+      }
+    }
+
+    if (!matched) {
+      report.push(`⚠️ Archivo no trackeado detectado: ${item}. Si es un archivo generado, considera agregarlo a tu .gitignore.`)
+    }
+  }
+
+  if (addedPatterns.size > 0) {
+    try {
+      let content = ""
+      if (fs.existsSync(gitignorePath)) {
+        content = fs.readFileSync(gitignorePath, "utf-8")
+        if (content && !content.endsWith("\n")) {
+          content += "\n"
+        }
+      }
+      content += `\n# Agregado automáticamente por Zugzbot (Detección Inteligente)\n`
+      for (const pattern of addedPatterns) {
+        content += `${pattern}\n`
+        report.push(`✓ Auto-ignorado en .gitignore: ${pattern}`)
+      }
+      fs.writeFileSync(gitignorePath, content, "utf-8")
+    } catch (e: any) {
+      report.push(`⚠️ Error actualizando .gitignore: ${e.message}`)
+    }
+  }
+}
+
+
 export default tool({
   description: "Cierra el ciclo SDD de forma atómica: realiza el bump SemVer, inyecta lecciones en el cerebro, documenta en CHANGELOG, archiva el directorio de cambios y realiza el commit de cierre de Git.",
   args: {
@@ -47,7 +178,10 @@ export default tool({
     bypassPendingTasks: tool.schema.boolean().optional().default(false).describe("Ignorar/Bypassear la verificación de tareas pendientes en el lockfile si el usuario aprobó manualmente o es un flujo QA Manual")
   },
   async execute(args, context) {
-    const projectRoot = context.worktree || context.directory
+    let projectRoot = context.worktree || context.directory || process.cwd()
+    if (projectRoot === "/") {
+      projectRoot = process.cwd()
+    }
     const changeDir = path.join(projectRoot, ".openspec/changes", args.changeName)
 
     if (!fs.existsSync(changeDir)) {
@@ -77,7 +211,7 @@ export default tool({
             }
           }
         }
-      } catch (e: any) {}
+      } catch {}
     }
 
     const report: string[] = ["━━━ sdd_archive_and_commit ━━━"]
@@ -157,19 +291,24 @@ export default tool({
       }
     }
 
-    // 3.5. Sincronizar habilidades de IA (Autoskills) de forma automática
-    try {
-      report.push("▶ Buscando y sincronizando habilidades de IA nuevas en base a tus cambios...")
-      const skillsOutputObj: any = await sddInstallAutoskills.execute({ dryRun: false }, context)
-      const skillsOutputStr = typeof skillsOutputObj === "string" ? skillsOutputObj : (skillsOutputObj?.output || "")
-      const shortSkillsOutput = skillsOutputStr
-        .split("\n")
-        .filter((l: string) => l.trim() && !l.startsWith("▶") && !l.startsWith("━━━"))
-        .map((l: string) => `  ${l}`)
-        .join("\n")
-      report.push(`✓ Sincronización de Habilidades Finalizada:\n${shortSkillsOutput || "  No se encontraron nuevas habilidades que instalar."}`)
-    } catch (e: any) {
-      report.push(`⚠️ Sincronización automática de habilidades fallida o no disponible: ${e.message || e}`)
+    // 3.5. Sincronizar habilidades de IA (Autoskills) de forma automática — GATED por session_features.autoskills
+    const features = readSessionFeatures(projectRoot)
+    if (features.autoskills === true) {
+      try {
+        report.push("▶ Buscando y sincronizando habilidades de IA nuevas en base a tus cambios...")
+        const skillsOutputObj: any = await sddInstallAutoskills.execute({ action: "install", dryRun: false }, context)
+        const skillsOutputStr = typeof skillsOutputObj === "string" ? skillsOutputObj : (skillsOutputObj?.output || "")
+        const shortSkillsOutput = skillsOutputStr
+          .split("\n")
+          .filter((l: string) => l.trim() && !l.startsWith("▶") && !l.startsWith("━━━"))
+          .map((l: string) => `  ${l}`)
+          .join("\n")
+        report.push(`✓ Sincronización de Habilidades Finalizada:\n${shortSkillsOutput || "  No se encontraron nuevas habilidades que instalar."}`)
+      } catch (e: any) {
+        report.push(`⚠️ Sincronización automática de habilidades fallida o no disponible: ${e.message || e}`)
+      }
+    } else {
+      report.push("ℹ️  autoskills: deshabilitado por sesión (session_features.autoskills=false); se omite sync en F5.")
     }
 
     // 4. No temporary file is needed on disk, we feed it directly to git commit stdin in step 7.
@@ -191,10 +330,8 @@ export default tool({
           retry_count: 0,
           corrective_loop_active: false,
           fresh_task: false,
-          checkpoints: [],
-          tasks: [],
-          complexity: "low"
-        }
+          checkpoints: []
+        };
         fs.writeFileSync(lockfilePath, JSON.stringify(lockfile, null, 2), "utf-8")
         report.push(`✓ Lockfile .openspec/sdd-lock.json restablecido a 'idle' con valores limpios`)
       } catch (e: any) {
@@ -212,33 +349,166 @@ export default tool({
         let totalInput = 0;
         let totalOutput = 0;
         const models = new Set<string>();
-        
-        entries.forEach((e: any) => {
-          if (e.analytics) {
-            totalCost = Math.max(totalCost, e.analytics.cumulative_cost_usd || 0);
-            totalInput = Math.max(totalInput, e.analytics.cumulative_tokens_input || 0);
-            totalOutput = Math.max(totalOutput, e.analytics.cumulative_tokens_output || 0);
-            if (Array.isArray(e.analytics.models_used)) {
-              e.analytics.models_used.forEach((m: string) => models.add(m));
+
+        // Intenta obtener la telemetría real desde la base de datos de OpenCode
+        let sessionList: any[] = [];
+        try {
+          const os = await import("os");
+          const dbPath = path.join(os.homedir(), ".local/share/opencode/opencode.db");
+          if (fs.existsSync(dbPath)) {
+            const pythonCmd = `python3 -c "
+import sqlite3, json, sys, os
+db_path = sys.argv[1]
+start_sid = sys.argv[2]
+if not os.path.exists(db_path):
+    print(json.dumps({}))
+    sys.exit(0)
+conn = sqlite3.connect(db_path)
+conn.row_factory = sqlite3.Row
+cursor = conn.cursor()
+
+curr_sid = start_sid
+while True:
+    cursor.execute('SELECT parent_id FROM session WHERE id = ?', (curr_sid,))
+    row = cursor.fetchone()
+    if row and row['parent_id']:
+        curr_sid = row['parent_id']
+    else:
+        break
+root_sid = curr_sid
+
+def get_descendants(sid):
+    cursor.execute('SELECT id, parent_id, agent, title, model, cost, tokens_input, tokens_output, time_created, time_updated FROM session WHERE parent_id = ?', (sid,))
+    children = cursor.fetchall()
+    res = [dict(c) for c in children]
+    for c in children:
+        res.extend(get_descendants(c['id']))
+    return res
+
+cursor.execute('SELECT id, parent_id, agent, title, model, cost, tokens_input, tokens_output, time_created, time_updated FROM session WHERE id = ?', (root_sid,))
+root = cursor.fetchone()
+sessions = [dict(root)] if root else []
+sessions.extend(get_descendants(root_sid))
+
+total_input = sum(s.get('tokens_input') or 0 for s in sessions)
+total_output = sum(s.get('tokens_output') or 0 for s in sessions)
+total_cost = sum(s.get('cost') or 0.0 for s in sessions)
+
+models = set()
+formatted_sessions = []
+for s in sessions:
+    m_val = s.get('model')
+    model_name = m_val
+    if m_val:
+        try:
+            m_json = json.loads(m_val)
+            model_name = m_json.get('id') or m_val
+            models.add(model_name)
+        except Exception:
+            models.add(m_val)
+    formatted_sessions.append({
+        'id': s.get('id'),
+        'parent_id': s.get('parent_id'),
+        'agent': s.get('agent'),
+        'title': s.get('title'),
+        'model': model_name,
+        'tokens_input': s.get('tokens_input') or 0,
+        'tokens_output': s.get('tokens_output') or 0,
+        'cost': s.get('cost') or 0.0,
+        'time_created': s.get('time_created') or 0,
+        'time_updated': s.get('time_updated') or 0
+    })
+
+print(json.dumps({
+    'total_input': total_input,
+    'total_output': total_output,
+    'total_cost': total_cost,
+    'models': list(models),
+    'sessions': formatted_sessions
+}))
+" "${dbPath}" "${context.sessionID}"`;
+
+            const output = execSync(pythonCmd, { encoding: "utf-8" });
+            const data = JSON.parse(output);
+            if (data.total_input !== undefined) {
+              totalInput = data.total_input;
+              totalOutput = data.total_output;
+              totalCost = data.total_cost;
+              if (Array.isArray(data.models)) {
+                data.models.forEach((m: string) => models.add(m));
+              }
+              if (Array.isArray(data.sessions)) {
+                sessionList = data.sessions;
+              }
             }
           }
-        });
+        } catch (e: any) {
+          report.push(`⚠️ Falló la consulta directa a opencode.db: ${e.message}. Usando fallback de historial.`);
+        }
 
+        // Fallback/acumulación si la consulta no arrojó resultados o falló
+        if (totalInput === 0 && totalOutput === 0) {
+          entries.forEach((e: any) => {
+            if (e.analytics) {
+              totalCost = Math.max(totalCost, e.analytics.cumulative_cost_usd || 0);
+              totalInput = Math.max(totalInput, e.analytics.cumulative_tokens_input || 0);
+              totalOutput = Math.max(totalOutput, e.analytics.cumulative_tokens_output || 0);
+              if (Array.isArray(e.analytics.models_used)) {
+                e.analytics.models_used.forEach((m: string) => models.add(m));
+              }
+            }
+          });
+        }
+
+        let sessionTable = "";
+        let totalDuration = 0;
+        if (sessionList.length > 0) {
+          sessionTable = `
+## 🕵️ Detalle de Ejecución por Agente y Subagente
+
+| Agente / Subagente | Tarea / Título | Modelo | Duración | Tokens Entrada | Tokens Salida | Costo (USD) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+`;
+          sessionList.forEach((s: any) => {
+            const agentName = s.agent ? `\`${s.agent}\`` : "—";
+            const titleStr = s.title || "—";
+            const modelStr = s.model ? `\`${s.model}\`` : "—";
+            const inputTokens = (s.tokens_input || 0).toLocaleString();
+            const outputTokens = (s.tokens_output || 0).toLocaleString();
+            const costStr = s.cost !== undefined ? `$${s.cost.toFixed(6)}` : "—";
+            
+            let durationStr = "—";
+            if (s.time_updated && s.time_created && s.time_updated > s.time_created) {
+              const diffMs = s.time_updated - s.time_created;
+              const diffSec = diffMs / 1000;
+              totalDuration += diffSec;
+              durationStr = `${diffSec.toFixed(1)}s`;
+            }
+            
+            sessionTable += `| ${agentName} | ${titleStr} | ${modelStr} | ${durationStr} | ${inputTokens} | ${outputTokens} | ${costStr} |\n`;
+          });
+          
+          const totalDurationStr = `${totalDuration.toFixed(1)}s`;
+          sessionTable += `| **Total Acumulado** | | | **${totalDurationStr}** | **${totalInput.toLocaleString()}** | **${totalOutput.toLocaleString()}** | **$${totalCost.toFixed(4)}** |\n`;
+        }
+
+        const totalMin = (totalDuration / 60).toFixed(1);
         const tokenUsageMarkdown = `# 💳 Reporte de Consumo del Cambio: ${args.changeName}
 
-Este reporte detalla la telemetría de tokens y coste financiero en USD acumulado por el enjambre de agentes durante el desarrollo de esta tarea.
+Este reporte detalla la telemetría de tokens, coste financiero en USD y tiempos de ejecución acumulados por el enjambre de agentes durante el desarrollo de esta tarea.
 
-## 📊 Métricas de Consumo
+## 📊 Métricas de Consumo General
+- **Duración Total de Ejecución:** ${totalDuration.toFixed(1)}s (~${totalMin}m)
 - **Coste Total de la Sesión:** $${totalCost.toFixed(4)} USD
 - **Tokens de Entrada (Prompt):** ${totalInput.toLocaleString()} tokens
 - **Tokens de Salida (Completion):** ${totalOutput.toLocaleString()} tokens
 - **Modelos de IA Participantes:** ${Array.from(models).join(", ") || "Ninguno registrado"}
-
+${sessionTable}
 ---
 *Reporte autogenerado de forma atómica al cierre de la tarea por sdd_archive_and_commit.*
 `;
         fs.writeFileSync(path.join(projectRoot, ".openspec/changes", args.changeName, "token_usage.md"), tokenUsageMarkdown, "utf-8");
-        report.push(`✓ Reporte de telemetría de tokens generado con éxito en token_usage.md`);
+        report.push(`✓ Reporte de telemetría de tokens (con duración en segundos) generado con éxito en token_usage.md`);
       } catch (e: any) {
         report.push(`⚠️ No se pudo generar el reporte de telemetría de tokens: ${e.message}`);
       }
@@ -260,7 +530,7 @@ Este reporte detalla la telemetría de tokens y coste financiero en USD acumulad
           }
         });
         seqPrefix = String(maxSeq + 1).padStart(4, "0");
-      } catch (e) {}
+      } catch {}
     }
 
     const now = new Date();
@@ -282,11 +552,20 @@ Este reporte detalla la telemetría de tokens y coste financiero en USD acumulad
     // 7. Confirmación Git Atómica (incluye la carpeta archivada y la eliminación de la activa)
     if (fs.existsSync(path.join(projectRoot, ".git"))) {
       try {
+        // Detección Inteligente de Gitignore para archivos generados/temporales antes del add/commit
+        autoUpdateGitignore(projectRoot, report)
+
         execSync("git add .", { cwd: projectRoot, stdio: "ignore" })
-        execSync("git commit -F -", { cwd: projectRoot, input: args.commitMessage + "\n", stdio: ["pipe", "ignore", "ignore"] })
+        try {
+          execSync("git commit -F -", { cwd: projectRoot, input: args.commitMessage + "\n", stdio: ["pipe", "ignore", "ignore"] })
+        } catch {
+          execSync("git config user.email \"zugzbot@sdd.local\"", { cwd: projectRoot, stdio: "ignore" })
+          execSync("git config user.name \"Zugzbot SDD\"", { cwd: projectRoot, stdio: "ignore" })
+          execSync("git commit -F -", { cwd: projectRoot, input: args.commitMessage + "\n", stdio: ["pipe", "ignore", "ignore"] })
+        }
         report.push(`✓ Commit de Git ejecutado usando el mensaje semántico (incluye archivos archivados)`)
       } catch (e: any) {
-        report.push(`⚠️ Git Commit falló o no había cambios pendientes de código: ${e.message}`)
+        report.push(`⚠️ Git Commit falló: ${e.message}`)
       }
     }
 

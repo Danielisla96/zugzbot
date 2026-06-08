@@ -1,7 +1,7 @@
 import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
-import { BrainEntry, parseEntries, buildFullBrain, readBrainFile, writeBrainFile, nextId, today } from "./brain-utils.js"
+import { BrainEntry, readBrainFile, writeBrainFile, nextId, today } from "./brain-utils.js"
 
 const BRAIN_FILE = ".openspec/brain.md"
 const BRAIN_SUBDIR = ".openspec/brain"
@@ -35,7 +35,10 @@ export default tool({
       .describe("ID de entrada a eliminar (ej: L001)")
   },
   async execute(args, context) {
-    const projectRoot = context.worktree || context.directory
+    let projectRoot = context.worktree || context.directory || process.cwd()
+    if (projectRoot === "/") {
+      projectRoot = process.cwd()
+    }
     const brainPath = path.join(projectRoot, BRAIN_FILE)
 
     switch (args.action) {

@@ -2,475 +2,460 @@ import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
 import { execSync } from "child_process"
-import specValidator from "./sdd_spec_validator"
-import regressionDetector from "./sdd_regression_detector"
-import secretScanner from "./sdd_secret_scanner"
-import requirementTracker from "./sdd_requirement_tracker"
-import checkDependencyCooldown from "./check_dependency_cooldown"
+import { readLockfile, writeLockfile, isValidChangeName, SddLockfile, SCHEMA_VERSION } from "./sdd_lock_manager.js"
+import specValidator from "./sdd_spec_validator.js"
+import specReviewer from "./sdd_spec_reviewer.js"
+import regressionDetector from "./sdd_regression_detector.js"
+import secretScanner from "./sdd_secret_scanner.js"
+import requirementTracker from "./sdd_requirement_tracker.js"
+import checkDependencyCooldown from "./check_dependency_cooldown.js"
 
-const SUBAGENT_MAPPING: { [key: number]: string } = {
-  0: "sdd-explorer",
-  1: "sdd-planner",
-  2: "sdd-builder",
-  3: "sdd-tester",
-  4: "sdd-deployer",
-  5: "sdd-archiver"
+export const VALID_PHASES = [
+  "F0",
+  "F1",
+  "F1.5",
+  "F2-RED",
+  "F2-GREEN",
+  "F2-REFACTOR",
+  "F3",
+  "F4",
+  "F5",
+  "DONE"
+] as const
+
+export const SUBAGENT_FOR_PHASE: Record<string, string> = {
+  "F0": "f0-explorer",
+  "F1": "f1-planner",
+  "F1.5": "f1.5-spec-reviewer",
+  "F2-RED": "f2-red-test-writer",
+  "F2-GREEN": "f2-green-implementer",
+  "F2-REFACTOR": "f2-refactor-improver",
+  "F3": "f3-validator",
+  "F4": "f4-deployer",
+  "F5": "f5-archiver",
+  "DONE": ""
 }
 
-const DEFAULT_LOCKFILE = {
-  change_name: "nuevo-cambio",
-  active_phase: 0,
-  active_subagent: "sdd-explorer",
-  status: "idle",
-  auto_pilot: false,
-  iteration: 0,
-  last_updated: "",
-  orchestrator_mode: "delegation_only",
-  direction: "forward" as "forward" | "backward" | "repeat",
-  last_successful_phase: 0,
-  retry_count: 0,
-  corrective_loop_active: false,
-  fresh_task: false,
-  checkpoints: []
+export const PHASE_ORDER: Record<string, number> = {
+  "F0": 0,
+  "F1": 1,
+  "F1.5": 2,
+  "F2-RED": 3,
+  "F2-GREEN": 4,
+  "F2-REFACTOR": 5,
+  "F3": 6,
+  "F4": 7,
+  "F5": 8,
+  "DONE": 9
+}
+
+function isValidPhase(p: string): boolean {
+  return VALID_PHASES.includes(p as any)
+}
+
+function checkTddGate(fromPhase: string, toPhase: string, lock: SddLockfile): string | null {
+  if (toPhase === "F2-GREEN" && !lock.tdd.red.completed) {
+    return `[SDD Transition Blocked] No puedes entrar a F2-GREEN sin completar F2-RED. tdd.red.completed = false. Escribe tests que fallen primero.`
+  }
+  if (toPhase === "F2-REFACTOR" && !lock.tdd.green.completed) {
+    return `[SDD Transition Blocked] No puedes entrar a F2-REFACTOR sin completar F2-GREEN. tdd.green.completed = false. Implementa el mínimo código que pase los tests primero.`
+  }
+  if (toPhase === "F3" && !lock.tdd.refactor.completed) {
+    return `[SDD Transition Blocked] No puedes entrar a F3 sin completar F2-REFACTOR. tdd.refactor.completed = false. Aplica linter y limpia el código primero.`
+  }
+  if (fromPhase === "F2-REFACTOR" && toPhase === "F3" && !lock.tdd.refactor.linter_clean) {
+    return `[SDD Transition Blocked] El linter no está limpio (tdd.refactor.linter_clean = false). Ejecuta sdd_linter y corrige errores antes de transicionar.`
+  }
+  return null
 }
 
 export default tool({
-  description: "Tránsiciona de fase en el ciclo Spec-Driven Development (SDD), actualizando el archivo de bloqueo lockfile .openspec/sdd-lock.json de forma segura, e integra control de cambios en Git de forma automática.",
+  description: `Transiciona de fase en el ciclo SDD v2 (Spec-Driven Development agnóstico al stack).
+  Maneja la máquina de estados de fases: F0 → F1 → F1.5 → F2-RED → F2-GREEN → F2-REFACTOR → F3 → F4 → F5 → DONE.
+  Enforces TDD: no se puede avanzar a F2-GREEN sin F2-RED completo, ni a F2-REFACTOR sin F2-GREEN, etc.
+  Valida que change_name sea kebab-case descriptivo.
+  Integra control automático de Git (rama sdd/change-<name>, commits de artefactos .openspec/).
+
+  Bypass formal: 'bypassAudit' permite saltar las validaciones de gates (TDD, requirement_tracker)
+  con una razón obligatoria que queda auditada en phase_history.jsonl. Usar solo cuando el Orquestador
+  tiene certeza de que el gate es un falso positivo del auditor automatizado.`,
   args: {
-    nextPhase: tool.schema.number().describe("El número de la siguiente fase del ciclo SDD (0-5)"),
-    status: tool.schema.string().describe("El nuevo estado del ciclo (ej: 'idle', 'in_progress', 'corrective_loop', 'restored')"),
-    reason: tool.schema.string().describe("La justificación o explicación resumida de los cambios logrados en esta fase"),
-    activeSubagent: tool.schema.string().optional().describe("El subagente activo opcional (ej: 'sdd-planner', 'sdd-builder')"),
-    iteration: tool.schema.number().optional().describe("El número de iteración correctiva opcional"),
-    changeName: tool.schema.string().optional().describe("El nombre del cambio de desarrollo activo opcional"),
-    complexity: tool.schema.enum(["low", "high"]).optional().default("high").describe("La complejidad del cambio de desarrollo activo (low o high)"),
-    direction: tool.schema.enum(["forward", "backward", "repeat"]).optional().default("forward").describe("Dirección de la transición: forward (normal), backward (retroceder a fase anterior), repeat (repetir fase actual)")
+    nextPhase: tool.schema.string()
+      .describe("Siguiente fase del ciclo SDD (F0 | F1 | F1.5 | F2-RED | F2-GREEN | F2-REFACTOR | F3 | F4 | F5 | DONE)"),
+    status: tool.schema.string()
+      .describe("Nuevo estado del ciclo (idle | in_progress | blocked | awaiting_hil | corrective_loop | spec_approved | qa_validated | archived)"),
+    reason: tool.schema.string()
+      .describe("Justificación breve de la transición"),
+    activeSubagent: tool.schema.string().optional()
+      .describe("Subagente activo opcional (ej: 'f2-red-test-writer')"),
+    iteration: tool.schema.number().optional()
+      .describe("Número de iteración correctiva opcional"),
+    changeName: tool.schema.string().optional()
+      .describe("Nombre del cambio (kebab-case, obligatorio desde F1 en adelante)"),
+    workflow: tool.schema.enum(["full-sdd-tdd", "quick-fix", "audit", "refactor", "explain", "oracle"]).optional()
+      .describe("Workflow activo (opcional)"),
+    direction: tool.schema.enum(["forward", "backward", "repeat"]).optional().default("forward")
+      .describe("Dirección: forward (normal), backward (corregir), repeat (reintentar)"),
+    bypassAudit: tool.schema.object({
+      reason: tool.schema.string(),
+      expectedResolutionDate: tool.schema.string().optional()
+    }).optional()
+      .describe("Bypass formal de gates con audit trail. Especifica { reason: '...' } para saltar la auditoría. La razón queda registrada en phase_history.jsonl.")
   },
   async execute(args, context) {
-    const projectRoot = context.worktree || context.directory;
-    let lockfilePath = path.join(projectRoot, ".openspec/sdd-lock.json");
-
-    // Validar si existe .openspec/sdd-lock.json o si es openspec/sdd-lock.json
-    if (!fs.existsSync(lockfilePath)) {
-      const altPath = path.join(projectRoot, "openspec/sdd-lock.json");
-      if (fs.existsSync(altPath)) {
-        lockfilePath = altPath;
-      } else {
-        // Si no existe ninguno, creamos el directorio y el archivo por defecto
-        const dirPath = path.join(projectRoot, ".openspec");
-        if (!fs.existsSync(dirPath)) {
-          fs.mkdirSync(dirPath, { recursive: true });
-        }
-      }
+    let projectRoot = context.worktree || context.directory || process.cwd()
+    if (projectRoot === "/") {
+      projectRoot = process.cwd()
     }
 
-    let lockfile: any = {
-      change_name: "nuevo-cambio",
-      active_phase: 0,
-      active_subagent: "sdd-explorer",
-      status: "idle",
-      auto_pilot: false,
-      iteration: 0,
-      last_updated: ""
-    };
-
-    if (fs.existsSync(lockfilePath)) {
-      try {
-        lockfile = JSON.parse(fs.readFileSync(lockfilePath, "utf-8"));
-        lockfile.orchestrator_mode = lockfile.orchestrator_mode || "delegation_only";
-        lockfile.direction = lockfile.direction || "forward";
-        lockfile.last_successful_phase = lockfile.last_successful_phase || 0;
-        lockfile.retry_count = lockfile.retry_count || 0;
-        lockfile.corrective_loop_active = lockfile.corrective_loop_active || false;
-        lockfile.fresh_task = lockfile.fresh_task || false;
-        lockfile.checkpoints = lockfile.checkpoints || [];
-      } catch (e) {
-        lockfile = { ...DEFAULT_LOCKFILE };
-      }
-    } else {
-      lockfile = { ...DEFAULT_LOCKFILE };
+    if (!isValidPhase(args.nextPhase)) {
+      return `[SDD Transition Blocked] Fase '${args.nextPhase}' inválida. Válidas: ${VALID_PHASES.join(", ")}`
     }
 
-    const direction = args.direction || lockfile.direction || "forward";
+    const lock = readLockfile(projectRoot)
+
+    if (args.changeName) {
+      if (!isValidChangeName(args.changeName)) {
+        return `[SDD Transition Blocked] change_name inválido: '${args.changeName}'. Debe ser kebab-case descriptivo (ej: 'agregar-auth-jwt'). Genéricos como 'nuevo-cambio' están prohibidos.`
+      }
+      lock.change_name = args.changeName
+    }
+
+    if (PHASE_ORDER[args.nextPhase] >= PHASE_ORDER["F1"] && !isValidChangeName(lock.change_name)) {
+      return `[SDD Transition Blocked] No se puede entrar a ${args.nextPhase} sin un change_name válido. Actualo vía el argumento 'changeName' antes de transicionar.`
+    }
+
+    const direction = args.direction || lock.direction || "forward"
 
     if (direction === "backward") {
-      const previousPhase = Math.max(0, (args.nextPhase || lockfile.active_phase) - 1);
-      lockfile.last_successful_phase = previousPhase;
-      lockfile.corrective_loop_active = true;
-      lockfile.fresh_task = true;
-      lockfile.retry_count = 0;
+      const currentOrder = PHASE_ORDER[lock.active_phase] ?? 0
+      const targetOrder = Math.max(0, currentOrder - 1)
+      const previousPhase = Object.entries(PHASE_ORDER).find(([_, o]) => o === targetOrder)?.[0] || "F0"
+      lock.last_successful_phase = previousPhase
+      lock.corrective_loop_active = true
+      lock.fresh_task = true
+      lock.retry_count = 0
     }
 
     if (direction === "repeat") {
-      lockfile.retry_count = (lockfile.retry_count || 0) + 1;
-      lockfile.corrective_loop_active = true;
-      lockfile.fresh_task = true;
-      if (lockfile.retry_count > 3) {
-        return `[SDD Transition Blocked] Se excedió el límite de 3 reintentos para esta fase. Escalando a revisión humana.`;
+      lock.retry_count = (lock.retry_count || 0) + 1
+      lock.corrective_loop_active = true
+      lock.fresh_task = true
+      if (lock.retry_count > 3) {
+        return `[SDD Transition Blocked] Se excedió el límite de 3 reintentos para esta fase. Escalando a revisión humana.`
       }
     }
 
     if (direction === "forward") {
-      lockfile.fresh_task = false;
+      lock.fresh_task = false
     }
 
-    const activeChangeName = args.changeName || lockfile.change_name;
+    const tddGate = checkTddGate(lock.active_phase, args.nextPhase, lock)
+    if (tddGate) {
+      return tddGate
+    }
 
-    // ── SALVAGUARDAS AUTOMÁTICAS DE METODOLOGÍA SDD ──
-    // 1. Transición a Fase 2 (Construcción): Validar spec.md y parsear la checklist de tareas
-    if (args.nextPhase === 2 && args.status !== "corrective_loop" && direction === "forward") {
-      const specValidationResultObj: any = await specValidator.execute({ changeName: activeChangeName }, context);
-      const specValidationResultStr = typeof specValidationResultObj === "string" ? specValidationResultObj : (specValidationResultObj?.output || "");
-      try {
-        const result = JSON.parse(specValidationResultStr);
-        if (result.status === "FAILED") {
-          return `[SDD Transition Blocked] Transición rechazada por falla de calidad del Plano Técnico:\n\n${result.message}`;
-        }
-      } catch (e) {}
+    if (args.nextPhase === "F2-RED" && lock.workflow === "full-sdd-tdd" && args.status !== "spec_approved" && lock.status !== "spec_approved") {
+      return `[SDD Transition Blocked] F2-RED solo se activa tras HIL-A (aprobación del spec). Estado actual: '${lock.status}'. El Orquestador debe transicionar primero a 'spec_approved'.`
+    }
 
-      // Extracción de checklist de tareas desde spec.md para el monitor de estados
-      const changeDir = path.join(projectRoot, ".openspec/changes", activeChangeName);
-      let specPath = path.join(changeDir, "specs/spec.md");
+    if (args.nextPhase === "F1.5") {
+      const specPath = path.join(projectRoot, ".openspec/changes", lock.change_name, "specs/spec.md")
       if (!fs.existsSync(specPath)) {
-        specPath = path.join(changeDir, "spec.md");
+        return `[SDD Transition Blocked] No existe spec.md para el change '${lock.change_name}'. F1 debe crearlo antes de F1.5.`
       }
+
+      // 1. Validar el Spec usando sdd_spec_reviewer
+      const reviewerResultObj: any = await specReviewer.execute({ action: "validate", specPath }, context)
+      const reviewerResultStr = typeof reviewerResultObj === "string"
+        ? reviewerResultObj
+        : (reviewerResultObj?.output || "")
+      try {
+        const result = JSON.parse(reviewerResultStr)
+        if (result.status === "FAILED" || result.verdict === "REJECTED") {
+          const failedDetails = Array.isArray(result.checks)
+            ? result.checks.filter((c: any) => !c.pass).map((c: any) => `- ${c.name}: ${c.details}`).join("\n")
+            : result.message
+          return `[SDD Transition Blocked] Spec rechazado en F1.5 por falla de testeabilidad/diseño:\n\n${failedDetails}`
+        }
+      } catch (e: any) {
+        return `[SDD Transition Blocked] Fallo crítico al validar el Spec con sdd_spec_reviewer: ${e.message}`
+      }
+
+      // 2. Validar también con sdd_spec_validator para asegurar formato mandatorio de secciones y placeholders
+      const validatorResultObj: any = await specValidator.execute({ changeName: lock.change_name }, context)
+      const validatorResultStr = typeof validatorResultObj === "string"
+        ? validatorResultObj
+        : (validatorResultObj?.output || "")
+      try {
+        const result = JSON.parse(validatorResultStr)
+        if (result.status === "FAILED") {
+          return `[SDD Transition Blocked] Spec rechazado en F1.5 por incumplimiento de formato de secciones obligatorias:\n\n${result.message}`
+        }
+      } catch (e: any) {
+        return `[SDD Transition Blocked] Fallo crítico al validar el formato del Spec con sdd_spec_validator: ${e.message}`
+      }
+    }
+
+    if (args.nextPhase === "F3" && args.status !== "corrective_loop" && direction === "forward") {
+      const specValidationResultObj: any = await specValidator.execute({ changeName: lock.change_name }, context)
+      const specValidationResultStr = typeof specValidationResultObj === "string"
+        ? specValidationResultObj
+        : (specValidationResultObj?.output || "")
+      try {
+        const result = JSON.parse(specValidationResultStr)
+        if (result.status === "FAILED") {
+          return `[SDD Transition Blocked] Transición rechazada por falla de calidad del Plano Técnico:\n\n${result.message}`
+        }
+      } catch {}
+
+      const changeDir = path.join(projectRoot, ".openspec/changes", lock.change_name)
+      const specPath = path.join(changeDir, "specs/spec.md")
       if (fs.existsSync(specPath)) {
         try {
-          const specContent = fs.readFileSync(specPath, "utf-8");
-          const qaSectionIndex = specContent.search(/##\s*5\s*[\.\s-]?\s*Criterios/i);
+          const specContent = fs.readFileSync(specPath, "utf-8")
+          const qaSectionIndex = specContent.search(/##\s*5\s*[.\s-]?\s*Criterios/i)
           if (qaSectionIndex !== -1) {
-            const qaContent = specContent.substring(qaSectionIndex);
-            const lines = qaContent.split("\n");
-            const parsedTasks: any[] = [];
-            let taskId = 1;
+            const qaContent = specContent.substring(qaSectionIndex)
+            const lines = qaContent.split("\n")
+            const parsedTasks: Array<{ id: number; desc: string; status: "pending" | "completed" | "blocked" }> = []
+            let taskId = 1
             for (const line of lines) {
-              if (line.startsWith("##") && !line.includes("## 5.")) {
-                break;
-              }
-              const match = line.match(/^\s*-\s*\[\s*\]\s*(.+)$/i);
+              if (line.startsWith("##") && !line.includes("## 5.")) break
+              const match = line.match(/^\s*-\s*\[\s*\]\s*(.+)$/i)
               if (match) {
                 parsedTasks.push({
                   id: taskId++,
                   desc: match[1].trim(),
                   status: "pending"
-                });
+                })
               }
             }
             if (parsedTasks.length > 0) {
-              lockfile.tasks = parsedTasks;
+              lock.tasks = parsedTasks
             }
           }
-        } catch (e) {}
+        } catch {}
       }
     }
 
-    // 2. Transición a Fase 5 (Cierre/Archiver): Validar regresiones de compilación, cobertura de requerimientos, cooldown y actualizar estado de tareas
-    if (args.nextPhase === 5 && args.status !== "corrective_loop") {
-      // Sincronizar checklist de tareas completadas desde el validation_report.md
-      if (lockfile.tasks) {
-        const reportPath = path.join(projectRoot, ".openspec/changes", activeChangeName, "validation_report.md");
+    if (args.nextPhase === "F5" && args.status !== "corrective_loop") {
+      if (lock.tasks) {
+        const reportPath = path.join(projectRoot, ".openspec/changes", lock.change_name, "validation_report.md")
         if (fs.existsSync(reportPath)) {
           try {
-            const reportContent = fs.readFileSync(reportPath, "utf-8");
-            // Buscar sección QA con fallback: probar ## QA (template tester) primero,
-            // luego ## 3. Correspondencia de Criterios (template anterior), luego buscar - [x] en cualquier parte
-            let qaSectionIndex = reportContent.search(/##\s*QA/i);
+            const reportContent = fs.readFileSync(reportPath, "utf-8")
+            let qaSectionIndex = reportContent.search(/##\s*QA/i)
             if (qaSectionIndex === -1) {
-              qaSectionIndex = reportContent.search(/##\s*3\s*[\.\s-]?\s*Correspondencia/i);
+              qaSectionIndex = reportContent.search(/##\s*3\s*[.\s-]?\s*Correspondencia/i)
             }
             if (qaSectionIndex !== -1) {
-              const qaContent = reportContent.substring(qaSectionIndex);
-              const lines = qaContent.split("\n");
-              let matchedCount = 0;
+              const qaContent = reportContent.substring(qaSectionIndex)
+              const lines = qaContent.split("\n")
               for (const line of lines) {
-                if (line.startsWith("##") && line !== "## QA" && line.includes("## QA") === false && !line.includes("## 3.")) {
-                  break;
-                }
-                const match = line.match(/^\s*-\s*\[(x|\s)\]\s*(.+)$/i);
+                if (line.startsWith("##") && line !== "## QA" && !line.includes("## 3.")) break
+                const match = line.match(/^\s*-\s*\[(x|\s)\]\s*(.+)$/i)
                 if (match) {
-                  const isCompleted = match[1].toLowerCase() === "x";
-                  const descClean = match[2].replace(/\*/g, "").trim().toLowerCase();
-                  for (const t of lockfile.tasks) {
-                    const taskClean = t.desc.toLowerCase();
+                  const isCompleted = match[1].toLowerCase() === "x"
+                  const descClean = match[2].replace(/\*/g, "").trim().toLowerCase()
+                  for (const t of lock.tasks) {
+                    const taskClean = t.desc.toLowerCase()
                     if (descClean.includes(taskClean) || taskClean.includes(descClean)) {
-                      t.status = isCompleted ? "completed" : "pending";
-                      matchedCount++;
-                    }
-                  }
-                }
-              }
-            } else {
-              // Fallback: buscar - [x] checkboxes en todo el documento
-              const lines = reportContent.split("\n");
-              for (const line of lines) {
-                const match = line.match(/^\s*-\s*\[(x|\s)\]\s*(.+)$/i);
-                if (match) {
-                  const isCompleted = match[1].toLowerCase() === "x";
-                  const descClean = match[2].replace(/\*/g, "").trim().toLowerCase();
-                  for (const t of lockfile.tasks) {
-                    const taskClean = t.desc.toLowerCase();
-                    if (descClean.includes(taskClean) || taskClean.includes(descClean)) {
-                      t.status = isCompleted ? "completed" : "pending";
+                      t.status = isCompleted ? "completed" : "pending"
                     }
                   }
                 }
               }
             }
-          } catch (e) {}
+          } catch {}
         }
       }
 
-      // A. Validar regresiones de compilación
-      const regressionResultObj: any = await regressionDetector.execute({ runCheck: true }, context);
-      const regressionResultStr = typeof regressionResultObj === "string" ? regressionResultObj : (regressionResultObj?.output || "");
+      const regressionResultObj: any = await regressionDetector.execute({ runCheck: true }, context)
+      const regressionResultStr = typeof regressionResultObj === "string"
+        ? regressionResultObj
+        : (regressionResultObj?.output || "")
       try {
-        const result = JSON.parse(regressionResultStr);
+        const result = JSON.parse(regressionResultStr)
         if (result.status && result.status.startsWith("FAILED")) {
-          return `[SDD Transition Blocked] Transición rechazada por detección de errores o regresiones de compilación:\n\n${result.message}`;
+          if (!args.bypassAudit) {
+            return `[SDD Transition Blocked] Regresión detectada:\n\n${result.message}\n\nSi consideras que es un falso positivo, pasa 'bypassAudit: { reason: "..." }' con justificación.`
+          }
         }
-      } catch (e) {}
+      } catch {}
 
-      // B. Validar cobertura semántica de criterios de aceptación (Requerimientos)
-      const requirementResultObj: any = await requirementTracker.execute({ changeName: activeChangeName }, context);
-      const requirementResultStr = typeof requirementResultObj === "string" ? requirementResultObj : (requirementResultObj?.output || "");
+      const requirementResultObj: any = await requirementTracker.execute({ changeName: lock.change_name }, context)
+      const requirementResultStr = typeof requirementResultObj === "string"
+        ? requirementResultObj
+        : (requirementResultObj?.output || "")
       try {
-        const result = JSON.parse(requirementResultStr);
+        const result = JSON.parse(requirementResultStr)
         if (result.status === "FAILED") {
-          return `[SDD Transition Blocked] Transición rechazada por falta de cobertura de pruebas para los criterios de aceptación:\n\n${result.message}`;
+          if (!args.bypassAudit) {
+            return `[SDD Transition Blocked] Cobertura insuficiente:\n\n${result.message}\n\nSi consideras que el auditor es un falso positivo, pasa 'bypassAudit: { reason: "..." }' con justificación detallada. La razón será auditada.`
+          }
         }
-      } catch (e) {}
+      } catch {}
 
-      // C. Validar Cooldown de dependencias agregadas en package.json en caliente
       if (fs.existsSync(path.join(projectRoot, "package.json")) && fs.existsSync(path.join(projectRoot, ".git"))) {
         try {
-          const diffOutput = execSync("git diff HEAD package.json", { cwd: projectRoot, encoding: "utf-8" });
-          const addedLines = diffOutput.split("\n").filter(l => l.startsWith("+") && !l.startsWith("+++"));
-          const depRegex = /"([^"]+)"\s*:\s*"([^"]+)"/;
+          const diffOutput = execSync("git diff HEAD package.json", { cwd: projectRoot, encoding: "utf-8" })
+          const addedLines = diffOutput.split("\n").filter(l => l.startsWith("+") && !l.startsWith("+++"))
+          const depRegex = /"([^"]+)"\s*:\s*"([^"]+)"/
           for (const line of addedLines) {
-            const match = line.match(depRegex);
+            const match = line.match(depRegex)
             if (match) {
-              const pkg = match[1];
-              const version = match[2].replace(/[\^~>=]/g, ""); // Limpiar rangos
-              if (pkg === "zugzbot-sdd" || pkg.startsWith("@opencode-ai/")) continue;
+              const pkg = match[1]
+              const version = match[2].replace(/[\^~>=]/g, "")
+              if (pkg === "zugzbot-sdd" || pkg.startsWith("@opencode-ai/")) continue
 
-              const cooldownResultObj: any = await checkDependencyCooldown.execute({ package: pkg, version }, context);
-              const cooldownResultStr = typeof cooldownResultObj === "string" ? cooldownResultObj : (cooldownResultObj?.output || "");
+              const cooldownResultObj: any = await checkDependencyCooldown.execute({ package: pkg, version }, context)
+              const cooldownResultStr = typeof cooldownResultObj === "string"
+                ? cooldownResultObj
+                : (cooldownResultObj?.output || "")
               try {
-                const cooldownResult = JSON.parse(cooldownResultStr);
+                const cooldownResult = JSON.parse(cooldownResultStr)
                 if (cooldownResult.status === "BLOCKED") {
-                  return `[SDD Transition Blocked] Transición rechazada por violación de la regla de Cooldown de Dependencias de Terceros:\n\n${cooldownResult.message}`;
+                  return `[SDD Transition Blocked] Violación de cooldown de dependencias:\n\n${cooldownResult.message}`
                 }
-              } catch (e) {}
+              } catch {}
             }
           }
-        } catch (e) {}
+        } catch {}
       }
     }
 
-    // 3. Transición a Fase 0 / Cierre (Commit final): Escanear secretos
-    if (args.nextPhase === 0) {
-      const secretScanResultObj: any = await secretScanner.execute({ scanAll: false }, context);
-      const secretScanResultStr = typeof secretScanResultObj === "string" ? secretScanResultObj : (secretScanResultObj?.output || "");
+    if (args.nextPhase === "DONE") {
+      const secretScanResultObj: any = await secretScanner.execute({ scanAll: false }, context)
+      const secretScanResultStr = typeof secretScanResultObj === "string"
+        ? secretScanResultObj
+        : (secretScanResultObj?.output || "")
       try {
-        const result = JSON.parse(secretScanResultStr);
+        const result = JSON.parse(secretScanResultStr)
         if (result.status === "FAILED") {
-          return `[SDD Transition Blocked] Transición y Git Commit cancelados por advertencia de seguridad (Se encontraron secretos expuestos):\n\n${result.message}`;
+          return `[SDD Transition Blocked] Secretos detectados en código:\n\n${result.message}`
         }
-      } catch (e) {}
+      } catch {}
     }
 
-    // Actualizar campos
-    lockfile.direction = direction;
-    lockfile.active_phase = args.nextPhase;
-    lockfile.status = args.status;
-    lockfile.last_updated = new Date().toISOString().split('T')[0];
-
+    lock.active_phase = args.nextPhase
+    lock.status = args.status as SddLockfile["status"]
+    lock.direction = direction
+    lock.last_updated = new Date().toISOString()
     if (args.activeSubagent) {
-      lockfile.active_subagent = args.activeSubagent;
+      lock.active_subagent = args.activeSubagent
     } else {
-      lockfile.active_subagent = SUBAGENT_MAPPING[args.nextPhase] || "sdd-planner";
+      lock.active_subagent = SUBAGENT_FOR_PHASE[args.nextPhase] || lock.active_subagent
     }
+    if (args.iteration !== undefined) lock.iteration = args.iteration
+    if (args.workflow) lock.workflow = args.workflow
 
-    if (args.iteration !== undefined) {
-      lockfile.iteration = args.iteration;
-    }
+    writeLockfile(projectRoot, lock)
 
-    if (args.changeName) {
-      lockfile.change_name = args.changeName;
-    }
-
-    if (args.complexity !== undefined) {
-      lockfile.complexity = args.complexity;
-    }
-
-    // Escribir los cambios
-    fs.writeFileSync(lockfilePath, JSON.stringify(lockfile, null, 2), "utf-8");
-
-    // Escribir en el log o auditoría interna del cambio activo si existe el directorio
-    if (lockfile.change_name && lockfile.change_name !== "nuevo-cambio") {
-      const changeDir = path.join(projectRoot, ".openspec/changes", lockfile.change_name);
+    if (lock.change_name && lock.change_name !== "nuevo-cambio") {
+      const changeDir = path.join(projectRoot, ".openspec/changes", lock.change_name)
       if (fs.existsSync(changeDir)) {
-        const historyPath = path.join(changeDir, "phase_history.jsonl");
-
-        // Obtener analíticas de tokens y costos de la sesión desde el servidor OpenCode
-        const port = process.env.OPENCODE_PORT || "4096";
-        let tokenStats = { cost: 0, input: 0, output: 0 };
-        const modelsUsed = new Set<string>();
-        try {
-          const url = `http://127.0.0.1:${port}/session/${context.sessionID}/message`;
-          const response = await fetch(url);
-          if (response.ok) {
-            const messages: any = await response.json();
-            const list = Array.isArray(messages) ? messages : (messages?.data || []);
-            list.forEach((msg: any) => {
-              const info = msg.info || msg;
-              if (info && info.role === "assistant") {
-                const cost = typeof info.cost === "number" && Number.isFinite(info.cost) ? info.cost : 0;
-                const input = info.tokens?.input ?? 0;
-                const output = info.tokens?.output ?? 0;
-                tokenStats.cost += cost;
-                tokenStats.input += input;
-                tokenStats.output += output;
-
-                // Extraer identificador de modelo de IA usado
-                const modelVal = info.modelID || (info.model && typeof info.model === "object" ? info.model.modelID : info.model);
-                if (modelVal) {
-                  modelsUsed.add(String(modelVal));
-                }
-              }
-            });
-          }
-        } catch (e) {}
-
-        const logEntry = {
+        const historyPath = path.join(changeDir, "phase_history.jsonl")
+        const logEntry: any = {
           timestamp: new Date().toISOString(),
           phase: args.nextPhase,
-          subagent: lockfile.active_subagent,
+          subagent: lock.active_subagent,
           status: args.status,
           reason: args.reason,
-          iteration: lockfile.iteration || 0,
-          analytics: {
-            session_id: context.sessionID,
-            models_used: Array.from(modelsUsed),
-            cumulative_cost_usd: tokenStats.cost,
-            cumulative_tokens_input: tokenStats.input,
-            cumulative_tokens_output: tokenStats.output
+          iteration: lock.iteration || 0,
+          schema_version: SCHEMA_VERSION
+        }
+        if (args.bypassAudit) {
+          logEntry.bypass_audit = {
+            reason: args.bypassAudit.reason,
+            timestamp: new Date().toISOString(),
+            expected_resolution_date: args.bypassAudit.expectedResolutionDate || null
           }
-        };
-        fs.appendFileSync(historyPath, JSON.stringify(logEntry) + "\n", "utf-8");
-
-        // GENERACIÓN AUTOMÁTICA DEL DASHBOARD DE ANALÍTICAS
+        }
         try {
-          const lines = fs.readFileSync(historyPath, "utf-8").split("\n").filter(Boolean);
-          const historyEntries = lines.map(l => JSON.parse(l));
-          
-          let totalCost = 0;
-          let totalInputTokens = 0;
-          let totalOutputTokens = 0;
-          const allModels = new Set<string>();
-          const phaseCounts: { [key: number]: number } = {};
-          
-          historyEntries.forEach(entry => {
-            if (entry.analytics) {
-              totalCost = Math.max(totalCost, entry.analytics.cumulative_cost_usd || 0);
-              totalInputTokens = Math.max(totalInputTokens, entry.analytics.cumulative_tokens_input || 0);
-              totalOutputTokens = Math.max(totalOutputTokens, entry.analytics.cumulative_tokens_output || 0);
-              if (Array.isArray(entry.analytics.models_used)) {
-                entry.analytics.models_used.forEach((m: string) => allModels.add(m));
-              }
-            }
-            phaseCounts[entry.phase] = (phaseCounts[entry.phase] || 0) + 1;
-          });
-
-          // Crear barras visuales estéticas en consola Markdown
-          const budgetLimit = 2.00; // Presupuesto sugerido de $2.00 USD
-          const costPercentage = Math.min(100, Math.round((totalCost / budgetLimit) * 100));
-          const barLength = 20;
-          const filledLength = Math.round((costPercentage / 100) * barLength);
-          const emptyLength = barLength - filledLength;
-          const progressBar = "█".repeat(filledLength) + "░".repeat(emptyLength);
-
-          const analyticsMarkdown = `# 📊 Tablero de Analíticas del Swarm: ${lockfile.change_name}
-
-Este reporte es generado de forma autónoma por la herramienta **sdd_transition** al cierre de cada fase para auditar la economía de tokens, presupuestos y eficiencia del enjambre multi-agente.
-
-> [!NOTE]
-> **Resumen Financiero de la Sesión:**
-> - **Presupuesto Consumido:** $${totalCost.toFixed(4)} USD
-> - **Límite de Presupuesto:** $${budgetLimit.toFixed(2)} USD
-> - **Eficiencia de Tokens:** Entrada: ${totalInputTokens.toLocaleString()} | Salida: ${totalOutputTokens.toLocaleString()}
-> - **Modelos Utilizados:** ${Array.from(allModels).join(", ") || "Ninguno registrado"}
-
-### 💳 Control de Presupuesto Consumido ($${totalCost.toFixed(4)} / $${budgetLimit.toFixed(2)})
-\`\`\`text
-[${progressBar}] ${costPercentage}% de límite
-\`\`\`
-
-## 🔄 Historial Completo del Swarm (Fases e Iteraciones)
-
-| Marca de Tiempo | Fase | Subagente | Estado | Iteración | Motivo |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-${historyEntries.map(e => `| ${e.timestamp.split("T")[1].substring(0, 8)} | F${e.phase} | \`@${e.subagent}\` | \`${e.status}\` | ${e.iteration} | ${e.reason} |`).join("\n")}
-
----
-
-## 📈 Estadísticas de Frecuencia de Fases
-- **Fase 0 (Explorer):** ${phaseCounts[0] || 0} visitas.
-- **Fase 1 (Planner):** ${phaseCounts[1] || 0} visitas.
-- **Fase 2 (Builder):** ${phaseCounts[2] || 0} visitas.
-- **Fase 3 (Tester):** ${phaseCounts[3] || 0} visitas.
-- **Fase 4 (Deployer):** ${phaseCounts[4] || 0} visitas.
-- **Fase 5 (Archiver):** ${phaseCounts[5] || 0} visitas.
-
-*Nota: Múltiples visitas a una misma fase indican reintentos o ciclos correctivos activos.*
-`;
-          fs.writeFileSync(path.join(projectRoot, ".openspec/analytics.md"), analyticsMarkdown, "utf-8");
-        } catch (err) {}
+          fs.appendFileSync(historyPath, JSON.stringify(logEntry) + "\n", "utf-8")
+        } catch {}
       }
     }
 
-    // INTEGRACIÓN AUTOMÁTICA CON GIT
-    let gitStatus = "";
-    if (fs.existsSync(path.join(projectRoot, ".git")) && lockfile.change_name && lockfile.change_name !== "nuevo-cambio") {
+    let gitStatus = ""
+    if (fs.existsSync(path.join(projectRoot, ".git")) && lock.change_name && isValidChangeName(lock.change_name)) {
       try {
-        const branchName = `sdd/change-${lockfile.change_name}`;
-        
-        // 1. Chequear rama actual
-        const currentBranch = execSync("git rev-parse --abbrev-ref HEAD", { cwd: projectRoot, encoding: "utf-8" }).trim();
-        
-        if (currentBranch !== branchName) {
-          // Chequear si la rama existe localmente
-          let branchExists = false;
+        const branchName = `sdd/change-${lock.change_name}`
+        let isRepoEmpty = false
+        try {
+          execSync("git rev-parse HEAD", { cwd: projectRoot, stdio: "ignore" })
+        } catch {
+          isRepoEmpty = true
+        }
+
+        let currentBranch = "main"
+        if (!isRepoEmpty) {
           try {
-            execSync(`git show-ref --verify --quiet refs/heads/${branchName}`, { cwd: projectRoot });
-            branchExists = true;
-          } catch (e) {}
+            currentBranch = execSync("git rev-parse --abbrev-ref HEAD", { cwd: projectRoot, encoding: "utf-8" }).trim()
+          } catch {}
+        }
+
+        if (isRepoEmpty) {
+          // Si el repo está vacío, hacemos commit inicial para definir HEAD y evitar errores
+          execSync("git add .gitignore", { cwd: projectRoot, stdio: "ignore" })
+          try {
+            try {
+              execSync("git commit -m \"chore: initial commit with base .gitignore\"", { cwd: projectRoot, stdio: "ignore" })
+            } catch {
+              execSync("git config user.email \"zugzbot@sdd.local\"", { cwd: projectRoot, stdio: "ignore" })
+              execSync("git config user.name \"Zugzbot SDD\"", { cwd: projectRoot, stdio: "ignore" })
+              execSync("git commit -m \"chore: initial commit with base .gitignore\"", { cwd: projectRoot, stdio: "ignore" })
+            }
+            isRepoEmpty = false
+            currentBranch = execSync("git rev-parse --abbrev-ref HEAD", { cwd: projectRoot, encoding: "utf-8" }).trim()
+          } catch {}
+        }
+
+        if (currentBranch !== branchName) {
+          let branchExists = false
+          try {
+            execSync(`git show-ref --verify --quiet refs/heads/${branchName}`, { cwd: projectRoot })
+            branchExists = true
+          } catch {}
 
           if (branchExists) {
-            execSync(`git checkout ${branchName}`, { cwd: projectRoot, stdio: "ignore" });
+            execSync(`git checkout ${branchName}`, { cwd: projectRoot, stdio: "ignore" })
           } else {
-            execSync(`git checkout -b ${branchName}`, { cwd: projectRoot, stdio: "ignore" });
+            execSync(`git checkout -b ${branchName}`, { cwd: projectRoot, stdio: "ignore" })
           }
         }
 
-        // 2. Hacer commit automático de los artefactos .openspec/
-        execSync("git add .openspec/", { cwd: projectRoot, stdio: "ignore" });
+        execSync("git add .openspec/ .gitignore", { cwd: projectRoot, stdio: "ignore" })
         
-        // Verificar si hay cambios reales preparados en el stage (staged changes)
-        const hasStagedChanges = execSync("git diff --cached --name-only", { cwd: projectRoot, encoding: "utf-8" }).trim().length > 0;
-        
-        if (hasStagedChanges) {
-          const commitMsg = `docs(sdd): transición a fase ${args.nextPhase} - ${args.reason.replace(/"/g, '\\"')}`;
-          execSync(`git commit -m "${commitMsg}"`, { cwd: projectRoot, stdio: "ignore" });
-          gitStatus = ` [Git: Rama '${branchName}' actualizada con commit semántico]`;
+        let hasStagedChanges = false
+        if (isRepoEmpty) {
+          // En reposo vacío, si hay archivos staged, git diff falla. Asumimos true.
+          hasStagedChanges = true
         } else {
-          gitStatus = ` [Git: Sin cambios nuevos en especificaciones para archivar]`;
+          hasStagedChanges = execSync("git diff --cached --name-only", { cwd: projectRoot, encoding: "utf-8" }).trim().length > 0
+        }
+
+        if (hasStagedChanges) {
+          const commitMsg = `docs(sdd): transición a ${args.nextPhase} - ${args.reason.replace(/"/g, '\\"').slice(0, 60)}`
+          try {
+            execSync(`git commit -m "${commitMsg}"`, { cwd: projectRoot, stdio: "ignore" })
+          } catch {
+            try {
+              execSync("git config user.email \"zugzbot@sdd.local\"", { cwd: projectRoot, stdio: "ignore" })
+              execSync("git config user.name \"Zugzbot SDD\"", { cwd: projectRoot, stdio: "ignore" })
+              execSync(`git commit -m "${commitMsg}"`, { cwd: projectRoot, stdio: "ignore" })
+            } catch {}
+          }
+          gitStatus = ` [Git: Rama '${branchName}' actualizada con commit inicial]`
+        } else {
+          gitStatus = ` [Git: Sin cambios nuevos en .openspec/]`
         }
       } catch (e: any) {
-        gitStatus = ` [Git Warning: No se pudo realizar commit automático: ${e.message || e}]`;
+        gitStatus = ` [Git Warning: ${e.message || e}]`
       }
     }
 
-    return `[SDD Tool] Fase transicionada con éxito a Fase ${args.nextPhase} (${lockfile.active_subagent}). Estado: ${args.status}. Motivo: ${args.reason}.${gitStatus}`;
+    return `[SDD Tool] Transición a ${args.nextPhase} (${lock.active_subagent}). Estado: ${args.status}. Motivo: ${args.reason}.${gitStatus}`
   }
 })

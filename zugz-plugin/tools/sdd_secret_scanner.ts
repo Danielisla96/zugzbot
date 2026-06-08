@@ -2,59 +2,8 @@ import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
 import { execSync } from "child_process"
-
-function decodeGitPath(gitPath: string): string {
-  let cleaned = gitPath.replace(/^"|"$/g, "");
-  
-  if (cleaned.includes("\\")) {
-    try {
-      const bytes: number[] = []
-      let i = 0
-      while (i < cleaned.length) {
-        if (cleaned[i] === "\\" && i + 3 < cleaned.length && /^[0-7]{3}$/.test(cleaned.substring(i + 1, i + 4))) {
-          const octalVal = cleaned.substring(i + 1, i + 4)
-          bytes.push(parseInt(octalVal, 8))
-          i += 4
-        } else {
-          if (cleaned[i] === "\\" && i + 1 < cleaned.length) {
-            const next = cleaned[i + 1]
-            if (next === "n") { bytes.push(10); i += 2 }
-            else if (next === "t") { bytes.push(9); i += 2 }
-            else if (next === "\\") { bytes.push(92); i += 2 }
-            else if (next === "\"") { bytes.push(34); i += 2 }
-            else { bytes.push(cleaned.charCodeAt(i)); i++ }
-          } else {
-            const code = cleaned.charCodeAt(i)
-            if (code < 128) {
-              bytes.push(code)
-            } else {
-              const buf = Buffer.from(cleaned[i], "utf-8")
-              for (let b = 0; b < buf.length; b++) {
-                bytes.push(buf[b])
-              }
-            }
-            i++
-          }
-        }
-      }
-      return Buffer.from(bytes).toString("utf-8")
-    } catch (e) {
-      return cleaned.replace(/\\([0-7]{3})/g, (match, octal) => {
-        return String.fromCharCode(parseInt(octal, 8))
-      })
-    }
-  }
-  return cleaned
-}
-
-function sanitizeGitPath(line: string): string {
-  const content = line.substring(3).trim()
-  if (content.includes(" -> ")) {
-    const parts = content.split(" -> ")
-    return decodeGitPath(parts[1])
-  }
-  return decodeGitPath(content)
-}
+import { sanitizeGitPath } from "./git_utils.js"
+import { readLockfile } from "./sdd_lock_manager.js"
 
 export default tool({
   description: "Escanea archivos modificados o listados en Git en busca de posibles fugas de secretos (tokens, llaves privadas, contraseñas en caliente) antes del commit de cierre de la Fase 3.",
@@ -62,7 +11,18 @@ export default tool({
     scanAll: tool.schema.boolean().optional().default(false).describe("Si es true, escanea todos los archivos de código del proyecto; por defecto solo escanea archivos modificados en Git.")
   },
   async execute(args, context) {
-    const projectRoot = context.worktree || context.directory;
+    let projectRoot = context.worktree || context.directory || process.cwd()
+    if (projectRoot === "/") {
+      projectRoot = process.cwd()
+    }
+    if (projectRoot === "/" || projectRoot.startsWith("/usr") || projectRoot.startsWith("/System") || projectRoot.startsWith("/private")) {
+      return JSON.stringify({
+        status: "WARNING",
+        reason: "No se permite escanear directorios raíz del sistema para evitar fuga de tokens en el escaneo de secretos."
+      }, null, 2);
+    }
+    const lock = readLockfile(projectRoot);
+    const targetRoot = lock.subproject_cwd ? path.join(projectRoot, lock.subproject_cwd) : projectRoot;
     const findings: Array<{ file: string; line: number; type: string; snippet: string }> = [];
 
     // 1. Obtener la lista de archivos a escanear
@@ -82,7 +42,11 @@ export default tool({
             return;
           }
           if (stat.isDirectory()) {
-            if (!["node_modules", ".git", ".openspec", ".opencode", "dist", "build", ".next", "coverage"].includes(file)) {
+            const excludeDirs = [
+              "node_modules", ".git", ".openspec", ".opencode", "dist", "build", ".next", "coverage",
+              "bin", "boot", "dev", "etc", "home", "lib", "lib64", "media", "mnt", "opt", "proc", "root", "run", "sbin", "srv", "sys", "tmp", "usr", "var"
+            ];
+            if (!excludeDirs.includes(file)) {
               scanDirRecursive(fullPath);
             }
           } else {
@@ -93,7 +57,7 @@ export default tool({
           }
         });
       }
-      scanDirRecursive(projectRoot);
+      scanDirRecursive(targetRoot);
     } else {
       // Buscar solo archivos modificados o sin trackear usando Git de forma robusta
       if (fs.existsSync(path.join(projectRoot, ".git"))) {
@@ -102,6 +66,9 @@ export default tool({
           gitOutput.split("\n").forEach(line => {
             if (!line || line.length < 4) return;
             const filePathRel = sanitizeGitPath(line);
+            if (lock.subproject_cwd && !filePathRel.startsWith(lock.subproject_cwd)) {
+              return;
+            }
             const fullPath = path.join(projectRoot, filePathRel);
             if (fs.existsSync(fullPath)) {
               let stat;

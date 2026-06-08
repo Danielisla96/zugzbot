@@ -1,3 +1,8 @@
+---
+name: sdd-token-economy
+description: Enseña a operar bajo directrices de ahorro de tokens y optimización contextual para reducir costos y acelerar la velocidad.
+---
+
 # Skill: SDD Token Economy
 
 Enseña a todos los agentes a operar bajo estrictas directrices de ahorro de tokens y optimización contextual para reducir costos y acelerar la velocidad del swarm.

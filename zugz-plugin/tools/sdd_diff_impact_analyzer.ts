@@ -48,12 +48,23 @@ export default tool({
 
     report.push(`🔍 Archivos modificados detectados: ${modifiedFiles.length}`)
     const impactList: string[] = []
+    
+    // Intentar leer el grafo de Graphify si existe
+    const graphPath = path.join(projectRoot, "graphify-out/graph.json")
+    let graphData: any = null
+    if (fs.existsSync(graphPath)) {
+      try {
+        graphData = JSON.parse(fs.readFileSync(graphPath, "utf-8"))
+        report.push("📊 Grafo de dependencias de Graphify cargado para análisis dinámico de Blast Radius.")
+      } catch {}
+    }
 
     for (const file of modifiedFiles) {
       const ext = path.extname(file)
       const base = path.basename(file)
       let severity = "Bajo"
       let dependencies: string[] = []
+      const collateralFiles = new Set<string>([base])
 
       if (file.includes("index.html") || file.includes("main.ts")) {
         severity = "🔴 CRÍTICO / ALTO"
@@ -69,14 +80,47 @@ export default tool({
         dependencies = ["Estilización y layout visual"]
       }
 
+      // Integrar dependencias estructurales reales del grafo
+      if (graphData && Array.isArray(graphData.nodes) && Array.isArray(graphData.edges)) {
+        // Encontrar nodos del archivo modificado
+        const fileNodes = graphData.nodes.filter((n: any) => {
+          return n.source_file === file || (n.id && n.id.includes(file))
+        })
+        const fileNodeIds = new Set(fileNodes.map((n: any) => n.id))
+
+        if (fileNodeIds.size > 0) {
+          // Filtrar aristas que conectan a estos nodos
+          const relatedEdges = graphData.edges.filter((e: any) => {
+            return fileNodeIds.has(e.source) || fileNodeIds.has(e.target)
+          })
+
+          const connectedIds = new Set<string>()
+          relatedEdges.forEach((e: any) => {
+            if (!fileNodeIds.has(e.source)) connectedIds.add(e.source)
+            if (!fileNodeIds.has(e.target)) connectedIds.add(e.target)
+          })
+
+          const connectedNodes = graphData.nodes.filter((n: any) => connectedIds.has(n.id))
+          connectedNodes.forEach((n: any) => {
+            dependencies.push(`[Graphify] Relación: ${n.label || n.id} (en ${n.source_file || 'externo'})`)
+            if (n.source_file) {
+              collateralFiles.add(path.basename(n.source_file))
+            }
+          })
+
+          if (connectedNodes.length > 0) {
+            severity = connectedNodes.length > 5 ? "🔴 ALTO" : "🟡 MEDIO"
+          }
+        }
+      }
+
       impactList.push(`
   📂 Archivo: \`${file}\`
   - Severidad de Impacto: ${severity}
   - Componentes Afectados / Blast Radius:
     ${dependencies.map(d => `* ${d}`).join("\n    ")}
   - Archivos colaterales recomendados para re-verificar:
-    * ${base} (auto-referencial)
-    * index.html (si aplica integración de layout)
+    ${Array.from(collateralFiles).map(f => `* ${f}`).join("\n    ")}
 `)
     }
 

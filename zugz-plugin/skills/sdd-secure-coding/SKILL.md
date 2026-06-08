@@ -1,3 +1,8 @@
+---
+name: sdd-secure-coding
+description: Impone directivas de codificación segura obligatorias para garantizar que el software sea inmune a vulnerabilidades.
+---
+
 # Skill: SDD Secure Coding (Threat Modeling & Sanitization)
 
 Esta habilidad impone directivas de codificación segura obligatorias para el enjambre de agentes en todas las fases de **Construcción (F2)** y **Calidad (F3)**, garantizando que el software desarrollado sea inherentemente inmune a vulnerabilidades de seguridad clásicas.

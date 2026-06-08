@@ -8,7 +8,10 @@ export default tool({
     changeName: tool.schema.string().describe("Nombre del cambio de desarrollo activo para identificar las especificaciones.")
   },
   async execute(args, context) {
-    const projectRoot = context.worktree || context.directory
+    let projectRoot = context.worktree || context.directory || process.cwd()
+    if (projectRoot === "/") {
+      projectRoot = process.cwd()
+    }
     const report: string[] = []
     report.push(`━━━ sdd_test_scaffold_generator: ${args.changeName} ━━━`)
 

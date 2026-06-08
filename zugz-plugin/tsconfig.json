@@ -20,7 +20,10 @@
   },
   "include": [
     "tools/**/*.ts",
-    "agents/**/*.md"
+    "agents/**/*.md",
+    "plugins/**/*.tsx",
+    ".opencode/plugins/**/*.tsx",
+    "types/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",

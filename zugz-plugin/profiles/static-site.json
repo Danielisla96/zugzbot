@@ -1,0 +1,41 @@
+{
+  "id": "static-site",
+  "display_name": "Static Site (Astro / Hugo / Jekyll / Next.js SSG)",
+  "detect": {
+    "files_any": ["astro.config.*", "hugo.toml", "hugo.config.*", "_config.yml", "next.config.*"],
+    "files_any_deep": ["static/index.html"]
+  },
+  "test_runners": [
+    { "name": "vitest", "cmd": "npx vitest run", "detect": "vitest.config.*" },
+    { "name": "playwright", "cmd": "npx playwright test", "detect": "playwright.config.*" },
+    { "name": "jest", "cmd": "npx jest", "detect": "jest.config.*" }
+  ],
+  "linters": [
+    { "name": "eslint", "cmd": "npx eslint .", "detect": ".eslintrc*" },
+    { "name": "markdownlint", "cmd": "npx markdownlint '**/*.md'", "detect": ".markdownlint.json" }
+  ],
+  "formatters": [
+    { "name": "prettier", "cmd": "npx prettier --write .", "detect": ".prettierrc*" }
+  ],
+  "deploy": {
+    "kind": "build",
+    "dev_cmd": "npm run dev",
+    "build_cmd": "npm run build",
+    "publish_cmd": "npx vercel deploy --prod"
+  },
+  "skip_tools": ["sdd_clasp"],
+  "required_tools": [
+    "sdd_linter",
+    "sdd_test_runner",
+    "sdd_git_awareness",
+    "sdd_lock_manager",
+    "sdd_ui_auditor"
+  ],
+  "conventions": {
+    "test_dir": "tests",
+    "test_unit_dir": "tests/unit",
+    "test_integration_dir": "tests/integration",
+    "source_dir": "src",
+    "version_file": "package.json"
+  }
+}

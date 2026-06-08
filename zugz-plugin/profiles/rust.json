@@ -1,0 +1,37 @@
+{
+  "id": "rust",
+  "display_name": "Rust",
+  "detect": {
+    "files_any": ["Cargo.toml"],
+    "files_any_deep": []
+  },
+  "test_runners": [
+    { "name": "cargo-test", "cmd": "cargo test", "detect": "Cargo.toml" }
+  ],
+  "linters": [
+    { "name": "clippy", "cmd": "cargo clippy --all-targets -- -D warnings", "detect": "Cargo.toml" }
+  ],
+  "formatters": [
+    { "name": "rustfmt", "cmd": "cargo fmt", "detect": "Cargo.toml" }
+  ],
+  "deploy": {
+    "kind": "publish",
+    "dev_cmd": "cargo run",
+    "build_cmd": "cargo build --release",
+    "publish_cmd": "cargo publish"
+  },
+  "skip_tools": ["sdd_clasp"],
+  "required_tools": [
+    "sdd_linter",
+    "sdd_test_runner",
+    "sdd_git_awareness",
+    "sdd_lock_manager"
+  ],
+  "conventions": {
+    "test_dir": "tests",
+    "test_unit_dir": "src",
+    "test_integration_dir": "tests",
+    "source_dir": "src",
+    "version_file": "Cargo.toml"
+  }
+}

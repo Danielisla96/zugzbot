@@ -2,10 +2,60 @@ import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
 
+function pruneFileContent(filePath: string): string {
+  const ext = path.extname(filePath)
+  if (!fs.existsSync(filePath)) {
+    return `// Archivo no encontrado: ${filePath}`
+  }
+  const content = fs.readFileSync(filePath, "utf-8")
+  if (![".ts", ".js", ".py"].includes(ext)) {
+    return content // Keep other file types intact
+  }
+
+  const lines = content.split("\n")
+  const prunedLines: string[] = []
+  
+  if (ext === ".py") {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
+      const trimmed = line.trim()
+      if (trimmed.startsWith("def ") || trimmed.startsWith("class ") || trimmed.startsWith("import ") || trimmed.startsWith("from ")) {
+        prunedLines.push(line)
+        if (i + 1 < lines.length && (lines[i + 1].trim().startsWith(`"""`) || lines[i + 1].trim().startsWith(`'''`))) {
+          prunedLines.push(lines[i + 1])
+        }
+      }
+    }
+    return prunedLines.join("\n") || "# (Empty signature)"
+  } else {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
+      const trimmed = line.trim()
+      if (
+        trimmed.startsWith("import ") ||
+        trimmed.startsWith("export ") ||
+        trimmed.startsWith("interface ") ||
+        trimmed.startsWith("type ") ||
+        trimmed.startsWith("class ") ||
+        (trimmed.startsWith("const ") && (trimmed.includes("=") || trimmed.includes("=>"))) ||
+        trimmed.startsWith("function ") ||
+        trimmed.startsWith("public ") ||
+        trimmed.startsWith("private ") ||
+        trimmed.startsWith("protected ") ||
+        trimmed.startsWith("async ")
+      ) {
+        prunedLines.push(line)
+      }
+    }
+    return prunedLines.join("\n") || "// (Empty signature)"
+  }
+}
+
 export default tool({
   description: "Crea una consolidación técnica de alta densidad (compaction snapshot) de los artefactos de la fase actual para optimizar tokens y reiniciar la memoria del subagente.",
   args: {
-    changeName: tool.schema.string().optional().describe("Nombre del cambio en kebab-case. Si se omite, se autodetectará del sdd-lock.")
+    changeName: tool.schema.string().optional().describe("Nombre del cambio en kebab-case. Si se omite, se autodetectará del sdd-lock."),
+    filesToPrune: tool.schema.array(tool.schema.string()).optional().describe("Lista de archivos (relativos al root) de los cuales extraer firmas/declaraciones para compactar y agregar al snapshot.")
   },
   async execute(args, context) {
     const projectRoot = context.worktree || context.directory;
@@ -86,6 +136,23 @@ export default tool({
     const snapshotPath = path.join(changeDir, "compaction_snapshot.md");
     const nowStr = new Date().toISOString().split('T')[0];
 
+    let prunedCodeSummary = "";
+    if (args.filesToPrune && args.filesToPrune.length > 0) {
+      prunedCodeSummary = "\n## 📁 Firmas de Código Compactadas (Declaraciones de API)\n";
+      for (const relFile of args.filesToPrune) {
+        const fullFilePath = path.join(projectRoot, relFile);
+        const ext = path.extname(relFile);
+        const lang = ext === ".py" ? "python" : (ext === ".ts" ? "typescript" : "javascript");
+        if (fs.existsSync(fullFilePath)) {
+          const signatures = pruneFileContent(fullFilePath);
+          prunedCodeSummary += `\n### [${relFile}](file:///${fullFilePath})\n\`\`\`${lang}\n${signatures}\n\`\`\`\n`;
+        } else {
+          prunedCodeSummary += `\n### ⚠️ Archivo no encontrado: \`${relFile}\`\n`;
+        }
+      }
+      prunedCodeSummary += "\n---\n";
+    }
+
     const markdown = `# 🧠 Consolidado de Contexto de Alta Densidad (SDD Compaction)
 Fecha de consolidación: ${nowStr}
 Cambio Activo: \`${changeName}\`
@@ -111,7 +178,7 @@ ${archSummary}
 ${tasksSummary}
 
 ---
-
+${prunedCodeSummary}
 > [!TIP]
 > **Acción Recomendada para Limpiar Memoria de Contexto:**
 > Si eres un subagente y ves este archivo, tu memoria ha sido compactada con éxito.

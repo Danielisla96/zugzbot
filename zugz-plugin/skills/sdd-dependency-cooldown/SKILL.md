@@ -1,3 +1,8 @@
+---
+name: sdd-dependency-cooldown
+description: Verifica que las dependencias tengan al menos 3 días de publicadas antes de ser importadas.
+---
+
 # Skill: Dependency Cooldown Checker
 
 Verifica que las dependencias tengan al menos **3 días** de publicadas antes de ser importadas.

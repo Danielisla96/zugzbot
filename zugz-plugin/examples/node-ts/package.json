@@ -1,0 +1,17 @@
+{
+  "name": "zugzbot-demo-node-ts",
+  "version": "0.1.0",
+  "description": "Demo project for Zugzbot v2.0.0 - Node/TypeScript",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "lint": "eslint src tests --ext .ts",
+    "build": "tsc",
+    "dev": "node --import tsx src/server.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "id": "node-javascript",
+  "display_name": "Node.js (JavaScript puro)",
+  "detect": {
+    "files_any": ["package.json"],
+    "files_any_deep": []
+  },
+  "test_runners": [
+    { "name": "vitest", "cmd": "npx vitest run", "detect": "vitest.config.*" },
+    { "name": "jest", "cmd": "npx jest", "detect": "jest.config.*" },
+    { "name": "mocha", "cmd": "npx mocha", "detect": ".mocharc*" },
+    { "name": "node-test", "cmd": "node --test", "detect": null }
+  ],
+  "linters": [
+    { "name": "eslint", "cmd": "npx eslint .", "detect": ".eslintrc*" },
+    { "name": "eslint", "cmd": "npx eslint .", "detect": "eslint.config.*" },
+    { "name": "biome", "cmd": "npx biome check", "detect": "biome.json" }
+  ],
+  "formatters": [
+    { "name": "prettier", "cmd": "npx prettier --write .", "detect": ".prettierrc*" }
+  ],
+  "deploy": {
+    "kind": "dev-server",
+    "dev_cmd": "npm run dev",
+    "build_cmd": "npm run build",
+    "publish_cmd": "npm publish"
+  },
+  "skip_tools": ["sdd_clasp"],
+  "required_tools": [
+    "sdd_linter",
+    "sdd_test_runner",
+    "sdd_git_awareness",
+    "sdd_lock_manager"
+  ],
+  "conventions": {
+    "test_dir": "tests",
+    "test_unit_dir": "tests/unit",
+    "test_integration_dir": "tests/integration",
+    "source_dir": "src",
+    "version_file": "package.json"
+  }
+}

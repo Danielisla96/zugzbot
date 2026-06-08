@@ -1,0 +1,41 @@
+{
+  "id": "java",
+  "display_name": "Java (Maven / Gradle)",
+  "detect": {
+    "files_any": ["pom.xml", "build.gradle", "build.gradle.kts"],
+    "files_any_deep": []
+  },
+  "test_runners": [
+    { "name": "maven", "cmd": "mvn test", "detect": "pom.xml" },
+    { "name": "gradle", "cmd": "gradle test", "detect": "build.gradle" },
+    { "name": "gradle-kts", "cmd": "gradle test", "detect": "build.gradle.kts" }
+  ],
+  "linters": [
+    { "name": "checkstyle", "cmd": "mvn checkstyle:check", "detect": "checkstyle.xml" },
+    { "name": "spotbugs", "cmd": "mvn spotbugs:check", "detect": null },
+    { "name": "pmd", "cmd": "mvn pmd:check", "detect": "pmd.xml" }
+  ],
+  "formatters": [
+    { "name": "google-java-format", "cmd": "google-java-format --replace src/**/*.java", "detect": null }
+  ],
+  "deploy": {
+    "kind": "build",
+    "dev_cmd": "mvn spring-boot:run",
+    "build_cmd": "mvn package",
+    "publish_cmd": "mvn deploy"
+  },
+  "skip_tools": ["sdd_clasp"],
+  "required_tools": [
+    "sdd_linter",
+    "sdd_test_runner",
+    "sdd_git_awareness",
+    "sdd_lock_manager"
+  ],
+  "conventions": {
+    "test_dir": "src/test",
+    "test_unit_dir": "src/test/java",
+    "test_integration_dir": "src/test/java",
+    "source_dir": "src/main/java",
+    "version_file": "pom.xml"
+  }
+}
