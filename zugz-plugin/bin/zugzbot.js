@@ -112,6 +112,19 @@ function yellow(msg) { console.log(`  \x1b[33m⚠\x1b[0m \x1b[33m${msg}\x1b[0m`)
 function red(msg) { console.log(`  \x1b[31m✘\x1b[0m \x1b[31m\x1b[1m${msg}\x1b[0m`) }
 function header(msg) { console.log(`\n\x1b[1m\x1b[36m❯ ${msg}\x1b[0m`) }
 
+function drawBox(lines, borderColorAnsi = "\x1b[35m") {
+  const width = 58
+  const top = `┌${"─".repeat(width)}┐`
+  const bottom = `└${"─".repeat(width)}┘`
+  console.log(`${borderColorAnsi}${top}\x1b[0m`)
+  for (const line of lines) {
+    const visibleLength = line.replace(/\x1b\[[0-9;]*m/g, "").length
+    const padding = Math.max(0, width - visibleLength)
+    console.log(`${borderColorAnsi}│\x1b[0m${line}${" ".repeat(padding)}${borderColorAnsi}│\x1b[0m`)
+  }
+  console.log(`${borderColorAnsi}${bottom}\x1b[0m`)
+}
+
 function checkDependencies() {
   header("🔍 Verificando dependencias del sistema...")
   
@@ -533,12 +546,10 @@ function buildOpencodeJson(models) {
 }
 
 function init() {
-  console.log(`
-\x1b[1m\x1b[35m┌──────────────────────────────────────────────────────────┐\x1b[0m
-\x1b[1m\x1b[35m│\x1b[0m   \x1b[1m\x1b[36mZugzbot SDD Plugin\x1b[0m \x1b[32mv${PKG_VERSION.padEnd(31)}\x1b[1m\x1b[35m│\x1b[0m
-\x1b[1m\x1b[35m│\x1b[0m   \x1b[2mStack-Agnostic + TDD Discipline\x1b[0m                        \x1b[1m\x1b[35m│\x1b[0m
-\x1b[1m\x1b[35m└──────────────────────────────────────────────────────────┘\x1b[0m
-`)
+  drawBox([
+    `   \x1b[1m\x1b[36mZugzbot SDD Plugin\x1b[0m \x1b[32mv${PKG_VERSION}\x1b[0m`,
+    `   \x1b[2mStack-Agnostic + TDD Discipline\x1b[0m`
+  ], "\x1b[1m\x1b[35m")
 
   checkDependencies()
 
@@ -757,11 +768,11 @@ function init() {
   }
 
 
-  console.log(`
-\x1b[1m\x1b[32m┌──────────────────────────────────────────────────────────┐\x1b[0m
-\x1b[1m\x1b[32m│\x1b[0m   \x1b[1m\x1b[32m✔ Zugzbot v${PKG_VERSION.padEnd(30)} instalado!  \x1b[1m\x1b[32m│\x1b[0m
-\x1b[1m\x1b[32m└──────────────────────────────────────────────────────────┘\x1b[0m
+  drawBox([
+    `   \x1b[1m\x1b[32m✔ Zugzbot v${PKG_VERSION} instalado!\x1b[0m`
+  ], "\x1b[1m\x1b[32m")
 
+  console.log(`
    \x1b[1mWorkflow:\x1b[0m opencode + @zugzbot (router cognitivo)
 
    \x1b[1mEstructura del proyecto v2:\x1b[0m
@@ -783,7 +794,7 @@ function init() {
    \x1b[1mMulti-Stack:\x1b[0m Autodetecta Node/TS, Python, Go, Rust, Java, GAS
    \x1b[1mWorkflows:\x1b[0m full-sdd-tdd, quick-fix, audit, refactor, explain, oracle
    \x1b[1mDesign Systems:\x1b[0m 11 frameworks de diseño incorporados (incluyendo HeroUI)
-   \x1b[1mHeroUI:\x1b[0m 3 skills oficiales integrados. Para uso global: \x1b[2mnpx skills add heroui-inc/heroui -y -g\x1b[0m
+   \x1b[1mHeroUI:\x1b[0m 3 skills oficiales ya copiados y listos en tu carpeta .opencode/skills/ (no requieres instalar nada más).
 `)
 }
 
