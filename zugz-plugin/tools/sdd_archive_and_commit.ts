@@ -390,6 +390,43 @@ root = cursor.fetchone()
 sessions = [dict(root)] if root else []
 sessions.extend(get_descendants(root_sid))
 
+def get_active_duration(session_id):
+    cursor.execute('SELECT time_created, time_updated FROM session WHERE id = ?', (session_id,))
+    row = cursor.fetchone()
+    if not row:
+        return 0.0
+    time_created, time_updated = row
+    total_raw_ms = time_updated - time_created
+    
+    cursor.execute('SELECT time_created, time_updated, data FROM part WHERE session_id = ?', (session_id,))
+    parts = cursor.fetchall()
+    
+    total_idle_ms = 0
+    for p_created, p_updated, p_data_str in parts:
+        try:
+            p_data = json.loads(p_data_str)
+        except Exception:
+            continue
+        if p_data.get('type') != 'tool':
+            continue
+            
+        tool_name = p_data.get('tool')
+        state = p_data.get('state') or {}
+        time_info = state.get('time') or {}
+        
+        t_start = time_info.get('start')
+        
+        if tool_name in ('ask_question', 'ask_permission', 'task'):
+            duration = p_updated - p_created
+            total_idle_ms += duration
+        else:
+            if t_start and t_start > p_created:
+                idle = t_start - p_created
+                total_idle_ms += idle
+                
+    active_ms = total_raw_ms - total_idle_ms
+    return max(0.0, active_ms / 1000.0)
+
 total_input = sum(s.get('tokens_input') or 0 for s in sessions)
 total_output = sum(s.get('tokens_output') or 0 for s in sessions)
 total_cost = sum(s.get('cost') or 0.0 for s in sessions)
@@ -406,6 +443,8 @@ for s in sessions:
             models.add(model_name)
         except Exception:
             models.add(m_val)
+    
+    active_dur = get_active_duration(s.get('id'))
     formatted_sessions.append({
         'id': s.get('id'),
         'parent_id': s.get('parent_id'),
@@ -416,7 +455,8 @@ for s in sessions:
         'tokens_output': s.get('tokens_output') or 0,
         'cost': s.get('cost') or 0.0,
         'time_created': s.get('time_created') or 0,
-        'time_updated': s.get('time_updated') or 0
+        'time_updated': s.get('time_updated') or 0,
+        'active_duration': active_dur
     })
 
 print(json.dumps({
@@ -461,13 +501,14 @@ print(json.dumps({
         }
 
         let sessionTable = "";
-        let totalDuration = 0;
+        let totalActiveSec = 0;
+        let totalRawSec = 0;
         if (sessionList.length > 0) {
           sessionTable = `
 ## 🕵️ Detalle de Ejecución por Agente y Subagente
 
-| Agente / Subagente | Tarea / Título | Modelo | Duración | Tokens Entrada | Tokens Salida | Costo (USD) |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Agente / Subagente | Tarea / Título | Modelo | Duración Activa | Duración Total | Tokens Entrada | Tokens Salida | Costo (USD) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 `;
           sessionList.forEach((s: any) => {
             const agentName = s.agent ? `\`${s.agent}\`` : "—";
@@ -477,28 +518,38 @@ print(json.dumps({
             const outputTokens = (s.tokens_output || 0).toLocaleString();
             const costStr = s.cost !== undefined ? `$${s.cost.toFixed(6)}` : "—";
             
-            let durationStr = "—";
+            let rawSec = 0;
             if (s.time_updated && s.time_created && s.time_updated > s.time_created) {
-              const diffMs = s.time_updated - s.time_created;
-              const diffSec = diffMs / 1000;
-              totalDuration += diffSec;
-              durationStr = `${diffSec.toFixed(1)}s`;
+              rawSec = (s.time_updated - s.time_created) / 1000;
             }
+            const activeSec = s.active_duration !== undefined ? s.active_duration : rawSec;
             
-            sessionTable += `| ${agentName} | ${titleStr} | ${modelStr} | ${durationStr} | ${inputTokens} | ${outputTokens} | ${costStr} |\n`;
+            totalActiveSec += activeSec;
+            totalRawSec += rawSec;
+            
+            const activeStr = s.active_duration !== undefined 
+              ? `${activeSec.toFixed(1)}s` 
+              : `${rawSec.toFixed(1)}s`;
+            const rawStr = `${rawSec.toFixed(1)}s`;
+            
+            sessionTable += `| ${agentName} | ${titleStr} | ${modelStr} | ${activeStr} | ${rawStr} | ${inputTokens} | ${outputTokens} | ${costStr} |\n`;
           });
           
-          const totalDurationStr = `${totalDuration.toFixed(1)}s`;
-          sessionTable += `| **Total Acumulado** | | | **${totalDurationStr}** | **${totalInput.toLocaleString()}** | **${totalOutput.toLocaleString()}** | **$${totalCost.toFixed(4)}** |\n`;
+          sessionTable += `| **Total Acumulado** | | | **${totalActiveSec.toFixed(1)}s** | **${totalRawSec.toFixed(1)}s** | **${totalInput.toLocaleString()}** | **${totalOutput.toLocaleString()}** | **$${totalCost.toFixed(4)}** |\n`;
         }
 
-        const totalMin = (totalDuration / 60).toFixed(1);
+        const activeMin = (totalActiveSec / 60).toFixed(1);
+        const rawMin = (totalRawSec / 60).toFixed(1);
         const tokenUsageMarkdown = `# 💳 Reporte de Consumo del Cambio: ${args.changeName}
 
-Este reporte detalla la telemetría de tokens, coste financiero en USD y tiempos de ejecución acumulados por el enjambre de agentes durante el desarrollo de esta tarea.
+Este reporte detalla la telemetría de tokens, coste financiero en USD y tiempos de ejecución activos acumulados por el enjambre de agentes durante el desarrollo de esta tarea.
+
+> [!NOTE]
+> La **Duración Activa** es el tiempo efectivo de ejecución de la IA. El valor entre paréntesis **(Total)** incluye las pausas por aprobación del usuario (HIL), solicitudes de permisos y esperas de delegación.
 
 ## 📊 Métricas de Consumo General
-- **Duración Total de Ejecución:** ${totalDuration.toFixed(1)}s (~${totalMin}m)
+- **Duración Activa de Ejecución (IA):** ${totalActiveSec.toFixed(1)}s (~${activeMin}m)
+- **Duración Total de Ejecución (Pared/HIL):** ${totalRawSec.toFixed(1)}s (~${rawMin}m)
 - **Coste Total de la Sesión:** $${totalCost.toFixed(4)} USD
 - **Tokens de Entrada (Prompt):** ${totalInput.toLocaleString()} tokens
 - **Tokens de Salida (Completion):** ${totalOutput.toLocaleString()} tokens
