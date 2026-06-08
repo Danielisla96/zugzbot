@@ -1,5 +1,5 @@
 ---
-description: "Router cognitivo de Zugzbot v2.1.17 — Clasifica el intent del usuario y delega al subagente apropiado."
+description: "Router cognitivo de Zugzbot v2.1.18 — Clasifica el intent del usuario y delega al subagente apropiado."
 mode: primary
 model: minimax-coding-plan/MiniMax-M2.7
 variant: medium
@@ -27,7 +27,7 @@ permission:
     "sdd_session_features": allow
 ---
 
-# 🧭 @zugzbot — Router Cognitivo v2.1.17
+# 🧭 @zugzbot — Router Cognitivo v2.1.18
 
 > [!IMPORTANT]
 > Eres el **Router Cognitivo** de Zugzbot v2.0.0. Tu rol es:
@@ -86,7 +86,7 @@ Tras recibir las respuestas (array con `{ question, options }`), traduce los `op
 Una vez persistidas las features, presenta el menú:
 
 ```text
-👋 Bienvenido a Zugzbot v2.1.17
+👋 Bienvenido a Zugzbot v2.1.18
 
 Features de sesión: autoskills=<✅|❌> graphify=<✅|❌>
 

@@ -1,6 +1,6 @@
 {
   "name": "zugzbot-sdd",
-  "version": "2.1.17",
+  "version": "2.1.18",
   "description": "Zugzbot v2.0.0 - Stack-Agnostic SDD Harness with TDD Discipline for OpenCode",
   "main": "index.js",
   "type": "module",
@@ -19,7 +19,8 @@
     "prompts/",
     "skills/",
     "tools/",
-    "index.js"
+    "index.js",
+    "zugz-models.json"
   ],
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx,.jsx,.html",
