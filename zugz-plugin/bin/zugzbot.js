@@ -106,10 +106,10 @@ const BRAIN_TEMPLATE = `# 🧠 Brain del Proyecto
 - Proyecto inicializado con Zugzbot SDD v${PKG_VERSION} (TDD-discipline, stack-agnostic)
 `
 
-function green(msg) { console.log(`  \x1b[32m✓\x1b[0m ${msg}`) }
-function yellow(msg) { console.log(`  \x1b[33m⚠\x1b[0m ${msg}`) }
-function red(msg) { console.log(`  \x1b[31m✗\x1b[0m ${msg}`) }
-function header(msg) { console.log(`\n\x1b[1m${msg}\x1b[0m`) }
+function green(msg) { console.log(`  \x1b[32m✔\x1b[0m \x1b[37m${msg}\x1b[0m`) }
+function yellow(msg) { console.log(`  \x1b[33m⚠\x1b[0m \x1b[33m${msg}\x1b[0m`) }
+function red(msg) { console.log(`  \x1b[31m✘\x1b[0m \x1b[31m\x1b[1m${msg}\x1b[0m`) }
+function header(msg) { console.log(`\n\x1b[1m\x1b[36m❯ ${msg}\x1b[0m`) }
 
 function copyRecursiveSync(src, dest) {
   const exists = fs.existsSync(src);
@@ -450,10 +450,10 @@ function buildOpencodeJson(models) {
 
 function init() {
   console.log(`
-╔══════════════════════════════════════════════════════════╗
-║   Zugzbot SDD Plugin v${PKG_VERSION.padEnd(36)}║
-║   Stack-Agnostic + TDD Discipline                        ║
-╚══════════════════════════════════════════════════════════╝
+\x1b[1m\x1b[35m┌──────────────────────────────────────────────────────────┐\x1b[0m
+\x1b[1m\x1b[35m│\x1b[0m   \x1b[1m\x1b[36mZugzbot SDD Plugin\x1b[0m \x1b[32mv${PKG_VERSION.padEnd(31)}\x1b[1m\x1b[35m│\x1b[0m
+\x1b[1m\x1b[35m│\x1b[0m   \x1b[2mStack-Agnostic + TDD Discipline\x1b[0m                        \x1b[1m\x1b[35m│\x1b[0m
+\x1b[1m\x1b[35m└──────────────────────────────────────────────────────────┘\x1b[0m
 `)
 
   if (detectLegacyInstallation(INSTALL_DIR)) {
@@ -653,7 +653,7 @@ function init() {
     const localDesignDir = path.join(INSTALL_DIR, ".opencode/design")
     fs.mkdirSync(localDesignDir, { recursive: true })
     copyRecursiveSync(sourceDesignDir, localDesignDir)
-    green("Design systems copiados (10 disponibles para el skill sdd-design-system)")
+    green("Design systems copiados (11 disponibles para el skill sdd-design-system)")
   }
 
   const sourceTemplatesDir = path.join(PKG_ROOT, "templates")
@@ -672,33 +672,32 @@ function init() {
 
 
   console.log(`
-╔══════════════════════════════════════════════════════════╗
-║  ✅ Zugzbot v${PKG_VERSION.padEnd(36)} instalado correctamente!  ║
-╚══════════════════════════════════════════════════════════╝
+\x1b[1m\x1b[32m┌──────────────────────────────────────────────────────────┐\x1b[0m
+\x1b[1m\x1b[32m│\x1b[0m   \x1b[1m\x1b[32m✔ Zugzbot v${PKG_VERSION.padEnd(30)} instalado!  \x1b[1m\x1b[32m│\x1b[0m
+\x1b[1m\x1b[32m└──────────────────────────────────────────────────────────┘\x1b[0m
 
-   Workflow: opencode + @zugzbot (router cognitivo)
+   \x1b[1mWorkflow:\x1b[0m opencode + @zugzbot (router cognitivo)
 
-   Estructura del proyecto v2:
+   \x1b[1mEstructura del proyecto v2:\x1b[0m
    ├── opencode.json              (14 agentes: zugzbot, f0-f5, aux-*)
    ├── tui.json
    ├── .openspec/
    │   ├── sdd-lock.json          (schema v7 con bloque tdd, git, session_features y design system)
    │   └── brain.md
-    ├── .opencode/
-    │   ├── profiles/              (8 profiles: node-ts, python, go, rust, java, gas, static-site)
-    │   ├── plugins/               (TUI + SDD core)
-    │   ├── skills/                (16 skills: 12 premium + sdd-design-system + 3 oficiales HeroUI)
-    │   ├── tools/                 (33 herramientas SRP)
-    │   ├── design/                (10 design systems: airbnb, apple, meta, nike, notion, renault, theverge, uber, voltagent, x.ai)
-    │   └── templates/             (Plantillas oficiales de scaffolding para frontend y backend)
-    └── prompts/                   (contratos y boundaries de cada fase)
+   ├── .opencode/
+   │   ├── profiles/              (8 profiles: node-ts, python, go, rust, java, gas, static-site)
+   │   ├── plugins/               (TUI + SDD core)
+   │   ├── skills/                (18 skills: premium + sdd-design-system + oficiales HeroUI)
+   │   ├── tools/                 (herramientas SRP)
+   │   ├── design/                (11 design systems: airbnb, apple, heroui, meta, nike, notion, renault, theverge, uber, voltagent, x.ai)
+   │   └── templates/             (Plantillas oficiales de scaffolding para frontend y backend)
+   └── prompts/                   (contratos y boundaries de cada fase)
 
-   TDD Discipline: Red → Green → Refactor enforced
-   Stack-agnostic: detecta automáticamente Node/TS, Python, Go, Rust, Java, GAS
-   Workflows: full-sdd-tdd, quick-fix, audit, refactor, explain, oracle
-   Agents: 14 (zugzbot + 8 core SDD/TDD + 4 aux + 1 sdd-tester legacy alias)
-   Design systems: el skill sdd-design-system carga el catálogo y persiste la elección en el lockfile (schema v7)
-   HeroUI: 3 skills oficiales (heroui-react con scripts Node para fetchear docs en vivo, heroui-migration v2→v3, heroui-native mobile) ya copiados a .opencode/skills/. Para tenerlos también a nivel global (~/.agents/skills/): npx skills add heroui-inc/heroui -y -g
+   \x1b[1mDisciplina TDD:\x1b[0m Red → Green → Refactor
+   \x1b[1mMulti-Stack:\x1b[0m Autodetecta Node/TS, Python, Go, Rust, Java, GAS
+   \x1b[1mWorkflows:\x1b[0m full-sdd-tdd, quick-fix, audit, refactor, explain, oracle
+   \x1b[1mDesign Systems:\x1b[0m 11 frameworks de diseño incorporados (incluyendo HeroUI)
+   \x1b[1mHeroUI:\x1b[0m 3 skills oficiales integrados. Para uso global: \x1b[2mnpx skills add heroui-inc/heroui -y -g\x1b[0m
 `)
 }
 
