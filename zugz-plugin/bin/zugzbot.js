@@ -156,6 +156,14 @@ function checkDependencies() {
     results.push({ name: "Git", required: true, status: "FAIL", current: "No encontrado", expected: "Cualquier versión", msg: "Git es crítico para gestionar commits y checkpoints en el ciclo SDD-TDD." })
   }
 
+  // 2.5 OpenCode (Required)
+  const opencodeVersion = testCmd("opencode --version")
+  if (opencodeVersion) {
+    green(`OpenCode CLI: v${opencodeVersion} (OK)`)
+  } else {
+    results.push({ name: "OpenCode", required: true, status: "FAIL", current: "No encontrado", expected: "Cualquier versión", msg: "El CLI de OpenCode es obligatorio para la orquestación y validación de agentes." })
+  }
+
   // 3. Docker (Recommended)
   const dockerVersion = testCmd("docker --version")
   if (dockerVersion) {
@@ -795,6 +803,7 @@ function init() {
    \x1b[1mWorkflows:\x1b[0m full-sdd-tdd, quick-fix, audit, refactor, explain, oracle
    \x1b[1mDesign Systems:\x1b[0m 11 frameworks de diseño incorporados (incluyendo HeroUI)
    \x1b[1mHeroUI:\x1b[0m 3 skills oficiales ya copiados y listos en tu carpeta .opencode/skills/ (no requieres instalar nada más).
+   \x1b[1mModelos de IA:\x1b[0m Edita \x1b[32mzugz-models.json\x1b[0m y ejecuta \x1b[36mnpx zugzbot\x1b[0m para sincronizar modelos personalizados por subagente.
 `)
 }
 
