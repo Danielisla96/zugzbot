@@ -3,6 +3,7 @@
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
+import { execSync } from "child_process"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -110,6 +111,89 @@ function green(msg) { console.log(`  \x1b[32m✔\x1b[0m \x1b[37m${msg}\x1b[0m`) 
 function yellow(msg) { console.log(`  \x1b[33m⚠\x1b[0m \x1b[33m${msg}\x1b[0m`) }
 function red(msg) { console.log(`  \x1b[31m✘\x1b[0m \x1b[31m\x1b[1m${msg}\x1b[0m`) }
 function header(msg) { console.log(`\n\x1b[1m\x1b[36m❯ ${msg}\x1b[0m`) }
+
+function checkDependencies() {
+  header("🔍 Verificando dependencias del sistema...")
+  
+  const results = []
+  
+  // 1. Node.js (Required)
+  const nodeVersionStr = process.version
+  const nodeMajor = parseInt(nodeVersionStr.replace(/^v/, "").split(".")[0], 10)
+  if (nodeMajor >= 18) {
+    green(`Node.js: ${nodeVersionStr} (OK, >= v18.0.0)`)
+  } else {
+    results.push({ name: "Node.js", required: true, status: "FAIL", current: nodeVersionStr, expected: ">= v18.0.0", msg: "Node.js v18 o superior es requerido." })
+  }
+
+  // Helper to run commands
+  function testCmd(cmd) {
+    try {
+      return execSync(cmd, { stdio: "pipe" }).toString().trim()
+    } catch (_e) {
+      return null
+    }
+  }
+
+  // 2. Git (Required)
+  const gitVersion = testCmd("git --version")
+  if (gitVersion) {
+    green(`Git: ${gitVersion} (OK)`)
+  } else {
+    results.push({ name: "Git", required: true, status: "FAIL", current: "No encontrado", expected: "Cualquier versión", msg: "Git es crítico para gestionar commits y checkpoints en el ciclo SDD-TDD." })
+  }
+
+  // 3. Docker (Recommended)
+  const dockerVersion = testCmd("docker --version")
+  if (dockerVersion) {
+    green(`Docker: ${dockerVersion.replace(/\n/g, " ")} (OK)`)
+  } else {
+    results.push({ name: "Docker", required: false, status: "WARN", current: "No encontrado", expected: "Recomendado", msg: "Docker es altamente recomendado para levantar bases de datos y servicios en contenedores." })
+  }
+
+  // 4. Python 3 (Recommended)
+  const pythonVersion = testCmd("python3 --version") || testCmd("python --version")
+  if (pythonVersion) {
+    green(`Python: ${pythonVersion} (OK)`)
+  } else {
+    results.push({ name: "Python", required: false, status: "WARN", current: "No encontrado", expected: "Recomendado", msg: "Python es recomendado para automatizaciones y stacks basados en FastAPI o Django." })
+  }
+
+  // Optional toolchains (Go, Rust)
+  const goVersion = testCmd("go version")
+  if (goVersion) {
+    green(`Go: ${goVersion.split(" ")[2]} (OK)`)
+  }
+  const rustVersion = testCmd("rustc --version")
+  if (rustVersion) {
+    green(`Rust: ${rustVersion.split(" ")[1]} (OK)`)
+  }
+
+  // Print summary of issues
+  const errors = results.filter(r => r.status === "FAIL")
+  const warnings = results.filter(r => r.status === "WARN")
+
+  if (errors.length > 0 || warnings.length > 0) {
+    console.log()
+    if (errors.length > 0) {
+      red("❌ CRITICAL: Faltan dependencias obligatorias. La herramienta podría no funcionar:")
+      errors.forEach(e => {
+        console.log(`     - \x1b[1m${e.name}\x1b[0m (Esperado: ${e.expected}, Actual: ${e.current})`)
+        console.log(`       \x1b[2m${e.msg}\x1b[0m`)
+      })
+    }
+    if (warnings.length > 0) {
+      yellow("⚠ AVISO: Faltan herramientas opcionales recomendadas para ciertos stacks:")
+      warnings.forEach(w => {
+        console.log(`     - \x1b[1m${w.name}\x1b[0m (Recomendado para ciertos flujos)`)
+        console.log(`       \x1b[2m${w.msg}\x1b[0m`)
+      })
+    }
+    console.log()
+  } else {
+    green("¡Todas las dependencias del sistema están en orden!")
+  }
+}
 
 function copyRecursiveSync(src, dest) {
   const exists = fs.existsSync(src);
@@ -455,6 +539,8 @@ function init() {
 \x1b[1m\x1b[35m│\x1b[0m   \x1b[2mStack-Agnostic + TDD Discipline\x1b[0m                        \x1b[1m\x1b[35m│\x1b[0m
 \x1b[1m\x1b[35m└──────────────────────────────────────────────────────────┘\x1b[0m
 `)
+
+  checkDependencies()
 
   if (detectLegacyInstallation(INSTALL_DIR)) {
     console.log()
