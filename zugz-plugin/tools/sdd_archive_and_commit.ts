@@ -378,14 +378,14 @@ while True:
 root_sid = curr_sid
 
 def get_descendants(sid):
-    cursor.execute('SELECT id, parent_id, agent, title, model, cost, tokens_input, tokens_output FROM session WHERE parent_id = ?', (sid,))
+    cursor.execute('SELECT id, parent_id, agent, title, model, cost, tokens_input, tokens_output, time_created, time_updated FROM session WHERE parent_id = ?', (sid,))
     children = cursor.fetchall()
     res = [dict(c) for c in children]
     for c in children:
         res.extend(get_descendants(c['id']))
     return res
 
-cursor.execute('SELECT id, parent_id, agent, title, model, cost, tokens_input, tokens_output FROM session WHERE id = ?', (root_sid,))
+cursor.execute('SELECT id, parent_id, agent, title, model, cost, tokens_input, tokens_output, time_created, time_updated FROM session WHERE id = ?', (root_sid,))
 root = cursor.fetchone()
 sessions = [dict(root)] if root else []
 sessions.extend(get_descendants(root_sid))
@@ -414,7 +414,9 @@ for s in sessions:
         'model': model_name,
         'tokens_input': s.get('tokens_input') or 0,
         'tokens_output': s.get('tokens_output') or 0,
-        'cost': s.get('cost') or 0.0
+        'cost': s.get('cost') or 0.0,
+        'time_created': s.get('time_created') or 0,
+        'time_updated': s.get('time_updated') or 0
     })
 
 print(json.dumps({
@@ -459,12 +461,13 @@ print(json.dumps({
         }
 
         let sessionTable = "";
+        let totalDuration = 0;
         if (sessionList.length > 0) {
           sessionTable = `
 ## 🕵️ Detalle de Ejecución por Agente y Subagente
 
-| Agente / Subagente | Tarea / Título | Modelo | Tokens Entrada | Tokens Salida | Costo (USD) |
-| :--- | :--- | :--- | :--- | :--- | :--- |
+| Agente / Subagente | Tarea / Título | Modelo | Duración | Tokens Entrada | Tokens Salida | Costo (USD) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 `;
           sessionList.forEach((s: any) => {
             const agentName = s.agent ? `\`${s.agent}\`` : "—";
@@ -473,17 +476,29 @@ print(json.dumps({
             const inputTokens = (s.tokens_input || 0).toLocaleString();
             const outputTokens = (s.tokens_output || 0).toLocaleString();
             const costStr = s.cost !== undefined ? `$${s.cost.toFixed(6)}` : "—";
-            sessionTable += `| ${agentName} | ${titleStr} | ${modelStr} | ${inputTokens} | ${outputTokens} | ${costStr} |\n`;
+            
+            let durationStr = "—";
+            if (s.time_updated && s.time_created && s.time_updated > s.time_created) {
+              const diffMs = s.time_updated - s.time_created;
+              const diffSec = diffMs / 1000;
+              totalDuration += diffSec;
+              durationStr = `${diffSec.toFixed(1)}s`;
+            }
+            
+            sessionTable += `| ${agentName} | ${titleStr} | ${modelStr} | ${durationStr} | ${inputTokens} | ${outputTokens} | ${costStr} |\n`;
           });
           
-          sessionTable += `| **Total Acumulado** | | | **${totalInput.toLocaleString()}** | **${totalOutput.toLocaleString()}** | **$${totalCost.toFixed(4)}** |\n`;
+          const totalDurationStr = `${totalDuration.toFixed(1)}s`;
+          sessionTable += `| **Total Acumulado** | | | **${totalDurationStr}** | **${totalInput.toLocaleString()}** | **${totalOutput.toLocaleString()}** | **$${totalCost.toFixed(4)}** |\n`;
         }
 
+        const totalMin = (totalDuration / 60).toFixed(1);
         const tokenUsageMarkdown = `# 💳 Reporte de Consumo del Cambio: ${args.changeName}
 
-Este reporte detalla la telemetría de tokens y coste financiero en USD acumulado por el enjambre de agentes durante el desarrollo de esta tarea.
+Este reporte detalla la telemetría de tokens, coste financiero en USD y tiempos de ejecución acumulados por el enjambre de agentes durante el desarrollo de esta tarea.
 
 ## 📊 Métricas de Consumo General
+- **Duración Total de Ejecución:** ${totalDuration.toFixed(1)}s (~${totalMin}m)
 - **Coste Total de la Sesión:** $${totalCost.toFixed(4)} USD
 - **Tokens de Entrada (Prompt):** ${totalInput.toLocaleString()} tokens
 - **Tokens de Salida (Completion):** ${totalOutput.toLocaleString()} tokens
@@ -493,7 +508,7 @@ ${sessionTable}
 *Reporte autogenerado de forma atómica al cierre de la tarea por sdd_archive_and_commit.*
 `;
         fs.writeFileSync(path.join(projectRoot, ".openspec/changes", args.changeName, "token_usage.md"), tokenUsageMarkdown, "utf-8");
-        report.push(`✓ Reporte de telemetría de tokens generado con éxito en token_usage.md`);
+        report.push(`✓ Reporte de telemetría de tokens (con duración en segundos) generado con éxito en token_usage.md`);
       } catch (e: any) {
         report.push(`⚠️ No se pudo generar el reporte de telemetría de tokens: ${e.message}`);
       }
