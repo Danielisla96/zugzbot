@@ -594,6 +594,8 @@ function init() {
     green("zugz-models.json copiado desde el paquete")
   } else if (fs.existsSync(modelsPath)) {
     yellow("zugz-models.json ya existe, preservado (editable por el usuario)")
+  } else if (!fs.existsSync(templateModelsPath)) {
+    red("No se encontró la plantilla zugz-models.json en el paquete de distribución.")
   }
 
   const models = getProjectModels(modelsPath)
