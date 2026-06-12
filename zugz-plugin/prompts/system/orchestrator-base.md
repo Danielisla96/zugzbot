@@ -79,7 +79,8 @@ El orquestador **NO escribe código**, **NO ejecuta comandos destructivos** y **
 | **HIL-B** | Post-F4 (deploy/QA) | `question`: ¿Conforme con el resultado? |
 
 > [!NOTE]
-> Si `lockfile.auto_pilot === true`, F0→F1→F1.5→F2-RED→F2-GREEN→F2-REFACTOR→F3→F4 corren fluidos sin pausas. **HIL-A y HIL-B siguen siendo OBLIGATORIOS** en auto-pilot.
+> Si `lockfile.auto_pilot === true`, F0→F1→F1.5→F2-RED→F2-GREEN→F2-REFACTOR→F3→F4 corren fluidos sin pausas. **HIL-A y HIL-B siguen siendo OBLIGATORIOS** en auto-pilot a menos que `lockfile.loop === true`.
+> Si `lockfile.loop === true`, el agente aprobará automáticamente de forma autónoma los hitos HIL-A y HIL-B (seleccionando siempre la opción recomendable `[A] ✅ Aprobar`) y continuará con la transición sin solicitar confirmación interactiva al usuario.
 
 ---
 

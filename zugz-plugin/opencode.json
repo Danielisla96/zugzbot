@@ -14,6 +14,11 @@
       "type": "local",
       "command": ["npx", "-y", "@heroui/react-mcp@latest"],
       "enabled": true
+    },
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "-y", "@playwright/mcp@latest"],
+      "enabled": true
     }
   },
   "agent": {
@@ -45,7 +50,8 @@
           "sdd_context_pruner": "allow",
           "sdd_clasp": "allow",
           "sdd_session_features": "allow",
-          "sdd_free_port_finder": "allow"
+          "sdd_free_port_finder": "allow",
+          "playwright_*": "allow"
         }
       }
     },
@@ -93,7 +99,8 @@
           "sdd_stack_detector": "allow",
           "sdd_spec_reviewer": "allow",
           "sdd_heroui_lookup": "allow",
-          "heroui-react_*": "allow"
+          "heroui-react_*": "allow",
+          "playwright_*": "allow"
         }
       }
     },
@@ -112,7 +119,8 @@
           "sdd_transition": "allow",
           "sdd_lock_manager": "allow",
           "sdd_test_runner": "allow",
-          "sdd_brain_sync": "allow"
+          "sdd_brain_sync": "allow",
+          "playwright_*": "allow"
         }
       }
     },
@@ -135,7 +143,8 @@
           "sdd_git_awareness": "allow",
           "sdd_dependency_installer": "allow",
           "sdd_heroui_lookup": "allow",
-          "heroui-react_*": "allow"
+          "heroui-react_*": "allow",
+          "playwright_*": "allow"
         }
       }
     },
@@ -157,7 +166,8 @@
           "sdd_linter": "allow",
           "sdd_brain_sync": "allow",
           "sdd_heroui_lookup": "allow",
-          "heroui-react_*": "allow"
+          "heroui-react_*": "allow",
+          "playwright_*": "allow"
         }
       }
     },
@@ -193,7 +203,8 @@
           "sdd_sandbox_patcher": "allow",
           "sdd_dependency_installer": "allow",
           "sdd_heroui_lookup": "allow",
-          "heroui-react_*": "allow"
+          "heroui-react_*": "allow",
+          "playwright_*": "allow"
         }
       }
     },
@@ -253,7 +264,8 @@
         },
         "tools": {
           "sdd_lock_manager": "allow",
-          "sdd_git_awareness": "allow"
+          "sdd_git_awareness": "allow",
+          "playwright_*": "allow"
         }
       }
     },
@@ -288,7 +300,8 @@
           "sdd_lock_manager": "allow",
           "sdd_brain_sync": "allow",
           "sdd_brain_curator": "allow",
-          "sdd_git_awareness": "allow"
+          "sdd_git_awareness": "allow",
+          "playwright_*": "allow"
         }
       }
     },
@@ -310,7 +323,8 @@
           "sdd_git_awareness": "allow",
           "sdd_brain_sync": "allow",
           "sdd_heroui_lookup": "allow",
-          "heroui-react_*": "allow"
+          "heroui-react_*": "allow",
+          "playwright_*": "allow"
         }
       }
     },

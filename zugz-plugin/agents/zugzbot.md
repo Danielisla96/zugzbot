@@ -270,6 +270,13 @@ Tras recibir la respuesta, traduce a `sdd_transition`:
 - B → `nextPhase: <anterior>, direction: "backward"`
 - C → no transiciones, mantén fase
 
+> [!IMPORTANT]
+> Si `lockfile.loop === true`, **NO muestres ni preguntes las plantillas HIL-A o HIL-B**. En su lugar:
+> - Para **HIL-A** (post-F1.5): Transiciona inmediatamente usando `sdd_transition(nextPhase: "F2-RED", status: "spec_approved", reason: "Aprobación automática del Spec (Configuración loop)")` y delega a `@f2-red-test-writer`.
+> - Para **HIL-B** (post-F4): Transiciona inmediatamente usando `sdd_transition(nextPhase: "F5", status: "qa_validated", reason: "Aprobación automática de QA/Deploy (Configuración loop)")` y delega a `@sdd-archiver`.
+>
+> Asegúrate de actuar de forma autónoma sin detener el flujo.
+
 #### 2.3 Plantilla de Cierre F5
 
 Cuando F5 termina, imprime el banner de "ciclo finalizado" con todos los artefactos entregados:

@@ -48,6 +48,7 @@ export interface SddLockfile {
   active_subagent: string
   status: "idle" | "in_progress" | "blocked" | "awaiting_hil" | "corrective_loop" | "spec_approved" | "qa_validated" | "archived"
   auto_pilot: boolean
+  loop: boolean
   iteration: number
   last_updated: string
   orchestrator_mode: string
@@ -93,6 +94,7 @@ export const DEFAULT_LOCKFILE: SddLockfile = {
   active_subagent: "f0-explorer",
   status: "idle",
   auto_pilot: false,
+  loop: false,
   iteration: 0,
   last_updated: "",
   orchestrator_mode: "router",

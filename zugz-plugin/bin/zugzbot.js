@@ -25,6 +25,7 @@ const TEMPLATE_SDD_LOCK_V2 = {
   active_subagent: "f0-explorer",
   status: "idle",
   auto_pilot: false,
+  loop: false,
   iteration: 0,
   last_updated: "",
   orchestrator_mode: "router",
