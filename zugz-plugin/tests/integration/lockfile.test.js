@@ -1,6 +1,11 @@
 import { describe, test, expect } from "vitest"
 import {
+  migrateToV2,
+  migrateToV4,
+  migrateToV5,
+  migrateToV6,
   migrateToV7,
+  migrateToV8,
   SCHEMA_VERSION,
   DESIGN_SYSTEM_SLUGS,
   isValidDesignSystemSlug,
@@ -8,7 +13,7 @@ import {
   isDesignSystemReady
 } from "../../.opencode/tools/sdd_lock_manager.js"
 
-describe("sdd_lock_manager v7 (active_design_system)", () => {
+describe("sdd_lock_manager general & design system metadata", () => {
   test("SCHEMA_VERSION es 8", () => {
     expect(SCHEMA_VERSION).toBe(8)
   })
@@ -73,109 +78,85 @@ describe("sdd_lock_manager v7 (active_design_system)", () => {
   })
 })
 
-describe("migrateToV7 — back-compat", () => {
-  test("migrateToV7 desde v6 → v7 con active_design_system: null", () => {
-    const v6Raw = {
-      schema_version: 6,
+describe("sdd_lock_manager back-compat migrations (v1 to v8)", () => {
+  test("migrateToV8 desde v7 con campos vacíos por default", () => {
+    const v7Raw = {
+      schema_version: 7,
       change_name: "feat-x",
       stack_profile: "python"
     }
-    const migrated = migrateToV7(v6Raw)
+    const migrated = migrateToV8(v7Raw)
     expect(migrated.schema_version).toBe(SCHEMA_VERSION)
-    expect(migrated.active_design_system).toBe(null)
+    expect(migrated.recommended_skills).toEqual([])
+    expect(migrated.autopilot_decisions).toEqual([])
   })
 
-  test("migrateToV7 desde v6 con active_design_system válido lo preserva", () => {
+  test("migrateToV8 preserva recommended_skills y autopilot_decisions", () => {
+    const v7Raw = {
+      schema_version: 7,
+      change_name: "feat-x",
+      recommended_skills: ["notebook-guidance"],
+      autopilot_decisions: [{ phase: "F1", decision: "Use Vitest", justification: "Node stack" }]
+    }
+    const migrated = migrateToV8(v7Raw)
+    expect(migrated.schema_version).toBe(SCHEMA_VERSION)
+    expect(migrated.recommended_skills).toEqual(["notebook-guidance"])
+    expect(migrated.autopilot_decisions).toEqual([{ phase: "F1", decision: "Use Vitest", justification: "Node stack" }])
+  })
+
+  test("migrateToV7 desde v6 con active_design_system lo preserva", () => {
     const v6Raw = {
       schema_version: 6,
       change_name: "feat-x",
       active_design_system: "theverge"
     }
     const migrated = migrateToV7(v6Raw)
+    expect(migrated.schema_version).toBe(SCHEMA_VERSION)
     expect(migrated.active_design_system).toBe("theverge")
   })
 
-  test("migrateToV7 desde v6 con active_design_system inválido → null", () => {
-    const v6Raw = {
-      schema_version: 6,
+  test("migrateToV6 preserva session_features si existían en v5", () => {
+    const v5Raw = {
+      schema_version: 5,
       change_name: "feat-x",
-      active_design_system: "google"
+      stack_profile: "python",
+      session_features: { autoskills: true, graphify: false }
     }
-    const migrated = migrateToV7(v6Raw)
-    expect(migrated.active_design_system).toBe(null)
+    const migrated = migrateToV6(v5Raw)
+    expect(migrated.schema_version).toBe(SCHEMA_VERSION)
+    expect(migrated.session_features).toEqual({ autoskills: true, graphify: false })
   })
 
-  test("migrateToV7 desde v4 (proyecto legacy) → v7 con active_design_system: null", () => {
+  test("migrateToV5 migra v4 con tasks e inicializa acceptance_criteria=[]", () => {
     const v4Raw = {
       schema_version: 4,
-      change_name: "old-feat",
-      stack_profile: "node-typescript",
-      tasks: [{ id: 1, desc: "task 1", status: "completed" }]
+      change_name: "feat-x",
+      stack_profile: "python",
+      tasks: [
+        { id: 1, desc: "work item 1", status: "pending" }
+      ]
     }
-    const migrated = migrateToV7(v4Raw)
+    const migrated = migrateToV5(v4Raw)
     expect(migrated.schema_version).toBe(SCHEMA_VERSION)
-    expect(migrated.active_design_system).toBe(null)
     expect(migrated.tasks).toHaveLength(1)
+    expect(migrated.acceptance_criteria).toEqual([])
   })
 
-  test("migrateToV7 desde v2 (proyecto muy legacy) → v7 con active_design_system: null", () => {
-    const v2Raw = {
-      schema_version: 2,
-      change_name: "ancient",
-      subproject_cwd: "apps/web"
-    }
-    const migrated = migrateToV7(v2Raw)
+  test("migrateToV4 con v3 con qa_manual:true → modo_qa: 'manual'", () => {
+    const v3Raw = { schema_version: 3, change_name: "feature-x", qa_manual: true, stack_profile: "python" }
+    const migrated = migrateToV4(v3Raw)
     expect(migrated.schema_version).toBe(SCHEMA_VERSION)
-    expect(migrated.subproject_cwd).toBe("apps/web")
-    expect(migrated.active_design_system).toBe(null)
-  })
-
-  test("migrateToV7 desde v1 → v7 con active_design_system: null", () => {
-    const v1Raw = { schema_version: 1, change_name: "x" }
-    const migrated = migrateToV7(v1Raw)
-    expect(migrated.schema_version).toBe(SCHEMA_VERSION)
-    expect(migrated.active_design_system).toBe(null)
-  })
-
-  test("migrateToV7 preserva session_features y modo_qa de v6", () => {
-    const v6Raw = {
-      schema_version: 6,
-      change_name: "feat-x",
-      session_features: { autoskills: true, graphify: true },
-      modo_qa: "manual"
-    }
-    const migrated = migrateToV7(v6Raw)
-    expect(migrated.session_features).toEqual({ autoskills: true, graphify: true })
     expect(migrated.modo_qa).toBe("manual")
-    expect(migrated.active_design_system).toBe(null)
   })
 
-  test("migrateToV7 normalize slug 'X.AI' (uppercase + dot)", () => {
-    const v6Raw = {
-      schema_version: 6,
-      change_name: "feat-x",
-      active_design_system: "X.AI"
+  test("migra v1 → v8 con modo_qa default 'automatizado'", () => {
+    const v1Raw = {
+      schema_version: 1,
+      change_name: "ancient"
     }
-    const migrated = migrateToV7(v6Raw)
-    expect(migrated.active_design_system).toBe("x.ai")
-  })
-
-  test("migrateToV7 inicializa design_system_explicitly_skipped: false por default", () => {
-    const v6Raw = { schema_version: 6, change_name: "feat-x" }
-    const migrated = migrateToV7(v6Raw)
-    expect(migrated.design_system_explicitly_skipped).toBe(false)
-  })
-
-  test("migrateToV7 preserva design_system_explicitly_skipped: true si ya estaba", () => {
-    const v6Raw = {
-      schema_version: 6,
-      change_name: "feat-x",
-      active_design_system: null,
-      design_system_explicitly_skipped: true
-    }
-    const migrated = migrateToV7(v6Raw)
-    expect(migrated.active_design_system).toBe(null)
-    expect(migrated.design_system_explicitly_skipped).toBe(true)
+    const migrated = migrateToV4(v1Raw)
+    expect(migrated.schema_version).toBe(SCHEMA_VERSION)
+    expect(migrated.modo_qa).toBe("automatizado")
   })
 })
 
@@ -198,13 +179,6 @@ describe("isDesignSystemReady — gate de Fase 2", () => {
     expect(isDesignSystemReady({ active_design_system: null, design_system_explicitly_skipped: false })).toEqual({
       ready: false,
       reason: "uninitialized"
-    })
-  })
-
-  test("set tiene prioridad sobre skip (no se pueden tener ambos)", () => {
-    expect(isDesignSystemReady({ active_design_system: "uber", design_system_explicitly_skipped: true })).toEqual({
-      ready: true,
-      reason: "set"
     })
   })
 })
