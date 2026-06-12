@@ -2,8 +2,8 @@ import { describe, test, expect } from "vitest"
 import fs from "fs"
 import path from "path"
 import os from "os"
-import bddTester from "../../.opencode/tools/sdd_bdd_tester.js"
-import { SPEC_TEMPLATE_V1 } from "../../.opencode/tools/sdd_spec_template.js"
+import bddTester from "../../.opencode/tools/_f2/sdd_bdd_tester.js"
+import { SPEC_TEMPLATE_V1 } from "../../.opencode/tools/_lib/sdd_spec_template.js"
 
 const TMP = path.join(os.tmpdir(), `zugzbot-bdd-tester-v4-${Date.now()}`)
 

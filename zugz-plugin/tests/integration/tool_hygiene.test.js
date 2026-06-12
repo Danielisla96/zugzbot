@@ -3,9 +3,9 @@ import fs from "fs"
 import path from "path"
 import os from "os"
 import { fileURLToPath } from "url"
-import linter from "../../.opencode/tools/sdd_linter.js"
-import testRunner from "../../.opencode/tools/sdd_test_runner.js"
-import installAutoskills from "../../.opencode/tools/sdd_install_autoskills.js"
+import linter from "../../.opencode/tools/_f2/sdd_linter.js"
+import testRunner from "../../.opencode/tools/_f2/sdd_test_runner.js"
+import installAutoskills from "../../.opencode/tools/_f0/sdd_install_autoskills.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)

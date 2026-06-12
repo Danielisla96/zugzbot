@@ -6,7 +6,7 @@ import {
   parseCriterios,
   matchBddScenarios,
   validateSpec
-} from "../../.opencode/tools/sdd_spec_template.js"
+} from "../../.opencode/tools/_lib/sdd_spec_template.js"
 
 const VALID_SPEC = `---
 spec_version: "1.0"

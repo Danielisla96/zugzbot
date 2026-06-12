@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import sddRouter, { classify } from '../../.opencode/tools/sdd_router.js';
+import sddRouter, { classify } from '../../.opencode/tools/_core/sdd_router.js';
 
 const ctx = { worktree: '/tmp', directory: '/tmp', sessionID: 'test' };
 

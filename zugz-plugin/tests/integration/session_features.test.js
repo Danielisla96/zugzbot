@@ -3,13 +3,13 @@ import fs from "fs"
 import os from "os"
 import path from "path"
 import { fileURLToPath } from "url"
-import sessionFeatures from "../../.opencode/tools/sdd_session_features.js"
+import sessionFeatures from "../../.opencode/tools/_core/sdd_session_features.js"
 import {
   readSessionFeatures,
   writeSessionFeatures,
   readLockfile,
   SCHEMA_VERSION
-} from "../../.opencode/tools/sdd_lock_manager.js"
+} from "../../.opencode/tools/_core/sdd_lock_manager.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)

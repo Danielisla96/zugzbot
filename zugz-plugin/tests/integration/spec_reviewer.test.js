@@ -3,8 +3,8 @@ import fs from "fs"
 import path from "path"
 import os from "os"
 import { fileURLToPath } from "url"
-import specReviewer from "../../.opencode/tools/sdd_spec_reviewer.js"
-import { SPEC_TEMPLATE_V1 } from "../../.opencode/tools/sdd_spec_template.js"
+import specReviewer from "../../.opencode/tools/_f1/sdd_spec_reviewer.js"
+import { SPEC_TEMPLATE_V1 } from "../../.opencode/tools/_lib/sdd_spec_template.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)

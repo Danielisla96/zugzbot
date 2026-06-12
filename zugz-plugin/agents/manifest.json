@@ -1,0 +1,234 @@
+{
+  "version": "3.0.0",
+  "primary": "zugzbot",
+  "naming_convention": "f<n>-<rol> para fases SDD, aux-<rol> para workflows rápidos",
+  "workflows": {
+    "full-sdd-tdd": [
+      "f0-explorer",
+      "f1-planner",
+      "f15-spec-reviewer",
+      "f2-red-test-writer",
+      "f2-green-builder",
+      "f2-refactor-improver",
+      "f3-validator",
+      "f4-deployer",
+      "f5-archiver"
+    ],
+    "quick-fix": ["aux-quick-fix"],
+    "audit": ["aux-audit"],
+    "refactor": ["aux-refactor"],
+    "explain": ["aux-explain"],
+    "oracle": ["aux-oracle"]
+  },
+  "agents": {
+    "zugzbot": {
+      "file": "agents/zugzbot.md",
+      "mode": "primary",
+      "role": "Router cognitivo. Clasifica intent y delega al subagente correcto."
+    },
+    "f0-explorer": {
+      "file": "agents/f0-explorer.md",
+      "mode": "subagent",
+      "phase": "F0",
+      "role": "Diagnosticar y mapear el codebase (stack-agnostic).",
+      "contract": "prompts/contracts/f0-explorer-contract.md",
+      "boundary": "prompts/boundaries/f0-explorer-boundary.md"
+    },
+    "f1-planner": {
+      "file": "agents/f1-planner.md",
+      "mode": "subagent",
+      "phase": "F1",
+      "role": "Redactar spec.md con criterios BDD testeables.",
+      "contract": "prompts/contracts/f1-planner-contract.md",
+      "boundary": "prompts/boundaries/f1-planner-boundary.md"
+    },
+    "f15-spec-reviewer": {
+      "file": "agents/f15-spec-reviewer.md",
+      "mode": "subagent",
+      "phase": "F1.5",
+      "role": "Validar de forma independiente que el spec sea testeable.",
+      "contract": "prompts/contracts/f15-spec-reviewer-contract.md",
+      "boundary": "prompts/boundaries/f15-spec-reviewer-boundary.md"
+    },
+    "f2-red-test-writer": {
+      "file": "agents/f2-red-test-writer.md",
+      "mode": "subagent",
+      "phase": "F2-RED",
+      "role": "Escribir tests reales que fallan (TDD discipline).",
+      "contract": "prompts/contracts/f2-red-test-writer-contract.md",
+      "boundary": "prompts/boundaries/f2-red-test-writer-boundary.md"
+    },
+    "f2-green-builder": {
+      "file": "agents/f2-green-builder.md",
+      "mode": "subagent",
+      "phase": "F2-GREEN",
+      "role": "Implementar el mínimo código que pasa los tests RED.",
+      "contract": "prompts/contracts/f2-green-builder-contract.md",
+      "boundary": "prompts/boundaries/f2-green-builder-boundary.md"
+    },
+    "f2-refactor-improver": {
+      "file": "agents/f2-refactor-improver.md",
+      "mode": "subagent",
+      "phase": "F2-REFACTOR",
+      "role": "Limpiar el código sin cambiar comportamiento. TDD discipline.",
+      "contract": "prompts/contracts/f2-refactor-improver-contract.md",
+      "boundary": "prompts/boundaries/f2-refactor-improver-boundary.md"
+    },
+    "f3-validator": {
+      "file": "agents/f3-validator.md",
+      "mode": "subagent",
+      "phase": "F3",
+      "role": "Ejecutar linter, security, secret-scan, spec-compliance, regression.",
+      "contract": "prompts/contracts/f3-validator-contract.md",
+      "boundary": "prompts/boundaries/f3-validator-boundary.md"
+    },
+    "f4-deployer": {
+      "file": "agents/f4-deployer.md",
+      "mode": "subagent",
+      "phase": "F4",
+      "role": "Deployar el código a entorno de desarrollo (sandbox/staging).",
+      "contract": "prompts/contracts/f4-deployer-contract.md",
+      "boundary": "prompts/boundaries/f4-deployer-boundary.md"
+    },
+    "f5-archiver": {
+      "file": "agents/f5-archiver.md",
+      "mode": "subagent",
+      "phase": "F5",
+      "role": "Cerrar el ciclo: bump SemVer, commit semántico, archivado.",
+      "contract": "prompts/contracts/f5-archiver-contract.md",
+      "boundary": "prompts/boundaries/f5-archiver-boundary.md"
+    },
+    "aux-quick-fix": {
+      "file": "agents/aux-quick-fix.md",
+      "mode": "subagent",
+      "workflow": "quick-fix",
+      "role": "Quick-fixes atómicos (≤ 3 archivos)."
+    },
+    "aux-audit": {
+      "file": "agents/aux-audit.md",
+      "mode": "subagent",
+      "workflow": "audit",
+      "role": "Auditor de calidad estática (read-only)."
+    },
+    "aux-refactor": {
+      "file": "agents/aux-refactor.md",
+      "mode": "subagent",
+      "workflow": "refactor",
+      "role": "Refactor seguro manteniendo tests verdes."
+    },
+    "aux-explain": {
+      "file": "agents/aux-explain.md",
+      "mode": "subagent",
+      "workflow": "explain",
+      "role": "Walkthrough didáctico de código (read-only)."
+    },
+    "aux-oracle": {
+      "file": "agents/aux-oracle.md",
+      "mode": "subagent",
+      "workflow": "oracle",
+      "role": "Conocimiento general teórico."
+    }
+  },
+  "skills": {
+    "active": [
+      "sdd-design-system",
+      "sdd-tdd-coach",
+      "sdd-dependency-cooldown",
+      "sdd-gitignore-manager"
+    ],
+    "notes": "Cualquier skill nuevo debe declararse en este manifest antes de añadirse a skills/."
+  },
+  "tools": {
+    "_core": [
+      "sdd_transition",
+      "sdd_lock_manager",
+      "sdd_router",
+      "sdd_checkpoint",
+      "sdd_compact_context",
+      "sdd_context_pruner",
+      "sdd_session_features",
+      "sdd_clasp"
+    ],
+    "_f0": [
+      "sdd_stack_detector",
+      "sdd_git_awareness",
+      "sdd_generate_tree",
+      "sdd_graphify",
+      "sdd_install_autoskills"
+    ],
+    "_f1": [
+      "sdd_requirement_tracker",
+      "sdd_diff_impact_analyzer",
+      "sdd_test_scaffold_generator",
+      "sdd_auto_api_mocker",
+      "sdd_spec_reviewer",
+      "sdd_spec_validator",
+      "sdd_dependency_installer",
+      "check_dependency_cooldown",
+      "sdd_heroui_lookup"
+    ],
+    "_f2": [
+      "sdd_test_runner",
+      "sdd_linter",
+      "sdd_auto_healer",
+      "sdd_brain_sync",
+      "sdd_brain_curator",
+      "sdd_bdd_tester",
+      "sdd_regression_detector"
+    ],
+    "_f3": [
+      "sdd_secret_scanner",
+      "sdd_security_vulnerability_scanner",
+      "sdd_spec_compliance_linter",
+      "sdd_sandbox_patcher",
+      "sdd_visual_regression_diff",
+      "sdd_performance_regress_profiler",
+      "sdd_ui_auditor"
+    ],
+    "_f4": [
+      "sdd_destructive_guard",
+      "sdd_free_port_finder"
+    ],
+    "_f5": [
+      "sdd_archive_and_commit"
+    ],
+    "_lib_internal": [
+      "brain-utils",
+      "git_utils",
+      "sdd_stack_detector_lib",
+      "sdd_spec_template",
+      "sdd_spec_sections"
+    ]
+  },
+  "mcps": {
+    "active": ["heroui-react", "playwright"],
+    "notes": "Para añadir un MCP, declararlo aquí antes de registrarlo en opencode.json."
+  },
+  "contributing": {
+    "add_agent": [
+      "1. Crear agents/<nombre>.md (frontmatter con mode, model, permission)",
+      "2. Crear prompts/contracts/<nombre>-contract.md y prompts/boundaries/<nombre>-boundary.md (si es fase)",
+      "3. Registrar en este manifest.json bajo agents",
+      "4. Añadir entrada en opencode.json bajo 'agent'",
+      "5. Añadir en bin/zugzbot.js bajo la función de generación de opencode.json",
+      "6. Añadir el nombre en tests/unit/harness_structure.test.js"
+    ],
+    "add_skill": [
+      "1. Crear skills/<nombre>/SKILL.md con frontmatter (name, description)",
+      "2. Declarar en este manifest.json bajo skills.active",
+      "3. Documentar los triggers en AGENTS.md"
+    ],
+    "add_tool": [
+      "1. Crear tools/_f<n>/<nombre>.ts (o _core/_lib si aplica)",
+      "2. Exportar en tools/index.ts",
+      "3. Compilar con `npx tsc -p tsconfig.build.json`",
+      "4. Añadir permiso en el agent apropiado de opencode.json",
+      "5. Declarar en este manifest.json bajo tools"
+    ],
+    "add_mcp": [
+      "1. Declarar en este manifest.json bajo mcps.active",
+      "2. Añadir en opencode.json bajo 'mcp'",
+      "3. (Opcional) Añadir permisos wildcard a los agentes que lo consuman"
+    ]
+  }
+}

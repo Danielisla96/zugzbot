@@ -3,7 +3,7 @@ import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
 import { afterAll, beforeAll, describe, test, expect } from 'vitest';
-import stackDetector from '../../.opencode/tools/sdd_stack_detector.js';
+import stackDetector from '../../.opencode/tools/_f0/sdd_stack_detector.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

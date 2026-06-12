@@ -3,7 +3,7 @@ import fs from "fs"
 import path from "path"
 import os from "os"
 import { fileURLToPath } from "url"
-import destructiveGuard from "../../.opencode/tools/sdd_destructive_guard.js"
+import destructiveGuard from "../../.opencode/tools/_f4/sdd_destructive_guard.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)

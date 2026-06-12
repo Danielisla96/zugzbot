@@ -120,7 +120,7 @@ Cuando el usuario envía un prompt, **primero clasifica el workflow apropiado**.
 
 | Workflow | Agente | Cuándo |
 | :--- | :--- | :--- |
-| `full-sdd-tdd` | `@sdd-explorer` → F0 | Features, bug fixes, cambios lógicos |
+| `full-sdd-tdd` | `@f0-explorer` → F0 → `@f1-planner` → F1 → `@f15-spec-reviewer` → F1.5 | Features, bug fixes, cambios lógicos |
 | `quick-fix` | `@aux-handyman` | Typos, renames, fixes triviales (≤3 archivos) |
 | `audit` | `@aux-auditor` | Pide evaluación de calidad |
 | `refactor` | `@aux-refactor` | Refactor seguro con tests |
@@ -156,7 +156,7 @@ Notion`, `vibe The Verge`, etc.), entonces **auto-invocá** el skill
    design system ya cargado.
 4. **Si el usuario eligió "skip / none"** → persistí
    `active_design_system: null` Y `design_system_explicitly_skipped: true`
-   en el lockfile. Esto le indica a `@sdd-builder` que el usuario fue
+   en el lockfile. Esto le indica a `@f2-green-builder` que el usuario fue
    consultado y eligió explícitamente no usar un design system. El builder
    procederá con un warning de "diseño ad-hoc, sin tokens formales".
 5. **Gate de Fase 1.5 → HIL-A**: si al cerrar F1.5 el spec.md tiene una
@@ -164,7 +164,7 @@ Notion`, `vibe The Verge`, etc.), entonces **auto-invocá** el skill
    `active_design_system: null` Y `design_system_explicitly_skipped: false`,
    → **bloquear HIL-A** y pedir al usuario que ejecute `/front` primero o
    confirme que no aplica (lo que setea el flag de skip).
-6. **Gate de Fase 2**: el prompt de delegación a `@sdd-builder` (F2-GREEN)
+6. **Gate de Fase 2**: el prompt de delegación a `@f2-green-builder` (F2-GREEN)
    o `@f2-refactor-improver` (F2-REFACTOR) **debe incluir literalmente**:
    ```
    Antes de codear, verificá que lock.active_design_system o
@@ -191,10 +191,11 @@ F0 → F1 → F1.5 → [HIL-A] → F2-RED → F2-GREEN → F2-REFACTOR → F3 �
 **Reglas de transición**:
 - Lee el lockfile para saber en qué fase estás.
 - **NO escales** entre F0↔F1, F1↔F1.5, etc. sin pasar por la fase correcta.
+- **F1.5 es una fase dedicada** con su propio agente (`@f15-spec-reviewer`): cuando F1 termina, delega la revisión al reviewer. NO ejecutes `sdd_spec_reviewer` tú mismo.
 - **HIL-A es OBLIGATORIO** post-F1.5: el usuario debe aprobar el spec.
 - **HIL-B es OBLIGATORIO** post-F4: el usuario debe validar el QA.
-- **Instruir Carga de Design Skill**: Al delegar la tarea a `@sdd-builder` (F2-GREEN) o `@f2-refactor-improver` (F2-REFACTOR), si el cambio involucra frontend, exigíle explícitamente en el prompt de la tarea que invoque `skill({ name: "sdd-design-system" })`, lea `.opencode/design/DESIGN-<active_design_system>.md`, y aplique el SANTUARIO (cero valores hardcoded). Si `active_design_system` es `null` en el lockfile y la tarea es UI, **RECHAZAR** la delegación y volver a invocar el skill.
-- **Instruir Dev-Server en F4 (Deploy)**: Al delegar la Fase 4 (F4) al `@sdd-deployer`, indícale explícitamente que el servidor local de desarrollo **debe permanecer corriendo en segundo plano tras un smoke test exitoso** para permitir la validación en caliente del desarrollador (HIL-B). Está estrictamente prohibido ordenar al deployer apagar o detener el servidor si los tests de humo respondieron correctamente.
+- **Instruir Carga de Design Skill**: Al delegar la tarea a `@f2-green-builder` (F2-GREEN) o `@f2-refactor-improver` (F2-REFACTOR), si el cambio involucra frontend, exigíle explícitamente en el prompt de la tarea que invoque `skill({ name: "sdd-design-system" })`, lea `.opencode/design/DESIGN-<active_design_system>.md`, y aplique el SANTUARIO (cero valores hardcoded). Si `active_design_system` es `null` en el lockfile y la tarea es UI, **RECHAZAR** la delegación y volver a invocar el skill.
+- **Instruir Dev-Server en F4 (Deploy)**: Al delegar la Fase 4 (F4) al `@f4-deployer`, indícale explícitamente que el servidor local de desarrollo **debe permanecer corriendo en segundo plano tras un smoke test exitoso** para permitir la validación en caliente del desarrollador (HIL-B). Está estrictamente prohibido ordenar al deployer apagar o detener el servidor si los tests de humo respondieron correctamente.
 
 #### 2.1 Plantilla de Reanudación (cada turno)
 
@@ -274,7 +275,7 @@ Tras recibir la respuesta, traduce a `sdd_transition`:
 > Si `lockfile.loop === true` o `lockfile.auto_pilot === true`, **NO muestres ni preguntes las plantillas HIL-A o HIL-B, ni bloquees el flujo con preguntas aclaratorias en F1**. En su lugar:
 > - **F1 Preguntas Aclaratorias**: Si el planificador requiere aclaraciones, el agente autónomo debe decidir por sí mismo las opciones técnicas por defecto más lógicas y seguras, registrar estas decisiones y sus justificaciones en `.openspec/autopilot_decisions.md`, y continuar directamente a F1.5.
 > - **Para HIL-A** (post-F1.5): Transiciona inmediatamente usando `sdd_transition(nextPhase: "F2-RED", status: "spec_approved", reason: "Aprobación automática del Spec (Autopilot/Loop)")` y delega a `@f2-red-test-writer`.
-> - **Para HIL-B** (post-F4): Transiciona inmediatamente usando `sdd_transition(nextPhase: "F5", status: "qa_validated", reason: "Aprobación automática de QA/Deploy (Autopilot/Loop)")` y delega a `@sdd-archiver`.
+> - **Para HIL-B** (post-F4): Transiciona inmediatamente usando `sdd_transition(nextPhase: "F5", status: "qa_validated", reason: "Aprobación automática de QA/Deploy (Autopilot/Loop)")` y delega a `@f5-archiver`.
 > - **Auto-Healing**: Si una fase de pruebas o validación falla, reintenta automáticamente (hasta 3 veces) retrocediendo a F2-GREEN/F2-REFACTOR y usando la herramienta `sdd_auto_healer` para resolver problemas de linter o sintaxis de forma autónoma.
 >
 > Asegúrate de actuar de forma autónoma sin detener el flujo.
@@ -381,10 +382,10 @@ Próxima acción: <siguiente paso>
 ```text
 1. Clasificas: full-sdd-tdd (feature nuevo, multi-archivo)
 2. Si lockfile.workflow == "full-sdd-tdd" y active_phase == "F0":
-   - Delegas a @sdd-explorer con: "Detecta stack y genera diagnostics.md"
+   - Delegas a @f0-explorer con: "Detecta stack y genera diagnostics.md"
 3. Cuando explorer termine:
    - sdd_transition(nextPhase: "F1", status: "in_progress", reason: "Diagnóstico completo")
-   - Delegas a @sdd-planner con: "Crea spec.md para 'agregar-endpoint-logout'"
+   - Delegas a @f1-planner con: "Crea spec.md para 'agregar-endpoint-logout'"
 4. ...continúa el ciclo hasta HIL-A → HIL-B → F5...
 ```
 

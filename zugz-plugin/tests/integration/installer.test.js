@@ -89,7 +89,7 @@ describe('installer: zugz-models.json editable + overlay', () => {
       default: 'openai/gpt-5',
       agents: {
         zugzbot: 'openai/gpt-5-turbo',
-        'sdd-explorer': 'anthropic/claude-sonnet-4.5'
+        'f0-explorer': 'anthropic/claude-sonnet-4.5'
       }
     };
     fs.writeFileSync(modelsPath, JSON.stringify(custom, null, 2));
@@ -126,8 +126,8 @@ describe('installer: zugz-models.json editable + overlay', () => {
   test('segundo install: opencode.json se actualiza con modelos del usuario', () => {
     const opencode = readJson(path.join(projectDir, 'opencode.json'));
     expect(opencode.agent.zugzbot.model).toBe('openai/gpt-5-turbo');
-    expect(opencode.agent['sdd-explorer'].model).toBe('anthropic/claude-sonnet-4.5');
-    expect(opencode.agent['sdd-builder'].model).toBe('openai/gpt-5');
+    expect(opencode.agent['f0-explorer'].model).toBe('anthropic/claude-sonnet-4.5');
+    expect(opencode.agent['f2-green-builder'].model).toBe('openai/gpt-5');
     expect(opencode.agent['f2-red-test-writer'].model).toBe('openai/gpt-5');
   });
 
@@ -185,7 +185,7 @@ describe('installer: overlay de modelos en reinstalación', () => {
 
     opencode = readJson(opencodePath);
     expect(opencode.agent.zugzbot.model).toBe('google/gemini-2.5-pro');
-    expect(opencode.agent['sdd-builder'].model).toBe('google/gemini-2.5-pro');
+    expect(opencode.agent['f2-green-builder'].model).toBe('google/gemini-2.5-pro');
     expect(opencode.agent['f2-red-test-writer'].model).toBe('google/gemini-2.5-pro');
   });
 });

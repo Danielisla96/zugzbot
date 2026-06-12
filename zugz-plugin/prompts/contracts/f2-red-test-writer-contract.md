@@ -51,7 +51,6 @@ Próxima acción: zugzbot → F2-GREEN
 
 ## TOOLS PERMITIDAS
 - `sdd_test_runner` (read/verify)
-- `sdd_test_writer` (escribir tests)
 - `sdd_lock_manager` (actualizar `tdd.red.*`)
 - `sdd_brain_sync` (registrar learnings)
 - `sdd_transition` (avanzar a F2-GREEN si RED está completo)

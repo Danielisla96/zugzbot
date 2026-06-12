@@ -5,6 +5,55 @@ Todas las versiones notables del proyecto Zugzbot SDD se documentan aquí.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [3.0.0] - 2026-06-12 — Refactor estructural del harness
+
+### ⚠️ Breaking changes (naming convention)
+- **Convención de nombres unificada**: todos los agentes del ciclo SDD adoptan el prefijo `f<n>-<rol>`:
+  - `sdd-explorer` → `f0-explorer`
+  - `sdd-planner` → `f1-planner`
+  - `sdd-builder` → `f2-green-builder`
+  - `sdd-tester` → `f3-validator`
+  - `sdd-deployer` → `f4-deployer`
+  - `sdd-archiver` → `f5-archiver`
+- **Auxiliares renombrados**:
+  - `aux-handyman` → `aux-quick-fix`
+  - `aux-auditor` → `aux-audit`
+  - `aux-explainer` → `aux-explain`
+- **Contratos/boundaries renombrados** en consecuencia (e.g. `f2-green-implementer-contract.md` → `f2-green-builder-contract.md`).
+
+### ✨ Features
+- **Nuevo agente `@f15-spec-reviewer`** (Fase 1.5 dedicada). Antes la revisión del spec se hacía dentro del `@f1-planner`; ahora es un agente independiente con `edit: deny, bash: deny` que sólo lee, valida los 8 checks canónicos y emite un veredicto (APROBADO/RECHAZADO). Cumple SRP estricto.
+- **`agents/manifest.json`** canónico: lista exhaustiva de workflows, agentes, skills, tools, MCPs y librerías internas. El instalador y los tests lo consultan para validar la integridad.
+- **`AGENTS.md` reescrito** con guías paso-a-paso para añadir agentes, skills, tools y MCPs.
+
+### 🗑️ Removido
+- **14 skills inactivas** (nunca referenciadas): `heroui-migration`, `heroui-native`, `heroui-react`, `sdd-auto-api-mocker`, `sdd-auto-rollback-recovery`, `sdd-brain-curator`, `sdd-clean-architecture`, `sdd-heroui`, `sdd-root-cause-diagnostician`, `sdd-secure-coding`, `sdd-semantic-context-pruner`, `sdd-spec-standard`, `sdd-token-economy`, `sdd-tree-generator`. **Skills activas restantes**: 4 (`sdd-design-system`, `sdd-tdd-coach`, `sdd-dependency-cooldown`, `sdd-gitignore-manager`).
+- **2 tools huérfanas**: `sdd_create_custom_skill` y `sdd_runtime_dryrun` (no estaban en `opencode.json`, ningún agente podía usarlas).
+- **1 tool alucinada**: `sdd_test_writer` (referenciada en `f2-red-test-writer.md` y su contract pero nunca existió como tool).
+- **1 artefacto huérfano compilado**: `.opencode/tools/sdd_syntax_and_linter_auditor.js` (sin fuente `.ts`).
+- **`write_file: { "/tmp": "allow" }`** raro en `f4-deployer` (no es un permiso válido de OpenCode, era ruido).
+
+### 🔧 Conectado
+- **`sdd_destructive_guard`**: añadido a permisos de `@f4-deployer` (lo usaba el agent pero no podía invocarse).
+- **`sdd_graphify`**: añadido a permisos de `@f0-explorer` y `@f1-planner` (idem).
+- **`sdd_auto_healer`**: añadido a permisos de `@f2-green-builder`, `@f2-refactor-improver` y `@zugzbot` (idem).
+
+### 🗂️ Reorganizado
+- **`tools/`** se reagrupó por fase:
+  - `tools/_lib/` — 5 librerías internas (no son tools registrables).
+  - `tools/_core/` — 8 tools transversales (transición, lockfile, router, contexto, sesión, clasp).
+  - `tools/_f0/` a `tools/_f5/` — 26 tools agrupadas por fase.
+  - `tools/_utils/` — utilidades.
+- **Mismo API público**: los exports de `tools/index.ts` no cambiaron de nombre, sólo de path interno.
+
+### 🛡️ Permisos estandarizados
+- `aux-oracle`: ahora tiene `question: allow` y `skill: { "*": "allow" }` (antes no podía hacer nada útil).
+- `aux-explain`: removido `question: allow` (sólo explica, no pregunta), añadido `sdd_generate_tree`.
+- `aux-refactor`: añadido `sdd_auto_healer` para correcciones automáticas.
+
+### 🧪 Tests
+- `tests/unit/harness_structure.test.js` reescrito: ahora valida los 9 phases del ciclo + 5 aux, las 39 tools activas en sus nuevas rutas, las 4 skills activas, el manifest.json, y un guard contra la tool alucinada `sdd_test_writer`.
+
 ## [2.1.8] - 2026-06-07 — HeroUI MCP server preconfigurado en agentes UI
 
 ### ✨ Features

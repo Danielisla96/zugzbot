@@ -2,7 +2,7 @@ import { describe, test, expect } from "vitest"
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
-import { DESIGN_SYSTEM_SLUGS } from "../../.opencode/tools/sdd_lock_manager.js"
+import { DESIGN_SYSTEM_SLUGS } from "../../.opencode/tools/_core/sdd_lock_manager.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)

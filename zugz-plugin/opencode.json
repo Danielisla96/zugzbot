@@ -51,14 +51,15 @@
           "sdd_clasp": "allow",
           "sdd_session_features": "allow",
           "sdd_free_port_finder": "allow",
+          "sdd_auto_healer": "allow",
           "playwright_*": "allow"
         }
       }
     },
-    "sdd-explorer": {
+    "f0-explorer": {
       "mode": "subagent",
       "model": "deepseek/deepseek-v4-flash",
-      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-explorer.md}",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/f0-explorer.md}",
       "permission": {
         "bash": "allow",
         "lsp": "allow",
@@ -70,14 +71,15 @@
           "sdd_lock_manager": "allow",
           "sdd_stack_detector": "allow",
           "sdd_generate_tree": "allow",
-          "sdd_git_awareness": "allow"
+          "sdd_git_awareness": "allow",
+          "sdd_graphify": "allow"
         }
       }
     },
-    "sdd-planner": {
+    "f1-planner": {
       "mode": "subagent",
       "model": "deepseek/deepseek-v4-flash",
-      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-planner.md}",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/f1-planner.md}",
       "permission": {
         "question": "allow",
         "edit": "allow",
@@ -97,10 +99,30 @@
           "sdd_test_scaffold_generator": "allow",
           "sdd_context_pruner": "allow",
           "sdd_stack_detector": "allow",
-          "sdd_spec_reviewer": "allow",
           "sdd_heroui_lookup": "allow",
+          "sdd_graphify": "allow",
           "heroui-react_*": "allow",
           "playwright_*": "allow"
+        }
+      }
+    },
+    "f15-spec-reviewer": {
+      "mode": "subagent",
+      "model": "deepseek/deepseek-v4-flash",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/f15-spec-reviewer.md}",
+      "permission": {
+        "edit": "deny",
+        "bash": "deny",
+        "lsp": "allow",
+        "skill": {
+          "*": "allow"
+        },
+        "tools": {
+          "sdd_spec_reviewer": "allow",
+          "sdd_spec_validator": "allow",
+          "sdd_requirement_tracker": "allow",
+          "sdd_lock_manager": "allow",
+          "sdd_transition": "allow"
         }
       }
     },
@@ -124,10 +146,10 @@
         }
       }
     },
-    "sdd-builder": {
+    "f2-green-builder": {
       "mode": "subagent",
       "model": "deepseek/deepseek-v4-flash",
-      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-builder.md}",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/f2-green-builder.md}",
       "permission": {
         "edit": "allow",
         "bash": "allow",
@@ -143,6 +165,7 @@
           "sdd_git_awareness": "allow",
           "sdd_dependency_installer": "allow",
           "sdd_heroui_lookup": "allow",
+          "sdd_auto_healer": "allow",
           "heroui-react_*": "allow",
           "playwright_*": "allow"
         }
@@ -166,15 +189,16 @@
           "sdd_linter": "allow",
           "sdd_brain_sync": "allow",
           "sdd_heroui_lookup": "allow",
+          "sdd_auto_healer": "allow",
           "heroui-react_*": "allow",
           "playwright_*": "allow"
         }
       }
     },
-    "sdd-tester": {
+    "f3-validator": {
       "mode": "subagent",
       "model": "deepseek/deepseek-v4-flash",
-      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-tester.md}",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/f3-validator.md}",
       "permission": {
         "question": "allow",
         "edit": "allow",
@@ -208,10 +232,10 @@
         }
       }
     },
-    "sdd-deployer": {
+    "f4-deployer": {
       "mode": "subagent",
       "model": "deepseek/deepseek-v4-flash",
-      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-deployer.md}",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/f4-deployer.md}",
       "permission": {
         "bash": "allow",
         "skill": {
@@ -223,17 +247,15 @@
           "sdd_clasp": "allow",
           "sdd_git_awareness": "allow",
           "sdd_dependency_installer": "allow",
-          "sdd_free_port_finder": "allow"
-        },
-        "write_file": {
-          "/tmp": "allow"
+          "sdd_free_port_finder": "allow",
+          "sdd_destructive_guard": "allow"
         }
       }
     },
-    "sdd-archiver": {
+    "f5-archiver": {
       "mode": "subagent",
       "model": "deepseek/deepseek-v4-flash",
-      "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-archiver.md}",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/f5-archiver.md}",
       "permission": {
         "edit": "allow",
         "bash": "allow",
@@ -251,10 +273,10 @@
         }
       }
     },
-    "aux-handyman": {
+    "aux-quick-fix": {
       "mode": "subagent",
       "model": "deepseek/deepseek-v4-flash",
-      "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-handyman.md}",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-quick-fix.md}",
       "permission": {
         "edit": "allow",
         "bash": "allow",
@@ -277,15 +299,16 @@
         "edit": "deny",
         "bash": "deny",
         "lsp": "deny",
+        "question": "allow",
         "skill": {
-          "*": "deny"
+          "*": "allow"
         }
       }
     },
-    "aux-auditor": {
+    "aux-audit": {
       "mode": "subagent",
       "model": "deepseek/deepseek-v4-flash",
-      "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-auditor.md}",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-audit.md}",
       "permission": {
         "edit": "deny",
         "bash": "allow",
@@ -323,17 +346,17 @@
           "sdd_git_awareness": "allow",
           "sdd_brain_sync": "allow",
           "sdd_heroui_lookup": "allow",
+          "sdd_auto_healer": "allow",
           "heroui-react_*": "allow",
           "playwright_*": "allow"
         }
       }
     },
-    "aux-explainer": {
+    "aux-explain": {
       "mode": "subagent",
       "model": "deepseek/deepseek-v4-flash",
-      "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-explainer.md}",
+      "prompt": "{file:./node_modules/zugzbot-sdd/agents/aux-explain.md}",
       "permission": {
-        "question": "allow",
         "edit": "deny",
         "bash": "deny",
         "lsp": "allow",
@@ -341,7 +364,8 @@
           "*": "allow"
         },
         "tools": {
-          "sdd_lock_manager": "allow"
+          "sdd_lock_manager": "allow",
+          "sdd_generate_tree": "allow"
         }
       }
     }

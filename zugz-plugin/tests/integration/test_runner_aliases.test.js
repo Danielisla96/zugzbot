@@ -3,8 +3,8 @@ import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
 import { afterAll, beforeAll, describe, test, expect } from 'vitest';
-import sddTestRunner from '../../.opencode/tools/sdd_test_runner.js';
-import lockManager from '../../.opencode/tools/sdd_lock_manager.js';
+import sddTestRunner from '../../.opencode/tools/_f2/sdd_test_runner.js';
+import lockManager from '../../.opencode/tools/_core/sdd_lock_manager.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

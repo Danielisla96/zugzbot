@@ -11,7 +11,7 @@ import {
   isValidDesignSystemSlug,
   normalizeDesignSystemSlug,
   isDesignSystemReady
-} from "../../.opencode/tools/sdd_lock_manager.js"
+} from "../../.opencode/tools/_core/sdd_lock_manager.js"
 
 describe("sdd_lock_manager general & design system metadata", () => {
   test("SCHEMA_VERSION es 8", () => {

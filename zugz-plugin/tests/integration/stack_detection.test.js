@@ -3,9 +3,9 @@ import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
 import { afterAll, beforeAll, describe, test, expect } from 'vitest';
-import stackDetector from '../../.opencode/tools/sdd_stack_detector.js';
-import lockManager, { SCHEMA_VERSION } from '../../.opencode/tools/sdd_lock_manager.js';
-import sddInstallAutoskills from '../../.opencode/tools/sdd_install_autoskills.js';
+import stackDetector from '../../.opencode/tools/_f0/sdd_stack_detector.js';
+import lockManager, { SCHEMA_VERSION } from '../../.opencode/tools/_core/sdd_lock_manager.js';
+import sddInstallAutoskills from '../../.opencode/tools/_f0/sdd_install_autoskills.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

@@ -3,11 +3,11 @@ import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
 import { afterAll, beforeAll, describe, test, expect } from 'vitest';
-import sddTransition from '../../.opencode/tools/sdd_transition.js';
-import lockManager from '../../.opencode/tools/sdd_lock_manager.js';
-import specReviewer from '../../.opencode/tools/sdd_spec_reviewer.js';
-import brainCurator from '../../.opencode/tools/sdd_brain_curator.js';
-import stackDetector from '../../.opencode/tools/sdd_stack_detector.js';
+import sddTransition from '../../.opencode/tools/_core/sdd_transition.js';
+import lockManager from '../../.opencode/tools/_core/sdd_lock_manager.js';
+import specReviewer from '../../.opencode/tools/_f1/sdd_spec_reviewer.js';
+import brainCurator from '../../.opencode/tools/_f2/sdd_brain_curator.js';
+import stackDetector from '../../.opencode/tools/_f0/sdd_stack_detector.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

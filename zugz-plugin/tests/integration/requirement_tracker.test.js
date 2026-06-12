@@ -2,8 +2,8 @@ import { describe, test, expect, beforeAll, afterAll } from "vitest"
 import fs from "fs"
 import path from "path"
 import os from "os"
-import requirementTracker from "../../.opencode/tools/sdd_requirement_tracker.js"
-import { SPEC_TEMPLATE_V1 } from "../../.opencode/tools/sdd_spec_template.js"
+import requirementTracker from "../../.opencode/tools/_f1/sdd_requirement_tracker.js"
+import { SPEC_TEMPLATE_V1 } from "../../.opencode/tools/_lib/sdd_spec_template.js"
 
 const TMP = path.join(os.tmpdir(), `zugzbot-requirement-consolidated-${Date.now()}`)
 

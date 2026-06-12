@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const ZUGZBOT_PATH = path.resolve(__dirname, "../../agents/zugzbot.md")
-const BUILDER_PATH = path.resolve(__dirname, "../../agents/sdd-builder.md")
+const BUILDER_PATH = path.resolve(__dirname, "../../agents/f2-green-builder.md")
 const SKILL_PATH = path.resolve(__dirname, "../../skills/sdd-design-system/SKILL.md")
 const FRONT_CMD_PATH = path.resolve(__dirname, "../../commands/front.md")
 
@@ -73,7 +73,7 @@ describe("Regresión: regex de detección de UI funciona contra prompts reales",
   })
 })
 
-describe("Regresión: sdd-builder honra el flag de skip", () => {
+describe("Regresión: f2-green-builder honra el flag de skip", () => {
   const raw = fs.readFileSync(BUILDER_PATH, "utf-8")
 
   test("el builder menciona design_system_explicitly_skipped", () => {

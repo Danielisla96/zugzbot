@@ -313,10 +313,10 @@ function buildOpencodeJson(models) {
           }
         }
       },
-      "sdd-explorer": {
+      "f0-explorer": {
         "mode": "subagent",
-        "model": agents["sdd-explorer"] || defaultModel,
-        "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-explorer.md}",
+        "model": agents["f0-explorer"] || defaultModel,
+        "prompt": "{file:./node_modules/zugzbot-sdd/agents/f0-explorer.md}",
         "permission": {
           "bash": "allow",
           "lsp": "allow",
@@ -331,10 +331,10 @@ function buildOpencodeJson(models) {
           }
         }
       },
-      "sdd-planner": {
+      "f1-planner": {
         "mode": "subagent",
-        "model": agents["sdd-planner"] || defaultModel,
-        "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-planner.md}",
+        "model": agents["f1-planner"] || defaultModel,
+        "prompt": "{file:./node_modules/zugzbot-sdd/agents/f1-planner.md}",
         "permission": {
           "edit": "allow",
           "bash": "allow",
@@ -355,10 +355,28 @@ function buildOpencodeJson(models) {
           }
         }
       },
-      "sdd-builder": {
+      "f15-spec-reviewer": {
         "mode": "subagent",
-        "model": agents["sdd-builder"] || defaultModel,
-        "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-builder.md}",
+        "model": agents["f15-spec-reviewer"] || defaultModel,
+        "prompt": "{file:./node_modules/zugzbot-sdd/agents/f15-spec-reviewer.md}",
+        "permission": {
+          "edit": "deny",
+          "bash": "deny",
+          "lsp": "allow",
+          "skill": { "*": "allow" },
+          "tools": {
+            "sdd_spec_reviewer": "allow",
+            "sdd_spec_validator": "allow",
+            "sdd_requirement_tracker": "allow",
+            "sdd_lock_manager": "allow",
+            "sdd_transition": "allow"
+          }
+        }
+      },
+      "f2-green-builder": {
+        "mode": "subagent",
+        "model": agents["f2-green-builder"] || defaultModel,
+        "prompt": "{file:./node_modules/zugzbot-sdd/agents/f2-green-builder.md}",
         "permission": {
           "edit": "allow",
           "bash": "allow",
@@ -370,15 +388,18 @@ function buildOpencodeJson(models) {
             "sdd_linter": "allow",
             "sdd_test_runner": "allow",
             "sdd_git_awareness": "allow",
-            "sdd_security_vulnerability_scanner": "allow",
-            "sdd_graphify": "allow"
+            "sdd_dependency_installer": "allow",
+            "sdd_heroui_lookup": "allow",
+            "sdd_auto_healer": "allow",
+            "heroui-react_*": "allow",
+            "playwright_*": "allow"
           }
         }
       },
-      "sdd-tester": {
+      "f3-validator": {
         "mode": "subagent",
-        "model": agents["sdd-tester"] || defaultModel,
-        "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-tester.md}",
+        "model": agents["f3-validator"] || defaultModel,
+        "prompt": "{file:./node_modules/zugzbot-sdd/agents/f3-validator.md}",
         "permission": {
           "edit": "allow",
           "bash": "allow",
@@ -404,10 +425,10 @@ function buildOpencodeJson(models) {
           }
         }
       },
-      "sdd-deployer": {
+      "f4-deployer": {
         "mode": "subagent",
-        "model": agents["sdd-deployer"] || defaultModel,
-        "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-deployer.md}",
+        "model": agents["f4-deployer"] || defaultModel,
+        "prompt": "{file:./node_modules/zugzbot-sdd/agents/f4-deployer.md}",
         "permission": {
           "bash": "allow",
           "skill": { "*": "allow" },
@@ -423,10 +444,10 @@ function buildOpencodeJson(models) {
         }
       }
     },
-      "sdd-archiver": {
+      "f5-archiver": {
         "mode": "subagent",
-        "model": agents["sdd-archiver"] || defaultModel,
-        "prompt": "{file:./node_modules/zugzbot-sdd/agents/sdd-archiver.md}",
+        "model": agents["f5-archiver"] || defaultModel,
+        "prompt": "{file:./node_modules/zugzbot-sdd/agents/f5-archiver.md}",
         "permission": {
           "edit": "allow",
           "bash": "allow",
@@ -642,7 +663,7 @@ function init() {
         }
         green("MCP server heroui-react añadido a opencode.json")
       }
-      const uiAgents = ["sdd-planner", "sdd-builder", "f2-refactor-improver", "sdd-tester", "aux-refactor"]
+      const uiAgents = ["f1-planner", "f2-green-builder", "f2-refactor-improver", "f3-validator", "aux-refactor"]
       let mcpAgentsApplied = 0
       for (const agentName of uiAgents) {
         const ag = opencodeBase.agent && opencodeBase.agent[agentName]
@@ -774,10 +795,10 @@ function init() {
     green("Plantillas de scaffolding copiadas")
   }
 
-  const hasOfficialHeroUISkills = ["heroui-react", "heroui-migration", "heroui-native"]
+  const hasOfficialHeroUISkills = ["heroui-react"]
     .every(s => fs.existsSync(path.join(PKG_ROOT, "skills", s, "SKILL.md")))
   if (hasOfficialHeroUISkills) {
-    green("Skills oficiales de HeroUI empaquetados (heroui-react, heroui-migration, heroui-native)")
+    green("Skill oficial de HeroUI empaquetado (heroui-react)")
   }
 
 

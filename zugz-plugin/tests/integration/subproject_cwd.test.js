@@ -3,7 +3,7 @@ import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
 import { afterAll, beforeAll, describe, test, expect } from 'vitest';
-import lockManager, { SCHEMA_VERSION } from '../../.opencode/tools/sdd_lock_manager.js';
+import lockManager, { SCHEMA_VERSION } from '../../.opencode/tools/_core/sdd_lock_manager.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

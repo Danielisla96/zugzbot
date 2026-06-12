@@ -11,7 +11,6 @@ permission:
     "sdd_transition": allow
     "sdd_lock_manager": allow
     "sdd_test_runner": allow
-    "sdd_test_writer": allow
     "sdd_brain_sync": allow
 ---
 
