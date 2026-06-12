@@ -2,7 +2,7 @@ import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
 
-export const SCHEMA_VERSION = 7
+export const SCHEMA_VERSION = 8
 
 export const DESIGN_SYSTEM_SLUGS = [
   "airbnb",
@@ -78,6 +78,8 @@ export interface SddLockfile {
   session_features: SessionFeatures
   active_design_system: DesignSystemSlug | null
   design_system_explicitly_skipped: boolean
+  recommended_skills: string[]
+  autopilot_decisions: Array<{ phase: string; decision: string; justification: string }>
 }
 
 export const DEFAULT_SESSION_FEATURES: SessionFeatures = {
@@ -123,7 +125,9 @@ export const DEFAULT_LOCKFILE: SddLockfile = {
   modo_qa: "automatizado",
   session_features: { ...DEFAULT_SESSION_FEATURES },
   active_design_system: null,
-  design_system_explicitly_skipped: false
+  design_system_explicitly_skipped: false,
+  recommended_skills: [],
+  autopilot_decisions: []
 }
 
 export function resolveLockfilePath(projectRoot: string): string {
@@ -171,10 +175,18 @@ export function migrateToV2(raw: any): SddLockfile {
     ...rawCopy,
     session_features: mergedFeatures,
     active_design_system: normalizeDesignSystemSlug(rawCopy.active_design_system),
-    design_system_explicitly_skipped: rawCopy.design_system_explicitly_skipped === true
+    design_system_explicitly_skipped: rawCopy.design_system_explicitly_skipped === true,
+    recommended_skills: Array.isArray(rawCopy.recommended_skills) ? rawCopy.recommended_skills : [],
+    autopilot_decisions: Array.isArray(rawCopy.autopilot_decisions) ? rawCopy.autopilot_decisions : []
   } as SddLockfile
 
   if (rawCopy.schema_version === SCHEMA_VERSION) {
+    return {
+      ...baseTemplate,
+      schema_version: SCHEMA_VERSION
+    }
+  }
+  if (rawCopy.schema_version === 7) {
     return {
       ...baseTemplate,
       schema_version: SCHEMA_VERSION
@@ -246,6 +258,10 @@ export function migrateToV6(raw: any): SddLockfile {
 }
 
 export function migrateToV7(raw: any): SddLockfile {
+  return migrateToV2(raw)
+}
+
+export function migrateToV8(raw: any): SddLockfile {
   return migrateToV2(raw)
 }
 

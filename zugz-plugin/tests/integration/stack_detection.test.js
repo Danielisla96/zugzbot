@@ -4,7 +4,7 @@ import os from 'os';
 import { fileURLToPath } from 'url';
 import { afterAll, beforeAll, describe, test, expect } from 'vitest';
 import stackDetector from '../../.opencode/tools/sdd_stack_detector.js';
-import lockManager from '../../.opencode/tools/sdd_lock_manager.js';
+import lockManager, { SCHEMA_VERSION } from '../../.opencode/tools/sdd_lock_manager.js';
 import sddInstallAutoskills from '../../.opencode/tools/sdd_install_autoskills.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -220,7 +220,7 @@ describe('Lockfile with stack_profile (v2)', () => {
     const readResult = await lockManager.execute({ action: 'read' }, ctx(projectPath));
     const lock = JSON.parse(readResult).lockfile;
     expect(lock.stack_profile).toBe('node-typescript');
-    expect(lock.schema_version).toBe(7);
+    expect(lock.schema_version).toBe(SCHEMA_VERSION);
   });
 
   test('lock_manager validates v2 schema correctly', async () => {

@@ -271,9 +271,11 @@ Tras recibir la respuesta, traduce a `sdd_transition`:
 - C → no transiciones, mantén fase
 
 > [!IMPORTANT]
-> Si `lockfile.loop === true`, **NO muestres ni preguntes las plantillas HIL-A o HIL-B**. En su lugar:
-> - Para **HIL-A** (post-F1.5): Transiciona inmediatamente usando `sdd_transition(nextPhase: "F2-RED", status: "spec_approved", reason: "Aprobación automática del Spec (Configuración loop)")` y delega a `@f2-red-test-writer`.
-> - Para **HIL-B** (post-F4): Transiciona inmediatamente usando `sdd_transition(nextPhase: "F5", status: "qa_validated", reason: "Aprobación automática de QA/Deploy (Configuración loop)")` y delega a `@sdd-archiver`.
+> Si `lockfile.loop === true` o `lockfile.auto_pilot === true`, **NO muestres ni preguntes las plantillas HIL-A o HIL-B, ni bloquees el flujo con preguntas aclaratorias en F1**. En su lugar:
+> - **F1 Preguntas Aclaratorias**: Si el planificador requiere aclaraciones, el agente autónomo debe decidir por sí mismo las opciones técnicas por defecto más lógicas y seguras, registrar estas decisiones y sus justificaciones en `.openspec/autopilot_decisions.md`, y continuar directamente a F1.5.
+> - **Para HIL-A** (post-F1.5): Transiciona inmediatamente usando `sdd_transition(nextPhase: "F2-RED", status: "spec_approved", reason: "Aprobación automática del Spec (Autopilot/Loop)")` y delega a `@f2-red-test-writer`.
+> - **Para HIL-B** (post-F4): Transiciona inmediatamente usando `sdd_transition(nextPhase: "F5", status: "qa_validated", reason: "Aprobación automática de QA/Deploy (Autopilot/Loop)")` y delega a `@sdd-archiver`.
+> - **Auto-Healing**: Si una fase de pruebas o validación falla, reintenta automáticamente (hasta 3 veces) retrocediendo a F2-GREEN/F2-REFACTOR y usando la herramienta `sdd_auto_healer` para resolver problemas de linter o sintaxis de forma autónoma.
 >
 > Asegúrate de actuar de forma autónoma sin detener el flujo.
 

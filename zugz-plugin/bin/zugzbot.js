@@ -17,7 +17,7 @@ try {
 const INSTALL_DIR = process.cwd()
 
 const TEMPLATE_SDD_LOCK_V2 = {
-  schema_version: 7,
+  schema_version: 8,
   change_name: "",
   workflow: "full-sdd-tdd",
   stack_profile: "unknown",
@@ -56,7 +56,9 @@ const TEMPLATE_SDD_LOCK_V2 = {
     graphify: false
   },
   active_design_system: null,
-  design_system_explicitly_skipped: false
+  design_system_explicitly_skipped: false,
+  recommended_skills: [],
+  autopilot_decisions: []
 }
 
 const TEMPLATE_TUI_JSON = {

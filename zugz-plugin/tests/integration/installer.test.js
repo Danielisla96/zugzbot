@@ -60,7 +60,7 @@ describe('installer: zugz-models.json editable + overlay', () => {
   test('primer install: sdd-lock.json contiene session_features y schema_version 7', () => {
     runInstaller(projectDir);
     const lock = readJson(path.join(projectDir, '.openspec/sdd-lock.json'));
-    expect(lock.schema_version).toBe(7);
+    expect(lock.schema_version).toBe(8);
     expect(lock.session_features).toEqual({ autoskills: false, graphify: false });
     expect(lock.active_design_system).toBe(null);
     expect(lock.design_system_explicitly_skipped).toBe(false);

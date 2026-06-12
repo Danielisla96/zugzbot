@@ -350,6 +350,15 @@ export default tool({
     if (args.iteration !== undefined) lock.iteration = args.iteration
     if (args.workflow) lock.workflow = args.workflow
 
+    if (lock.auto_pilot && direction === "forward") {
+      if (!lock.autopilot_decisions) lock.autopilot_decisions = []
+      lock.autopilot_decisions.push({
+        phase: args.nextPhase,
+        decision: `Transición automática a ${args.nextPhase} con estado ${args.status}`,
+        justification: args.reason
+      })
+    }
+
     writeLockfile(projectRoot, lock)
 
     if (lock.change_name && lock.change_name !== "nuevo-cambio") {

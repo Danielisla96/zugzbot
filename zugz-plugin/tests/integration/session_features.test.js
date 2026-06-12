@@ -54,7 +54,7 @@ describe("sdd_session_features (tool, schema v6)", () => {
     expect(parsed.status).toBe("SUCCESS")
     expect(parsed.session_features).toEqual({ autoskills: false, graphify: false })
     const lock = readLockfile(projectPath)
-    expect(lock.schema_version).toBe(7)
+    expect(lock.schema_version).toBe(SCHEMA_VERSION)
     expect(lock.session_features).toEqual({ autoskills: false, graphify: false })
   })
 
@@ -132,7 +132,7 @@ describe("sdd_session_features (tool, schema v6)", () => {
     expect(readSessionFeatures(projectPath)).toEqual({ autoskills: true, graphify: true })
   })
 
-  test("SCHEMA_VERSION runtime es 7", () => {
-    expect(SCHEMA_VERSION).toBe(7)
+  test("SCHEMA_VERSION runtime es 8", () => {
+    expect(SCHEMA_VERSION).toBe(8)
   })
 })

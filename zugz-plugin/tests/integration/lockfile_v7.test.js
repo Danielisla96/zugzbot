@@ -9,8 +9,8 @@ import {
 } from "../../.opencode/tools/sdd_lock_manager.js"
 
 describe("sdd_lock_manager v7 (active_design_system)", () => {
-  test("SCHEMA_VERSION es 7", () => {
-    expect(SCHEMA_VERSION).toBe(7)
+  test("SCHEMA_VERSION es 8", () => {
+    expect(SCHEMA_VERSION).toBe(8)
   })
 
   test("DESIGN_SYSTEM_SLUGS contiene los 11 esperados", () => {
@@ -81,7 +81,7 @@ describe("migrateToV7 — back-compat", () => {
       stack_profile: "python"
     }
     const migrated = migrateToV7(v6Raw)
-    expect(migrated.schema_version).toBe(7)
+    expect(migrated.schema_version).toBe(SCHEMA_VERSION)
     expect(migrated.active_design_system).toBe(null)
   })
 
@@ -113,7 +113,7 @@ describe("migrateToV7 — back-compat", () => {
       tasks: [{ id: 1, desc: "task 1", status: "completed" }]
     }
     const migrated = migrateToV7(v4Raw)
-    expect(migrated.schema_version).toBe(7)
+    expect(migrated.schema_version).toBe(SCHEMA_VERSION)
     expect(migrated.active_design_system).toBe(null)
     expect(migrated.tasks).toHaveLength(1)
   })
@@ -125,7 +125,7 @@ describe("migrateToV7 — back-compat", () => {
       subproject_cwd: "apps/web"
     }
     const migrated = migrateToV7(v2Raw)
-    expect(migrated.schema_version).toBe(7)
+    expect(migrated.schema_version).toBe(SCHEMA_VERSION)
     expect(migrated.subproject_cwd).toBe("apps/web")
     expect(migrated.active_design_system).toBe(null)
   })
@@ -133,7 +133,7 @@ describe("migrateToV7 — back-compat", () => {
   test("migrateToV7 desde v1 → v7 con active_design_system: null", () => {
     const v1Raw = { schema_version: 1, change_name: "x" }
     const migrated = migrateToV7(v1Raw)
-    expect(migrated.schema_version).toBe(7)
+    expect(migrated.schema_version).toBe(SCHEMA_VERSION)
     expect(migrated.active_design_system).toBe(null)
   })
 

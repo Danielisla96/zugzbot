@@ -3,7 +3,7 @@ import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
 import { afterAll, beforeAll, describe, test, expect } from 'vitest';
-import lockManager from '../../.opencode/tools/sdd_lock_manager.js';
+import lockManager, { SCHEMA_VERSION } from '../../.opencode/tools/sdd_lock_manager.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,7 +57,7 @@ describe('Lockfile subproject_cwd (v3)', () => {
 
     const readResult = await lockManager.execute({ action: 'read' }, context);
     const lock = JSON.parse(readResult).lockfile;
-    expect(lock.schema_version).toBe(7);
+    expect(lock.schema_version).toBe(SCHEMA_VERSION);
   });
 
   test('default lockfile has schema_version 4 and subproject_cwd empty', async () => {
@@ -66,7 +66,7 @@ describe('Lockfile subproject_cwd (v3)', () => {
 
     const readResult = await lockManager.execute({ action: 'read' }, context);
     const lock = JSON.parse(readResult).lockfile;
-    expect(lock.schema_version).toBe(7);
+    expect(lock.schema_version).toBe(SCHEMA_VERSION);
     expect(lock.subproject_cwd).toBe('');
   });
 
@@ -111,7 +111,7 @@ describe('Lockfile subproject_cwd (v3)', () => {
 
     const readResult = await lockManager.execute({ action: 'read' }, context);
     const lock = JSON.parse(readResult).lockfile;
-    expect(lock.schema_version).toBe(7);
+    expect(lock.schema_version).toBe(SCHEMA_VERSION);
     expect(lock.subproject_cwd).toBe('');
     expect(lock.change_name).toBe('legacy-change');
     expect(lock.stack_profile).toBe('python');
