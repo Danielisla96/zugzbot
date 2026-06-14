@@ -48,11 +48,13 @@ El JSON generado en `contract.json` debe cumplir estrictamente con `.opencode/co
   </omd_reference_loading>
 
 <design_standards>
-- **Alineación con DESIGN.md (OBLIGATORIO)**: Debes leer obligatoriamente el archivo `.openspec/DESIGN.md` para extraer los tokens de diseño (colores primarios/secundarios, tipografía, radios de bordes, espaciado, estilo de voz de micro-copias). El contrato debe forzar el acoplamiento a este diseño.
-- **Diseño Premium**: El contrato debe contemplar layouts estructurados profesionales (ej. `Sidebar`, `Header`, tarjetas KPIs, gráficos, modo claro/oscuro) e instruir el uso del skill `shadcn-templates` (Sección 3.5) alineado a la guía del `DESIGN.md`. Quedan prohibidos los MVPs de pantalla única flotante.
+- **Alineación con DESIGN.md y Ejemplos de Layout (OBLIGATORIO)**: Debes leer obligatoriamente el archivo `.openspec/DESIGN.md` para extraer los tokens de diseño. **Además, debes leer y basarte en los ejemplos HTML interactivos (`preview.html`, `preview-dark.html`) correspondientes de la marca, los cuales puedes consultar a través de la herramienta `get_html_previews` del MCP o leyendo directamente en el directorio `.openspec/design-assets/<brandId>/`. El contrato debe forzar el acoplamiento a este diseño y detallar los layouts (sidebars, grids, headers) extraídos de estos ejemplos.**
+- **Diseño Premium**: El contrato debe contemplar layouts estructurados profesionales (ej. `Sidebar`, `Header`, tarjetas KPIs, gráficos, modo claro/oscuro) e instruir el uso del skill `shadcn-templates` (Sección 3.5) alineado a la guía del `DESIGN.md` y a los ejemplos HTML interactivos. Quedan prohibidos los MVPs de pantalla única flotante.
 - **Estructura de Diseño Detallada (OBLIGATORIO)**: Debes incluir una sección detallada en el contrato que defina la estructura visual exacta para guiar al coder. Especifica:
   - Qué componentes exactos de **Shadcn UI** utilizar (ej. `Card`, `Table`, `Tabs`, `Dialog`, `Switch`, `Tooltip`, etc.) y sus aliases correctos.
   - El listado de **iconos específicos de `lucide-react`** asociados a botones, cabeceras y métricas clave (ej. `Plus`, `Sigma`, `TrendingUp`, `User`), garantizados mediante validación previa con el MCP `lucide-icons`.
   - Las micro-interacciones, efectos hover (`hover:scale-[1.01]`, `transition-all duration-200`) y responsividad esperada.
-- **Escenarios de Test**: Incluye al menos 1 escenario por feature. Utiliza `type: "visual"` para cambios de UI (con selector CSS real y aserción) e `type: "integration"` para flujos cruzados de componentes.
+- **Escenarios de Test (Precisión y Velocidad)**:
+  - Cuando el modo de verificación (`verificationMode`) en settings es `console`, genera únicamente escenarios de tipo `unit` o `integration` enfocados en las funcionalidades críticas (un rango de 3 a 5 escenarios en total es lo recomendado para mantener el desarrollo ágil y preciso). No generes escenarios de tipo `visual` ni tests redundantes o basados en browser.
+  - Cuando el modo de verificación es `visual`, incluye los escenarios de prueba visuales necesarios con sus selectores CSS reales y aserciones técnicas.
 </design_standards>

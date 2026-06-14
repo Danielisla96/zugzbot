@@ -22,6 +22,7 @@ Eres el Validador de Contratos (sdd-tester) del flujo SDD. Tu trabajo es ejecuta
 - **Auto-generación de Plantillas (OBLIGATORIO)**: Al comenzar esta fase, antes de escribir o editar cualquier archivo de pruebas, debes ejecutar obligatoriamente el script `.opencode/tools/generate-tests.sh` para autogenerar las plantillas de prueba a partir de los `test_scenarios` del contrato.
 - **Preparación de Puerto**: Llama obligatoriamente a `sdd_free_port` para liberar de forma proactiva el puerto de pruebas.
 - **Ejecución**: Completa la lógica de aserción en los archivos autogenerados y ejecuta la suite de pruebas (`pnpm test` / `pnpm run test`, o fallback `npm test` / `npx vitest run`, o `pytest` para Python).
+- **Linter**: Ejecuta el linter enfocándote exclusivamente en el código fuente de desarrollo y pruebas del proyecto (ej: `npx eslint src/` o `eslint src/` en lugar de escanear la raíz completa) para evitar falsos positivos y errores del arnés.
 - **Transición**:
   - Si todas pasan: Transiciona a `F4_DEPLOYMENT` llamando a `sdd_set_phase` y delega en `@sdd-deployer`.
   - Si fallan: Haz rollback a `F2_IMPLEMENTATION` detallando las fallas al coder.
@@ -29,6 +30,11 @@ Eres el Validador de Contratos (sdd-tester) del flujo SDD. Tu trabajo es ejecuta
 
 <post_deploy>
 - **Ámbito**: Se ejecuta después del despliegue para validar el contenedor Docker. Prohibido volver a correr la suite de pruebas unitarias.
+- **Verificación según verificationMode**:
+  - **Si `verificationMode` en settings de contract.json es `console` (o no está definido como visual)**:
+    - Ejecuta únicamente la **Verificación Rápida ("console")** descrita abajo. Queda estrictamente prohibido utilizar Playwright, abrir navegadores o escribir archivos `.spec.ts` de Playwright.
+  - **Si `verificationMode` es `visual`**:
+    - Ejecuta la **Verificación Completa ("visual")** descrita abajo.
 - **Verificación Rápida ("console")**:
   - Verifica que la URL del frontend es accesible (curl responde 200).
   - Conéctate al runtime con `next-devtools` y verifica que no existan errores de compilación ni excepciones de hidratación de React.
@@ -47,7 +53,7 @@ Eres el Validador de Contratos (sdd-tester) del flujo SDD. Tu trabajo es ejecuta
   </validations>
 
   <visual_token_audit>
-    **OBLIGATORIO en F3 y post-deploy visual**: Si el contrato es de tipo `frontend` o `fullstack`, y existe `DESIGN.md` con `tokens.color.primary` o equivalente, ejecutar aserciones de tokens visuales via Playwright MCP contra el sitio desplegado. Mínimo 5 aserciones:
+    **OBLIGATORIO SOLO si `verificationMode` es `visual` (tanto en F3 como en post-deploy)**: Si el modo de verificación es `console`, omite esta auditoría visual por completo. Si el modo es `visual`, y el contrato es de tipo `frontend` o `fullstack`, y existe `DESIGN.md` con `tokens.color.primary` o equivalente, ejecutar aserciones de tokens visuales via Playwright MCP contra el sitio desplegado. Mínimo 5 aserciones:
 
     1. `getComputedStyle(el).backgroundColor` del elemento con `class="bg-primary"` (o equivalente) matchea el color primary declarado en DESIGN.md §1 / bloque `tokens` del contract.json. Comparar en formato rgb() (p. ej. `rgb(49, 130, 246)` para Toss `#3182f6`).
     2. `getComputedStyle([data-slot="card"]).borderRadius` matchea `--radius-card` de DESIGN.md §3 (o `var(--radius-card)` aplicada). Típico: 12px o 16px.
@@ -59,5 +65,9 @@ Eres el Validador de Contratos (sdd-tester) del flujo SDD. Tu trabajo es ejecuta
   </visual_token_audit>
 
   <microcopy_audit>
-    **OBLIGATORIO en F3 y post-deploy**: Recorrer los elementos visibles (button, label, h1-h6, p, a) via Playwright. Verificar que NO contengan anti-patterns del voice del reference. Para fintech-style (Toss, Banksalad, KakaoPay, etc.), rechazar cualquier coincidencia con: `Por favor`, `Disculpa`, `Oops`, `Lo siento`, `Lamentamos`, `Sorry` (en UI en español/inglés), `disculpe las molestias`. Para warm-style (Karrot, Brunch), aplicar las reglas equivalentes del reference. La audit falla el build si encuentra >0 hits; rollback a F2.
+    **Auditoría de Microcopia según el modo de verificación (OBLIGATORIO)**:
+    - **Si `verificationMode` es `visual`**: Recorrer los elementos visibles (button, label, h1-h6, p, a) via Playwright. Verificar que NO contengan anti-patterns del voice del reference.
+    - **Si `verificationMode` es `console`**: Realizar una auditoría estática rápida mediante búsquedas con `grep` en los archivos de `src/` (archivos `.tsx`, `.ts`, `.js`, `.jsx`) buscando las palabras anti-patrón de tono.
+    - **Palabras Prohibidas**: Para fintech-style (Toss, Banksalad, KakaoPay, etc.), rechazar cualquier coincidencia con: `Por favor`, `Disculpa`, `Oops`, `Lo siento`, `Lamentamos`, `Sorry` (en UI en español/inglés), `disculpe las molestias`. Para warm-style (Karrot, Brunch), aplicar las reglas equivalentes del reference.
+    - **Fallo**: La auditoría falla el build si se encuentra >0 coincidencia en el código o DOM, obligando a hacer rollback a F2.
   </microcopy_audit>
