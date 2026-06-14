@@ -18,7 +18,7 @@
   },
   "lsp": true,
   "instructions": [
-    "./AGENTS.md"
+    "./.opencode/DESIGN.md"
   ],
   "plugin": [
     "./.opencode/plugins/omd-bootstrap.ts",

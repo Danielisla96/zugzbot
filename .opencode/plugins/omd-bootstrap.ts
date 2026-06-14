@@ -4,7 +4,7 @@ import path from "path"
 
 const CATALOG_DIR = process.env.OMD_CATALOG_DIR || ".opencode/data"
 const INIT_CONTEXT_FILE = ".omd/init-context.json"
-const DESIGN_FILE = "DESIGN.md"
+const DESIGN_FILE = ".opencode/DESIGN.md"
 
 type InitContext = {
   reference_id: string

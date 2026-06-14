@@ -167,10 +167,10 @@ Each turn you are in one state. Determine current state from `.handoff.json` `st
 
   사용자 선택 → 다음 절차를 직접 수행 (1.0.0부터 `omd init prepare` CLI 폐기 — master prose가 source-of-truth).
 
-  **Step 4.1 — 기존 DESIGN.md 보호.** 프로젝트 root에 DESIGN.md 있으면 deprecation rename:
+  **Step 4.1 — 기존 DESIGN.md 보호.** `.opencode/DESIGN.md`가 있으면 deprecation rename:
   ```bash
   TS=$(date -u +%Y-%m-%dT%H-%M-%SZ)
-  mv DESIGN.md "DESIGN.md.deprecated-${TS}.md"
+  mv .opencode/DESIGN.md ".opencode/DESIGN.md.deprecated-${TS}.md"
   ```
   rename된 파일 첫 줄에 deprecation header 삽입:
   ```
@@ -199,7 +199,7 @@ Each turn you are in one state. Determine current state from `.handoff.json` `st
 
   **사용자가 명시 안 한 axes는 절대 임의 shift 금지.** "warmer + softer" 발화가 없으면 `hue_deg`/`radius_step` 손대지 말 것.
 
-  **Step 4.4 — Hybrid DESIGN.md write.** 다음 원칙으로 새 DESIGN.md를 Write 툴로 생성:
+  **Step 4.4 — Hybrid DESIGN.md write.** 다음 원칙으로 새 DESIGN.md를 Write 툴로 `.opencode/DESIGN.md`에 생성:
   - **§1-9 (Visual Theme / Color / Typography / Spacing / Radius / Depth / States / Components / Templates)**: reference base + delta axes 적용. 색은 hue/sat 회전, radius는 step 가산, font는 swap.
   - **§10-15 (Voice / Narrative / Principles / Personas / States / Motion)**: reference voice fingerprint **그대로 보존** — 본문 paraphrase 금지. Toss "breathing room around amounts", Lovable "warm encouragement" 같은 시그니처 문장은 verbatim 인용.
   - **§11 Brand Narrative / §12 Principles / §13 Personas**: 사용자가 fact 제공 안 했으면 `[FILL IN — <안내 텍스트>]` placeholder. **자동 fact 생성 금지** (예: Drop이 Toss처럼 "2015년 창립" 으로 쓰면 거짓 brand claim).
@@ -218,7 +218,7 @@ Each turn you are in one state. Determine current state from `.handoff.json` `st
   }
   ```
 
-  **Step 4.6 — sync shim 갱신.** 새 DESIGN.md 작성 직후 omd-sync 스킬 트리거 (또는 master가 직접 Read/Write로 CLAUDE.md / AGENTS.md / .cursor/rules 3종 갱신 — omd-sync SKILL.md의 템플릿 사용).
+  **Step 4.6 — sync shim 갱신 (생략).** 이 프로젝트에서는 CLAUDE.md / AGENTS.md / .cursor/rules 등의 shim 파일 생성이 생략됩니다. `.opencode/DESIGN.md`만 유지합니다.
 
   **Quality 가드**: 작성 후 §10-15 본문이 reference의 §10-15와 비교해서 50% 이상 겹치는지 self-check. 안 겹치면 voice 망가진 것 — Step 4.4 다시.
 
@@ -512,7 +512,7 @@ Decision logic:
 # - URL extraction: WebFetch + manual token reading
 # - DESIGN.md hybrid emit: master inline (PRODUCTION_TRANSITION Step 4)
 # - preference logging: trigger omd:remember skill (Edit .omd/preferences.md)
-# - shim sync: trigger omd:sync skill (Write CLAUDE.md / AGENTS.md / .cursor/rules)
+# - shim sync: 생략 (DESIGN.md만 사용)
 
 # patch application (Phase 5 after user approval)
 git apply DESIGN.md.patch
