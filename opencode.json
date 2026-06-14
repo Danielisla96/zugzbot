@@ -21,10 +21,18 @@
     "./.opencode/DESIGN.md"
   ],
   "plugin": [
-    "./.opencode/plugins/omd-bootstrap.ts",
-    "./.opencode/plugins/omd-token-audit.ts"
   ],
   "mcp": {
+    "oh-my-design": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "oh-my-design-mcp"
+      ],
+      "enabled": true,
+      "purpose": "MCP oficial de Oh My Design para buscar, consultar y aplicar temas de diseño (Toss, Stripe, Supabase, etc.)."
+    },
     "shadcn": {
       "type": "local",
       "command": [
