@@ -38,9 +38,25 @@ Eres el Validador de Contratos (sdd-tester) del flujo SDD. Tu trabajo es ejecuta
 - **Rollback**: Si algún escenario visual o de consola falla, haz rollback a F2 aportando la evidencia.
 </post_deploy>
 
-<validations>
-- **StateFlow**: Valida mediante `grep` que solo el component `owner` modifique/declare el estado centralizado y que las dependencias fluyan mediante props.
-- **Forbidden**: Comprueba que ninguna restricción del arreglo `forbidden[]` del contrato sea violada en el código.
-- **Warnings**: Reporta advertencias y errores menores de consola como "soft-fail" al orquestador, sin bloquear el despliegue.
-- **Polyfills**: Configura polyfills globales (matchMedia, localStorage, `crypto.randomUUID`) centralizados en `src/test/setup.ts`, no duplicados por archivo de test.
-</validations>
+  <validations>
+    - **StateFlow**: Valida mediante `grep` que solo el component `owner` modifique/declare el estado centralizado y que las dependencias fluyan mediante props.
+    - **Forbidden**: Comprueba que ninguna restricción del arreglo `forbidden[]` del contrato sea violada en el código.
+    - **Warnings**: Reporta advertencias y errores menores de consola como "soft-fail" al orquestador, sin bloquear el despliegue.
+    - **Polyfills**: Configura polyfills globales (matchMedia, localStorage, `crypto.randomUUID`) centralizados en `src/test/setup.ts`, no duplicados por archivo de test.
+  </validations>
+
+  <visual_token_audit>
+    **OBLIGATORIO en F3 y post-deploy visual**: Si el contrato es de tipo `frontend` o `fullstack`, y existe `DESIGN.md` con `tokens.color.primary` o equivalente, ejecutar aserciones de tokens visuales via Playwright MCP contra el sitio desplegado. Mínimo 5 aserciones:
+
+    1. `getComputedStyle(el).backgroundColor` del elemento con `class="bg-primary"` (o equivalente) matchea el color primary declarado en DESIGN.md §1 / bloque `tokens` del contract.json. Comparar en formato rgb() (p. ej. `rgb(49, 130, 246)` para Toss `#3182f6`).
+    2. `getComputedStyle([data-slot="card"]).borderRadius` matchea `--radius-card` de DESIGN.md §3 (o `var(--radius-card)` aplicada). Típico: 12px o 16px.
+    3. `getComputedStyle(:root).getPropertyValue('--radius')` existe y es numérico (no `0`, no string vacío).
+    4. Toggle de tema: tras click en `[role="switch"]` o similar, `html` debe contener la clase esperada (`dark` o `light`) Y `getComputedStyle(body).backgroundColor` debe cambiar de valor.
+    5. `getComputedStyle(body).fontFamily` empieza con la primera opción del font-family declarado en DESIGN.md §2 (o el fallback inmediato si la fuente custom no carga — esto detecta falta de `<link>` o `@import`).
+
+    Si CUALQUIER aserción falla, rollback a F2 con screenshot de evidencia guardado en `.openspec/specs/<activeContract>/playwright/` (usar `.opencode/tools/save-playwright-artifacts.sh`).
+  </visual_token_audit>
+
+  <microcopy_audit>
+    **OBLIGATORIO en F3 y post-deploy**: Recorrer los elementos visibles (button, label, h1-h6, p, a) via Playwright. Verificar que NO contengan anti-patterns del voice del reference. Para fintech-style (Toss, Banksalad, KakaoPay, etc.), rechazar cualquier coincidencia con: `Por favor`, `Disculpa`, `Oops`, `Lo siento`, `Lamentamos`, `Sorry` (en UI en español/inglés), `disculpe las molestias`. Para warm-style (Karrot, Brunch), aplicar las reglas equivalentes del reference. La audit falla el build si encuentra >0 hits; rollback a F2.
+  </microcopy_audit>

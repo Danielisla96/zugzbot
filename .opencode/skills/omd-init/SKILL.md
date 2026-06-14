@@ -40,15 +40,15 @@ Phase 7: 요약 출력
 
 다음 파일을 Read 툴로 전체 로드 (있는 순서대로 fallback):
 
-1. `.claude/data/reference-fingerprints.json` (사용자 프로젝트에 설치된 카탈로그 — 표준 경로)
+1. `.opencode/data/reference-fingerprints.json` (사용자 프로젝트에 설치된 카탈로그 — 표준 경로)
 2. `node_modules/oh-my-design-cli/data/reference-fingerprints.json` (npm 설치 직접 경로)
 3. `data/reference-fingerprints.json` (개발 환경)
 
 스키마: `{ count, items: [{ id, primary_color_hex, category, visual_theme, voice_fingerprint, tone_keywords, antipatterns, signature_motion, has_personas, category_raw }] }`.
 
 추가 보조 파일 (있으면 같이 로드):
-- `.claude/data/vocabulary.json` — controlled vocab axes/keywords
-- `.claude/data/reference-tags.md` — human-readable keyword matrix
+- `.opencode/data/vocabulary.json` — controlled vocab axes/keywords
+- `.opencode/data/reference-tags.md` — human-readable keyword matrix
 
 ### 2.2 task 분석 (silent, in-head)
 
@@ -128,10 +128,10 @@ Phase 4.2~6은 건너뛴다.
 
 <!-- omd:catalog-resolution-order — omd-harness/omd-reference-capture SKILL.md + agents/omd-master.md 와 동일 순서 강제. drift guard: test/unit/core/catalog-resolution-order.test.ts -->
 
-1. `.claude/data/references/<id>/DESIGN.md` (installer가 복사 — npx 설치 기본 경로)
+1. `.opencode/data/references/<id>/DESIGN.md` (installer가 복사 — npx 설치 기본 경로)
 2. `node_modules/oh-my-design-cli/web/references/<id>/DESIGN.md` (로컬 npm 설치 직접 경로)
 3. `web/references/<id>/DESIGN.md` (개발 레포)
-4. `https://oh-my-design.kr/design-systems/<id>.md` 를 fetch (WebFetch 또는 `curl -fsSL`) — 1~3 로컬 경로가 전부 없을 때 (npx 설치가 기본 경로라 흔한 상황). 200이면 응답 본문이 곧 reference DESIGN.md다. 가져온 내용을 `.claude/data/references/<id>/DESIGN.md`로 저장해 다음 실행부터는 로컬 캐시(경로 1)로 잡히게 한다.
+4. `https://oh-my-design.kr/design-systems/<id>.md` 를 fetch (WebFetch 또는 `curl -fsSL`) — 1~3 로컬 경로가 전부 없을 때 (npx 설치가 기본 경로라 흔한 상황). 200이면 응답 본문이 곧 reference DESIGN.md다. 가져온 내용을 `.opencode/data/references/<id>/DESIGN.md`로 저장해 다음 실행부터는 로컬 캐시(경로 1)로 잡히게 한다.
 
 4까지 전부 실패하면 **절대 DESIGN.md를 임의로 지어내지 말 것.** 사용자에게
 "레퍼런스 `<id>` 원문을 찾지 못했어요 (오프라인이거나 카탈로그 미배포).
@@ -272,7 +272,7 @@ args: --force
 
 omd:sync skill이 `CLAUDE.md`, `AGENTS.md`, `.cursor/rules/omd-design.mdc` shim 3종을 생성/갱신하고 `.omd/sync.lock.json` 업데이트.
 
-**옵션 B**: omd:sync skill을 호출할 수 없는 환경이면 직접 Write로 shim 작성. 템플릿은 `.claude/skills/omd-sync/SKILL.md` (설치 경로; dev 레포에서는 `skills/omd-sync/SKILL.md`) §"shim body" 참조. 최소한:
+**옵션 B**: omd:sync skill을 호출할 수 없는 환경이면 직접 Write로 shim 작성. 템플릿은 `.opencode/skills/omd-sync/SKILL.md` (설치 경로; dev 레포에서는 `skills/omd-sync/SKILL.md`) §"shim body" 참조. 최소한:
 - `CLAUDE.md`: managed block ("<!-- omd:managed:start --> ... <!-- omd:managed:end -->") 안에 DESIGN.md 참조 + 핵심 token 요약
 - `AGENTS.md`: 동일 패턴
 - `.cursor/rules/omd-design.mdc`: 전체 파일 omd 전용 — frontmatter + DESIGN.md 인용

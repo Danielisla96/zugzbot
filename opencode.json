@@ -1,20 +1,30 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "permission": {
-    "*": "allow"
+    "*": "allow",
+    "skill": {
+      "omd-*": "allow",
+      "stack-validator": "allow",
+      "sdd-methodology": "allow",
+      "shadcn": "allow",
+      "shadcn-templates": "allow",
+      "docker-templates": "allow",
+      "claude-design": "ask",
+      "find-docs": "ask",
+      "heroui-*": "deny",
+      "hero-*": "deny",
+      "*": "ask"
+    }
   },
   "lsp": true,
+  "instructions": [
+    "./AGENTS.md"
+  ],
+  "plugin": [
+    "./.opencode/plugins/omd-bootstrap.ts",
+    "./.opencode/plugins/omd-token-audit.ts"
+  ],
   "mcp": {
-    "heroui": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@heroui/mcp@latest"
-      ],
-      "enabled": true,
-      "purpose": "Referencia de documentaci\u00f3n HeroUI (legacy). NO usar para c\u00f3digo nuevo. Conservar solo hasta migrar componentes existentes."
-    },
     "shadcn": {
       "type": "local",
       "command": [

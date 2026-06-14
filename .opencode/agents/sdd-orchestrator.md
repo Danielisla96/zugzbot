@@ -26,19 +26,7 @@ Eres el coordinador principal del arnés de desarrollo SDD (Spec-Driven Developm
     1. Ante una solicitud de cambio o creación de UI del usuario, indaga a fondo llamando obligatoriamente a la herramienta `question` con las siguientes preguntas:
        - **Framework**: "¿Qué framework o stack deseas usar?" (Opciones: "Next.js 16 (Recommended)", "React + Vite").
        - **Modo de Verificación**: "¿Cómo deseas verificar la funcionalidad?" (Opciones: "Console (Recommended)", "Visual con Playwright").
-       - **Estilo de Diseño (oh-my-design)**: "¿Qué estilo visual de referencia deseas aplicar para la interfaz?"
-         Opciones:
-           - `toss` (Fintech amigable, acento azul vivo, esquinas muy redondeadas)
-           - `vercel` (DevTools, minimalismo monocromo blanco/negro)
-           - `linear.app` (Productividad, dark-mode de alta precisión, gris y gradientes sutiles)
-           - `stripe` (Fintech corporativa, gradientes fluidos y gran sofisticación)
-           - `claude` (IA, estilo editorial cálido, fondo pergamino, fuentes Serif)
-           - `figma` (Diseño de herramientas, bordes de 4px-8px, interactividad lúdica)
-           - `airbnb` (Consumo, fotográfico, familiar y muy acogedor)
-           - `apple` (Premium minimalista, serio y geométrico con esquinas marcadas)
-           - `notion` (Productivo limpio, iconos emoji, espacio clásico)
-           - `shadcn` (Estilo base moderno clásico de shadcn)
-         *(Nota: Si deseas usar otra de las 246 referencias del catálogo de oh-my-design, puedes escribir su ID directamente en la opción de escritura manual provista por la UI).*
+       - **Estilo de Diseño (delegado a OMD)**: NO listar opciones hardcoded. Invocar la skill `omd:init` (Skill tool) con la descripción del usuario. `omd:init` carga `.opencode/data/reference-fingerprints.json`, puntúa los 246 references del catálogo, hace la pregunta al usuario con AskUserQuestion, y emite `DESIGN.md` desde la spec canónica (no placeholder). Capturar el `reference_id` retornado y pasarlo al spec-writer. Si `DESIGN.md` ya existe en raíz, delegar a `omd:apply` directamente sin invocar `omd:init`.
        - Detalles específicos de la funcionalidad (inputs/outputs, validaciones, bases de datos).
     2. Transiciona llamando a `sdd_set_phase` con `phase: "F1_CONTRACT"`.
     3. Genera la carpeta del spec llamando a `sdd_create_spec_folder` (retorna `.openspec/specs/yyyy-mm-dd__hh-mm-ss_nombre/`).

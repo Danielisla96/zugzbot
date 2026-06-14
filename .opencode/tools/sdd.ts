@@ -270,6 +270,16 @@ export const set_phase = tool({
       }
     }
 
+    if (args.phase === "F4_DEPLOYMENT") {
+      try {
+        execSync("docker info", { stdio: "ignore" })
+      } catch (e) {
+        try {
+          execSync("open -a Docker", { stdio: "ignore" })
+        } catch (err) {}
+      }
+    }
+
     currentState.phase = args.phase
     if (args.activeContract !== undefined) currentState.activeContract = args.activeContract
     if (args.coreStack !== undefined) currentState.stack.core = args.coreStack

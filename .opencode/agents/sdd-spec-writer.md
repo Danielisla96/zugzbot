@@ -31,13 +31,25 @@ El JSON generado en `contract.json` debe cumplir estrictamente con `.opencode/co
 - `external_api_verification`: Registro detallado de firmas de API validadas.
 </contract_structure>
 
-<mcp_validation>
-Antes de declarar firmas de componentes/APIs externas en el contrato, **debes** verificar su estructura real mediante los MCPs:
-- **Shadcn UI**: Usar `mcp__shadcn__get_item` con el nombre del componente (ej. `@shadcn/button`) para conocer props y variantes.
-- **Lucide Icons**: Usar obligatoriamente las herramientas del MCP `lucide-icons` (como `mcp__lucide-icons__search_icons` y `mcp__lucide-icons__get_icon_usage_examples`) para buscar y seleccionar de forma exacta los nombres de los iconos que requiera la aplicación, asegurando su existencia real y obteniendo ejemplos de uso JSX correctos.
-- **Radix / Next.js / FastAPI / React Aria**: Usar `mcp__context7__get-library-docs` para validar el comportamiento real (ej. props de Radix o lifecycle en React 19).
-- **Bypass de Optimización**: Si la firma ya fue validada en contratos previos de `.openspec/archive/` o es sintaxis estándar (ej. FastAPI query params simples), puedes omitir llamadas externas y registrar la firma directamente.
-</mcp_validation>
+  <mcp_validation>
+    Antes de declarar firmas de componentes/APIs externas en el contrato, **debes** verificar su estructura real mediante los MCPs:
+    - **Shadcn UI**: Usar `mcp__shadcn__get_item` con el nombre del componente (ej. `@shadcn/button`) para conocer props y variantes.
+    - **Lucide Icons**: Usar obligatoriamente las herramientas del MCP `lucide-icons` (como `mcp__lucide-icons__search_icons` y `mcp__lucide-icons__get_icon_usage_examples`) para buscar y seleccionar de forma exacta los nombres de los iconos que requiera la aplicación, asegurando su existencia real y obteniendo ejemplos de uso JSX correctos.
+    - **Radix / Next.js / FastAPI / React Aria**: Usar `mcp__context7__get-library-docs` para validar el comportamiento real (ej. props de Radix o lifecycle en React 19).
+    - **Bypass de Optimización**: Si la firma ya fue validada en contratos previos de `.openspec/archive/` o es sintaxis estándar (ej. FastAPI query params simples), puedes omitir llamadas externas y registrar la firma directamente.
+  </mcp_validation>
+
+  <omd_reference_loading>
+    **OMD reference (OBLIGATORIO antes de redactar contrato)**: Si el orchestrator pasó un `reference_id` en la tarea o existe `.omd/init-context.json` con un `reference_id` activo, cargar la DESIGN.md canónica en este orden estricto:
+    1. `.opencode/data/references/<reference_id>/DESIGN.md` (catalog local — instalado por `npx oh-my-design-cli install-skills`)
+    2. `node_modules/oh-my-design-cli/web/references/<reference_id>/DESIGN.md` (npm install directo)
+    3. `web/references/<reference_id>/DESIGN.md` (dev repo)
+    4. Fetch `https://oh-my-design.kr/design-systems/<reference_id>.md` (fallback de red; cachear a `.opencode/data/references/<id>/DESIGN.md` si 200)
+
+    Extraer los tokens canónicos (color palette, radius scale, typography, shadows, motion) y embeberlos como bloque `tokens` en el `contract.json`. Esto garantiza que el contrato y el DESIGN.md no diverjan y que el coder tenga una referencia inmutable incluso si el DESIGN.md raíz se sobreescribe.
+
+    Si el primer load falla (4/4 rutas miss), DETENERSE y reportar: "Reference `<id>` no encontrado en catalog. Run: npx oh-my-design-cli install-skills --all --force". NO inventar tokens.
+  </omd_reference_loading>
 
 <design_standards>
 - **Alineación con DESIGN.md (OBLIGATORIO)**: Si existe un archivo `DESIGN.md` en la raíz del proyecto, debes leerlo obligatoriamente para extraer los tokens de diseño (colores primarios/secundarios, tipografía, radios de bordes, espaciado, estilo de voz de micro-copias). El contrato debe forzar el acoplamiento a este diseño.
