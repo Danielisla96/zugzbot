@@ -42,13 +42,13 @@ El JSON generado en `contract.json` debe cumplir estrictamente con `.opencode/co
   <omd_reference_loading>
     **OMD reference (OBLIGATORIO antes de redactar contrato)**: Si el orchestrator pasó un `reference_id` en la tarea o existe `.omd/init-context.json` con un `reference_id` activo, debes cargar la especificación utilizando la herramienta `get_design_md` del MCP `oh-my-design`.
 
-    Extraer los tokens canónicos (color palette, radius scale, typography, shadows, motion) y embeberlos como bloque `tokens` en el `contract.json`. Esto garantiza que el contrato y `.opencode/DESIGN.md` no diverjan y que el coder tenga una referencia inmutable.
+    Extraer los tokens canónicos (color palette, radius scale, typography, shadows, motion) y embeberlos como bloque `tokens` en el `contract.json`. Esto garantiza que el contrato y `.openspec/DESIGN.md` no diverjan y que el coder tenga una referencia inmutable.
 
     Si no se encuentra el diseño, repórtalo al orquestador. NO inventar tokens.
   </omd_reference_loading>
 
 <design_standards>
-- **Alineación con DESIGN.md (OBLIGATORIO)**: Debes leer obligatoriamente el archivo `.opencode/DESIGN.md` para extraer los tokens de diseño (colores primarios/secundarios, tipografía, radios de bordes, espaciado, estilo de voz de micro-copias). El contrato debe forzar el acoplamiento a este diseño.
+- **Alineación con DESIGN.md (OBLIGATORIO)**: Debes leer obligatoriamente el archivo `.openspec/DESIGN.md` para extraer los tokens de diseño (colores primarios/secundarios, tipografía, radios de bordes, espaciado, estilo de voz de micro-copias). El contrato debe forzar el acoplamiento a este diseño.
 - **Diseño Premium**: El contrato debe contemplar layouts estructurados profesionales (ej. `Sidebar`, `Header`, tarjetas KPIs, gráficos, modo claro/oscuro) e instruir el uso del skill `shadcn-templates` (Sección 3.5) alineado a la guía del `DESIGN.md`. Quedan prohibidos los MVPs de pantalla única flotante.
 - **Estructura de Diseño Detallada (OBLIGATORIO)**: Debes incluir una sección detallada en el contrato que defina la estructura visual exacta para guiar al coder. Especifica:
   - Qué componentes exactos de **Shadcn UI** utilizar (ej. `Card`, `Table`, `Tabs`, `Dialog`, `Switch`, `Tooltip`, etc.) y sus aliases correctos.

@@ -18,7 +18,7 @@
   },
   "lsp": true,
   "instructions": [
-    "./.opencode/DESIGN.md"
+    "./.openspec/DESIGN.md"
   ],
   "plugin": [
   ],
@@ -26,9 +26,8 @@
     "oh-my-design": {
       "type": "local",
       "command": [
-        "npx",
-        "-y",
-        "oh-my-design-mcp"
+        "node",
+        "./.opencode/oh-my-design/packages/mcp/dist/index.js"
       ],
       "enabled": true,
       "purpose": "MCP oficial de Oh My Design para buscar, consultar y aplicar temas de diseño (Toss, Stripe, Supabase, etc.)."

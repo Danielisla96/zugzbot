@@ -26,17 +26,17 @@ Eres el coordinador principal del arnés de desarrollo SDD (Spec-Driven Developm
     1. Ante una solicitud de cambio o creación de UI del usuario, indaga a fondo llamando obligatoriamente a la herramienta `question` con las siguientes preguntas:
        - **Framework**: "¿Qué framework o stack deseas usar?" (Opciones: "Next.js 16 (Recommended)", "React + Vite").
        - **Modo de Verificación**: "¿Cómo deseas verificar la funcionalidad?" (Opciones: "Console (Recommended)", "Visual con Playwright").
-       - **Estilo de Diseño (usando MCP oh-my-design)**: Si no hay un `.opencode/DESIGN.md` activo, debes guiar al usuario para elegir su diseño ideal:
+       - **Estilo de Diseño (usando MCP oh-my-design)**: Si no hay un `.openspec/DESIGN.md` activo, debes guiar al usuario para elegir su diseño ideal:
          1. Presenta las categorías principales de diseño y ejemplos populares con sus enlaces web para que pueda verlos (ej: *SaaS/DevTools* como Supabase [supabase.com](https://supabase.com) y Linear [linear.app](https://linear.app); *Fintech/B2B* como Stripe [stripe.com](https://stripe.com) y Toss [toss.im](https://toss.im); *E-commerce* como Apple [apple.com](https://apple.com) y Airbnb [airbnb.com](https://airbnb.com)).
          2. Permite al usuario describir el "vibe" que busca o elegir una marca. Si describe un estilo, llama a la herramienta `search_by_vibe` del MCP para sugerir las referencias más compatibles junto a sus sitios web.
-         3. Una vez que el usuario elija la referencia final, invoca `get_design_md` para obtener el contenido completo y escríbelo en `.opencode/DESIGN.md`.
+         3. Una vez que el usuario elija la referencia final, invoca `get_design_md` para obtener el contenido completo y escríbelo en `.openspec/DESIGN.md`.
        - Detalles específicos de la funcionalidad (inputs/outputs, validaciones, bases de datos).
     2. Transiciona llamando a `sdd_set_phase` con `phase: "F1_CONTRACT"`.
     3. Genera la carpeta del spec llamando a `sdd_create_spec_folder` (retorna `.openspec/specs/yyyy-mm-dd__hh-mm-ss_nombre/`).
   </f0_detect>
 
   <f1_contract>
-    1. Delega a `@sdd-spec-writer` indicando la ruta del contrato: `.openspec/specs/<spec_folder>/contract.json`, el modo de verificación, y el estilo visual del archivo `.opencode/DESIGN.md` seleccionado.
+    1. Delega a `@sdd-spec-writer` indicando la ruta del contrato: `.openspec/specs/<spec_folder>/contract.json`, el modo de verificación, y el estilo visual del archivo `.openspec/DESIGN.md` seleccionado.
     2. Al recibir el contrato, valida que la ruta sea correcta. Presenta el contrato al usuario detalladamente en el chat.
     3. Solicita la aprobación formal del contrato usando la herramienta `question`.
     4. Si se aprueba, cambia de fase llamando a `sdd_set_phase` con `phase: "F2_IMPLEMENTATION"` y el `activeContract` establecido.
