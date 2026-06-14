@@ -531,4 +531,72 @@ export const stop_server = tool({
   }
 })
 
+// Tool: sdd_select_design
+export const select_design = tool({
+  description: "Copia fielmente el archivo DESIGN.md y sus ejemplos y recursos interactivos asociados desde el catálogo original de oh-my-design a la carpeta .openspec/ del proyecto.",
+  args: {
+    brandId: tool.schema.string().describe("ID exacto del diseño en oh-my-design (ej: 'linear.app', 'vercel', 'stripe')")
+  },
+  async execute(args, context) {
+    const root = context.worktree || context.directory || process.cwd()
+    const brandId = args.brandId.trim()
+    const sourceDir = path.resolve(root, ".opencode/oh-my-design/design-md", brandId)
+    const targetDir = path.resolve(root, ".openspec")
+
+    if (!fs.existsSync(sourceDir)) {
+      // Try resolving with substring match if not found exactly
+      const catalogDir = path.resolve(root, ".opencode/oh-my-design/design-md")
+      if (fs.existsSync(catalogDir)) {
+        const brands = fs.readdirSync(catalogDir)
+        const match = brands.find(b => b.toLowerCase() === brandId.toLowerCase() || b.toLowerCase().includes(brandId.toLowerCase()))
+        if (match) {
+          return this.execute({ brandId: match }, context)
+        }
+      }
+      return JSON.stringify({
+        status: "ERROR",
+        message: `No se encontró el directorio de diseño para la marca "${brandId}" en ${sourceDir}`
+      }, null, 2)
+    }
+
+    // 1. Copy DESIGN.md
+    const sourceDesign = path.join(sourceDir, "DESIGN.md")
+    const targetDesign = path.join(targetDir, "DESIGN.md")
+    if (fs.existsSync(sourceDesign)) {
+      fs.copyFileSync(sourceDesign, targetDesign)
+    } else {
+      return JSON.stringify({
+        status: "ERROR",
+        message: `No se encontró el archivo DESIGN.md en la ruta origen: ${sourceDesign}`
+      }, null, 2)
+    }
+
+    // 2. Copy accompanying files (HTML previews, README, etc.) to a brand subfolder in .openspec
+    const targetBrandDir = path.join(targetDir, "design-assets", brandId)
+    if (!fs.existsSync(targetBrandDir)) {
+      fs.mkdirSync(targetBrandDir, { recursive: true })
+    }
+
+    const copiedFiles: string[] = []
+    const files = fs.readdirSync(sourceDir)
+    for (const file of files) {
+      if (file === "DESIGN.md" || file.startsWith(".")) continue
+      const srcFile = path.join(sourceDir, file)
+      const dstFile = path.join(targetBrandDir, file)
+      if (fs.statSync(srcFile).isFile()) {
+        fs.copyFileSync(srcFile, dstFile)
+        copiedFiles.push(file)
+      }
+    }
+
+    return JSON.stringify({
+      status: "SUCCESS",
+      message: `Diseño "${brandId}" copiado exitosamente a .openspec/DESIGN.md`,
+      copiedFiles,
+      designAssetsDir: path.relative(root, targetBrandDir)
+    }, null, 2)
+  }
+})
+
+
 
