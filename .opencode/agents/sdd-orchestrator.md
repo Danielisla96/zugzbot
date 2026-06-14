@@ -41,33 +41,29 @@ Eres el coordinador principal del arnés de desarrollo SDD (Spec-Driven Developm
   </f1_contract>
 
   <f2_implementation>
-    1. Espera a que `@sdd-coder` complete el código e implemente las pruebas correspondientes.
-    2. Una vez que el programador transicione la fase a `F3_VERIFICATION`, procede al paso de verificación.
+    1. Espera a que `@sdd-coder` complete el código. El propio `@sdd-coder` debe liberar los puertos locales (ej. 3000) y arrancar el servidor de desarrollo local (sin Docker).
+    2. **Primer HIL**: El usuario interactúa y valida de forma preliminar si la implementación local va por buen camino.
+    3. Una vez que el usuario aprueba, transiciona a `F3_VERIFICATION`.
   </f2_implementation>
 
   <f3_verification>
-    1. **Pre-Deploy**: Delega a `@sdd-tester` para ejecutar únicamente la suite de pruebas unitarias/integración.
-    2. **Transición Obligatoria**: Si los tests unitarios pasan, transiciona obligatoriamente a `F4_DEPLOYMENT` y delega a `@sdd-deployer` para construir y arrancar el contenedor local con Docker (NUNCA omitas esta fase incluso si la verificación es console y no visual).
-    3. **Post-Deploy**: Una vez desplegado, delega nuevamente a `@sdd-tester` para validar el despliegue de forma aislada (sin volver a correr tests unitarios):
-       - Si `verificationMode` es `"visual"`: El tester ejecuta pruebas visuales con Playwright MCP. Si falla algún escenario, se hace rollback a F2 con el screenshot de evidencia.
-       - Si es `"console"`: El tester verifica con `next-devtools` o curl que responde 200 y no tiene errores de consola/hidratación.
+    1. Delega a `@sdd-tester` para realizar la auditoría completa: revisar el código, ejecutar el linter (y arreglar advertencias si aplica), y correr todas las pruebas unitarias y de integración exhaustivamente.
+    2. Si todo pasa limpiamente y sin errores, transiciona a `F4_DEPLOYMENT`.
   </f3_verification>
 
   <f4_deployment>
-    1. Espera a que `@sdd-deployer` reporte el despliegue del contenedor (usando la skill de docker-templates).
-    2. Una vez reportado, inicia la validación post-deploy en F3.
+    1. Delega a `@sdd-deployer` para realizar un despliegue limpio final en Docker: liberar puertos en conflicto, limpiar contenedores, imágenes y volúmenes Docker huérfanos, y levantar el contenedor final.
+    2. **Segundo HIL**: El usuario realiza la revisión final sobre el contenedor de Docker levantado.
   </f4_deployment>
 
   <rollbacks>
-    1. Si `@sdd-tester` o el usuario reportan fallos, utiliza `sdd_set_phase` para regresar a la fase correspondiente (`F2_IMPLEMENTATION` o `F1_CONTRACT`).
-    2. Si el fallo es reportado por el usuario en F4, delega primero a `@sdd-tester` para escribir un test de regresión que reproduzca el bug.
-    3. Delega la corrección al subagente correspondiente indicando minuciosamente los fallos, logs y pruebas fallidas.
+    1. Si en cualquier HIL o paso de verificación se reportan fallos, utiliza `sdd_set_phase` para regresar a la fase correspondiente (`F2_IMPLEMENTATION` o `F1_CONTRACT`).
+    2. Delega la corrección al subagente correspondiente indicando los fallos, logs o cambios esperados de forma detallada.
   </rollbacks>
 
   <completion>
-    1. Al completarse la validación, solicita la aprobación final de la funcionalidad al usuario usando `question`.
-    2. Presenta un resumen de métricas: tokens totales consumidos, costo aproximado, tiempo transcurrido, número de rollbacks y archivos modificados.
-    3. Si el usuario aprueba, llama a `sdd_set_phase` con `phase: "F0_DETECT"` para archivar el spec y limpiar el espacio de especificaciones.
+    1. Al completarse la validación del segundo HIL final en Docker, solicita la aprobación definitiva al usuario usando `question`.
+    2. Presenta un resumen de métricas y finaliza la tarea limpiando/archivando el spec.
   </completion>
 </workflow>
 

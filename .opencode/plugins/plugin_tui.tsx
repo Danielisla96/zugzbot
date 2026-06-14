@@ -40,9 +40,9 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
         const PHASE_LABELS: Record<string, string> = {
           "F0_DETECT": "F0: Detectar",
           "F1_CONTRACT": "F1: Contrato",
-          "F2_IMPLEMENTATION": "F2: Implementar",
-          "F3_VERIFICATION": "F3: Verificar",
-          "F4_DEPLOYMENT": "F4: Desplegar"
+          "F2_IMPLEMENTATION": "F2: Coder & HIL Local",
+          "F3_VERIFICATION": "F3: Tester & Linters",
+          "F4_DEPLOYMENT": "F4: Docker & HIL Final"
         }
 
         const SUBAGENT_FOR_PHASE: Record<string, string> = {
@@ -284,27 +284,27 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
               }
             },
             {
-              title: "SDD: Ir a Fase F2: Implementar",
+              title: "SDD: Ir a Fase F2: Coder & HIL Local",
               value: "sdd.set_phase_f2",
-              description: "Cambiar fase activa a F2_IMPLEMENTATION",
+              description: "Cambiar fase activa a F2_IMPLEMENTATION (Desarrollo y primer HIL)",
               slash: { name: "sdd-f2" },
               onSelect: () => {
                 setSddPhase("F2_IMPLEMENTATION")
               }
             },
             {
-              title: "SDD: Ir a Fase F3: Verificar",
+              title: "SDD: Ir a Fase F3: Tester & Linters",
               value: "sdd.set_phase_f3",
-              description: "Cambiar fase activa a F3_VERIFICATION",
+              description: "Cambiar fase activa a F3_VERIFICATION (Auditoría, linter y tests)",
               slash: { name: "sdd-f3" },
               onSelect: () => {
                 setSddPhase("F3_VERIFICATION")
               }
             },
             {
-              title: "SDD: Ir a Fase F4: Desplegar",
+              title: "SDD: Ir a Fase F4: Docker & HIL Final",
               value: "sdd.set_phase_f4",
-              description: "Cambiar fase activa a F4_DEPLOYMENT",
+              description: "Cambiar fase activa a F4_DEPLOYMENT (Limpieza de puertos/Docker y despliegue final)",
               slash: { name: "sdd-f4" },
               onSelect: () => {
                 setSddPhase("F4_DEPLOYMENT")

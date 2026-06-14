@@ -52,7 +52,7 @@ Eres el Programador de Código (sdd-coder) del arnés SDD. Tu trabajo es codific
   </design_standards>
 
 <transition>
-- **Limpieza**: Detén o limpia cualquier servidor residual de desarrollo iniciado en segundo plano. Usa `sdd_stop_server` si es aplicable.
-- **Build Local**: Es obligatorio que el proyecto pase compilación local (`pnpm build` o `npm run build`) sin advertencias ni errores antes de transicionar.
-- **Transición**: Llama a `sdd_set_phase` con `phase: "F3_VERIFICATION"`, reporta el resumen de cambios y delega al subagente `@sdd-tester`.
+- **Liberar Puertos y Levantar Servidor Local**: Antes de finalizar el turno, debes liberar los puertos locales correspondientes (ej. puerto 3000) y arrancar el servidor de desarrollo local (`pnpm dev` o `npm run dev`) en segundo plano. No uses Docker para esta fase.
+- **Primer HIL**: Deja el servidor local activo y funcionando para que el usuario pueda validar y probar directamente en este primer HIL.
+- **Transición**: Notifica al orquestador con el resumen de los cambios implementados para iniciar la revisión HIL por parte del usuario.
 </transition>
