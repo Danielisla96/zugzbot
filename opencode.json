@@ -1,0 +1,123 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "*": "allow"
+  },
+  "lsp": true,
+  "mcp": {
+    "heroui": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@heroui/mcp@latest"
+      ],
+      "enabled": true,
+      "purpose": "Referencia de documentaci\u00f3n HeroUI (legacy). NO usar para c\u00f3digo nuevo. Conservar solo hasta migrar componentes existentes."
+    },
+    "shadcn": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "shadcn@latest",
+        "mcp"
+      ],
+      "enabled": true,
+      "purpose": "Librer\u00eda UI objetivo. Usar para browse/search/install de componentes y blocks (dashboards, landings, auth, forms)."
+    },
+    "context7": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@upstash/context7-mcp@latest"
+      ],
+      "enabled": true
+    },
+    "playwright": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@playwright/mcp@latest",
+        "--output-dir",
+        ".openspec/.playwright",
+        "--isolated"
+      ],
+      "enabled": true,
+      "purpose": "Playwright MCP. Artefactos (screenshots, traces, videos, downloads) van a .openspec/.playwright/<call-id>/. Para evidencia por sesi\u00f3n SDD, promueve los artefactos relevantes a .openspec/specs/<activeContract>/playwright/ con .opencode/tools/save-playwright-artifacts.sh. --isolated evita ensuciar el perfil del browser en disco."
+    },
+    "next-devtools": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "next-devtools-mcp@latest"
+      ],
+      "enabled": true,
+      "environment": {
+        "NEXT_TELEMETRY_DISABLED": "1"
+      },
+      "purpose": "Toolchain oficial Vercel para Next.js 16. Provee init, nextjs_docs, nextjs_index/nextjs_call (errores, logs, rutas, Server Actions en runtime), browser_eval, upgrade_nextjs_16 y enable_cache_components. Complementa context7 (docs gen\u00e9rico) con docs y runtime espec\u00edficos de Next 16 (dev server expone /_next/mcp). Telemetr\u00eda desactivada expl\u00edcitamente."
+    },
+    "lucide-icons": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "lucide-icons-mcp",
+        "--stdio"
+      ],
+      "enabled": true,
+      "purpose": "Permite buscar, filtrar y obtener ejemplos de uso JSX de m\u00e1s de 1,500 iconos de Lucide React de forma exacta mediante herramientas del MCP."
+    }
+  },
+  "agent": {
+    "sdd-orchestrator": {
+      "description": "Coordinador principal del flujo SDD y del stack cerrado",
+      "mode": "primary",
+      "model": "deepseek/deepseek-v4-flash",
+      "prompt": "{file:./.opencode/agents/sdd-orchestrator.md}",
+      "permission": {
+        "*": "allow"
+      }
+    },
+    "sdd-spec-writer": {
+      "description": "Redacta y valida contratos OpenAPI e interfaces en specs/",
+      "mode": "subagent",
+      "model": "deepseek/deepseek-v4-flash",
+      "prompt": "{file:./.opencode/agents/sdd-spec-writer.md}",
+      "permission": {
+        "*": "allow"
+      }
+    },
+    "sdd-coder": {
+      "description": "Implementa c\u00f3digo ajust\u00e1ndose estrictamente a los contratos en specs/",
+      "mode": "subagent",
+      "model": "deepseek/deepseek-v4-flash",
+      "prompt": "{file:./.opencode/agents/sdd-coder.md}",
+      "permission": {
+        "*": "allow"
+      }
+    },
+    "sdd-tester": {
+      "description": "Dise\u00f1a y corre pruebas unitarias, integraci\u00f3n y visuales (Playwright)",
+      "mode": "subagent",
+      "model": "deepseek/deepseek-v4-flash",
+      "prompt": "{file:./.opencode/agents/sdd-tester.md}",
+      "permission": {
+        "*": "allow"
+      }
+    },
+    "sdd-deployer": {
+      "description": "Limpia Docker y realiza el despliegue local del sistema",
+      "mode": "subagent",
+      "model": "deepseek/deepseek-v4-flash",
+      "prompt": "{file:./.opencode/agents/sdd-deployer.md}",
+      "permission": {
+        "*": "allow"
+      }
+    }
+  }
+}

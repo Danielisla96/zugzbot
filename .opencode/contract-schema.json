@@ -1,0 +1,201 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SDDSoftwareContract",
+  "description": "Contrato formal de software para la metodología SDD de zugzbot-v2. Extendido con stateFlow y test_scenarios para reducir ambigüedad entre contrato e implementación.",
+  "type": "object",
+  "properties": {
+    "contractName": {
+      "type": "string",
+      "description": "Nombre identificativo del contrato"
+    },
+    "description": {
+      "type": "string",
+      "description": "Propósito general de la funcionalidad"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["backend", "frontend", "fullstack", "database"]
+    },
+    "stack": {
+      "type": "object",
+      "properties": {
+        "core": { "type": "array", "items": { "type": "string" } },
+        "databases": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["core"]
+    },
+    "backend": {
+      "type": "object",
+      "properties": {
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": { "type": "string" },
+              "method": { "type": "string", "enum": ["GET", "POST", "PUT", "DELETE", "PATCH"] },
+              "description": { "type": "string" },
+              "requestBody": { "type": "object", "description": "Esquema JSON de entrada" },
+              "responses": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": { "type": "integer" },
+                    "body": { "type": "object", "description": "Esquema JSON de salida" }
+                  },
+                  "required": ["statusCode"]
+                }
+              }
+            },
+            "required": ["path", "method", "responses"]
+          }
+        }
+      }
+    },
+    "frontend": {
+      "type": "object",
+      "properties": {
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "props": { "type": "object", "description": "Propiedades e interfaces TS esperadas" },
+              "state": { "type": "object", "description": "Estados internos reactivos" },
+              "events": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["name"]
+          }
+        }
+      }
+    },
+    "database": {
+      "type": "object",
+      "properties": {
+        "tablesOrCollections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "type": { "type": "string", "enum": ["relational", "vectorial", "documental", "cache"] },
+              "schema": { "type": "object", "description": "Esquema de campos y tipos" }
+            },
+            "required": ["name", "type"]
+          }
+        }
+      }
+    },
+    "stateFlow": {
+      "type": "object",
+      "description": "Define dónde vive el estado compartido y cómo fluyen los datos entre componentes. Reduce errores de 'state instanciado N veces'.",
+      "properties": {
+        "owner": {
+          "type": "string",
+          "description": "ID del componente que posee el estado compartido (single source of truth). null si no hay estado compartido."
+        },
+        "lifts_to": {
+          "type": "string",
+          "description": "ID del componente padre al que se eleva el estado si owner es un nieto. null si owner ya es top-level."
+        },
+        "props_down": {
+          "type": "array",
+          "description": "Cables de props que llevan datos y callbacks desde el owner hacia abajo.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": { "type": "string", "description": "ID del componente fuente" },
+              "to": { "type": "string", "description": "ID del componente destino" },
+              "prop": { "type": "string", "description": "Nombre de la prop" },
+              "type": {
+                "type": "string",
+                "enum": ["data", "callback", "state"],
+                "description": "data = valor de solo lectura, callback = función, state = pieza de estado"
+              }
+            },
+            "required": ["from", "to", "prop", "type"]
+          }
+        },
+        "forbidden": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Patrones prohibidos explícitamente. Ej: ['instanciar useHistory en múltiples componentes', 'usar context global sin provider']"
+        }
+      }
+    },
+    "test_scenarios": {
+      "type": "array",
+      "description": "Lista de flujos críticos a validar. Cada escenario debe poder escribirse como test automatizado (unit, integration o visual con Playwright).",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador único del escenario (ej. TS-01)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Descripción legible del flujo a validar"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["unit", "integration", "visual", "e2e"],
+            "description": "Tipo de test. 'visual' requiere Playwright MCP; 'e2e' puede ser Playwright o curl real."
+          },
+          "feature_ref": {
+            "type": "string",
+            "description": "ID de la feature del contrato a la que pertenece (ej. F05)"
+          },
+          "given": {
+            "type": "string",
+            "description": "Precondición del escenario"
+          },
+          "when": {
+            "type": "string",
+            "description": "Acción o evento disparador"
+          },
+          "then": {
+            "type": "string",
+            "description": "Resultado esperado observable"
+          },
+          "selector": {
+            "type": "string",
+            "description": "Selector CSS/data-testid para escenarios visuales. Usado por Playwright MCP."
+          },
+          "assertion": {
+            "type": "string",
+            "description": "Aserción técnica para el tester. Ej: 'visible AND not-overlapping AND contains-result'"
+          }
+        },
+        "required": ["id", "name", "type", "feature_ref", "then"]
+      },
+      "minItems": 1
+    },
+    "external_api_verification": {
+      "type": "object",
+      "description": "Resultados de la verificación de APIs externas (HeroUI, Next.js, etc.) realizada por el spec-writer con MCPs. Hace explícito qué se validó en F1.",
+      "properties": {
+        "verified_at": {
+          "type": "string",
+          "description": "ISO timestamp de la verificación"
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "library": { "type": "string" },
+              "version_resolved": { "type": "string" },
+              "mcp_source": { "type": "string", "description": "Qué MCP se usó (heroui/context7)" },
+              "api_signature": { "type": "string", "description": "Firma API verificada" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": ["contractName", "description", "category", "stack", "test_scenarios"]
+}
