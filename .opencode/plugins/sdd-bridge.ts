@@ -247,6 +247,43 @@ export const SddBridgePlugin: Plugin = async ({ project, client, $, directory, w
             writeMetrics(fresh)
           }
         }
+        // Live-refresh the canonical _sessions.jsonl so future sessions
+        // can read compact history (1 line per contract) instead of full MD exports.
+        if (input?.tool === "sdd_set_phase" || input?.tool === "sdd_select_design" || input?.tool === "sdd_create_spec_folder") {
+          try {
+            const metrics = readMetrics()
+            const state = readState()
+            if (metrics.contractName && metrics.startedAt) {
+              const archiveDir = path.resolve(projectRoot, ".openspec/archive")
+              if (!fs.existsSync(archiveDir)) fs.mkdirSync(archiveDir, { recursive: true })
+              const logPath = path.join(archiveDir, "_sessions.jsonl")
+              const now = new Date().toISOString()
+              const line = JSON.stringify({
+                contractName: metrics.contractName,
+                sessionId: metrics.sessionId,
+                startedAt: metrics.startedAt,
+                lastUpdatedAt: now,
+                phase: state.phase,
+                cost: +metrics.totals.cost.toFixed(6),
+                tokensIn: metrics.totals.tokensIn,
+                tokensOutput: metrics.totals.tokensOutput,
+                messages: metrics.totals.messages,
+                inProgress: true,
+              })
+              let existing: string[] = []
+              if (fs.existsSync(logPath)) {
+                existing = fs.readFileSync(logPath, "utf8").split("\n").filter((l) => l.trim().length > 0)
+              }
+              const filtered = existing.filter((l) => {
+                try { return JSON.parse(l).contractName !== metrics.contractName } catch { return true }
+              })
+              filtered.push(line)
+              fs.writeFileSync(logPath, filtered.join("\n") + "\n", "utf8")
+            }
+          } catch (e) {
+            // best-effort
+          }
+        }
       } catch (e) {
         // best-effort
       }

@@ -1,19 +1,139 @@
 ---
 name: sdd-methodology
-description: Metodología SDD basada en contratos de software para garantizar calidad e integridad
+description: Guía rápida del flujo SDD (Spec-Driven Development) con atajos y trampas conocidas. Cargar al inicio de CUALQUIER sesión SDD. Esta skill reemplaza la guía genérica anterior y contiene los patrones optimizados descubiertos tras analizar la sesión 137a (Sumadora Nike).
 license: MIT
 compatibility: opencode
 ---
 
 ## Qué hace esta habilidad
 
-Guía a los agentes a través de las fases estrictas de SDD (Spec-Driven Development):
+Esta habilidad instruye a los agentes del arnés SDD a través del ciclo de 5 fases (F0-F4) **usando los atajos del harness optimizado**. NO es solo una guía genérica — incluye las **trampas conocidas** que han costado tiempo en sesiones reales y los atajos que las evitan.
 
-- **F0 (Detectar & Preguntar)**: Identifica el stack y pregunta al usuario sobre bases de datos/servicios adicionales del stack.
-- **F1 (Especificar/Contrato)**: Escribe una especificación en `.openspec/specs/` antes de tocar código de desarrollo. Obtiene la aprobación del usuario.
-- **F2 (Programar)**: Implementa el código ajustándose estrictamente a la especificación.
-- **F3 (Verificar)**: Crea y corre pruebas automatizadas que validen que el comportamiento cumple la especificación al 100%.
+---
 
-## Cuándo usarme
+## 1. El ciclo SDD en 60 segundos
 
-Úsala siempre al iniciar cualquier desarrollo para asegurar el cumplimiento del ciclo de contratos y evitar codificación reactiva.
+```
+F0_DETECT  → detectar stack + diseño + crear carpeta del spec (atómica)
+F1_CONTRACT → escribir contract.json desde plantilla pre-rellenada (sdd-quickstart)
+F2_IMPLEMENTATION → implementar código que pase los tests del F1
+F3_VERIFICATION → correr linter + tests (con auto-lint gate)
+F4_DEPLOYMENT → generar Dockerfile con 1 tool call, build, deploy
+```
+
+Cada fase tiene un **gate explícito** (HIL del usuario) antes de transicionar a la siguiente.
+
+---
+
+## 2. Atajos críticos (USAR siempre)
+
+| Atajo | Cuándo | Ahorro |
+|---|---|---|
+| `sdd_list_design_recommendations({ use_case: "all" })` | F0 | 4 llamadas a `oh-my-design_list_references` → 1 |
+| `sdd_set_phase({ phase: "F1_CONTRACT", spec_name: "..." })` | F0→F1 | Crea la carpeta del spec atómicamente, sin race de timestamp |
+| `sdd_select_design({ brandId: "nike" })` | F0 | Copia DESIGN.md al path canónico `.openspec/design-assets/<brandId>/` |
+| Skill `sdd-quickstart` | F1 | Plantilla de `contract.json` pre-rellenada + test_scenarios recurrentes |
+| `sdd_apply_brand_tokens({ tokens: ... })` | F2 | Inyecta tokens de marca en `globals.css` sin romper variables shadcn |
+| `sdd_generate_dockerfile({ stack: "nextjs", port: 3000 })` | F4 | Genera Dockerfile + .dockerignore + docker-compose.yml en 1 call |
+| `_sessions.jsonl` | Histórico | 1 línea por contrato (vs 18K+ líneas de MD export) |
+
+---
+
+## 3. Trampas conocidas (EVITAR siempre)
+
+### Trampa 1: Listar marcas de diseño una por una
+**NO HAGAS**: 4 llamadas a `oh-my-design_list_references` con `category: "saas"`, "fintech", "ecommerce", "consumer" solo para mostrar opciones.
+**HAZ**: 1 llamada a `sdd_list_design_recommendations({ use_case: "all", max_per_category: 3 })`. Si el usuario quiere "Personalizar", ahí sí usa `oh-my-design_search_by_vibe`.
+
+### Trampa 2: Crear la carpeta del spec en 2 steps
+**NO HAGAS**: `sdd_create_spec_folder("mi-spec")` + `sdd_set_phase("F1_CONTRACT", ...)` en 2 calls (race condition de timestamp, observado en sesión 137a).
+**HAZ**: 1 sola call: `sdd_set_phase({ phase: "F1_CONTRACT", spec_name: "mi-spec" })`. Devuelve `activeContract` listo.
+
+### Trampa 3: Reescribir `globals.css` desde cero
+**NO HAGAS**: Sobrescribir `src/app/globals.css` quitando las variables shadcn (`--color-border: var(--border)`, etc.) al aplicar tokens de marca. Build falla con `Cannot apply unknown utility class 'border-border'` (observado en sesión 137a).
+**HAZ**: Usar `sdd_apply_brand_tokens` que inyecta en un bloque `@theme inline` aparte, preservando las variables shadcn.
+
+### Trampa 4: Cargar `next-devtools` MCP en sesión normal
+**NO HAGAS**: Dejar `next-devtools` habilitado. Su tool `init` inyecta 1000+ palabras de "FORGET ALL PRIOR KNOWLEDGE" (~8K tokens de reasoning desperdiciado — el coder tuvo el mayor consumo de tokens de la sesión 137a por esta razón).
+**HAZ**: Está deshabilitado por defecto en `opencode.json`. Solo activarlo on-demand si un subagente reporta un error específico de Next 16.
+
+### Trampa 5: Escribir el contrato desde cero
+**NO HAGAS**: Redactar 600+ líneas de `contract.json` en cada sesión. Riesgo alto de inconsistencia.
+**HAZ**: Cargar la skill `sdd-quickstart` y usar la plantilla pre-rellenada. Solo rellenar `{{...}}`.
+
+### Trampa 6: Tests en F2
+**NO HAGAS**: Que el coder escriba los tests después de implementar (loop Coder → Tester → Coder, observado en sesión 137a).
+**HAZ**: Que el spec-writer (en F1) cree los tests con assertions reales basadas en `test_scenarios`. El coder solo implementa el código de producción para hacerlos pasar.
+
+### Trampa 7: 5+ llamadas a `todowrite` durante la sesión
+**NO HAGAS**: Actualizar la lista de TODOs cada vez que cambias de fase (observado 5 veces en sesión 137a).
+**HAZ**: Crear la lista al inicio. Marcar `in_progress` solo cuando arrancas la fase. Marcar `completed` **en bloque** al final.
+
+### Trampa 8: `lint: false` en el orquestador
+**NO HAGAS**: Dejar que el tester descubra imports no usados en tests.
+**HAZ**: El self-audit del coder (F2) y el auto-lint gate de `sdd_set_phase("F3_VERIFICATION")` ya lo previenen. El orquestador debe **reportar el `lintWarning`** al usuario antes de delegar al tester.
+
+---
+
+## 4. Stack cerrado (NO abrir)
+
+- **Frontend**: Next.js 16 + React 19 + TypeScript + Tailwind v4 + Shadcn UI v4.11+ (Base UI) + lucide-react + Vitest. **PROHIBIDO**: HeroUI, Chakra, Material-UI, Radix directo sin shadcn.
+- **Backend**: Python 3.11+ + FastAPI + Pydantic v2 + Uvicorn + Pytest + Ruff. **PROHIBIDO**: Django, Flask, sync SQLAlchemy.
+- **Persistencia**: localStorage (frontend-only) o PostgreSQL con pgvector. **PROHIBIDO**: MongoDB (excepto si se justifica), Redis como primary store.
+- **Containerización**: Docker multi-stage con `node:20-alpine` (Next) o `python:3.11-slim` (FastAPI). Usuario no-root. Healthcheck via `node -e` (no wget en alpine).
+
+---
+
+## 5. Estructura de directorios (OBLIGATORIA)
+
+```
+/
+├── .opencode/                    # Arnés SDD (no tocar)
+├── .openspec/
+│   ├── specs/<yyyy-mm-dd__hh-mm-ss>_<name>/   # Contratos activos
+│   │   └── contract.json
+│   ├── archive/                  # Contratos completados
+│   │   ├── _sessions.jsonl       # 1 línea por contrato (histórico compacto)
+│   │   └── <archived_specs>/
+│   ├── design-assets/<brandId>/  # ÚNICA ruta canónica de DESIGN.md
+│   │   ├── DESIGN.md
+│   │   ├── preview.html
+│   │   └── preview-dark.html
+│   ├── .playwright/              # (transient, se borra en F0_DETECT)
+│   ├── sdd_state.json
+│   └── .sdd_session_metrics.json
+├── src/                          # Código de aplicación
+│   ├── app/                      # Next.js App Router
+│   ├── components/{ui,blocks}/
+│   ├── lib/
+│   ├── test/setup.ts             # Polyfills (crypto.randomUUID, etc.)
+│   └── types/
+├── tests/                        # (opcional) tests de integración
+├── eslint.config.mjs             # ESLint 9 flat (ignora .opencode/, .openspec/)
+├── next.config.ts                # output: "standalone"
+├── Dockerfile, .dockerignore, docker-compose.yml
+└── package.json
+```
+
+---
+
+## 6. Modos de verificación (F3 y F4)
+
+| Modo | Cuándo usar | Tests permitidos | Token audit | Docker verify |
+|---|---|---|---|---|
+| `console` | Apps lógicas, APIs, dashboards sin pixel-review | `unit`, `integration` (3-5 escenarios) | NO visual | `curl` + logs |
+| `visual` | Landings, marketing, designs pixel-perfect | + `visual`, `e2e` (5-10 escenarios) | SÍ (5 aserciones Playwright) | + Playwright opcional |
+
+El modo se define en `contract.json:settings.verificationMode` en F1. **No cambies el modo a mitad de sesión** — invalida los tests ya escritos.
+
+---
+
+## 7. Métricas de éxito de una sesión
+
+- **F0**: 1 sola ronda de `question` con 3-4 opciones
+- **F1**: contract.json entre 100-300 líneas, 3-5 test_scenarios
+- **F2**: self-audit limpio en 1 intento (sin loops)
+- **F3**: lint pasa en 1 intento, 100% tests verdes
+- **F4**: Dockerfile generado por tool, build OK al 1er intento, healthcheck `healthy` en <60s
+
+Si tu sesión desvía de estos números, probablemente estás cayendo en una de las trampas de la sección 3.

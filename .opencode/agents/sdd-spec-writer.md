@@ -48,7 +48,7 @@ El JSON generado en `contract.json` debe cumplir estrictamente con `.opencode/co
   </omd_reference_loading>
 
 <design_standards>
-- **Alineación con DESIGN.md y Ejemplos de Layout (OBLIGATORIO)**: Debes leer obligatoriamente el archivo `.openspec/DESIGN.md` para extraer los tokens de diseño. **Además, debes leer y basarte en los ejemplos HTML interactivos (`preview.html`, `preview-dark.html`) correspondientes de la marca, los cuales puedes consultar a través de la herramienta `get_html_previews` del MCP o leyendo directamente en el directorio `.openspec/design-assets/<brandId>/`. El contrato debe forzar el acoplamiento a este diseño y detallar los layouts (sidebars, grids, headers) extraídos de estos ejemplos.**
+- **Alineación con DESIGN.md y Ejemplos de Layout (OBLIGATORIO)**: Debes leer obligatoriamente el archivo `.openspec/design-assets/<brandId>/DESIGN.md` (ruta canónica única) para extraer los tokens de diseño. **Además, debes leer y basarte en los ejemplos HTML interactivos (`preview.html`, `preview-dark.html`) correspondientes de la marca, los cuales puedes consultar a través de la herramienta `get_html_previews` del MCP o leyendo directamente en el directorio `.openspec/design-assets/<brandId>/`. El contrato debe forzar el acoplamiento a este diseño y detallar los layouts (sidebars, grids, headers) extraídos de estos ejemplos.**
 - **Diseño Premium**: El contrato debe contemplar layouts estructurados profesionales (ej. `Sidebar`, `Header`, tarjetas KPIs, gráficos, modo claro/oscuro) e instruir el uso del skill `shadcn-templates` (Sección 3.5) alineado a la guía del `DESIGN.md` y a los ejemplos HTML interactivos. Quedan prohibidos los MVPs de pantalla única flotante.
 - **Estructura de Diseño Detallada (OBLIGATORIO)**: Debes incluir una sección detallada en el contrato que defina la estructura visual exacta para guiar al coder. Especifica:
   - Qué componentes exactos de **Shadcn UI** utilizar (ej. `Card`, `Table`, `Tabs`, `Dialog`, `Switch`, `Tooltip`, etc.) y sus aliases correctos.
@@ -57,4 +57,10 @@ El JSON generado en `contract.json` debe cumplir estrictamente con `.opencode/co
 - **Escenarios de Test (Precisión y Velocidad)**:
   - Cuando el modo de verificación (`verificationMode`) en settings es `console`, genera únicamente escenarios de tipo `unit` o `integration` enfocados en las funcionalidades críticas (un rango de 3 a 5 escenarios en total es lo recomendado para mantener el desarrollo ágil y preciso). No generes escenarios de tipo `visual` ni tests redundantes o basados en browser.
   - Cuando el modo de verificación es `visual`, incluye los escenarios de prueba visuales necesarios con sus selectores CSS reales y aserciones técnicas.
+- **Autoría de los Archivos de Test (NUEVO)**: Tienes la **responsabilidad de crear los archivos de test** (Vitest) que validarán cada `test_scenario` del contrato. Al terminar el `contract.json`, crea:
+  1. Un archivo de test por cada `feature_ref` en `src/__tests__/` (o `src/` junto al componente, según la convención del proyecto), siguiendo el patrón `feature_ref.test.tsx` o `feature_ref.test.ts`.
+  2. Los tests deben **tener assertions reales basadas en `given/when/then` del test_scenario** — NO generes stubs con `expect(true).toBe(true)`.
+  3. Si la lógica de negocio es trivial (p.ej. `a + b`), escribe un test unitario directo en `src/lib/<util>.test.ts` que importe la función real desde `src/lib/<util>.ts`.
+  4. El `@sdd-coder` se encargará de **implementar el código de producción** y los componentes para hacer pasar estos tests. **Tú NO delegas los tests al tester** — los tests son tuyos.
+- **Cargar la skill `sdd-quickstart` (RECOMENDADO)**: Antes de redactar el `contract.json`, carga la skill `sdd-quickstart` para usar la plantilla pre-rellenada. Solo ajusta los huecos `{{...}}` con los datos del proyecto, en lugar de redactar 600+ líneas desde cero.
 </design_standards>

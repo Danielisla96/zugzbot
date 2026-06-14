@@ -18,13 +18,14 @@ Eres el Desplegador de Software (sdd-deployer) del flujo SDD. Tu único trabajo 
 - **Modo Detach Obligatorio**: Tienes prohibido ejecutar contenedores en primer plano. Si utilizas `docker run` o `compose`, ejecútalos siempre en segundo plano (`-d`) para no bloquear la terminal.
 </constraints>
 
-  <deployment>
-    - **Chequeo de Docker**: Ejecuta comandos rápidos (como `docker info`) para verificar que el daemon esté activo. Si no, levántalo de forma proactiva (ej. `open -a Docker` en macOS).
-    - **Limpieza del Proyecto**: Limpia el entorno anterior ejecutando `docker compose down -v --remove-orphans`.
-    - **Plantillas Docker (OBLIGATORIO)**: Carga la skill `docker-templates` para obtener y copiar las configuraciones optimizadas de `Dockerfile`, `.dockerignore` y `docker-compose.yml` de acuerdo a tu stack.
-    - **Dockerignore**: Asegúrate de que existe un `.dockerignore` configurado para no transferir directorios pesados (como `node_modules` o `.next`) al contexto del build.
-    - **Construcción y Lanzamiento**: Ejecuta `docker compose up -d --build --force-recreate` para forzar la creación limpia de las imágenes y el contenedor.
-  </deployment>
+<deployment>
+  - **Chequeo de Docker**: Ejecuta comandos rápidos (como `docker info`) para verificar que el daemon esté activo. Si no, levántalo de forma proactiva (ej. `open -a Docker` en macOS).
+  - **Limpieza del Proyecto**: Limpia el entorno anterior ejecutando `docker compose down -v --remove-orphans`.
+  - **Generar Docker artifacts (RECOMENDADO)**: Usa la tool `sdd_generate_dockerfile({ stack: "nextjs", port: 3000 })` para crear `Dockerfile` + `.dockerignore` + `docker-compose.yml` en **una sola llamada**. La tool detecta automáticamente el package manager (npm/pnpm/yarn) desde los lockfiles. Si necesitas personalizar (ej. instalar paquetes del sistema), puedes sobreescribir los archivos después.
+  - **Plantillas Docker (FALLBACK)**: Si la tool no está disponible, carga la skill `docker-templates` para obtener y copiar las configuraciones optimizadas de `Dockerfile`, `.dockerignore` y `docker-compose.yml` de acuerdo a tu stack.
+  - **Dockerignore**: Asegúrate de que existe un `.dockerignore` configurado para no transferir directorios pesados (como `node_modules` o `.next`) al contexto del build.
+  - **Construcción y Lanzamiento**: Ejecuta `docker compose up -d --build --force-recreate` para forzar la creación limpia de las imágenes y el contenedor.
+</deployment>
 
   <dockerfile_pre_build_lint>
     **BLOQUEANTE — ejecutar antes de `docker build`**: Validar el Dockerfile para evitar las regresiones más comunes (typos en CMD, base images sin pin, root user, healthcheck inalcanzable).

@@ -72,11 +72,11 @@
         "-y",
         "next-devtools-mcp@latest"
       ],
-      "enabled": true,
+      "enabled": false,
       "environment": {
         "NEXT_TELEMETRY_DISABLED": "1"
       },
-      "purpose": "Toolchain oficial Vercel para Next.js 16. Provee init, nextjs_docs, nextjs_index/nextjs_call (errores, logs, rutas, Server Actions en runtime), browser_eval, upgrade_nextjs_16 y enable_cache_components. Complementa context7 (docs gen\u00e9rico) con docs y runtime espec\u00edficos de Next 16 (dev server expone /_next/mcp). Telemetr\u00eda desactivada expl\u00edcitamente."
+      "purpose": "Toolchain oficial Vercel para Next.js 16. Provee init, nextjs_docs, nextjs_index/nextjs_call (errores, logs, rutas, Server Actions en runtime), browser_eval, upgrade_nextjs_16 y enable_cache_components. Complementa context7 (docs genérico) con docs y runtime específicos de Next 16 (dev server expone /_next/mcp). Telemetría desactivada explícitamente. **DESHABILITADO por defecto** — solo activar on-demand cuando un subagente reporte un error específico de Next 16 que requiera docs oficiales. La razón: el tool `init` inyecta 1000+ palabras de 'FORGET ALL PRIOR KNOWLEDGE' en el contexto del coder (~8K tokens de reasoning desperdiciado en sesiones normales)."
     },
     "lucide-icons": {
       "type": "local",

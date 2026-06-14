@@ -235,17 +235,39 @@ const writeSessionSummary = (archiveFolder: string, root: string) => {
 
 // Tool: sdd_set_phase (file sdd.ts, export set_phase -> sdd_set_phase)
 export const set_phase = tool({
-  description: "Establece la fase activa del ciclo de desarrollo SDD (F0_DETECT, F1_CONTRACT, F2_IMPLEMENTATION, F3_VERIFICATION, F4_DEPLOYMENT)",
+  description: "Establece la fase activa del ciclo de desarrollo SDD (F0_DETECT, F1_CONTRACT, F2_IMPLEMENTATION, F3_VERIFICATION, F4_DEPLOYMENT). Si phase=F1_CONTRACT y se pasa spec_name, crea la carpeta del spec atómicamente y devuelve la ruta absoluta. Si phase=F3_VERIFICATION, ejecuta auto-lint (no bloqueante, solo informativo) y aborta si hay errores de lint.",
   args: {
     phase: tool.schema.enum(["F0_DETECT", "F1_CONTRACT", "F2_IMPLEMENTATION", "F3_VERIFICATION", "F4_DEPLOYMENT"]).describe("La fase a establecer"),
     activeContract: tool.schema.string().optional().describe("La ruta o nombre del archivo de contrato JSON activo (.openspec/specs/XXXX_TIMESTAMP_NAME/contract.json)"),
     coreStack: tool.schema.array(tool.schema.string()).optional().describe("Tecnologías base del stack detectado"),
-    databases: tool.schema.array(tool.schema.string()).optional().describe("Bases de datos añadidas al stack")
+    databases: tool.schema.array(tool.schema.string()).optional().describe("Bases de datos añadidas al stack"),
+    spec_name: tool.schema.string().optional().describe("(Solo F1_CONTRACT) Nombre del spec en minúsculas y guiones. Si se pasa junto con phase=F1_CONTRACT, crea la carpeta del spec atómicamente y devuelve la ruta completa."),
+    skip_lint_gate: tool.schema.boolean().default(false).describe("(Solo F3_VERIFICATION) Si true, no ejecuta el auto-lint gate."),
   },
   async execute(args, context) {
     const root = context.worktree || context.directory || process.cwd()
     const filePath = getStateFilePath(context)
     const currentState = readState(filePath)
+
+    // Auto-create spec folder atomically when entering F1_CONTRACT with spec_name
+    let autoCreatedContract: string | null = null
+    if (args.phase === "F1_CONTRACT" && args.spec_name) {
+      const specsDir = path.resolve(root, ".openspec/specs")
+      if (!fs.existsSync(specsDir)) {
+        fs.mkdirSync(specsDir, { recursive: true })
+      }
+      const now = new Date()
+      const yyyy = now.getFullYear()
+      const mm = String(now.getMonth() + 1).padStart(2, "0")
+      const dd = String(now.getDate()).padStart(2, "0")
+      const hh = String(now.getHours()).padStart(2, "0")
+      const mi = String(now.getMinutes()).padStart(2, "0")
+      const ss = String(now.getSeconds()).padStart(2, "0")
+      const folderName = `${yyyy}-${mm}-${dd}__${hh}-${mi}-${ss}_${args.spec_name}`
+      const targetFolder = path.join(specsDir, folderName)
+      fs.mkdirSync(targetFolder, { recursive: true })
+      autoCreatedContract = path.relative(root, path.join(targetFolder, "contract.json"))
+    }
 
     // Auto-archive the active spec folder when resetting to F0_DETECT
     if (args.phase === "F0_DETECT" && currentState.activeContract) {
@@ -280,8 +302,29 @@ export const set_phase = tool({
       }
     }
 
+    // Auto-lint gate on transition to F3_VERIFICATION
+    let lintWarning: string | null = null
+    if (args.phase === "F3_VERIFICATION" && !args.skip_lint_gate) {
+      try {
+        const out = execSync("npx eslint src/ --quiet 2>&1 || true", {
+          cwd: root,
+          encoding: "utf8",
+          timeout: 120_000,
+        })
+        if (out.toLowerCase().includes("error") || out.trim().length > 0) {
+          lintWarning = `Lint encontró posibles errores. Considere abortar la transición a F3 y volver a F2:\n${out.slice(0, 1000)}`
+        }
+      } catch (e) {
+        // best-effort, no abortamos
+      }
+    }
+
     currentState.phase = args.phase
-    if (args.activeContract !== undefined) currentState.activeContract = args.activeContract
+    if (autoCreatedContract) {
+      currentState.activeContract = autoCreatedContract
+    } else if (args.activeContract !== undefined) {
+      currentState.activeContract = args.activeContract
+    }
     if (args.coreStack !== undefined) currentState.stack.core = args.coreStack
     if (args.databases !== undefined) currentState.stack.databases = args.databases
 
@@ -337,11 +380,19 @@ export const set_phase = tool({
 
     writeState(filePath, currentState)
 
-    return JSON.stringify({
-      status: "SUCCESS",
+    const response: any = {
+      status: lintWarning ? "WARNING" : "SUCCESS",
       message: `Fase transicionada exitosamente a ${currentState.phase}`,
-      state: currentState
-    }, null, 2)
+      state: currentState,
+    }
+    if (autoCreatedContract) {
+      response.activeContract = autoCreatedContract
+      response.message = `Fase F1_CONTRACT activada con spec folder creado atómicamente: ${autoCreatedContract}`
+    }
+    if (lintWarning) {
+      response.lintWarning = lintWarning
+    }
+    return JSON.stringify(response, null, 2)
   }
 })
 
@@ -549,8 +600,10 @@ export const select_design = tool({
       if (fs.existsSync(catalogDir)) {
         const brands = fs.readdirSync(catalogDir)
         const match = brands.find(b => b.toLowerCase() === brandId.toLowerCase() || b.toLowerCase().includes(brandId.toLowerCase()))
-        if (match) {
-          return this.execute({ brandId: match }, context)
+        if (match && match !== brandId) {
+          // Resolved to a different brandId; re-run with the exact match.
+          // We delegate to a helper to avoid `this.execute` type issues.
+          return selectDesignHelper(match, context)
         }
       }
       return JSON.stringify({
@@ -559,28 +612,47 @@ export const select_design = tool({
       }, null, 2)
     }
 
-    // 1. Copy DESIGN.md
-    const sourceDesign = path.join(sourceDir, "DESIGN.md")
-    const targetDesign = path.join(targetDir, "DESIGN.md")
-    if (fs.existsSync(sourceDesign)) {
-      fs.copyFileSync(sourceDesign, targetDesign)
-    } else {
+    return selectDesignHelper(brandId, context)
+  }
+})
+
+// Helper extracted to allow substring-match recursion without `this.execute` typing issues.
+async function selectDesignHelper(brandId: string, context: any) {
+    const root = context.worktree || context.directory || process.cwd()
+    const sourceDir = path.resolve(root, ".opencode/oh-my-design/design-md", brandId)
+    const targetDir = path.resolve(root, ".openspec")
+
+    if (!fs.existsSync(sourceDir)) {
       return JSON.stringify({
         status: "ERROR",
-        message: `No se encontró el archivo DESIGN.md en la ruta origen: ${sourceDesign}`
+        message: `No se encontró el directorio de diseño para la marca "${brandId}" en ${sourceDir}`
       }, null, 2)
     }
 
-    // 2. Copy accompanying files (HTML previews, README, etc.) to a brand subfolder in .openspec
+    // Single canonical path: ONLY design-assets/<brandId>/ (no root DESIGN.md)
+    // Reason: extract-design-pattern.py and the rest of the toolchain already
+    // look up `preview.html` / `preview-dark.html` from this subfolder. The
+    // duplicate .openspec/DESIGN.md caused three-way drift between catalog
+    // and project copies. The skill sdd-quickstart points to design-assets/.
+
+    // 1. Copy accompanying files (HTML previews, README, DESIGN.md, etc.) to a brand subfolder in .openspec
     const targetBrandDir = path.join(targetDir, "design-assets", brandId)
     if (!fs.existsSync(targetBrandDir)) {
       fs.mkdirSync(targetBrandDir, { recursive: true })
     }
 
     const copiedFiles: string[] = []
+    const sourceDesign = path.join(sourceDir, "DESIGN.md")
+    if (!fs.existsSync(sourceDesign)) {
+      return JSON.stringify({
+        status: "ERROR",
+        message: `No se encontró el archivo DESIGN.md en la ruta origen: ${sourceDesign}`
+      }, null, 2)
+    }
+
     const files = fs.readdirSync(sourceDir)
     for (const file of files) {
-      if (file === "DESIGN.md" || file.startsWith(".")) continue
+      if (file.startsWith(".")) continue
       const srcFile = path.join(sourceDir, file)
       const dstFile = path.join(targetBrandDir, file)
       if (fs.statSync(srcFile).isFile()) {
@@ -589,14 +661,381 @@ export const select_design = tool({
       }
     }
 
+    // 2. Remove the legacy .openspec/DESIGN.md if it exists to enforce single canonical path
+    const legacyDesign = path.join(targetDir, "DESIGN.md")
+    if (fs.existsSync(legacyDesign)) {
+      try { fs.unlinkSync(legacyDesign) } catch (e) { /* ignore */ }
+    }
+
     return JSON.stringify({
       status: "SUCCESS",
-      message: `Diseño "${brandId}" copiado exitosamente a .openspec/DESIGN.md`,
+      message: `Diseño "${brandId}" copiado a la ruta canónica .openspec/design-assets/${brandId}/ (legacy .openspec/DESIGN.md eliminado si existía)`,
       copiedFiles,
-      designAssetsDir: path.relative(root, targetBrandDir)
+      designAssetsDir: path.relative(root, targetBrandDir),
+      canonicalDesignPath: path.relative(root, path.join(targetBrandDir, "DESIGN.md")),
+    }, null, 2)
+}
+
+// =====================================================================
+// NEW TOOLS (zugzbot-v2 optimization plan)
+// =====================================================================
+
+// Curated subset of brands with HTML+CSS interactive previews.
+// These are the brands the orchestrator should recommend first because
+// they have usable assets in `.opencode/oh-my-design/design-md/<brandId>/`.
+const RECOMMENDED_BRANDS: Record<string, { id: string; name: string; category: string; vibe: string }[]> = {
+  saas: [
+    { id: "supabase", name: "Supabase", category: "saas", vibe: "Open-source Firebase alternative, dark-mode-first, dense data UI" },
+    { id: "linear.app", name: "Linear", category: "saas", vibe: "Issue tracking premium, ultra-fast keyboard-first, monochrome" },
+    { id: "vercel", name: "Vercel", category: "saas", vibe: "Vercel/Next.js native, mono+geist font, gradient accents" },
+    { id: "raycast", name: "Raycast", category: "saas", vibe: "Productivity launcher, sharp corners, command-bar UX" },
+    { id: "posthog", name: "PostHog", category: "saas", vibe: "Product analytics, orange accent, fun playful tone" },
+  ],
+  fintech: [
+    { id: "stripe", name: "Stripe", category: "fintech", vibe: "Premium payments, gradient brand, dense docs" },
+    { id: "revolut", name: "Revolut", category: "fintech", vibe: "Neobank, dark+violet, large numbers" },
+    { id: "wise", name: "Wise", category: "fintech", vibe: "Cross-border money, bright green, friendly tone" },
+    { id: "toss", name: "Toss", category: "fintech", vibe: "Korean super-app, blue primary, imperative microcopy" },
+  ],
+  ecommerce: [
+    { id: "airbnb", name: "Airbnb", category: "ecommerce", vibe: "Travel marketplace, coral accent, photographic" },
+    { id: "apple", name: "Apple", category: "ecommerce", vibe: "Hardware store, ultra-minimal, SF Pro typography" },
+    { id: "nike", name: "Nike", category: "ecommerce", vibe: "Athletic brand, black+volt, UPPERCASE bold, flat" },
+    { id: "shopify", name: "Shopify", category: "ecommerce", vibe: "E-commerce platform, green primary, merchant-focused" },
+  ],
+  consumer: [
+    { id: "spotify", name: "Spotify", category: "consumer", vibe: "Music streaming, green+dark, immersive cards" },
+    { id: "figma", name: "Figma", category: "consumer", vibe: "Design tool, multi-color, playful professional" },
+    { id: "notion", name: "Notion", category: "consumer", vibe: "Productivity, minimal, document-first" },
+  ],
+}
+
+// Tool: sdd_list_design_recommendations
+// Returns a curated short-list of design brands grouped by category.
+// Saves the orchestrator from 3-4 separate `oh-my-design_list_references` calls.
+export const list_design_recommendations = tool({
+  description: "Devuelve una lista curada y corta de marcas de diseño recomendadas (con assets HTML+CSS interactivos), filtrada por categoría de uso. Reemplaza 3-4 llamadas a oh-my-design_list_references en F0.",
+  args: {
+    use_case: tool.schema.enum(["saas", "fintech", "ecommerce", "consumer", "all"]).default("all").describe("Categoría del proyecto para filtrar marcas relevantes"),
+    max_per_category: tool.schema.number().default(3).describe("Máximo de marcas a devolver por categoría"),
+  },
+  async execute(args, context) {
+    const useCase = args.use_case
+    const maxPer = Math.max(1, Math.min(args.max_per_category || 3, 6))
+
+    if (useCase === "all") {
+      const result: Record<string, any[]> = {}
+      for (const cat of Object.keys(RECOMMENDED_BRANDS)) {
+        result[cat] = RECOMMENDED_BRANDS[cat].slice(0, maxPer)
+      }
+      return JSON.stringify({
+        status: "SUCCESS",
+        message: `Recomendaciones de diseño curadas (top ${maxPer} por categoría)`,
+        recommendations: result,
+        note: "Estas marcas tienen preview.html/preview-dark.html en .opencode/oh-my-design/design-md/. Para marcas adicionales usa oh-my-design_list_references.",
+      }, null, 2)
+    }
+
+    const list = RECOMMENDED_BRANDS[useCase] || []
+    return JSON.stringify({
+      status: "SUCCESS",
+      message: `Recomendaciones de diseño para use_case="${useCase}"`,
+      recommendations: { [useCase]: list.slice(0, maxPer) },
+      note: "Estas marcas tienen preview.html/preview-dark.html en .opencode/oh-my-design/design-md/.",
     }, null, 2)
   }
 })
 
+// Tool: sdd_apply_brand_tokens
+// Injects brand-specific CSS custom properties into the project's globals.css
+// without removing the shadcn theme variables. Prevents the recurring
+// "Cannot apply unknown utility class `border-border`" build error.
+export const apply_brand_tokens = tool({
+  description: "Inyecta tokens de diseño de marca (colores, tipografía, radius) en src/app/globals.css preservando las variables shadcn (--color-border, --color-background, etc.). Usar en F2 cuando se necesite aplicar el tema de marca.",
+  args: {
+    tokens: tool.schema.string().describe("JSON stringificado con {colors: {...}, typography: {...}, radius: {...}} extraído de contract.json design.tokens"),
+  },
+  async execute(args, context) {
+    const root = context.worktree || context.directory || process.cwd()
+    const globalsPath = path.resolve(root, "src/app/globals.css")
+
+    if (!fs.existsSync(globalsPath)) {
+      return JSON.stringify({
+        status: "ERROR",
+        message: `No se encontró src/app/globals.css. Ejecuta primero el bootstrap de nextjs-shadcn.`,
+      }, null, 2)
+    }
+
+    let brandTokens: any
+    try {
+      brandTokens = JSON.parse(args.tokens)
+    } catch (e) {
+      return JSON.stringify({
+        status: "ERROR",
+        message: `tokens no es JSON válido: ${(e as Error).message}`,
+      }, null, 2)
+    }
+
+    const colors = brandTokens.colors || {}
+    const typography = brandTokens.typography?.family || {}
+    const radius = brandTokens.radius || {}
+
+    // Build the brand CSS variables block. Preserves shadcn vars.
+    const brandVarLines: string[] = []
+    for (const [k, v] of Object.entries(colors)) {
+      const safeName = String(k).replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase()
+      brandVarLines.push(`  --color-brand-${safeName}: ${v};`)
+    }
+    if (typography.sans) {
+      brandVarLines.push(`  --font-sans: ${typography.sans};`)
+      brandVarLines.push(`  --font-heading: ${typography.sans};`)
+    }
+    for (const [k, v] of Object.entries(radius)) {
+      brandVarLines.push(`  --radius-${k}: ${v}px;`)
+    }
+
+    const brandBlock = `/* Brand tokens (injected by sdd_apply_brand_tokens) */
+@theme inline {
+${brandVarLines.join("\n")}
+}
+`
+
+    let css = fs.readFileSync(globalsPath, "utf8")
+
+    // Remove any previous brand block to keep this idempotent.
+    css = css.replace(/\/\* Brand tokens[\s\S]*?\}\s*\n/g, "")
+
+    // Append at the end. Existing shadcn @theme inline block remains untouched.
+    css = css.trimEnd() + "\n\n" + brandBlock
+
+    fs.writeFileSync(globalsPath, css, "utf8")
+
+    return JSON.stringify({
+      status: "SUCCESS",
+      message: `Inyectados ${brandVarLines.length} tokens de marca en src/app/globals.css (preservando variables shadcn)`,
+      globalsPath: path.relative(root, globalsPath),
+      brandVariables: brandVarLines.length,
+    }, null, 2)
+  }
+})
+
+// Tool: sdd_generate_dockerfile
+// Generates a production-ready multi-stage Dockerfile + .dockerignore +
+// docker-compose.yml from the project stack in ~1 call. Replaces ~5 read
+// + 3 write operations the deployer does manually.
+export const generate_dockerfile = tool({
+  description: "Genera Dockerfile multi-stage, .dockerignore y docker-compose.yml optimizados a partir del stack del proyecto (nextjs|fastapi). Detecta package manager desde package.json.",
+  args: {
+    stack: tool.schema.enum(["nextjs", "fastapi"]).describe("Stack del proyecto"),
+    port: tool.schema.number().default(3000).describe("Puerto de la aplicación"),
+  },
+  async execute(args, context) {
+    const root = context.worktree || context.directory || process.cwd()
+
+    if (args.stack === "nextjs") {
+      // Detect package manager
+      let pm = "npm"
+      let installCmd = "npm ci --frozen-lockfile"
+      let buildCmd = "npm run build"
+      if (fs.existsSync(path.resolve(root, "pnpm-lock.yaml"))) {
+        pm = "pnpm"
+        installCmd = "pnpm install --frozen-lockfile"
+        buildCmd = "pnpm build"
+      } else if (fs.existsSync(path.resolve(root, "yarn.lock"))) {
+        pm = "yarn"
+        installCmd = "yarn install --frozen-lockfile"
+        buildCmd = "yarn build"
+      }
+
+      // Pin to node 20-alpine (most common, Next 16 compatible)
+      const nodeImage = "node:20-alpine"
+
+      const dockerfile = `# Stage 1: Dependencias
+FROM ${nodeImage} AS deps
+WORKDIR /app
+COPY package.json ${pm === "npm" ? "package-lock.json* " : pm === "pnpm" ? "pnpm-lock.yaml* " : "yarn.lock* "}./
+RUN ${installCmd}
+
+# Stage 2: Constructor
+FROM ${nodeImage} AS builder
+WORKDIR /app
+RUN corepack enable || true
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN ${buildCmd}
+
+# Stage 3: Ejecutor
+FROM ${nodeImage} AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN addgroup --system --gid 1001 nodejs \\
+ && adduser --system --uid 1001 nextjs \\
+ && mkdir -p public
+
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+EXPOSE ${args.port}
+ENV PORT=${args.port}
+ENV HOSTNAME="0.0.0.0"
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \\
+  CMD node -e "require('http').get('http://localhost:${args.port}', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
+
+CMD ["node", "server.js"]
+`
+
+      const dockerignore = `node_modules
+.next
+.git
+.opencode
+.openspec
+.env*
+*.md
+vitest.config.ts
+*.test.ts
+*.spec.ts
+coverage
+playwright-report
+test-results
+`
+
+      const compose = `services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${args.port}:${args.port}"
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:${args.port}', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+`
+
+      const filesWritten: string[] = []
+      for (const [name, content] of [
+        ["Dockerfile", dockerfile],
+        [".dockerignore", dockerignore],
+        ["docker-compose.yml", compose],
+      ] as const) {
+        const fullPath = path.resolve(root, name)
+        fs.writeFileSync(fullPath, content, "utf8")
+        filesWritten.push(path.relative(root, fullPath))
+      }
+
+      return JSON.stringify({
+        status: "SUCCESS",
+        message: `Docker artifacts generados (${pm}, ${nodeImage}, puerto ${args.port})`,
+        filesWritten,
+        packageManager: pm,
+        nodeImage,
+      }, null, 2)
+    }
+
+    // fastapi path
+    const dockerfilePy = `FROM python:3.11-slim
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends \\
+    build-essential \\
+ && rm -rf /var/lib/apt/lists/*
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY src/ ./src/
+EXPOSE ${args.port}
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "${args.port}"]
+`
+    const dockerignorePy = `__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.git
+.opencode
+.openspec
+.pytest_cache/
+tests/
+`
+    const composePy = `services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${args.port}:${args.port}"
+    environment:
+      - ENV=production
+    restart: unless-stopped
+`
+    const filesWritten: string[] = []
+    for (const [name, content] of [
+      ["Dockerfile", dockerfilePy],
+      [".dockerignore", dockerignorePy],
+      ["docker-compose.yml", composePy],
+    ] as const) {
+      const fullPath = path.resolve(root, name)
+      fs.writeFileSync(fullPath, content, "utf8")
+      filesWritten.push(path.relative(root, fullPath))
+    }
+
+    return JSON.stringify({
+      status: "SUCCESS",
+      message: `Docker artifacts generados para FastAPI (puerto ${args.port})`,
+      filesWritten,
+    }, null, 2)
+  }
+})
+
+// Tool: sdd_quick_lint
+// Runs the project linter against src/ only (avoiding the harness dir).
+// Used by sdd_set_phase as a gate before transitioning to F3_VERIFICATION.
+export const quick_lint = tool({
+  description: "Ejecuta el linter del proyecto (eslint) restringido a src/. Devuelve exit code y warnings. Usado como gate automático antes de transicionar a F3.",
+  args: {},
+  async execute(args, context) {
+    const root = context.worktree || context.directory || process.cwd()
+
+    // Detect package manager scripts
+    const pkgPath = path.resolve(root, "package.json")
+    if (!fs.existsSync(pkgPath)) {
+      return JSON.stringify({
+        status: "ERROR",
+        message: "No se encontró package.json. ¿Estás en un proyecto Next.js?",
+      }, null, 2)
+    }
+
+    try {
+      const out = execSync("npx eslint src/ --quiet --max-warnings 0 2>&1 || true", {
+        cwd: root,
+        encoding: "utf8",
+        timeout: 120_000,
+      })
+      const hasErrors = out.toLowerCase().includes("error") || out.trim().length > 0
+      return JSON.stringify({
+        status: hasErrors ? "FAIL" : "SUCCESS",
+        message: hasErrors ? "Lint encontró errores. Corrígelos antes de transicionar a F3." : "Lint limpio.",
+        output: out.slice(0, 2000),
+      }, null, 2)
+    } catch (e: any) {
+      return JSON.stringify({
+        status: "FAIL",
+        message: `Lint falló: ${e.message?.slice(0, 500) || "unknown error"}`,
+      }, null, 2)
+    }
+  }
+})
 
 

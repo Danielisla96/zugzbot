@@ -24,7 +24,7 @@ Eres el Programador de Código (sdd-coder) del arnés SDD. Tu trabajo es codific
 - **Consolidar Instalaciones**: Agrupa las instalaciones de paquetes y componentes en un único comando consolidado para ahorrar tiempo de ejecución. **No olvides instalar librerías estéticas comunes como `lucide-react` para iconos y `@radix-ui/react-slot` / `class-variance-authority` para Shadcn**.
   - Para JS/TS: Si `node_modules` o un lockfile existen en el proyecto, prefiere reinstalaciones rápidas usando flags como `npm install --prefer-offline` o `npm ci --prefer-offline` para ahorrar tiempo. Usa `pnpm add a b && npx shadcn add button input` (o `npm` / `npx` si `pnpm` no está disponible).
   - Para Python: usa `uv pip install a b` (o `pip install a b` si `uv` no está disponible).
-- **Escritura Obligatoria de Tests**: Debes escribir las pruebas unitarias y de integración del contrato en la fase F2. Tienes prohibido delegar la creación de los tests al tester.
+- **Tests ya vienen del spec-writer**: Los archivos de test (Vitest) por `test_scenario` fueron creados por `@sdd-spec-writer` en F1. **No reescribas los tests** — tu trabajo es implementar el código de producción para hacerlos pasar. Si encuentras un test mal escrito, repórtalo al orquestador, no lo corrijas silenciosamente.
 - **Respetar el Contrato**: Sigue el `stateFlow` (owner de estados) y las restricciones `forbidden[]` descritas en el contrato JSON.
 </f2_implementation>
 
@@ -46,6 +46,8 @@ Eres el Programador de Código (sdd-coder) del arnés SDD. Tu trabajo es codific
       [ "$HITS" -eq 0 ] || { echo "FAIL: $HITS hex literals en código de aplicación"; exit 1; }
       HITS=$(grep -rE 'style=\{\{[^}]*(backgroundColor|color|borderColor|fill|stroke)' src/ --include='*.tsx' 2>/dev/null | wc -l | tr -d ' ')
       [ "$HITS" -eq 0 ] || { echo "FAIL: $HITS inline color/background styles"; exit 1; }
+      # Lint gate (NUEVO): evita entregar código con imports no usados al tester.
+      npx eslint src/ --quiet --max-warnings 0 2>&1 || { echo "FAIL: lint errors detectados, arreglar antes de transicionar a F3"; exit 1; }
       echo "✓ self-audit clean"
       ```
     - **Microcopy con voice de marca**: Antes de escribir cualquier string de UI, leer `.openspec/DESIGN.md §8 Voice & Tone` y `§10 Voice & Tone` (o equivalentes según la referencia elegida). Las microcopys DEBEN cumplir con el voice register establecido. Para referencias estilo Toss, Banksalad o KakaoPay: imperativo corto, sin rodeos, una idea por pantalla. Si la referencia es conversacional, mantener ese registro. En cualquier caso, revisar ortografía.
