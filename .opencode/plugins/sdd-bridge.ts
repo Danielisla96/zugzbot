@@ -246,6 +246,29 @@ export const SddBridgePlugin: Plugin = async ({ project, client, $, directory, w
             fresh.contractName = folderName
             writeMetrics(fresh)
           }
+
+          // Trigger native TUI Toast for phase transition
+          if (client?.tui?.showToast) {
+            await client.tui.showToast({
+              body: {
+                message: `🚀 SDD: Transición a Fase ${newState.phase}${newState.loopMode ? " (Autopiloto Activo)" : ""}`,
+                variant: "success"
+              }
+            }).catch(() => {})
+          }
+        }
+
+        // Trigger native TUI Toast for brain memory save
+        if (input?.tool === "brain_save_memory") {
+          const category = input.args?.category || "general"
+          if (client?.tui?.showToast) {
+            await client.tui.showToast({
+              body: {
+                message: `🧠 Brain: Nuevo aprendizaje registrado en '${category}'`,
+                variant: "info"
+              }
+            }).catch(() => {})
+          }
         }
         // Live-refresh the canonical _sessions.jsonl so future sessions
         // can read compact history (1 line per contract) instead of full MD exports.
@@ -286,6 +309,24 @@ export const SddBridgePlugin: Plugin = async ({ project, client, $, directory, w
         }
       } catch (e) {
         // best-effort
+      }
+    },
+
+    // Inject active SDD state and loopMode into the compaction context to prevent memory loss
+    "experimental.session.compacting": async (input, output) => {
+      try {
+        const state = readState()
+        output.context.push(`
+## SDD HARNESS STATE (CRITICAL PERSISTENCE)
+
+Este es el estado del arnés de desarrollo SDD activo en disco. DEBES conservarlo en tu memoria resumida tras la compactación:
+- **Fase Activa de SDD**: '${state.phase}'
+- **Contrato Activo**: '${state.activeContract || "Ninguno"}'
+- **Modo Piloto Automático (/loop)**: ${state.loopMode === true ? "ACTIVO (Debes continuar resolviendo las tareas de forma 100% autónoma sin preguntar al usuario)" : "DESACTIVADO (Interacción estándar)"}
+- **Tecnologías Detectadas**: ${JSON.stringify(state.stack || {})}
+`)
+      } catch (e) {
+        // ignore
       }
     },
 

@@ -266,6 +266,7 @@ export const set_phase = tool({
     databases: tool.schema.array(tool.schema.string()).optional().describe("Bases de datos añadidas al stack"),
     spec_name: tool.schema.string().optional().describe("(Solo F1_CONTRACT) Nombre del spec en minúsculas y guiones. Si se pasa junto con phase=F1_CONTRACT, crea la carpeta del spec atómicamente y devuelve la ruta completa."),
     skip_lint_gate: tool.schema.boolean().default(false).describe("(Solo F3_VERIFICATION) Si true, no ejecuta el auto-lint gate."),
+    loopMode: tool.schema.boolean().optional().describe("Establece si el modo piloto automático (/loop) está activado para tomar decisiones autónomas de forma acumulativa."),
   },
   async execute(args, context) {
     const root = context.worktree || context.directory || process.cwd()
@@ -362,9 +363,13 @@ export const set_phase = tool({
     }
     if (args.coreStack !== undefined) currentState.stack.core = args.coreStack
     if (args.databases !== undefined) currentState.stack.databases = args.databases
+    if (args.loopMode !== undefined) currentState.loopMode = args.loopMode
 
     // If resetting to F0_DETECT, ensure everything is 100% clean
     if (args.phase === "F0_DETECT") {
+      if (args.loopMode === undefined) {
+        currentState.loopMode = false
+      }
       // Clean up running servers
       const pidFile = getPidFilePath(root)
       if (fs.existsSync(pidFile)) {
@@ -1708,6 +1713,182 @@ export const validate_lucide_icons_batch = tool({
       validatedAt: new Date().toISOString(),
       results
     }, null, 2)
+  }
+})
+
+export const generate_tests = tool({
+  description: "Autogenera plantillas de pruebas unitarias/integración en tests/unit/ a partir de los escenarios de prueba descritos en el contrato activo de sdd_state.json. No pisa archivos de pruebas existentes.",
+  args: {},
+  async execute(args, context) {
+    const root = context.worktree || context.directory || process.cwd()
+    const stateFile = path.resolve(root, ".openspec/sdd_state.json")
+    if (!fs.existsSync(stateFile)) {
+      return JSON.stringify({ success: false, error: "sdd_state.json no existe. Inicia una sesión SDD primero." }, null, 2)
+    }
+    const state = JSON.parse(fs.readFileSync(stateFile, "utf8"))
+    const activeContract = state.activeContract
+    if (!activeContract) {
+      return JSON.stringify({ success: false, error: "El estado activo no tiene un activeContract. El orquestador debe fijar la sesión." }, null, 2)
+    }
+    const contractPath = path.resolve(root, activeContract)
+    if (!fs.existsSync(contractPath)) {
+      return JSON.stringify({ success: false, error: `El archivo del contrato '${contractPath}' no existe.` }, null, 2)
+    }
+    const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"))
+    const test_scenarios = contract.test_scenarios || []
+    if (test_scenarios.length === 0) {
+      return JSON.stringify({ success: true, message: "No se encontraron test_scenarios en el contrato. No hay plantillas que generar." }, null, 2)
+    }
+    
+    const grouped_tests: Record<string, any[]> = {}
+    for (const ts of test_scenarios) {
+      const feature = ts.feature_ref || "general"
+      if (!grouped_tests[feature]) grouped_tests[feature] = []
+      grouped_tests[feature].push(ts)
+    }
+    
+    const created: string[] = []
+    const skipped: string[] = []
+    
+    for (const [feature, scenarios] of Object.entries(grouped_tests)) {
+      const clean_feature = feature.replace(/([A-Z])/g, "-$1").toLowerCase().replace(/^-/, "")
+      const hasReact = scenarios.some(s => s.type === "unit" || s.type === "visual")
+      const ext = hasReact ? "tsx" : "ts"
+      const test_dir = path.resolve(root, "tests", "unit")
+      if (!fs.existsSync(test_dir)) {
+        fs.mkdirSync(test_dir, { recursive: true })
+      }
+      const test_file = path.join(test_dir, `${clean_feature}.test.${ext}`)
+      
+      if (fs.existsSync(test_file)) {
+        skipped.push(`tests/unit/${clean_feature}.test.${ext}`)
+        continue
+      }
+      
+      const lines: string[] = []
+      lines.push('import { describe, it, expect } from "vitest";')
+      if (hasReact) {
+        lines.push('import { render, screen } from "@testing-library/react";')
+        lines.push('import userEvent from "@testing-library/user-event";')
+        lines.push(`// import ${feature} from "@/components/blocks/${clean_feature}";`)
+      }
+      lines.push("")
+      lines.push(`describe("${feature} Tests (Contract Scenarios)", () => {`)
+      
+      for (const s of scenarios) {
+        const tid = s.id || "TS-XX"
+        const name = s.name || "Test case"
+        lines.push(`  // ${tid}: ${name}`)
+        lines.push(`  // Given: ${s.given || ""}`)
+        lines.push(`  // When: ${s.when || ""}`)
+        lines.push(`  // Then: ${s.then || ""}`)
+        lines.push(`  it("${tid}: ${name}", async () => {`)
+        lines.push('    // TODO: Implement actual contract assertions')
+        lines.push('    expect(true).toBe(true);')
+        lines.push('  });')
+        lines.push("")
+      }
+      lines.push("});")
+      
+      fs.writeFileSync(test_file, lines.join("\n").trim() + "\n", "utf8")
+      created.push(`tests/unit/${clean_feature}.test.${ext}`)
+    }
+    
+    return JSON.stringify({
+      status: "SUCCESS",
+      message: "Generación de plantillas de prueba completada.",
+      created,
+      skipped
+    }, null, 2)
+  }
+})
+
+export const save_playwright_artifacts = tool({
+  description: "Promueve y archiva los artefactos de captura visual/videos (.openspec/.playwright/) generados por Playwright a la carpeta del spec/contrato activo de forma ordenada, evitando ensuciar la raíz.",
+  args: {
+    callId: tool.schema.string().optional().describe("ID de llamada de Playwright MCP específica. Si no se pasa, toma la última ejecución de forma automática."),
+    move: tool.schema.boolean().default(false).describe("Si true, mueve los archivos en lugar de copiarlos.")
+  },
+  async execute(args, context) {
+    const root = context.worktree || context.directory || process.cwd()
+    const stateFile = path.resolve(root, ".openspec/sdd_state.json")
+    if (!fs.existsSync(stateFile)) {
+      return JSON.stringify({ success: false, error: "sdd_state.json no existe. Inicia una sesión SDD primero." }, null, 2)
+    }
+    const state = JSON.parse(fs.readFileSync(stateFile, "utf8"))
+    const activeContract = state.activeContract
+    if (!activeContract) {
+      return JSON.stringify({ success: false, error: "El estado activo no tiene un activeContract. El orquestador debe fijar la sesión." }, null, 2)
+    }
+    const contractPath = path.resolve(root, activeContract)
+    if (!fs.existsSync(contractPath)) {
+      return JSON.stringify({ success: false, error: `El archivo del contrato '${contractPath}' no existe.` }, null, 2)
+    }
+    const activeDir = path.dirname(contractPath)
+    const sourceBase = path.resolve(root, ".openspec/.playwright")
+    if (!fs.existsSync(sourceBase)) {
+      return JSON.stringify({ success: true, message: "No existen carpetas de Playwright para archivar en .openspec/.playwright." }, null, 2)
+    }
+    
+    let callId = args.callId
+    if (!callId) {
+      const files = fs.readdirSync(sourceBase).filter(f => fs.statSync(path.join(sourceBase, f)).isDirectory())
+      if (files.length === 0) {
+        return JSON.stringify({ success: true, message: "No hay carpetas de artefactos de Playwright disponibles en .openspec/.playwright" }, null, 2)
+      }
+      // sort by mtime descending to get the newest
+      files.sort((a, b) => {
+        return fs.statSync(path.join(sourceBase, b)).mtimeMs - fs.statSync(path.join(sourceBase, a)).mtimeMs
+      })
+      callId = files[0]
+    }
+    
+    const sourceDir = path.join(sourceBase, callId)
+    if (!fs.existsSync(sourceDir)) {
+      return JSON.stringify({ success: false, error: `La ruta de origen '${sourceDir}' no existe.` }, null, 2)
+    }
+    
+    const destDir = path.join(activeDir, "playwright", callId)
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true })
+    }
+    
+    const copyRecursiveSync = (src: string, dest: string, moveMode: boolean) => {
+      const exists = fs.existsSync(src)
+      const stats = exists && fs.statSync(src)
+      const isDirectory = exists && stats.isDirectory()
+      if (isDirectory) {
+        if (!fs.existsSync(dest)) {
+          fs.mkdirSync(dest, { recursive: true })
+        }
+        fs.readdirSync(src).forEach((childItemName) => {
+          copyRecursiveSync(path.join(src, childItemName), path.join(dest, childItemName), moveMode)
+        })
+        if (moveMode) {
+          fs.rmdirSync(src)
+        }
+      } else {
+        fs.copyFileSync(src, dest)
+        if (moveMode) {
+          fs.unlinkSync(src)
+        }
+      }
+    }
+    
+    try {
+      copyRecursiveSync(sourceDir, destDir, args.move)
+      return JSON.stringify({
+        status: "SUCCESS",
+        message: `Artefactos archivados con éxito en la sesión activa.`,
+        callId,
+        destination: destDir
+      }, null, 2)
+    } catch (e: any) {
+      return JSON.stringify({
+        status: "ERROR",
+        error: e.message
+      }, null, 2)
+    }
   }
 })
 

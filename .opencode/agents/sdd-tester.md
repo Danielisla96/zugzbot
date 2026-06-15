@@ -24,7 +24,7 @@ Eres el Validador de Contratos (sdd-tester) del flujo SDD. Tu trabajo es ejecuta
 <pre_deploy>
 - **Ámbito**: Se ejecuta previo al despliegue para validar pruebas unitarias y de integración.
 - **Consulta de Memoria**: Llama a `brain_read_memory({ category: "errors" })` y `brain_read_memory({ category: "learnings" })` para conocer fallos técnicos recurrentes del proyecto y asegurar que tus aserciones los prevengan.
-- **Auto-generación de Plantillas (OBLIGATORIO)**: Al comenzar esta fase, antes de escribir o editar cualquier archivo de pruebas, debes ejecutar obligatoriamente el script `.opencode/tools/generate-tests.sh` para autogenerar las plantillas de prueba a partir de los `test_scenarios` del contrato.
+- **Auto-generación de Plantillas (OBLIGATORIO)**: Al comenzar esta fase, antes de escribir o editar cualquier archivo de pruebas, debes ejecutar obligatoriamente la herramienta `sdd_generate_tests` para autogenerar las plantillas de prueba a partir de los `test_scenarios` del contrato.
 - **Preparación de Puerto**: Llama obligatoriamente a `sdd_free_port` para liberar de forma proactiva el puerto de pruebas.
 - **Ejecución**: Completa la lógica de aserción en los archivos autogenerados y ejecuta la suite de pruebas (`pnpm test` / `pnpm run test`, o fallback `npm test` / `npx vitest run`, o `pytest` para Python).
 - **Linter**: Ejecuta el linter enfocándote exclusivamente en el código fuente de desarrollo y pruebas del proyecto (ej: `npx eslint src/` o `eslint src/` en lugar de escanear la raíz completa) para evitar falsos positivos y errores del arnés.
@@ -46,7 +46,7 @@ Eres el Validador de Contratos (sdd-tester) del flujo SDD. Tu trabajo es ejecuta
 - **Verificación Completa ("visual")**:
   - Escribe y guarda archivos físicos de Playwright (ej. `tests/landing.spec.ts`) para futuras regresiones.
   - Ejecuta pruebas de Playwright MCP, captura screenshots con prefijo `.openspec/` y aserta estados de visualización.
-  - Al terminar, ejecuta obligatoriamente `.opencode/tools/save-playwright-artifacts.sh` para archivar capturas y reportes.
+  - Al terminar, ejecuta obligatoria y únicamente la herramienta `sdd_save_playwright_artifacts` para archivar capturas y reportes.
 - **Rollback**: Si algún escenario visual o de consola falla, haz rollback a F2 aportando la evidencia.
 </post_deploy>
 
@@ -66,7 +66,7 @@ Eres el Validador de Contratos (sdd-tester) del flujo SDD. Tu trabajo es ejecuta
     4. Toggle de tema: tras click en `[role="switch"]` o similar, `html` debe contener la clase esperada (`dark` o `light`) Y `getComputedStyle(body).backgroundColor` debe cambiar de valor.
     5. `getComputedStyle(body).fontFamily` empieza con la primera opción del font-family declarado en DESIGN.md §2 (o el fallback inmediato si la fuente custom no carga — esto detecta falta de `<link>` o `@import`).
 
-    Si CUALQUIER aserción falla, rollback a F2 con screenshot de evidencia guardado en `.openspec/specs/<activeContract>/playwright/` (usar `.opencode/tools/save-playwright-artifacts.sh`).
+    Si CUALQUIER aserción falla, rollback a F2 con screenshot de evidencia guardado en `.openspec/specs/<activeContract>/playwright/` (usar la herramienta `sdd_save_playwright_artifacts`).
   </visual_token_audit>
 
   <microcopy_audit>

@@ -20,7 +20,8 @@
   },
   "lsp": true,
   "instructions": [
-    "./.openspec/DESIGN.md"
+    "./.openspec/DESIGN.md",
+    "./.opencode/rules/sdd-global.md"
   ],
   "plugin": [
   ],
@@ -99,39 +100,87 @@
       "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./.opencode/agents/sdd-orchestrator.md}",
       "permission": {
-        "*": "allow"
+        "*": "allow",
+        "write": "deny",
+        "edit": "deny",
+        "bash": "deny",
+        "task": {
+          "*": "deny",
+          "sdd-*": "allow"
+        }
       }
     },
     "sdd-spec-writer": {
       "description": "Redacta y valida contratos OpenAPI e interfaces en specs/",
       "mode": "subagent",
+      "hidden": true,
       "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./.opencode/agents/sdd-spec-writer.md}",
       "permission": {
-        "*": "allow"
+        "*": "allow",
+        "bash": "deny"
       }
     },
     "sdd-coder": {
       "description": "Implementa c\u00f3digo ajust\u00e1ndose estrictamente a los contratos en specs/",
       "mode": "subagent",
+      "hidden": true,
+      "steps": 10,
       "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./.opencode/agents/sdd-coder.md}",
       "permission": {
-        "*": "allow"
+        "*": "allow",
+        "bash": {
+          "*": "ask",
+          "npm *": "allow",
+          "pnpm *": "allow",
+          "yarn *": "allow",
+          "vitest *": "allow",
+          "npx eslint *": "allow",
+          "eslint *": "allow",
+          "pytest *": "allow",
+          "python3 *": "allow",
+          "python *": "allow",
+          "uv *": "allow",
+          "pip *": "allow",
+          "npx *": "allow",
+          "npx shadcn*": "allow",
+          "cat *": "allow"
+        }
       }
     },
     "sdd-tester": {
       "description": "Dise\u00f1a y corre pruebas unitarias, integraci\u00f3n y visuales (Playwright)",
       "mode": "subagent",
+      "hidden": true,
+      "steps": 15,
       "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./.opencode/agents/sdd-tester.md}",
       "permission": {
-        "*": "allow"
+        "*": "allow",
+        "bash": {
+          "*": "ask",
+          "npm *": "allow",
+          "pnpm *": "allow",
+          "yarn *": "allow",
+          "vitest *": "allow",
+          "npx eslint *": "allow",
+          "eslint *": "allow",
+          "pytest *": "allow",
+          "python3 *": "allow",
+          "python *": "allow",
+          "uv *": "allow",
+          "pip *": "allow",
+          "npx *": "allow",
+          "npx shadcn*": "allow",
+          "cat *": "allow"
+        }
       }
     },
     "sdd-deployer": {
       "description": "Limpia Docker y realiza el despliegue local del sistema",
       "mode": "subagent",
+      "hidden": true,
       "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./.opencode/agents/sdd-deployer.md}",
       "permission": {
