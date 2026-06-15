@@ -6,6 +6,8 @@
       "omd-*": "allow",
       "stack-validator": "allow",
       "sdd-methodology": "allow",
+      "sdd-quickstart": "allow",
+      "sdd-tester-quickstart": "allow",
       "shadcn": "allow",
       "shadcn-templates": "allow",
       "docker-templates": "allow",

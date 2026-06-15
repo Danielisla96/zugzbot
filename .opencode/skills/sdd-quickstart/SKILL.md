@@ -153,6 +153,8 @@ Copia y adapta los IDs y descripciones que apliquen. Borra los que no apliquen.
 ## 3. Anti-patrones a evitar en el contrato
 
 - **Inconsistencia de nombres de componentes (CRÍTICO)**: Los nombres declarados en `frontend.components[].name` del contrato son **un compromiso inmutable**. El spec-writer DEBE usar exactamente estos mismos nombres al crear las pruebas unitarias/integración, y el coder DEBE usarlos para crear los componentes de producción. **PROHIBIDO renombrar o cambiar de PascalCase a kebab-case en archivos de test**. Si el contrato dice `CalculatorPanel`, el archivo de test se llamará `CalculatorPanel.test.tsx` y no se debe cambiar a `CalculatorPage.test.tsx` (esto causó fallas de compilación con imports rotos en la sesión 1374).
+- **NO busques iconos uno por uno**: PROHIBIDO usar `lucide-icons_fuzzy_search_icons` de forma repetitiva en un loop para cada icono. Usa la herramienta optimizada por lotes `sdd_validate_lucide_icons_batch` pasándole todo el arreglo de nombres de iconos que desees usar en una sola llamada.
+- **NO uses `read` para DESIGN.md**: Para extraer los tokens de diseño de una marca, usa siempre `oh-my-design_get_design_md(brandId)` o lee selectivamente, no leas el archivo entero que consume miles de tokens de input innecesariamente.
 - **NO embebas código TSX en el contrato.** El contrato es declarativo (qué, no cómo).
 - **NO dupliques los tokens de `.openspec/design-assets/<brandId>/DESIGN.md` línea por línea.** Usa el tool `oh-my-design_get_design_md` y pega el bloque `tokens` completo UNA vez.
 - **NO escribas más de 5-6 `test_scenarios`** para modo `console`. Más de eso no acelera la entrega, solo retrasa F2.

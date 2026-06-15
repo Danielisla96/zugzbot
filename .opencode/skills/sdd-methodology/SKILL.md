@@ -73,6 +73,14 @@ Cada fase tiene un **gate explícito** (HIL del usuario) antes de transicionar a
 **NO HAGAS**: Dejar que el tester descubra imports no usados en tests.
 **HAZ**: El self-audit del coder (F2) y el auto-lint gate de `sdd_set_phase("F3_VERIFICATION")` ya lo previenen. El orquestador debe **reportar el `lintWarning`** al usuario antes de delegar al tester.
 
+### Trampa 9: Cargar skills duplicadas
+**NO HAGAS**: Cargar skills de forma genérica en subagentes si su contenido ya está integrado en su prompt de identidad (ej. cargar `sdd-methodology` en `@sdd-deployer` o `@sdd-tester`). Esto duplica los tokens de input consumidos.
+**HAZ**: Limitar la carga de skills a los casos proactivos indicados o cuando se requieran plantillas/recursos específicos de la skill (ej. `sdd-quickstart` en `@sdd-spec-writer`).
+
+### Trampa 10: Playwright en modo Console
+**NO HAGAS**: Invocar herramientas de Playwright (`playwright_browser_navigate`, `playwright_browser_snapshot`, etc.) si `verificationMode` está configurado en `"console"`. Esto consume tiempo y reasoning innecesarios.
+**HAZ**: En modo `console`, confía en pruebas unitarias/integración (Vitest) y verificaciones directas con curls/logs. No abras navegadores.
+
 ---
 
 ## 4. Stack cerrado (NO abrir)

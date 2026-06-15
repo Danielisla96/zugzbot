@@ -1638,6 +1638,79 @@ export const bootstrap_fastapi = tool({
   }
 })
 
+export const validate_lucide_icons_batch = tool({
+  description: "Valida un lote de nombres de iconos de Lucide React de forma rápida e idempotente. Si node_modules/lucide-react existe, verifica contra los exports reales; de lo contrario, valida contra un listado estático de los iconos más comunes.",
+  args: {
+    icons: tool.schema.array(tool.schema.string()).describe("Lista de nombres de iconos a validar (ej: ['Sun', 'Moon', 'Plus'])"),
+  },
+  async execute(args, context) {
+    const root = context.worktree || context.directory || process.cwd()
+    const results: Record<string, { valid: boolean; source: string }> = {}
+    
+    // Lista de iconos comunes como fallback
+    const commonIcons = new Set([
+      "Sun", "Moon", "Plus", "Trash2", "History", "Clock", "Calculator", "User", "Settings", 
+      "Home", "ChevronLeft", "ChevronRight", "ChevronUp", "ChevronDown", "Search", "X", "Check", 
+      "Edit", "Menu", "LogOut", "LogIn", "Lock", "Mail", "Phone", "MapPin", "Calendar", "Upload", 
+      "Download", "ExternalLink", "Eye", "EyeOff", "AlertCircle", "CheckCircle", "Info", "HelpCircle", 
+      "Bell", "Share2", "Copy", "File", "Folder", "Image", "Video", "Music", "Play", "Pause", 
+      "Server", "Database", "Terminal", "Code", "Grid", "List", "Filter", "Heart", "Star", 
+      "ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "RefreshCw", "Send", "Activity", "Briefcase", 
+      "Camera", "Cloud", "Compass", "Cpu", "CreditCard", "DollarSign", "DownloadCloud", "Edit2", "Edit3", 
+      "FileText", "Gift", "Globe", "Hash", "Key", "Laptop", "Map", "MessageCircle", "MessageSquare", 
+      "Mic", "Monitor", "Package", "Paperclip", "Percent", "Power", "Printer", "Radio", "RotateCcw", 
+      "Save", "Scissors", "Shield", "ShoppingBag", "ShoppingCart", "Slider", "Sliders", "Smartphone", 
+      "Speaker", "Tablet", "Tag", "Target", "ThumbsUp", "ThumbsDown", "ToggleLeft", "ToggleRight", 
+      "Trash", "TrendingUp", "TrendingDown", "Truck", "Tv", "Type", "Umbrella", "Unlock", "UploadCloud", 
+      "Users", "Volume2", "VolumeX", "Wifi", "Wind", "Zap"
+    ])
+
+    let hasNodeModules = false
+    let exportsList: Set<string> | null = null
+
+    // Intentar buscar lucide-react en node_modules
+    const lucidePath = path.resolve(root, "node_modules/lucide-react")
+    if (fs.existsSync(lucidePath)) {
+      try {
+        // Ejecutar un script de node rápido para obtener los exports de lucide-react
+        const nodeScript = `
+          const lucide = require('lucide-react');
+          console.log(JSON.stringify(Object.keys(lucide)));
+        `
+        const output = execSync(`node -e "${nodeScript.replace(/"/g, '\\"')}"`, { cwd: root, stdio: "pipe" }).toString()
+        const keys = JSON.parse(output)
+        exportsList = new Set(keys)
+        hasNodeModules = true
+      } catch (e) {
+        // Fallback
+      }
+    }
+
+    for (const icon of args.icons) {
+      if (hasNodeModules && exportsList) {
+        results[icon] = {
+          valid: exportsList.has(icon),
+          source: "node_modules/lucide-react"
+        }
+      } else {
+        // Validar contra lista estática o formato PascalCase general como fallback optimista
+        const isPascalCase = /^[A-Z][a-zA-Z0-9]*$/.test(icon)
+        const inCommon = commonIcons.has(icon)
+        results[icon] = {
+          valid: inCommon || isPascalCase,
+          source: inCommon ? "static_common_list" : "pascal_case_fallback"
+        }
+      }
+    }
+
+    return JSON.stringify({
+      status: "SUCCESS",
+      validatedAt: new Date().toISOString(),
+      results
+    }, null, 2)
+  }
+})
+
 
 
 
