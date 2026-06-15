@@ -195,6 +195,32 @@
           }
         }
       }
+    },
+    "sdd_hints": {
+      "type": "object",
+      "description": "Hints opcionales para que el orchestrator pre-configure el bootstrap del coder (shadcn components a pre-instalar, iconos validados, plantilla preferida). Reduce el tiempo de F2 y el contexto del coder.",
+      "properties": {
+        "shadcn_components": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Lista de shadcn components necesarios (lowercased, ej: ['button','input','table','card','switch']). El orchestrator pasa este array a sdd_bootstrap_nextjs_shadcn para pre-instalarlos."
+        },
+        "lucide_icons": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Lista de iconos lucide-react requeridos (PascalCase, ej: ['Sun','Moon','Plus','Trash2','History']). Validados por el spec-writer con el MCP lucide-icons."
+        },
+        "python_extras": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Lista de paquetes Python adicionales a instalar (ej: ['sqlalchemy','pydantic-settings','pytest-asyncio','asyncpg']). El orchestrator pasa este array a sdd_bootstrap_fastapi."
+        },
+        "bootstrap_template": {
+          "type": "string",
+          "enum": ["nextjs-shadcn", "fastapi-sdd"],
+          "description": "Plantilla preferida para bootstrap. Si no se especifica, el orchestrator la infiere de stack.core."
+        }
+      }
     }
   },
   "required": ["contractName", "description", "category", "stack", "test_scenarios"]
