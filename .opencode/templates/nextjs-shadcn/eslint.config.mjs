@@ -1,19 +1,24 @@
 // ESLint 9 flat config for Next.js 16 + Shadcn UI + Tailwind v4.
-// Pre-configured to ignore the SDD harness (.opencode/, .openspec/, .next/, etc.)
-// so the harness code never produces false-positive lint errors.
-import { FlatCompat } from '@eslint/eslintrc'
-import { fileURLToPath } from 'node:url'
-import { dirname } from 'node:path'
+// Native flat config without FlatCompat to avoid circular structure validator crashes.
+import tsLint from 'typescript-eslint'
+import nextPlugin from '@next/eslint-plugin-next'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+export default tsLint.config(
+  // 1. TypeScript recommended configs
+  ...tsLint.configs.recommended,
 
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-})
+  // 2. Next.js recommended flat config (custom rule set)
+  {
+    plugins: {
+      '@next/next': nextPlugin,
+    },
+    rules: {
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs['core-web-vitals'].rules,
+    },
+  },
 
-export default [
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
+  // 3. Globals & Ignores
   {
     ignores: [
       '.next/**',
@@ -28,11 +33,13 @@ export default [
       'build/**',
     ],
   },
+
+  // 4. Custom overrides
   {
     rules: {
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'off',
       'react/no-unescaped-entities': 'off',
     },
-  },
-]
+  }
+)

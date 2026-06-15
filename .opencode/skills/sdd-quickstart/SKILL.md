@@ -152,6 +152,7 @@ Copia y adapta los IDs y descripciones que apliquen. Borra los que no apliquen.
 
 ## 3. Anti-patrones a evitar en el contrato
 
+- **Inconsistencia de nombres de componentes (CRÍTICO)**: Los nombres declarados en `frontend.components[].name` del contrato son **un compromiso inmutable**. El spec-writer DEBE usar exactamente estos mismos nombres al crear las pruebas unitarias/integración, y el coder DEBE usarlos para crear los componentes de producción. **PROHIBIDO renombrar o cambiar de PascalCase a kebab-case en archivos de test**. Si el contrato dice `CalculatorPanel`, el archivo de test se llamará `CalculatorPanel.test.tsx` y no se debe cambiar a `CalculatorPage.test.tsx` (esto causó fallas de compilación con imports rotos en la sesión 1374).
 - **NO embebas código TSX en el contrato.** El contrato es declarativo (qué, no cómo).
 - **NO dupliques los tokens de `.openspec/design-assets/<brandId>/DESIGN.md` línea por línea.** Usa el tool `oh-my-design_get_design_md` y pega el bloque `tokens` completo UNA vez.
 - **NO escribas más de 5-6 `test_scenarios`** para modo `console`. Más de eso no acelera la entrega, solo retrasa F2.

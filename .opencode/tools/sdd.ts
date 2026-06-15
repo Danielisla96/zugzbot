@@ -316,12 +316,18 @@ export const set_phase = tool({
     }
 
     if (args.phase === "F4_DEPLOYMENT") {
-      try {
-        execSync("docker info", { stdio: "ignore" })
-      } catch (e) {
+      // Wait up to 60s for Docker daemon to be ready (macOS open -a Docker fallback)
+      const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+      for (let i = 0; i < 12; i++) {
         try {
-          execSync("open -a Docker", { stdio: "ignore" })
-        } catch (err) {}
+          execSync("docker info", { stdio: "ignore", timeout: 3000 })
+          break // ready!
+        } catch (e) {
+          if (i === 0) {
+            try { execSync("open -a Docker", { stdio: "ignore" }) } catch (err) {}
+          }
+          await sleep(5000)
+        }
       }
     }
 
@@ -334,8 +340,14 @@ export const set_phase = tool({
           encoding: "utf8",
           timeout: 120_000,
         })
-        if (out.toLowerCase().includes("error") || out.trim().length > 0) {
+        const isCircularError = out.toLowerCase().includes("converting circular structure") || out.toLowerCase().includes("circular structure")
+        if (out.toLowerCase().includes("error") || (out.trim().length > 0 && !isCircularError)) {
           lintWarning = `Lint encontró posibles errores. Considere abortar la transición a F3 y volver a F2:\n${out.slice(0, 1000)}`
+        } else if (isCircularError) {
+          // It's a known false positive with ESLint 9.x flatCompat legacy configs.
+          // Note: with our updated flat config without FlatCompat, we shouldn't even see this,
+          // but we keep this safeguard just in case of any user/legacy configs.
+          console.log("[set_phase] Ignorado falso positivo circular de ESLint.")
         }
       } catch (e) {
         // best-effort, no abortamos
