@@ -32,6 +32,8 @@ Cada fase tiene un **gate explícito** (HIL del usuario) antes de transicionar a
 | `sdd_list_design_recommendations({ use_case: "all" })` | F0 | 4 llamadas a `oh-my-design_list_references` → 1 |
 | `sdd_set_phase({ phase: "F1_CONTRACT", spec_name: "..." })` | F0→F1 | Crea la carpeta del spec atómicamente, sin race de timestamp |
 | `sdd_select_design({ brandId: "nike" })` | F0 | Copia DESIGN.md al path canónico `.openspec/design-assets/<brandId>/` |
+| `brain_read_memory({ category: ... })` | F0-F4 | Consulta el cerebro del proyecto para recuperar aprendizajes y evitar errores históricos |
+| `brain_save_memory({ category: ... })` | F2, F4 | Guarda aprendizajes, errores técnicos resueltos y decisiones de diseño en el cerebro |
 | Skill `sdd-quickstart` | F1 | Plantilla de `contract.json` pre-rellenada + test_scenarios recurrentes |
 | `sdd_apply_brand_tokens({ tokens: ... })` | F2 | Inyecta tokens de marca en `globals.css` sin romper variables shadcn |
 | `sdd_generate_dockerfile({ stack: "nextjs", port: 3000 })` | F4 | Genera Dockerfile + .dockerignore + docker-compose.yml en 1 call |
