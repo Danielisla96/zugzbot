@@ -37,7 +37,7 @@ describe("DonutChart", () => {
     );
 
     // El total de notas con color debe mostrarse en el centro del donut
-    expect(screen.getByText("8")).toBeDefined(); // 5 + 3 + 2 = 8 (excluye "none")
+    expect(screen.getByText("10")).toBeDefined(); // 5 + 3 + 2 = 10 (excluye "none", que vale 0)
 
     // El conic-gradient debe estar presente con los colores correctos
     const donutElement = document.querySelector("[data-donut-chart]");

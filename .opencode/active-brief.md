@@ -21,7 +21,7 @@ Añadir animaciones de entrada, tooltips interactivos, donut chart alternativo, 
 - `tooltip` (instalar con: `npx shadcn@latest add tooltip`)
 
 ## Lucide icons usados
-- `PieChart` (validado), `BarChart3` (validado), `MousePointer2` (validado), `BarChartHorizontal` (validado)
+- `PieChart`, `BarChart3`, `MousePointer2`, `BarChartHorizontal`
 
 ## Animaciones
 - `@keyframes fadeSlideUp`: opacity 0→1, translateY(12px)→0
@@ -32,7 +32,7 @@ Añadir animaciones de entrada, tooltips interactivos, donut chart alternativo, 
 - Hover: `hover:shadow-md hover:-translate-y-[1px]`
 
 ## Tests (4 escenarios)
-1. `TS-ANIM-01` → StatsDashboard metric cards tienen animación (añadido a `StatsDashboard.test.tsx`)
-2. `TS-ANIM-02` → DonutChart renderiza conic-gradient correcto (NUEVO `DonutChart.test.tsx`)
-3. `TS-ANIM-03` → Toggle button cambia vista (añadido a `StatsDashboard.test.tsx`)
-4. `TS-ANIM-04` → Tooltip en WeeklyChart aparece en hover (añadido a `StatsDashboard.test.tsx`)
+1. TS-ANIM-01 → StatsDashboard metric cards tienen animación
+2. TS-ANIM-02 → DonutChart renderiza conic-gradient correcto
+3. TS-ANIM-03 → Toggle button cambia vista
+4. TS-ANIM-04 → Tooltip en WeeklyChart aparece en hover
