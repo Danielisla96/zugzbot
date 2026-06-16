@@ -1,7 +1,7 @@
 ---
 description: Despliega el sistema localmente usando Docker y limpia contenedores existentes
 mode: subagent
-model: deepseek/deepseek-v4-flash
+model: google/gemini-3.5-flash
 temperature: 0.1
 tools:
   write: true

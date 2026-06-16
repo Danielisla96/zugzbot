@@ -1,7 +1,7 @@
 ---
 description: Redacta y valida los contratos de especificación en formato JSON/OpenAPI
 mode: subagent
-model: deepseek/deepseek-v4-flash
+model: google/gemini-3.5-flash
 temperature: 0.1
 tools:
   write: true

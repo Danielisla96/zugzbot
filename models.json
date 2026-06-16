@@ -1,8 +1,8 @@
 {
-  "global": "deepseek/deepseek-v4-flash",
+  "global": "google/gemini-3.5-flash",
   "sdd-orchestrator": "",
   "sdd-spec-writer": "",
-  "sdd-coder": "",
+  "sdd-coder": "google/gemini-2.5-pro",
   "sdd-tester": "",
   "sdd-deployer": ""
 }
