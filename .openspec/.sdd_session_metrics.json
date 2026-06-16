@@ -2,25 +2,31 @@
   "contractName": "2026-06-16__00-35-00_keyboard-shortcuts-quick-actions",
   "sessionId": "ses_1314a0b2dffeCtmEA4IBX44eI6",
   "startedAt": "2026-06-16T04:35:00.826Z",
-  "lastUpdatedAt": "2026-06-16T04:37:08.595Z",
+  "lastUpdatedAt": "2026-06-16T04:40:27.847Z",
   "totals": {
-    "cost": 0.022685465600000006,
-    "tokensIn": 90992,
-    "tokensOutput": 17426,
-    "messages": 57
+    "cost": 0.04403058240000002,
+    "tokensIn": 150236,
+    "tokensOutput": 30046,
+    "messages": 132
   },
   "byAgent": {
     "sdd-orchestrator": {
-      "cost": 0.005323471999999999,
-      "tokensIn": 23280,
-      "tokensOutput": 3756,
-      "messages": 12
+      "cost": 0.011184342399999998,
+      "tokensIn": 38296,
+      "tokensOutput": 8956,
+      "messages": 33
     },
     "sdd-spec-writer": {
       "cost": 0.0173619936,
       "tokensIn": 67712,
       "tokensOutput": 13670,
       "messages": 45
+    },
+    "sdd-coder": {
+      "cost": 0.015484246399999999,
+      "tokensIn": 44228,
+      "tokensOutput": 7420,
+      "messages": 54
     }
   }
 }

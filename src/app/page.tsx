@@ -4,6 +4,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { NotesList } from "@/components/blocks/NotesList";
 import { NoteEditor } from "@/components/blocks/NoteEditor";
 import { useToast } from "@/hooks/useToast";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import type { Note, SortBy } from "@/types";
 
 const STORAGE_KEY = "notas-app";
@@ -32,6 +33,7 @@ export default function Home() {
   const [_deletedNotes, setDeletedNotes] = useState<Note[]>([]);
   const deleteTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const { toasts, addToast, removeToast } = useToast();
+  const activeNoteId = editingNote?.id ?? null;
 
   useEffect(() => {
     setNotes(loadNotes());
@@ -52,6 +54,16 @@ export default function Home() {
   const handleCreateNew = useCallback(() => {
     setEditingNote(null);
     setIsEditorOpen(true);
+  }, []);
+
+  const handleCloseEditor = useCallback(() => {
+    setIsEditorOpen(false);
+    setEditingNote(null);
+  }, []);
+
+  const handleSearchFocus = useCallback(() => {
+    const searchInput = document.querySelector<HTMLInputElement>('input[type="text"]');
+    searchInput?.focus();
   }, []);
 
   const handleEdit = useCallback((note: Note) => {
@@ -135,6 +147,17 @@ export default function Home() {
     });
   }, [addToast]);
 
+  useKeyboardShortcuts(
+    {
+      onCreateNew: handleCreateNew,
+      onCloseEditor: handleCloseEditor,
+      onDeleteNote: handleDelete,
+      onSearchFocus: handleSearchFocus,
+    },
+    isEditorOpen,
+    activeNoteId
+  );
+
   return (
     <AppLayout
       notesCount={notes.length}
@@ -157,10 +180,7 @@ export default function Home() {
       <NoteEditor
         note={editingNote}
         isOpen={isEditorOpen}
-        onClose={() => {
-          setIsEditorOpen(false);
-          setEditingNote(null);
-        }}
+        onClose={handleCloseEditor}
         onSave={handleSave}
       />
     </AppLayout>
