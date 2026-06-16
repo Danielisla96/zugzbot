@@ -59,6 +59,14 @@ function ToastItem({
     >
       <Icon className="size-4 shrink-0" />
       <span className="text-sm flex-1">{toast.message}</span>
+      {toast.action && (
+        <button
+          onClick={() => { toast.action!.onClick(); handleDismiss(); }}
+          className="text-xs font-medium underline underline-offset-2 hover:text-white/80 shrink-0 ml-auto"
+        >
+          {toast.action.label}
+        </button>
+      )}
       <Button
         variant="ghost"
         size="icon"

@@ -1,30 +1,7 @@
-import { z } from "zod"
+import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
 import { execSync, spawn } from "child_process"
-
-// Inlined `tool` wrapper from @opencode-ai/plugin (it's just an identity
-// function that exposes zod as `schema`). This avoids the package's
-// "exports" field that only defines the `import` condition (which breaks
-// CJS resolution in some test environments).
-type ToolFactory = {
-  <Args extends z.ZodRawShape>(input: {
-    description: string
-    args: Args
-    execute: (args: z.infer<z.ZodObject<Args>>, context: any) => Promise<any>
-  }): {
-    description: string
-    args: Args
-    execute: (args: z.infer<z.ZodObject<Args>>, context: any) => Promise<any>
-  }
-  schema: typeof z
-}
-const tool = (<Args extends z.ZodRawShape>(input: {
-  description: string
-  args: Args
-  execute: (args: z.infer<z.ZodObject<Args>>, context: any) => Promise<any>
-}) => input) as ToolFactory
-tool.schema = z
 
 
 // Helper to resolve state path

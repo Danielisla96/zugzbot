@@ -25,7 +25,8 @@
     "./.opencode/rules/sdd-global.md"
   ],
   "plugin": [
-    "opencode-dynamic-context-pruning"
+    "opencode-dynamic-context-pruning",
+    "opencode-notificator"
   ],
   "mcp": {
     "oh-my-design": {

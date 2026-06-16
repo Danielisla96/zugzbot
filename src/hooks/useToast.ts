@@ -6,6 +6,7 @@ export interface Toast {
   message: string;
   type: "success" | "info" | "destructive";
   createdAt: number;
+  action?: { label: string; onClick: () => void };
 }
 
 export type SortBy = "newest" | "oldest" | "a-z" | "favorites-first";
@@ -30,9 +31,9 @@ export function useToast() {
   }, []);
 
   const addToast = useCallback(
-    (message: string, type: Toast["type"] = "info"): string => {
+    (message: string, type: Toast["type"] = "info", action?: { label: string; onClick: () => void }): string => {
       const id = crypto.randomUUID();
-      sharedToasts = [...sharedToasts, { id, message, type, createdAt: Date.now() }];
+      sharedToasts = [...sharedToasts, { id, message, type, createdAt: Date.now(), action }];
       notifyListeners();
       return id;
     },

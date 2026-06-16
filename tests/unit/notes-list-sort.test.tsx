@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NotesList } from "@/components/blocks/NotesList";
-import type { Note, SortBy } from "@/types";
+import type { Note } from "@/types";
 
 // Mock lucide-react icons
 vi.mock("lucide-react", () => ({

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { NotesList } from "@/components/blocks/NotesList";
 import { NoteEditor } from "@/components/blocks/NoteEditor";
@@ -29,6 +29,8 @@ export default function Home() {
   const [loaded, setLoaded] = useState(false);
   const [sortBy, setSortBy] = useState<SortBy>("newest");
   const [filteredCount, setFilteredCount] = useState(0);
+  const [_deletedNotes, setDeletedNotes] = useState<Note[]>([]);
+  const deleteTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const { toasts, addToast, removeToast } = useToast();
 
   useEffect(() => {
@@ -39,6 +41,13 @@ export default function Home() {
   useEffect(() => {
     if (loaded) saveNotes(notes);
   }, [notes, loaded]);
+
+  useEffect(() => {
+    return () => {
+      deleteTimeoutsRef.current.forEach((timeout) => clearTimeout(timeout));
+      deleteTimeoutsRef.current.clear();
+    };
+  }, []);
 
   const handleCreateNew = useCallback(() => {
     setEditingNote(null);
@@ -75,12 +84,35 @@ export default function Home() {
     [addToast]
   );
 
-  const handleDelete = useCallback((id: string) => {
-    if (window.confirm("¿Eliminar esta nota?")) {
-      setNotes((prev) => prev.filter((n) => n.id !== id));
-      addToast("Nota eliminada", "destructive");
+  const restoreNote = useCallback((note: Note) => {
+    setDeletedNotes((prev) => prev.filter((n) => n.id !== note.id));
+    setNotes((prev) => [note, ...prev]);
+    const timeout = deleteTimeoutsRef.current.get(note.id);
+    if (timeout) {
+      clearTimeout(timeout);
+      deleteTimeoutsRef.current.delete(note.id);
     }
+    addToast("Nota restaurada", "success");
   }, [addToast]);
+
+  const handleDelete = useCallback((id: string) => {
+    const noteToDelete = notes.find((n) => n.id === id);
+    if (!noteToDelete) return;
+
+    setDeletedNotes((prev) => [...prev, noteToDelete]);
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+
+    addToast("Nota eliminada", "info", {
+      label: "Deshacer",
+      onClick: () => restoreNote(noteToDelete),
+    });
+
+    const timeout = setTimeout(() => {
+      setDeletedNotes((prev) => prev.filter((n) => n.id !== id));
+      deleteTimeoutsRef.current.delete(id);
+    }, 5000);
+    deleteTimeoutsRef.current.set(id, timeout);
+  }, [notes, addToast, restoreNote]);
 
   const handleToggleFavorite = useCallback((id: string) => {
     setNotes((prev) => {

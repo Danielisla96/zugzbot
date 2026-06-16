@@ -2,25 +2,31 @@
   "contractName": "2026-06-15__23-37-28_undo-delete-toast",
   "sessionId": "ses_1318e6129ffeBwHbsFtyLErJKv",
   "startedAt": "2026-06-16T03:37:28.907Z",
-  "lastUpdatedAt": "2026-06-16T03:39:43.973Z",
+  "lastUpdatedAt": "2026-06-16T03:42:30.710Z",
   "totals": {
-    "cost": 0.023422727999999997,
-    "tokensIn": 87218,
-    "tokensOutput": 14082,
-    "messages": 51
+    "cost": 0.038874113599999996,
+    "tokensIn": 119858,
+    "tokensOutput": 27484,
+    "messages": 126
   },
   "byAgent": {
     "sdd-orchestrator": {
-      "cost": 0.0016304736000000001,
-      "tokensIn": 1248,
-      "tokensOutput": 2072,
-      "messages": 6
+      "cost": 0.0065285920000000015,
+      "tokensIn": 6208,
+      "tokensOutput": 5962,
+      "messages": 27
     },
     "sdd-spec-writer": {
       "cost": 0.021792254399999992,
       "tokensIn": 85970,
       "tokensOutput": 12010,
       "messages": 45
+    },
+    "sdd-coder": {
+      "cost": 0.010553267199999997,
+      "tokensIn": 27680,
+      "tokensOutput": 9512,
+      "messages": 54
     }
   }
 }

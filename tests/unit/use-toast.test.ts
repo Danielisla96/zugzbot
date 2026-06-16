@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 
 // NOTE: This file tests the useToast hook (TS-01, TS-02).
@@ -12,12 +12,6 @@ interface Toast {
   message: string;
   type: "success" | "info" | "destructive";
   createdAt: number;
-}
-
-interface UseToastReturn {
-  toasts: Toast[];
-  addToast: (message: string, type?: "success" | "info" | "destructive") => string;
-  removeToast: (id: string) => void;
 }
 
 // Import mock — the real hook is implemented by the coder.
