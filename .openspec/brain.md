@@ -16,3 +16,4 @@
 - Radius: 4px botones/inputs, 12px cards, 9999px badges
 - Dark mode: invertir paleta con warm-dark como fondo y warm-white como texto
 - Typography: Inter font con 4 pesos (400/500/600/700), tracking negativo en títulos
+- [2026-06-16]: Typography improvement: Replace Inter with Geist Sans/Mono (next/font/google) para jerarquía tipográfica Vercel. Variables CSS: --font-geist-sans y --font-geist-mono en @theme inline. Tracking negativo progresivo: -0.96px en card-title (24px), normal en body. Tres pesos: 400 (body), 500 (UI/interactive), 600 (headings). Layout.tsx debe importar Geist y Geist_Mono de next/font/google, NO Inter.
