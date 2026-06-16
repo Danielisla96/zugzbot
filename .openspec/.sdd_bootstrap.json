@@ -1,0 +1,35 @@
+{
+  "template": "nextjs-shadcn",
+  "version": "1.0.0",
+  "lastBootstrappedAt": "2026-06-16T02:14:44.160Z",
+  "packageManager": "npm",
+  "nodeVersion": "v20.18.1",
+  "filesCopied": [
+    "package.json",
+    "next.config.ts",
+    "tsconfig.json",
+    "eslint.config.mjs",
+    "vitest.config.ts",
+    "postcss.config.mjs",
+    "components.json",
+    "src/app/page.tsx",
+    "src/app/layout.tsx",
+    "src/app/globals.css",
+    "src/lib/utils.ts",
+    "src/components/theme-provider.tsx",
+    "src/test/setup.ts",
+    "public/.gitkeep"
+  ],
+  "filesSkipped": [],
+  "componentsInstalled": [
+    "button",
+    "input",
+    "card",
+    "textarea",
+    "dialog",
+    "badge",
+    "scroll-area"
+  ],
+  "installDuration": 29614,
+  "totalDuration": 34302
+}
