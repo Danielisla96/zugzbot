@@ -1,0 +1,28 @@
+{
+  "name": "zugzbot",
+  "version": "1.0.0",
+  "description": "Fácil instalador del arnés SDD de Zugzbot para proyectos OpenCode",
+  "type": "module",
+  "bin": {
+    "zugzbot": "./bin/init.js"
+  },
+  "files": [
+    "bin/",
+    ".opencode/",
+    "opencode.json",
+    "tui.json",
+    "utils/"
+  ],
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": [
+    "opencode",
+    "sdd",
+    "harness",
+    "zugzbot",
+    "cli"
+  ],
+  "author": "Daniel Isla",
+  "license": "MIT"
+}
