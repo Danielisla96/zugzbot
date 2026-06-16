@@ -1,7 +1,7 @@
 ---
 description: Implementa la lógica y la interfaz de usuario basándose estrictamente en los contratos aprobados
 mode: subagent
-model: google/gemini-2.5-pro
+model: deepseek/deepseek-v4-flash
 temperature: 0.35
 frequency_penalty: 0.5
 presence_penalty: 0.2

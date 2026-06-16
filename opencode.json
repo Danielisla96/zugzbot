@@ -33,7 +33,7 @@
         "./.opencode/oh-my-design/packages/mcp/dist/index.mjs"
       ],
       "enabled": true,
-      "purpose": "MCP oficial de Oh My Design para buscar, consultar y aplicar temas de dise\u00f1o (Toss, Stripe, Supabase, etc.)."
+      "purpose": "MCP oficial de Oh My Design para buscar, consultar y aplicar temas de diseño (Toss, Stripe, Supabase, etc.)."
     },
     "shadcn": {
       "type": "local",
@@ -44,7 +44,7 @@
         "mcp"
       ],
       "enabled": true,
-      "purpose": "Librer\u00eda UI objetivo. Usar para browse/search/install de componentes y blocks (dashboards, landings, auth, forms)."
+      "purpose": "Librería UI objetivo. Usar para browse/search/install de componentes y blocks (dashboards, landings, auth, forms)."
     },
     "context7": {
       "type": "local",
@@ -66,7 +66,7 @@
         "--isolated"
       ],
       "enabled": true,
-      "purpose": "Playwright MCP. Artefactos (screenshots, traces, videos, downloads) van a .openspec/.playwright/<call-id>/. Para evidencia por sesi\u00f3n SDD, promueve los artefactos relevantes a .openspec/specs/<activeContract>/playwright/ con .opencode/tools/save-playwright-artifacts.sh. --isolated evita ensuciar el perfil del browser en disco."
+      "purpose": "Playwright MCP. Artefactos (screenshots, traces, videos, downloads) van a .openspec/.playwright/<call-id>/. Para evidencia por sesión SDD, promueve los artefactos relevantes a .openspec/specs/<activeContract>/playwright/ con .opencode/tools/save-playwright-artifacts.sh. --isolated evita ensuciar el perfil del browser en disco."
     },
     "next-devtools": {
       "type": "local",
@@ -79,7 +79,7 @@
       "environment": {
         "NEXT_TELEMETRY_DISABLED": "1"
       },
-      "purpose": "Toolchain oficial Vercel para Next.js 16. Provee init, nextjs_docs, nextjs_index/nextjs_call (errores, logs, rutas, Server Actions en runtime), browser_eval, upgrade_nextjs_16 y enable_cache_components. Complementa context7 (docs gen\u00e9rico) con docs y runtime espec\u00edficos de Next 16 (dev server expone /_next/mcp). Telemetr\u00eda desactivada expl\u00edcitamente. **DESHABILITADO por defecto** \u2014 solo activar on-demand cuando un subagente reporte un error espec\u00edfico de Next 16 que requiera docs oficiales. La raz\u00f3n: el tool `init` inyecta 1000+ palabras de 'FORGET ALL PRIOR KNOWLEDGE' en el contexto del coder (~8K tokens de reasoning desperdiciado en sesiones normales)."
+      "purpose": "Toolchain oficial Vercel para Next.js 16. Provee init, nextjs_docs, nextjs_index/nextjs_call (errores, logs, rutas, Server Actions en runtime), browser_eval, upgrade_nextjs_16 y enable_cache_components. Complementa context7 (docs genérico) con docs y runtime específicos de Next 16 (dev server expone /_next/mcp). Telemetría desactivada explícitamente. **DESHABILITADO por defecto** — solo activar on-demand cuando un subagente reporte un error específico de Next 16 que requiera docs oficiales. La razón: el tool `init` inyecta 1000+ palabras de 'FORGET ALL PRIOR KNOWLEDGE' en el contexto del coder (~8K tokens de reasoning desperdiciado en sesiones normales)."
     },
     "lucide-icons": {
       "type": "local",
@@ -90,14 +90,14 @@
         "--stdio"
       ],
       "enabled": true,
-      "purpose": "Permite buscar, filtrar y obtener ejemplos de uso JSX de m\u00e1s de 1,500 iconos de Lucide React de forma exacta mediante herramientas del MCP."
+      "purpose": "Permite buscar, filtrar y obtener ejemplos de uso JSX de más de 1,500 iconos de Lucide React de forma exacta mediante herramientas del MCP."
     }
   },
   "agent": {
     "sdd-orchestrator": {
       "description": "Coordinador principal del flujo SDD y del stack cerrado",
       "mode": "primary",
-      "model": "google/gemini-3.5-flash",
+      "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./.opencode/rules/sdd-global.md}\n\n{file:./.opencode/agents/sdd-orchestrator.md}",
       "permission": {
         "*": "allow",
@@ -120,7 +120,7 @@
       "description": "Redacta y valida contratos OpenAPI e interfaces en specs/",
       "mode": "subagent",
       "hidden": true,
-      "model": "google/gemini-3.5-flash",
+      "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./.opencode/rules/sdd-global.md}\n\n{file:./.opencode/agents/sdd-spec-writer.md}",
       "permission": {
         "*": "allow",
@@ -128,11 +128,11 @@
       }
     },
     "sdd-coder": {
-      "description": "Implementa c\u00f3digo ajust\u00e1ndose estrictamente a los contratos en specs/",
+      "description": "Implementa código ajustándose estrictamente a los contratos en specs/",
       "mode": "subagent",
       "hidden": true,
       "steps": 10,
-      "model": "google/gemini-2.5-pro",
+      "model": "deepseek/deepseek-v4-flash",
       "temperature": 0.35,
       "frequency_penalty": 0.5,
       "presence_penalty": 0.2,
@@ -159,11 +159,11 @@
       }
     },
     "sdd-tester": {
-      "description": "Dise\u00f1a y corre pruebas unitarias, integraci\u00f3n y visuales (Playwright)",
+      "description": "Diseña y corre pruebas unitarias, integración y visuales (Playwright)",
       "mode": "subagent",
       "hidden": true,
       "steps": 15,
-      "model": "google/gemini-3.5-flash",
+      "model": "deepseek/deepseek-v4-flash",
       "temperature": 0.35,
       "frequency_penalty": 0.5,
       "presence_penalty": 0.2,
@@ -193,7 +193,7 @@
       "description": "Limpia Docker y realiza el despliegue local del sistema",
       "mode": "subagent",
       "hidden": true,
-      "model": "google/gemini-3.5-flash",
+      "model": "deepseek/deepseek-v4-flash",
       "prompt": "{file:./.opencode/agents/sdd-deployer.md}",
       "permission": {
         "*": "allow"

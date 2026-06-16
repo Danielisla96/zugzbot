@@ -1,7 +1,7 @@
 ---
 description: Diseña y ejecuta pruebas automatizadas (unit, integration, visual) para validar el cumplimiento de contratos
 mode: subagent
-model: google/gemini-3.5-flash
+model: deepseek/deepseek-v4-flash
 temperature: 0.35
 frequency_penalty: 0.5
 presence_penalty: 0.2
