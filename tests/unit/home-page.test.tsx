@@ -38,6 +38,10 @@ vi.mock("next-themes", () => ({
 vi.mock("@/components/ui/dialog", () => ({
   Dialog: ({ open, children }: any) =>
     open ? <div role="dialog">{children}</div> : null,
+  DialogTrigger: ({ children, render, ..._props }: any) => {
+    if (render) return <>{render}</>;
+    return <div>{children}</div>;
+  },
   DialogContent: ({ children }: any) => (
     <div data-testid="dialog-content">{children}</div>
   ),

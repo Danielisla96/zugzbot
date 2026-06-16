@@ -161,6 +161,7 @@ export default function Home() {
 
   return (
     <AppLayout
+      notes={notes}
       notesCount={notes.length}
       filteredNotesCount={filteredCount}
       searchActive={filteredCount !== notes.length}
