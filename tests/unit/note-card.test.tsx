@@ -8,6 +8,10 @@ import type { Note } from "@/types";
 vi.mock("lucide-react", () => ({
   Star: () => <div data-testid="icon-star" />,
   Trash2: () => <div data-testid="icon-trash" />,
+  Clock: () => <div data-testid="icon-clock" />,
+  FileText: () => <div data-testid="icon-filetext" />,
+  Hash: () => <div data-testid="icon-hash" />,
+  Tag: () => <div data-testid="icon-tag" />,
 }));
 
 // Mock next-themes (needed by NoteCard → Card →... but not directly)

@@ -14,6 +14,9 @@ vi.mock("lucide-react", () => ({
   Calendar: () => <div data-testid="icon-calendar" />,
   ArrowUpAZ: () => <div data-testid="icon-arrow-up-az" />,
   FileText: () => <div data-testid="icon-filetext" />,
+  Clock: () => <div data-testid="icon-clock" />,
+  Hash: () => <div data-testid="icon-hash" />,
+  Tag: () => <div data-testid="icon-tag" />,
 }));
 
 describe("NotesList Sort (Contract Scenarios TS-04, TS-05)", () => {

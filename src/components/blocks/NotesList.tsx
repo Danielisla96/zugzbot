@@ -80,7 +80,7 @@ export function NotesList({ notes, onEdit, onDelete, onToggleFavorite, onCreateN
           No se encontraron notas para &ldquo;{searchQuery}&rdquo;
         </div>
       ) : (
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {sorted.map((note) => (
             <NoteCard
               key={note.id}

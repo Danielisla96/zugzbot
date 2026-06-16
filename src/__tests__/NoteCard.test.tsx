@@ -76,26 +76,15 @@ describe("NoteCard", () => {
       />
     );
 
-    // Find the Trash2 button (destructive button inside the card)
+    // Find the delete button by its aria-label
     const deleteButton = screen.getByRole("button", { name: /eliminar/i });
-    // Use more generic selector — trash icon button
-    const buttons = document.querySelectorAll("button");
-    // The delete button is the one with a trash icon — typically second button or has destructive class
-    const trashBtn = Array.from(buttons).find(
-      (btn) =>
-        btn.innerHTML.includes("Trash2") ||
-        btn.innerHTML.includes("trash") ||
-        btn.className.includes("destructive")
-    );
-    expect(trashBtn).toBeInTheDocument();
+    expect(deleteButton).toBeInTheDocument();
 
-    if (trashBtn) {
-      fireEvent.click(trashBtn);
-      expect(onDelete).toHaveBeenCalledTimes(1);
-      expect(onDelete).toHaveBeenCalledWith("note-1");
-      // onEdit should NOT have been called (stopPropagation)
-      expect(onEdit).toHaveBeenCalledTimes(0);
-    }
+    fireEvent.click(deleteButton);
+    expect(onDelete).toHaveBeenCalledTimes(1);
+    expect(onDelete).toHaveBeenCalledWith("note-1");
+    // onEdit should NOT have been called (stopPropagation)
+    expect(onEdit).toHaveBeenCalledTimes(0);
   });
 
   it("TS-04: Star favorito siempre visible sin hover, click llama onToggleFavorite", () => {
@@ -160,7 +149,7 @@ describe("NoteCard", () => {
       />
     );
 
-    // 8 words → the "8" should appear in the metadata
-    expect(screen.getByText("8")).toBeInTheDocument();
+    // 9 words → the "9" should appear in the metadata
+    expect(screen.getByText("9")).toBeInTheDocument();
   });
 });
