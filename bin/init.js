@@ -15,10 +15,22 @@ const yellow = '\x1b[33m';
 const red = '\x1b[31m';
 const bold = '\x1b[1m';
 
-console.log(`\n${bold}${cyan}🤖 Zugzbot Harness Installer${reset}\n`);
-
 const pkgRoot = join(__dirname, '..');
 const targetDir = process.cwd();
+
+const banner = `
+${bold}${cyan}███████╗██╗   ██╗ ██████╗ ███████╗
+╚══███╔╝██║   ██║██╔════╝ ╚══███╔╝
+  ███╔╝ ██║   ██║██║  ███╗  ███╔╝ 
+ ███╔╝  ██║   ██║██║   ██║ ███╔╝  
+███████╗╚██████╔╝╚██████╔╝███████╗
+╚══════╝ ╚═════╝  ╚═════╝ ╚══════╝${reset}
+${bold}${yellow}      Harness Installer v1.0.7${reset}\n`;
+
+console.log(banner);
+console.log(`${bold}${cyan}🔍 Detectando entorno de trabajo...${reset}`);
+console.log(`  ${green}✔ Directorio destino identificado: ${targetDir}${reset}\n`);
+console.log(`${bold}${cyan}📦 Instalando arnés de desarrollo SDD...${reset}`);
 
 // Define items to copy
 const itemsToCopy = [
@@ -49,11 +61,16 @@ for (const item of itemsToCopy) {
 
   const relativeDest = relative(targetDir, item.dest);
   
+  if (item.src === item.dest) {
+    copiedCount++;
+    continue;
+  }
+  
   try {
     if (fs.existsSync(item.dest)) {
-      console.log(`${yellow}⚠️  Updating existing: ${relativeDest}...${reset}`);
+      console.log(`  ${yellow}✔ Updated existing: ${relativeDest}${reset}`);
     } else {
-      console.log(`${green}📦 Copying: ${relativeDest}...${reset}`);
+      console.log(`  ${green}✔ Copied: ${relativeDest}${reset}`);
     }
 
     if (item.type === 'dir') {
@@ -89,8 +106,8 @@ try {
 }
 
 if (copiedCount > 0) {
-  console.log(`\n${bold}${green}✨ Zugzbot Harness successfully installed/updated!${reset}`);
-  console.log(`Run ${cyan}opencode${reset} or your configured command to start building.\n`);
+  console.log(`\n${bold}${green}✨ ¡Arnés de Zugzbot instalado y actualizado con éxito!${reset}`);
+  console.log(`🚀 Ejecuta ${bold}${cyan}opencode${reset} para iniciar tu sesión de desarrollo autónomo.\n`);
 } else {
   console.log(`\n${red}❌ No files were installed.${reset}\n`);
 }
