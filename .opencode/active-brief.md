@@ -1,54 +1,33 @@
-# Active Brief: keyboard-shortcuts-quick-actions (Iteration 3/3)
+# Contrato Activo: MarkdownTemplates (Iteración 1/3)
 
-## Project
-- Zugzbot-v2: Notes app (Next.js 16 + Shadcn UI + Tailwind v4 + localStorage)
-- Path: `/Users/wavesbyte/Documents/Repositorio Personal/zugzbot-v2`
-- Design: Linear.app (tokens already applied)
-- Current tests: 71 passing
-- Verification mode: console
+## Features
+1. **Modo Markdown en vista previa de notas**
+   - Instalar `react-markdown` + `remark-gfm`
+   - Crear `MarkdownRenderer` en `src/components/blocks/MarkdownRenderer.tsx` (content, className props)
+   - NoteCard: toggle botón (Eye icon) para alternar raw ↔ markdown preview
+   - NoteEditor: botón "vista previa" que muestra markdown renderizado
 
-## What to build
-**Hook `useKeyboardShortcuts`** at `src/hooks/useKeyboardShortcuts.ts`
+2. **Plantillas de notas al crear**
+   - Crear `src/lib/templates.ts` con 4 templates: Reunión 📋, Diario 📔, TODO List ✅, Idea 💡
+   - Crear `TemplateSelector` en `src/components/blocks/TemplateSelector.tsx` con grid de 4 cards
+   - NoteEditor modificado: mostrar TemplateSelector al crear nueva nota
 
-### Interface
-```typescript
-interface KeyboardShortcutHandlers {
-  onCreateNew: () => void;
-  onCloseEditor: () => void;
-  onDeleteNote: () => void;       // deletes active note (needs activeNoteId)
-  onSearchFocus: () => void;
-}
+## Diseño Linear.app
+- Primary: #5e6ad2, accent-hover: #828fff
+- Cards: bg-white dark:bg-white/[0.02], border border-border/50, rounded-[8px]
+- Hover: shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:-translate-y-[2px]
+- Typography: Inter, tracking-tight para headings
 
-function useKeyboardShortcuts(
-  handlers: KeyboardShortcutHandlers, 
-  isEditorOpen: boolean,
-  activeNoteId: string | null
-): void
-```
+## Tests creados (5 escenarios)
+1. `src/__tests__/MarkdownRenderer.test.tsx` - renderizado correcto de headings/bold/lists
+2. `src/__tests__/MarkdownRenderer.test.tsx` - XSS safety (no raw HTML)
+3. `src/__tests__/TemplateSelector.test.tsx` - 4 templates en grid + blank note
+4. `src/__tests__/NoteEditor.test.tsx` - template pre-fills title/content
+5. `src/__tests__/NoteCard.test.tsx` (TS-09 añadido) - toggle raw/markdown
 
-### Shortcuts
-- `n` (no input focus) → `handlers.onCreateNew()`
-- `Escape` (editor open) → `handlers.onCloseEditor()`
-- `Delete` (editor open, no input focus) → `handlers.onDeleteNote()`
-- `Cmd+F`/`Ctrl+F` → `handlers.onSearchFocus()`, `event.preventDefault()`
+## Dependencias nuevas
+- `react-markdown` + `remark-gfm` (instalar en package.json)
+- Shadcn: `tabs` component
 
-### Edge cases
-- Skip if `event.target` is `input`, `textarea`, or `[contenteditable]`
-- Skip Escape/Delete if `isEditorOpen === false`
-- For Delete: needs `activeNoteId` — if null, no-op
-- Platform detection: `navigator.platform.includes('Mac') ? e.metaKey : e.ctrlKey`
-- Cleanup: `useEffect` return removes `keydown` listener
-
-### File to modify
-- **Create**: `src/hooks/useKeyboardShortcuts.ts` (the hook)
-- **Modify**: `src/app/page.tsx` (integrate hook in Home component)
-- **Test file already exists**: `src/__tests__/useKeyboardShortcuts.test.ts` (6 tests, written by spec-writer)
-
-### Shadcn components
-- None needed (all already installed)
-
-### Lucide icons
-- None needed
-
-## Contract path
-`.openspec/specs/2026-06-16__00-35-00_keyboard-shortcuts-quick-actions/contract.json`
+## Iconos validados (lucide-react)
+FileCode, Eye, Edit, FileText, ClipboardList, BookOpen, CheckSquare, Lightbulb, Plus, Calendar

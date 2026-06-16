@@ -196,4 +196,33 @@ describe("NoteCard", () => {
     expect(pinIcon).toBeInTheDocument();
     expect(pinIcon!.className).toContain("fill");
   });
+
+  it("TS-09: toggle raw/markdown cambia la vista previa", () => {
+    const note = makeNote({
+      content: "## Título markdown\n\nTexto **bold** normal",
+    });
+
+    render(
+      <NoteCard
+        note={note}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+        onToggleFavorite={vi.fn()}
+      />
+    );
+
+    // By default, raw content should be visible (plain text with ## not rendered)
+    expect(screen.getByText(/## Título markdown/)).toBeInTheDocument();
+
+    // Find and click the markdown toggle button
+    const toggleButton = screen.getByRole("button", { name: /markdown|vista previa|render/i });
+    expect(toggleButton).toBeInTheDocument();
+    fireEvent.click(toggleButton);
+
+    // After clicking, raw text should no longer be visible; rendered markdown should appear
+    expect(screen.queryByText(/## Título markdown/)).not.toBeInTheDocument();
+
+    // "Título markdown" should appear as rendered heading text
+    expect(screen.getByText("Título markdown")).toBeInTheDocument();
+  });
 });

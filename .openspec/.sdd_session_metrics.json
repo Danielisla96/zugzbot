@@ -1,13 +1,26 @@
 {
   "contractName": "2026-06-16__08-54-51_markdown-templates",
-  "sessionId": "",
-  "startedAt": "",
-  "lastUpdatedAt": "",
+  "sessionId": "ses_12f8220d1ffe97uGERk5wf8sDN",
+  "startedAt": "2026-06-16T12:54:52.127Z",
+  "lastUpdatedAt": "2026-06-16T12:57:12.857Z",
   "totals": {
-    "cost": 0,
-    "tokensIn": 0,
-    "tokensOutput": 0,
-    "messages": 0
+    "cost": 0.028505892800000005,
+    "tokensIn": 114538,
+    "tokensOutput": 21146,
+    "messages": 66
   },
-  "byAgent": {}
+  "byAgent": {
+    "sdd-orchestrator": {
+      "cost": 0.0054367152,
+      "tokensIn": 18986,
+      "tokensOutput": 3950,
+      "messages": 15
+    },
+    "sdd-spec-writer": {
+      "cost": 0.0230691776,
+      "tokensIn": 95552,
+      "tokensOutput": 17196,
+      "messages": 51
+    }
+  }
 }
