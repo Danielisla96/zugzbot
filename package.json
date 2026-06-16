@@ -10,8 +10,7 @@
     "bin/",
     ".opencode/",
     "opencode.json",
-    "tui.json",
-    ".utils/"
+    "tui.json"
   ],
   "engines": {
     "node": ">=16.0.0"

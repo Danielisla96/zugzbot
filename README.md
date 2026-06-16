@@ -18,8 +18,7 @@ npx zugzbot
 
 ¡Eso es todo! El instalador automatizado copiará de forma no destructiva y fusionará los siguientes recursos en tu proyecto:
 
-*   📁 **`.opencode/`** — El núcleo del sistema: agentes, comandos, skills y herramientas personalizadas.
-*   📁 **`.utils/`** — Utilidades ocultas de desarrollo (como exportadores de sesiones y conmutadores de modelos).
+*   📁 **`.opencode/`** — El núcleo del sistema: agentes, comandos, skills y herramientas personalizadas (incluyendo el catálogo offline de **Oh My Design** con 246 marcas).
 *   ⚙️ **`opencode.json`** — La configuración maestra de seguridad, variables de entorno, plugins y servidores MCP de tu bot.
 *   🖥️ **`tui.json`** — Configuración personalizada para la interfaz interactiva de terminal (TUI).
 
