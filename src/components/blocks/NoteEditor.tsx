@@ -47,13 +47,14 @@ export function NoteEditor({ note, isOpen, onClose, onSave }: NoteEditorProps) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{note ? "Editar nota" : "Nueva nota"}</DialogTitle>
+          <DialogTitle className="tracking-tight">{note ? "Editar nota" : "Nueva nota"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <Input
             placeholder="Título de la nota"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            className="text-xl font-semibold tracking-tight bg-transparent border-none outline-none w-full"
             autoFocus
           />
           <Textarea
@@ -61,7 +62,7 @@ export function NoteEditor({ note, isOpen, onClose, onSave }: NoteEditorProps) {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={8}
-            className="resize-none"
+            className="text-base bg-transparent border-none outline-none resize-none w-full min-h-[200px]"
           />
         </div>
         <DialogFooter>

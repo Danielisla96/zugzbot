@@ -19,11 +19,11 @@ export function NoteCard({ note, onEdit, onDelete, onToggleFavorite }: NoteCardP
 
   return (
     <Card
-      className="group cursor-pointer transition-shadow hover:shadow-md p-4 border border-border/50 rounded-xl"
+      className="group cursor-pointer transition-shadow p-4 border border-border/50 rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.08)] hover:shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_2px_2px_rgba(0,0,0,0.04)]"
       onClick={() => onEdit(note)}
     >
       <div className="flex items-start justify-between gap-2">
-        <h3 className="font-semibold text-base truncate flex-1">{note.title || "Sin título"}</h3>
+        <h3 className="font-semibold text-lg tracking-tight line-clamp-2 flex-1">{note.title || "Sin título"}</h3>
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
           <Button variant="ghost" size="icon" className="size-8" onClick={() => onToggleFavorite(note.id)}>
             <Star className={`size-4 ${note.favorite ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`} />
@@ -33,7 +33,7 @@ export function NoteCard({ note, onEdit, onDelete, onToggleFavorite }: NoteCardP
           </Button>
         </div>
       </div>
-      <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+      <p className="text-sm text-muted-foreground mt-2 line-clamp-3">
         {note.content || "Sin contenido"}
       </p>
       <p className="text-xs text-muted-foreground/60 mt-3">{formatDate(note.updatedAt)}</p>

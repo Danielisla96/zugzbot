@@ -4,7 +4,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <header className="flex items-center justify-between px-4 py-3 md:px-8 md:py-4 border-b border-border/50">
-        <h1 className="font-bold text-xl md:text-2xl tracking-tight text-foreground">
+        <h1 className="font-semibold text-xl md:text-2xl tracking-tight text-foreground">
           NOTAS
         </h1>
         <ThemeToggle />

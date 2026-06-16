@@ -130,26 +130,6 @@
   }
 }
 
-/* Brand tokens (injected by sdd_apply_brand_tokens) */
-@theme inline {
-  --color-brand-ink: rgba(0,0,0,0.95);
-  --color-brand-canvas: #ffffff;
-  --color-brand-primary: #0075de;
-  --color-brand-primary-active: #005bab;
-  --color-brand-warm-white: #f6f5f4;
-  --color-brand-warm-dark: #31302e;
-  --color-brand-warm-gray-500: #615d59;
-  --color-brand-warm-gray-300: #a39e98;
-  --color-brand-border: #dddddd;
-  --color-brand-focus-ring: #097fe8;
-  --color-brand-badge-bg: #f2f9ff;
-  --color-brand-badge-fg: #097fe8;
-  --radius-sm: 4px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-full: 9999px;
-}
-
 /* Notion dark mode overrides */
 .dark {
   --color-brand-canvas: #1a1a1a;
@@ -159,4 +139,20 @@
   --color-brand-warm-gray-300: #808080;
   --color-brand-ink: rgba(255,255,255,0.95);
   --color-brand-border: rgba(255,255,255,0.1);
+}
+
+/* Brand tokens (injected by sdd_apply_brand_tokens) */
+@theme inline {
+  --color-brand-primary: #171717;
+  --color-brand-canvas: #ffffff;
+  --color-brand-body: #4d4d4d;
+  --color-brand-muted: #666666;
+  --color-brand-border: #ebebeb;
+  --color-brand-surface-tint: #fafafa;
+  --font-sans: Geist;
+  --font-heading: Geist;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
 }

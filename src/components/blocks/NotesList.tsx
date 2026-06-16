@@ -42,7 +42,7 @@ export function NotesList({ notes, onEdit, onDelete, onToggleFavorite, onCreateN
             placeholder="Buscar notas..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
+            className="pl-9 text-base"
           />
         </div>
         <Button onClick={onCreateNew} className="bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-active)] text-white shrink-0">

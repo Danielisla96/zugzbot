@@ -300,7 +300,22 @@ export const LoopEnforcerPlugin: Plugin = async ({ project, client, $, directory
     // 5. Intercept first loop message to extract target iterations mechanically
     "chat.message": async (input, output) => {
       try {
-        const text = output.message?.content || ""
+        let text = ""
+        let textPart: any = null
+
+        // Check parts first (standard OpenCode message text structure)
+        if (output.parts && Array.isArray(output.parts)) {
+          textPart = output.parts.find((p: any) => p && p.type === "text")
+          if (textPart) {
+            text = textPart.text || ""
+          }
+        }
+
+        // Fallback to output.message.content if parts are empty or not populated
+        if (!text && output.message && typeof (output.message as any).content === "string") {
+          text = (output.message as any).content
+        }
+
         if (text && typeof text === "string" && text.includes("MODO AUTOPILOTO (/loop) ACTIVADO")) {
           const match = text.match(/>\s*(\d+)\s+([\s\S]+)$/m)
           if (match) {
@@ -314,11 +329,18 @@ export const LoopEnforcerPlugin: Plugin = async ({ project, client, $, directory
               state.rollbackCount = 0
               writeState(state)
 
-              // Rewrite output.message.content to explicitly instruct the Orchestrator with the parsed value
-              output.message.content = text.replace(
+              // Rewrite the message text with the parsed confirmed value
+              const rewrittenText = text.replace(
                 />\s*(\d+)\s+([\s\S]+)$/m,
                 `> [SDD AUTOPILOT CONFIRMED: loopTargetIterations=${targetNum}] Petición del usuario: $2`
               )
+
+              // Update the text in the correct location
+              if (textPart) {
+                textPart.text = rewrittenText
+              } else if (output.message) {
+                (output.message as any).content = rewrittenText
+              }
 
               if (client?.tui?.showToast) {
                 await client.tui.showToast({

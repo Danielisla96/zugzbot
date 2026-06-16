@@ -2,12 +2,12 @@
   "contractName": "2026-06-15__23-04-04_typography-improvement",
   "sessionId": "ses_1319db94cffetEzU3DOoVzwrm2",
   "startedAt": "2026-06-16T03:04:04.281Z",
-  "lastUpdatedAt": "2026-06-16T03:05:38.993Z",
+  "lastUpdatedAt": "2026-06-16T03:07:59.613Z",
   "totals": {
-    "cost": 0.0119384048,
-    "tokensIn": 16086,
-    "tokensOutput": 16682,
-    "messages": 26
+    "cost": 0.0325998512,
+    "tokensIn": 97982,
+    "tokensOutput": 29690,
+    "messages": 71
   },
   "byAgent": {
     "sdd-spec-writer": {
@@ -17,10 +17,16 @@
       "messages": 20
     },
     "sdd-orchestrator": {
-      "cost": 0.0019307120000000002,
-      "tokensIn": 3826,
-      "tokensOutput": 2638,
-      "messages": 6
+      "cost": 0.0066302096,
+      "tokensIn": 16026,
+      "tokensOutput": 6658,
+      "messages": 21
+    },
+    "sdd-coder": {
+      "cost": 0.015961948799999997,
+      "tokensIn": 69696,
+      "tokensOutput": 8988,
+      "messages": 30
     }
   }
 }
