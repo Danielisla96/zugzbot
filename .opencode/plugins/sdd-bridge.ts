@@ -188,6 +188,24 @@ export const SddBridgePlugin: Plugin = async ({ project, client, $, directory, w
     writeMetrics(metrics)
   }
 
+  // Ensure .openspec/active-brief.md exists physically on load to prevent OpenCode startup crash on raw workspaces
+  const activeBriefPath = path.resolve(projectRoot, ".openspec/active-brief.md")
+  if (!fs.existsSync(activeBriefPath)) {
+    try {
+      const openspecDir = path.dirname(activeBriefPath)
+      if (!fs.existsSync(openspecDir)) {
+        fs.mkdirSync(openspecDir, { recursive: true })
+      }
+      fs.writeFileSync(
+        activeBriefPath,
+        "# SDD Active Brief\n\nNo hay ninguna sesión activa o el spec actual no ha sido iniciado.\n",
+        "utf8"
+      )
+    } catch (e) {
+      // best-effort
+    }
+  }
+
   // Ensure metrics file matches current contract on plugin load
   maybeResetMetrics()
 

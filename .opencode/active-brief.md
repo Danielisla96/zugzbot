@@ -1,30 +1,29 @@
-# Note Colors & Categories — Active Contract
+# StatsDashboard - Brief del Coder
 
-## Ubicación
-`.openspec/specs/2026-06-16__09-06-22_note-colors-categories/contract.json`
+## Path del contrato
+`.openspec/specs/2026-06-16__09-21-03_stats-dashboard/contract.json`
 
-## Cambios
-- **Type**: Añadir `NoteColor = "indigo" | "orange" | "green" | "red" | "purple" | "gray" | "none"` y campo `color?: NoteColor` en `Note`
-- **NUEVO**: `ColorPicker` (7 círculos de color estilo Linear.app, seleccionado con indigo ring)
-- **NUEVO**: `src/lib/colors.ts` (mapa NOTE_COLORS con label, dot, lightBg, hex)
-- **MOD**: `NoteEditor` — añadir ColorPicker, color state, onSave incluye color
-- **MOD**: `NoteCard` — border-left tint, badge, lightBg según note.color
-- **MOD**: `NotesList` — filtro por color tipo pills horizontal
+## Bootstrap
+- Template: nextjs-shadcn (ya bootstrapped)
+- Shadcn components a instalar: `progress` (el resto ya están: button, card, dialog, badge, scroll-area)
+- Lucide icons (10): BarChart3, FileText, AlignLeft, Type, Star, Pin, PieChart, Hash, Calendar, TrendingUp
+
+## Componentes a crear
+1. **src/lib/stats.ts** — `computeStats(notes): NoteStats` con totalNotes, totalWords (importar countWords de src/lib/countWords.ts), totalChars, favoritedCount, pinnedCount, colorDistribution (Record<NoteColor, number>), topHashtags (top 5 extraídos del content), createdToday, createdThisWeek. Helpers inline isToday/isThisWeek (NO hay date-fns).
+2. **src/components/blocks/StatsDashboard.tsx** — Grid de cards métricas estilo Linear (translúcido rgba(255,255,255,0.02), borde rgba(255,255,255,0.08), números 32px weight 510, etiquetas 13px muted #8a8f98). Layout: 2 cols móvil, 3-4 desktop. Incluye Progress bar para distribución de colores.
+3. **src/components/ui/StatsButton.tsx** — Botón con BarChart3 que abre Dialog de shadcn con StatsDashboard.
+
+## Modificaciones existentes
+- **AppLayout** — Añadir prop `notes: Note[]`, insertar `<StatsButton notes={notes} />` en header (entre NoteStats y ThemeToggle). Pasar notes desde HomePage.
 
 ## Diseño
-- **Marca**: Linear.app (indigo #5e6ad2, dark-mode-first, cards translúcidas)
-- **Tokens**: primary #5e6ad2, surface rgbefectos translúcidos, filter-pill estilo Linear
+- Linear.app: indigo primary #5e6ad2, fondo canvas #0f1011, surface #191a1b, cards rgba(255,255,255,0.02)
+- Modal/dialog estilo command palette: fondo #191a1b, radius 12px, overlay rgba(0,0,0,0.85)
 
-## Stack
-Next.js 16 + Shadcn UI + Tailwind v4 + localStorage
+## Tests
+- Crear tests: src/lib/stats.test.ts, src/__tests__/StatsDashboard.test.tsx, src/__tests__/StatsButton.test.tsx
+- Primero tests, luego implementación para que pasen
+- Nota: Note type NO tiene campo hashtags — extraer de content via regex
 
-## Tests (6 escenarios)
-1. `ColorPicker.test.tsx` — CLR-01 (renderiza 7 colores), CLR-02 (onChange al clickear)
-2. `NoteEditor.test.tsx` — CLR-03 (guarda con color), CLR-06 (inicializa desde nota existente)
-3. `NoteCard.test.tsx` — CLR-04 (indicador visual purple), CLR-04b (none no muestra)
-4. `NotesList.test.tsx` — CLR-05 (filtra por color), CLR-05b (Todas muestra todo)
-
-## Hints
-- shadcn componentes ya instalados: button, input, card, textarea, dialog, badge, scroll-area
-- Iconos validados: Circle, Slash, Filter, X
-- Bootstrap: nextjs-shadcn
+## PRIMERA ACCIÓN
+`sdd_bootstrap_status` → luego instalar progress shadcn component → luego crear archivos en orden: stats.ts → StatsDashboard.tsx → StatsButton.tsx → modificar AppLayout

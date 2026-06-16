@@ -504,21 +504,21 @@ export const get_initial_session_data = tool({
 
 // Tool: sdd_save_active_brief
 export const save_active_brief = tool({
-  description: "Guarda un resumen breve y estructurado del spec o contrato activo en .opencode/active-brief.md para que sirva de anclaje de contexto de sistema (System State Anchoring) para el subagente sdd-coder o sdd-tester.",
+  description: "Guarda un resumen breve y estructurado del spec o contrato activo en .openspec/active-brief.md para que sirva de anclaje de contexto de sistema (System State Anchoring) para el subagente sdd-coder o sdd-tester.",
   args: {
     brief: tool.schema.string().describe("Contenido en formato Markdown con el resumen del spec activo, componentes, diseño y dependencias.")
   },
   async execute(args, context) {
-    const root = context.worktree || context.directory || process.cwd()
-    const opencodeDir = path.resolve(root, ".opencode")
-    if (!fs.existsSync(opencodeDir)) {
-      fs.mkdirSync(opencodeDir, { recursive: true })
+    const root = context?.worktree || context?.directory || process.cwd()
+    const openspecDir = path.resolve(root, ".openspec")
+    if (!fs.existsSync(openspecDir)) {
+      fs.mkdirSync(openspecDir, { recursive: true })
     }
-    const briefPath = path.resolve(opencodeDir, "active-brief.md")
+    const briefPath = path.resolve(openspecDir, "active-brief.md")
     fs.writeFileSync(briefPath, args.brief, "utf8")
     return JSON.stringify({
       status: "SUCCESS",
-      message: `Brief de contexto de sistema guardado exitosamente en .opencode/active-brief.md`,
+      message: `Brief de contexto de sistema guardado exitosamente en .openspec/active-brief.md`,
       filePath: briefPath
     }, null, 2)
   }
