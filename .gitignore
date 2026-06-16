@@ -68,5 +68,5 @@ next-env.d.ts
 .playwright-mcp/
 export_ses_*
 package-lock.json
-.openspec/.*
+.openspec/
 .utils/

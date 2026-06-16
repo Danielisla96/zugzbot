@@ -27,11 +27,14 @@ const itemsToCopy = [
   { name: 'tui.json', src: join(pkgRoot, 'tui.json'), dest: join(targetDir, 'tui.json'), type: 'file' }
 ];
 
-// Helper to filter out node_modules and .git files
+// Helper to filter out node_modules and .git files relative to the package root
 const filterFunc = (srcPath) => {
-  const isIgnored = srcPath.includes('node_modules') || 
-                    srcPath.includes('.git') || 
-                    srcPath.includes('.openspec');
+  const relativeSrc = relative(pkgRoot, srcPath);
+  const isIgnored = relativeSrc.split(/[/\\]/).some(part => 
+    part === 'node_modules' || 
+    part === '.git' || 
+    part === '.openspec'
+  );
   return !isIgnored;
 };
 
