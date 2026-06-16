@@ -102,7 +102,13 @@
       "prompt": "{file:./.opencode/rules/sdd-global.md}\n\n{file:./.opencode/agents/sdd-orchestrator.md}",
       "permission": {
         "*": "allow",
-        "write": "deny",
+        "write": {
+          ".openspec/*": "allow",
+          ".openspec/**": "allow",
+          ".opencode/*": "allow",
+          ".opencode/**": "allow",
+          "*": "deny"
+        },
         "edit": "deny",
         "bash": "deny",
         "task": {
