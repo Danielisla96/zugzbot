@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { StatsButton } from "@/components/ui/StatsButton";
-import type { Note } from "@/types";
 
 vi.mock("lucide-react", () => ({
   BarChart3: () => <span data-testid="icon-barchart3">BC3</span>,

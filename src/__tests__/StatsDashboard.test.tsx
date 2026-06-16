@@ -49,6 +49,7 @@ describe("StatsDashboard", () => {
 
   it("renderiza con array vacío", () => {
     render(<StatsDashboard notes={[]} />);
-    expect(screen.getByText("0")).toBeDefined();
+    const zeros = screen.getAllByText("0");
+    expect(zeros.length).toBeGreaterThanOrEqual(4);
   });
 });
