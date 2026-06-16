@@ -85,6 +85,45 @@ Para evitar la pérdida de contexto entre turnos y agentes, el arnés implementa
 
 ---
 
+## 🎯 Configuración Rápida de Modelos de IA
+
+El arnés de Zugzbot incluye un sistema de asignación de modelos centralizado, ágil e interactivo. La configuración se almacena en el archivo `models.json` en la raíz de tu proyecto.
+
+### 1. El Archivo `models.json`
+El formato de este archivo es muy simple e intuitivo:
+```json
+{
+  "global": "deepseek/deepseek-v4-flash",
+  "sdd-orchestrator": "",
+  "sdd-spec-writer": "",
+  "sdd-coder": "google/gemini-2.5-pro",
+  "sdd-tester": "",
+  "sdd-deployer": ""
+}
+```
+*   **Modelo Global**: Define el modelo predeterminado (`"global"`) que usarán los agentes por defecto.
+*   **Heredar del Global**: Si dejas el modelo de un agente vacío (`""`), el sistema le asignará automáticamente el modelo `"global"`.
+*   **Personalización**: Si quieres que un agente en particular use un modelo diferente (ej. un modelo de razonamiento o de programación más potente), escribe el identificador del modelo directamente en su clave.
+
+### 2. Sincronización Automática
+¡No tienes que hacer nada manual! Al abrir la interfaz de **OpenCode**, el plugin integrado detecta y lee de forma automática tu `models.json`, actualizando instantáneamente `opencode.json` y los markdown de tus agentes en disco con total transparencia.
+
+### 3. Interfaz Visual en Terminal (TUI)
+Para cambiar de modelos de forma cómoda y sin riesgo de cometer errores tipográficos en los identificadores de IA, puedes abrir la **interfaz visual interactiva** en tu terminal.
+
+Ejecuta el script sin argumentos:
+```bash
+python3 .utils/toggle_model.py
+```
+
+*   **Menú Principal**: Muévete con las flechas `[↑/↓]` y presiona `[Enter]` para editar el modelo global o el de un agente específico.
+*   **Selector con Buscador**: Dentro del selector de modelos, puedes empezar a escribir para filtrar la lista en tiempo real por palabra clave (ej. *"gemini"* o *"deepseek"*).
+*   **Guardar y Aplicar**: Selecciona `[✓ GUARDAR Y APLICAR CAMBIOS]` o pulsa la tecla `[G]` para persistir la configuración e inyectarla en todos tus agentes al instante.
+
+*Nota: Sigue siendo compatible con la CLI tradicional rápida. Por ejemplo, `python3 .utils/toggle_model.py google/gemini-3.5-flash` actualizará de inmediato tu modelo global en modo lote no interactivo.*
+
+---
+
 ## 🔄 Modo Autopiloto (/loop)
 
 El arnés de Zugzbot viene preparado de forma nativa para soportar el **Modo Autopiloto** mediante el comando `/loop` en OpenCode.

@@ -23,6 +23,8 @@ const targetDir = process.cwd();
 // Define items to copy
 const itemsToCopy = [
   { name: '.opencode', src: join(pkgRoot, '.opencode'), dest: join(targetDir, '.opencode'), type: 'dir' },
+  { name: '.utils', src: join(pkgRoot, '.utils'), dest: join(targetDir, '.utils'), type: 'dir' },
+  { name: 'models.json', src: join(pkgRoot, 'models.json'), dest: join(targetDir, 'models.json'), type: 'file' },
   { name: 'opencode.json', src: join(pkgRoot, 'opencode.json'), dest: join(targetDir, 'opencode.json'), type: 'file' },
   { name: 'tui.json', src: join(pkgRoot, 'tui.json'), dest: join(targetDir, 'tui.json'), type: 'file' }
 ];

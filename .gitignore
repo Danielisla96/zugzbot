@@ -69,4 +69,3 @@ next-env.d.ts
 export_ses_*
 package-lock.json
 .openspec/
-.utils/

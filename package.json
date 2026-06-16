@@ -9,6 +9,8 @@
   "files": [
     "bin/",
     ".opencode/",
+    ".utils/",
+    "models.json",
     "opencode.json",
     "tui.json"
   ],
