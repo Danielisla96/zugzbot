@@ -56,11 +56,14 @@ vi.mock('@radix-ui/react-switch', () => ({
 }));
 ```
 
-#### Mock de `crypto.randomUUID` (si ya existe en setup.ts, no duplicar)
+#### Mock de `crypto.randomUUID` (evitar warnings de llaves duplicadas en React)
 ```typescript
+let uuidCounter = 0;
 if (!globalThis.crypto) {
   Object.defineProperty(globalThis, 'crypto', {
-    value: { randomUUID: () => 'test-uuid-1234' }
+    value: { 
+      randomUUID: () => `test-uuid-${++uuidCounter}-${Math.random().toString(36).slice(2, 6)}` 
+    }
   });
 }
 ```

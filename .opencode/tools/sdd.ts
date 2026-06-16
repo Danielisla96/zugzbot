@@ -810,15 +810,17 @@ async function selectDesignHelper(brandId: string, context: any) {
       }
     }
 
-    // 2. Remove the legacy .openspec/DESIGN.md if it exists to enforce single canonical path
+    // 2. Overwrite .openspec/DESIGN.md so that opencode.json static references always resolve and agents get the active design guidelines
     const legacyDesign = path.join(targetDir, "DESIGN.md")
-    if (fs.existsSync(legacyDesign)) {
-      try { fs.unlinkSync(legacyDesign) } catch (e) { /* ignore */ }
+    try {
+      fs.copyFileSync(sourceDesign, legacyDesign)
+    } catch (e) {
+      /* ignore */
     }
 
     return JSON.stringify({
       status: "SUCCESS",
-      message: `Diseño "${brandId}" copiado a la ruta canónica .openspec/design-assets/${brandId}/ (legacy .openspec/DESIGN.md eliminado si existía)`,
+      message: `Diseño "${brandId}" copiado a la ruta canónica .openspec/design-assets/${brandId}/ y actualizado en .openspec/DESIGN.md`,
       copiedFiles,
       designAssetsDir: path.relative(root, targetBrandDir),
       canonicalDesignPath: path.relative(root, path.join(targetBrandDir, "DESIGN.md")),

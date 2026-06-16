@@ -99,7 +99,7 @@
       "description": "Coordinador principal del flujo SDD y del stack cerrado",
       "mode": "primary",
       "model": "deepseek/deepseek-v4-flash",
-      "prompt": "{file:./.opencode/rules/sdd-global.md}\n\n{file:./.openspec/DESIGN.md}\n\n{file:./.opencode/agents/sdd-orchestrator.md}",
+      "prompt": "{file:./.opencode/rules/sdd-global.md}\n\n{file:./.opencode/agents/sdd-orchestrator.md}",
       "permission": {
         "*": "allow",
         "write": "deny",
@@ -131,7 +131,7 @@
       "temperature": 0.35,
       "frequency_penalty": 0.5,
       "presence_penalty": 0.2,
-      "prompt": "{file:./.opencode/rules/sdd-global.md}\n\n{file:./.openspec/DESIGN.md}\n\n{file:./.opencode/agents/sdd-coder.md}\n\nContexto Activo de la Iteración:\n{file:./.openspec/active-brief.md}",
+      "prompt": "{file:./.opencode/rules/sdd-global.md}\n\n{file:./.opencode/agents/sdd-coder.md}",
       "permission": {
         "*": "allow",
         "bash": {
@@ -162,7 +162,7 @@
       "temperature": 0.35,
       "frequency_penalty": 0.5,
       "presence_penalty": 0.2,
-      "prompt": "{file:./.opencode/rules/sdd-global.md}\n\n{file:./.openspec/DESIGN.md}\n\n{file:./.opencode/agents/sdd-tester.md}\n\nContexto Activo de la Iteración:\n{file:./.openspec/active-brief.md}",
+      "prompt": "{file:./.opencode/rules/sdd-global.md}\n\n{file:./.opencode/agents/sdd-tester.md}",
       "permission": {
         "*": "allow",
         "bash": {
