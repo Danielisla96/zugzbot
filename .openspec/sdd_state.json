@@ -1,13 +1,13 @@
 {
-  "phase": "F4_DEPLOYMENT",
-  "activeContract": ".openspec/specs/2026-06-16__09-50-28_dashboard-animations/contract.json",
+  "phase": "F0_DETECT",
+  "activeContract": "",
   "stack": {
     "core": [],
     "databases": []
   },
-  "loopMode": true,
+  "loopMode": false,
   "loopTargetIterations": 2,
   "loopCurrentIteration": 2,
   "rollbackCount": 0,
-  "updatedAt": "2026-06-16T14:00:25.459Z"
+  "updatedAt": "2026-06-16T14:02:36.651Z"
 }
