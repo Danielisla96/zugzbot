@@ -1,0 +1,20 @@
+{
+  "contractName": "",
+  "sessionId": "ses_1314a0b2dffeCtmEA4IBX44eI6",
+  "startedAt": "2026-06-16T04:42:35.202Z",
+  "lastUpdatedAt": "2026-06-16T04:42:49.425Z",
+  "totals": {
+    "cost": 0.0028409359999999996,
+    "tokensIn": 2386,
+    "tokensOutput": 4086,
+    "messages": 11
+  },
+  "byAgent": {
+    "sdd-orchestrator": {
+      "cost": 0.0028409359999999996,
+      "tokensIn": 2386,
+      "tokensOutput": 4086,
+      "messages": 11
+    }
+  }
+}
