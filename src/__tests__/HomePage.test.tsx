@@ -29,6 +29,29 @@ Object.defineProperty(globalThis, "crypto", {
   },
 });
 
+// Mock lucide-react icons
+vi.mock("lucide-react", () => ({
+  Pin: () => <div data-testid="icon-pin" />,
+  Star: () => <div data-testid="icon-star" />,
+  Trash2: () => <div data-testid="icon-trash" />,
+  Plus: () => <div data-testid="icon-plus" />,
+  ArrowUpDown: () => <div data-testid="icon-arrow-up-down" />,
+  Calendar: () => <div data-testid="icon-calendar" />,
+  ArrowUpAZ: () => <div data-testid="icon-arrow-up-az" />,
+  Clock: () => <div data-testid="icon-clock" />,
+  Hash: () => <div data-testid="icon-hash" />,
+  Tag: () => <div data-testid="icon-tag" />,
+  Sun: () => <div data-testid="icon-sun" />,
+  Moon: () => <div data-testid="icon-moon" />,
+  Search: () => <div data-testid="icon-search" />,
+  FileText: () => <div data-testid="icon-filetext" />,
+  XIcon: () => <div data-testid="icon-x" />,
+  CheckCircle2: () => <div data-testid="icon-checkcircle" />,
+  Info: () => <div data-testid="icon-info" />,
+  XCircle: () => <div data-testid="icon-xcircle" />,
+  X: () => <div data-testid="icon-x" />,
+}));
+
 // Mock next-themes ThemeProvider
 vi.mock("next-themes", () => ({
   ThemeProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -72,7 +95,7 @@ describe("HomePage - Pinned", () => {
     });
 
     // Find and click "Nueva nota" button
-    const newNoteBtn = screen.getByRole("button", { name: /nueva nota/i });
+    const newNoteBtn = screen.getByRole("button", { name: /crear nota/i });
     await act(async () => {
       fireEvent.click(newNoteBtn);
     });
