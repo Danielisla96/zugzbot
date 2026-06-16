@@ -68,6 +68,23 @@ for (const item of itemsToCopy) {
     console.error(`${red}❌ Error copying ${item.name}: ${error.message}${reset}`);
   }
 }
+// Ensure .openspec directory and active-brief.md exist on target
+try {
+  const openspecDir = join(targetDir, '.openspec');
+  if (!fs.existsSync(openspecDir)) {
+    fs.mkdirSync(openspecDir, { recursive: true });
+  }
+  const activeBriefPath = join(openspecDir, 'active-brief.md');
+  if (!fs.existsSync(activeBriefPath)) {
+    fs.writeFileSync(
+      activeBriefPath,
+      "# SDD Active Brief\n\nNo hay ninguna sesión activa o el spec actual no ha sido iniciado.\n",
+      "utf8"
+    );
+  }
+} catch (error) {
+  console.error(`${red}❌ Error creating .openspec directory: ${error.message}${reset}`);
+}
 
 if (copiedCount > 0) {
   console.log(`\n${bold}${green}✨ Zugzbot Harness successfully installed/updated!${reset}`);
