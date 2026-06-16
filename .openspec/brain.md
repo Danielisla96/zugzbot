@@ -41,6 +41,8 @@
 - [2026-06-16]: Dashboard animations (iteration 2/2): fadeSlideUp keyframes, conic-gradient DonutChart, CSS tooltips on chart bars, progressive section loading (50/350/650ms), smooth transitions. 110 tests passing. Docker build 36s healthy.
 - [2026-06-16]: 2026-06-16: dashboard-animations con fadeSlideUp, DonutChart, tooltips, carga progresiva completada. 110 tests. LoopMode desactivado.
 - [2026-06-16]: F3_VERIFICATION: CardFilterAnimations spec validado. 114 tests (31 files) pasan. Warnings pre-existentes de lint en DonutChart (unused params), StatsDashboard (unused import) y stats.test (unused vi) — no bloqueantes.
+- [2026-06-16]: 2026-06-16: Sesión card-filter-animations completada. (1) Implementado stagger fade+slide-up para NoteCards con animationDelay index*60ms, clase .animate-fade-slide-up (400ms). (2) Color filter pills con animate-fade-slide-up-fast (300ms) + stagger index*40ms + hover:scale-105. (3) SortControls con animate-fade-slide-up-fast + hover:scale-105. (4) Lección técnica: Para pasar className a un componente hijo, la interface del componente DEBE declarar className?: string y mergearlo en cn(). (5) 114 tests pasan (4 nuevos: ANIM-01 al ANIM-04). Docker deploy exitoso.
+- [2026-06-16]: 2026-06-16: Sesion card-filter-animations completada. Implementado stagger fade+slide-up para NoteCards con animationDelay index*60ms. Color filter pills con stagger index*40ms + hover:scale-105. SortControls con entrada animada. Leccion: Para pasar className a un componente, la interface debe declarar className?: string y mergearlo en cn(). 114 tests pasan (4 nuevos ANIM-01 a ANIM-04). Docker deploy exitoso.
 
 # Design
 - [2026-06-16]: ## Notion Design System aplicado en App de Notas
@@ -66,3 +68,4 @@
 # Deployment
 - [2026-06-16]: F4 Deployment (Iteración 2/2 Undo Delete): Docker build exitoso con Next.js 16.2.9 en node:20-alpine multi-stage. Contenedor healthy en puerto 3000. Healthcheck con node nativo funciona correctamente. Comando clave: `docker compose up -d --build --force-recreate` para despliegue limpio.
 - [2026-06-16]: F4_DEPLOYMENT StatsDashboard: Despliegue Docker exitoso en iteración 3/3 del autopiloto. Build compilado correctamente con Next.js 16.2.9 (Turbopack), TypeScript pasó en 5.7s, 3 páginas generadas. Container healthy en 18s, HTTP 200 en localhost:3000. Sin warnings ni errores en logs.
+- [2026-06-16]: Despliegue Docker exitoso para zugzbot-v2 (Next.js 16). Dockerfile multi-stage generado con sdd_generate_dockerfile (node:20-alpine, npm, puerto 3000). Build completado en ~10s, contenedor healthy al instante. App responde HTTP 200 en http://localhost:3000.

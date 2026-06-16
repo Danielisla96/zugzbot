@@ -1,0 +1,51 @@
+{
+  "contractName": "2026-06-16__11-02-42_card-filter-animations",
+  "sessionId": "ses_12f0c58f5ffeg9m08gqVSnqhB4",
+  "startedAt": "2026-06-16T15:02:43.122Z",
+  "closedAt": "2026-06-16T15:11:11.273Z",
+  "durationMs": 508151,
+  "durationMinutes": 8.47,
+  "totals": {
+    "cost": 0.085118,
+    "tokensIn": 363128,
+    "tokensOutput": 47762,
+    "messages": 228
+  },
+  "byAgent": [
+    {
+      "agent": "sdd-coder",
+      "cost": 0.02277,
+      "tokensIn": 112332,
+      "tokensOutput": 8612,
+      "messages": 54
+    },
+    {
+      "agent": "sdd-tester",
+      "cost": 0.020474,
+      "tokensIn": 86808,
+      "tokensOutput": 9072,
+      "messages": 45
+    },
+    {
+      "agent": "sdd-spec-writer",
+      "cost": 0.017105,
+      "tokensIn": 85664,
+      "tokensOutput": 10146,
+      "messages": 27
+    },
+    {
+      "agent": "sdd-orchestrator",
+      "cost": 0.013566,
+      "tokensIn": 28794,
+      "tokensOutput": 13928,
+      "messages": 54
+    },
+    {
+      "agent": "sdd-deployer",
+      "cost": 0.011203,
+      "tokensIn": 49530,
+      "tokensOutput": 6004,
+      "messages": 48
+    }
+  ]
+}
