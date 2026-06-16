@@ -55,6 +55,9 @@ describe("NotesList Tests (Contract Scenarios)", () => {
         onDelete={vi.fn()}
         onToggleFavorite={vi.fn()}
         onCreateNew={vi.fn()}
+        sortBy="newest"
+        onSortChange={vi.fn()}
+        onFilteredCountChange={vi.fn()}
       />,
     );
 
@@ -86,6 +89,9 @@ describe("NotesList Tests (Contract Scenarios)", () => {
         onDelete={vi.fn()}
         onToggleFavorite={vi.fn()}
         onCreateNew={vi.fn()}
+        sortBy="newest"
+        onSortChange={vi.fn()}
+        onFilteredCountChange={vi.fn()}
       />,
     );
 
@@ -108,6 +114,9 @@ describe("NotesList Tests (Contract Scenarios)", () => {
         onDelete={vi.fn()}
         onToggleFavorite={vi.fn()}
         onCreateNew={vi.fn()}
+        sortBy="newest"
+        onSortChange={vi.fn()}
+        onFilteredCountChange={vi.fn()}
       />,
     );
 

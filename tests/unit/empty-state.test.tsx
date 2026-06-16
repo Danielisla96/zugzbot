@@ -20,6 +20,9 @@ describe("EmptyState Tests (Contract Scenarios)", () => {
         onDelete={vi.fn()}
         onToggleFavorite={vi.fn()}
         onCreateNew={vi.fn()}
+        sortBy="newest"
+        onSortChange={vi.fn()}
+        onFilteredCountChange={vi.fn()}
       />,
     );
     const title = screen.getByRole("heading", { name: /no hay notas aún/i });
@@ -35,6 +38,9 @@ describe("EmptyState Tests (Contract Scenarios)", () => {
         onDelete={vi.fn()}
         onToggleFavorite={vi.fn()}
         onCreateNew={vi.fn()}
+        sortBy="newest"
+        onSortChange={vi.fn()}
+        onFilteredCountChange={vi.fn()}
       />,
     );
 

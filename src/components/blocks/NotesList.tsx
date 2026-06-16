@@ -1,11 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { NoteCard } from "./NoteCard";
 import { EmptyState } from "./EmptyState";
-import { Note } from "@/types";
+import { SortControls } from "./SortControls";
+import { Note, SortBy } from "@/types";
 
 interface NotesListProps {
   notes: Note[];
@@ -13,9 +14,12 @@ interface NotesListProps {
   onDelete: (id: string) => void;
   onToggleFavorite: (id: string) => void;
   onCreateNew: () => void;
+  sortBy: SortBy;
+  onSortChange: (sort: SortBy) => void;
+  onFilteredCountChange: (count: number) => void;
 }
 
-export function NotesList({ notes, onEdit, onDelete, onToggleFavorite, onCreateNew }: NotesListProps) {
+export function NotesList({ notes, onEdit, onDelete, onToggleFavorite, onCreateNew, sortBy, onSortChange, onFilteredCountChange }: NotesListProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filtered = searchQuery
@@ -26,8 +30,27 @@ export function NotesList({ notes, onEdit, onDelete, onToggleFavorite, onCreateN
       )
     : notes;
 
-  // Render in insertion order (no sorting) to match test expectations
-  const sorted = filtered;
+  const sorted = [...filtered].sort((a, b) => {
+    switch (sortBy) {
+      case "newest":
+        return b.updatedAt.localeCompare(a.updatedAt);
+      case "oldest":
+        return a.updatedAt.localeCompare(b.updatedAt);
+      case "a-z":
+        return a.title.localeCompare(b.title);
+      case "favorites-first":
+        if (a.favorite !== b.favorite) {
+          return b.favorite ? 1 : -1;
+        }
+        return b.updatedAt.localeCompare(a.updatedAt);
+      default:
+        return 0;
+    }
+  });
+
+  useEffect(() => {
+    onFilteredCountChange(sorted.length);
+  }, [sorted.length, onFilteredCountChange]);
 
   if (notes.length === 0 && !searchQuery) {
     return <EmptyState onCreateNew={onCreateNew} />;
@@ -49,6 +72,8 @@ export function NotesList({ notes, onEdit, onDelete, onToggleFavorite, onCreateN
           <Plus className="size-4 mr-1" /> Nueva nota
         </Button>
       </div>
+
+      <SortControls sortBy={sortBy} onSortChange={onSortChange} />
 
       {sorted.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">

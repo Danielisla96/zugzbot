@@ -1,5 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "theme": "tokyonight",
   "permission": {
     "*": "allow",
     "skill": {
@@ -24,6 +25,7 @@
     "./.opencode/rules/sdd-global.md"
   ],
   "plugin": [
+    "opencode-dynamic-context-pruning"
   ],
   "mcp": {
     "oh-my-design": {

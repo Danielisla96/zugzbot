@@ -3,7 +3,8 @@ import { useState, useEffect, useCallback } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { NotesList } from "@/components/blocks/NotesList";
 import { NoteEditor } from "@/components/blocks/NoteEditor";
-import type { Note } from "@/types";
+import { useToast } from "@/hooks/useToast";
+import type { Note, SortBy } from "@/types";
 
 const STORAGE_KEY = "notas-app";
 
@@ -26,6 +27,9 @@ export default function Home() {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [sortBy, setSortBy] = useState<SortBy>("newest");
+  const [filteredCount, setFilteredCount] = useState(0);
+  const { toasts, addToast, removeToast } = useToast();
 
   useEffect(() => {
     setNotes(loadNotes());
@@ -66,32 +70,46 @@ export default function Home() {
         };
         setNotes((prev) => [newNote, ...prev]);
       }
+      setTimeout(() => addToast(data.id ? "Nota actualizada correctamente" : "Nota creada correctamente", "success"), 0);
     },
-    []
+    [addToast]
   );
 
   const handleDelete = useCallback((id: string) => {
     if (window.confirm("¿Eliminar esta nota?")) {
       setNotes((prev) => prev.filter((n) => n.id !== id));
+      addToast("Nota eliminada", "destructive");
     }
-  }, []);
+  }, [addToast]);
 
   const handleToggleFavorite = useCallback((id: string) => {
-    setNotes((prev) =>
-      prev.map((n) =>
-        n.id === id ? { ...n, favorite: !n.favorite, updatedAt: new Date().toISOString() } : n
-      )
-    );
-  }, []);
+    setNotes((prev) => {
+      const note = prev.find((n) => n.id === id);
+      const newFavorite = !note?.favorite;
+      setTimeout(() => addToast(newFavorite ? "Añadida a favoritos" : "Eliminada de favoritos", "success"), 0);
+      return prev.map((n) =>
+        n.id === id ? { ...n, favorite: newFavorite, updatedAt: new Date().toISOString() } : n
+      );
+    });
+  }, [addToast]);
 
   return (
-    <AppLayout>
+    <AppLayout
+      notesCount={notes.length}
+      filteredNotesCount={filteredCount}
+      searchActive={filteredCount !== notes.length}
+      toasts={toasts}
+      onRemoveToast={removeToast}
+    >
       <NotesList
         notes={notes}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onToggleFavorite={handleToggleFavorite}
         onCreateNew={handleCreateNew}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+        onFilteredCountChange={setFilteredCount}
       />
       <NoteEditor
         note={editingNote}
