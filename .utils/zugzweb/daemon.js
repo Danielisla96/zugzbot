@@ -2,7 +2,7 @@ import http from 'http'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { spawn } from 'child_process'
+import { spawn, exec } from 'child_process'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -12,13 +12,55 @@ let opencodePort = 4096 // Puerto activo de Opencode por defecto
 let tunnelUrl = ''
 let detectedInstances = []
 
-// Función auxiliar para escanear en paralelo las instancias de Opencode activas
+// Obtiene programáticamente puertos de Opencode en escucha mediante lsof del sistema (soporte para puertos aleatorios)
+const getLsofPorts = () => {
+  return new Promise((resolve) => {
+    // Busca puertos TCP en estado de escucha asociados al binario "opencode"
+    exec('lsof -nP -iTCP -sTCP:LISTEN | grep -i "opencode"', (err, stdout) => {
+      if (err || !stdout) {
+        resolve([])
+        return
+      }
+      
+      const ports = []
+      const lines = stdout.split('\n')
+      for (const line of lines) {
+        // Coincide con patrones tipo 127.0.0.1:54329 (LISTEN) o *:54329 (LISTEN)
+        const match = line.match(/(?:127\.0\.0\.1|localhost|\*|\[::1\]):(\d+)\s+\(LISTEN\)/)
+        if (match) {
+          const portNum = parseInt(match[1], 10)
+          if (portNum && !ports.includes(portNum)) {
+            ports.push(portNum)
+          }
+        }
+      }
+      resolve(ports)
+    })
+  })
+}
+
+// Función para escanear en paralelo las instancias de Opencode activas
 const scanInstances = async () => {
   const currentDir = process.cwd()
+  
+  // 1. Obtener puertos dinámicos descubiertos por lsof en caliente
+  const dynamicPorts = await getLsofPorts()
+  
+  // 2. Fusionar con puertos del rango típico (4096-4115) para máxima redundancia
+  const candidatePorts = new Set()
+  for (let p = 4096; p <= 4115; p++) {
+    candidatePorts.add(p)
+  }
+  for (const p of dynamicPorts) {
+    candidatePorts.add(p)
+  }
+  
+  // Evitar bucle recursivo ignorando el puerto propio del Daemon
+  candidatePorts.delete(PORT)
+
   const scanPromises = []
 
-  // Escanea puertos locales del 4096 al 4115
-  for (let p = 4096; p <= 4115; p++) {
+  for (const p of candidatePorts) {
     scanPromises.push(
       new Promise((resolve) => {
         const req = http.get(`http://127.0.0.1:${p}/path`, { timeout: 100 }, (res) => {
@@ -57,12 +99,12 @@ const scanInstances = async () => {
   const results = await Promise.all(scanPromises)
   detectedInstances = results.filter(Boolean)
 
-  // Autodescubrimiento: si aún estamos en el puerto 4096 pero hay una instancia que coincide con el proyecto actual, nos enlazamos automáticamente
+  // Enlazado automático inicial al proyecto actual si no se ha conmutado explícitamente
   if (opencodePort === 4096) {
     const currentInstance = detectedInstances.find(inst => inst.isCurrentProject)
     if (currentInstance && currentInstance.port !== opencodePort) {
       opencodePort = currentInstance.port
-      console.log(`\x1b[35m%s\x1b[0m`, `✨ Autodescubrimiento: Enlazado automáticamente al puerto ${opencodePort} (Ruta coincidente con este proyecto)`)
+      console.log(`\x1b[35m%s\x1b[0m`, `✨ Autodescubrimiento: Enlazado automáticamente al puerto ${opencodePort} (Ruta coincidente)`)
     }
   }
 }
@@ -106,14 +148,14 @@ const startServer = () => {
         try {
           const parsed = JSON.parse(body)
           const targetPort = parseInt(parsed.port, 10)
-          if (targetPort >= 4096 && targetPort <= 4115) {
+          if (targetPort >= 1024 && targetPort <= 65535) { // Rango TCP completo admitido
             opencodePort = targetPort
             console.log(`\x1b[33m%s\x1b[0m`, `🔌 Instancia conmutada: Redireccionando proxy al puerto ${opencodePort}`)
             res.writeHead(200, { 'Content-Type': 'application/json' })
             res.end(JSON.stringify({ success: true, currentPort: opencodePort }))
           } else {
             res.writeHead(400, { 'Content-Type': 'application/json' })
-            res.end(JSON.stringify({ error: 'Puerto fuera de rango válido (4096-4115)' }))
+            res.end(JSON.stringify({ error: 'Puerto fuera de rango válido' }))
           }
         } catch (e) {
           res.writeHead(400, { 'Content-Type': 'application/json' })
