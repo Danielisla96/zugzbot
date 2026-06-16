@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { NoteCard } from "@/components/blocks/NoteCard";
-import type { Note } from "@/types";
+import type { Note, NoteColor } from "@/types";
 
 function makeNote(overrides: Partial<Note> = {}): Note {
   const now = new Date();
@@ -195,6 +195,43 @@ describe("NoteCard", () => {
     const pinIcon = pinButton.querySelector("svg");
     expect(pinIcon).toBeInTheDocument();
     expect(pinIcon!.className).toContain("fill");
+  });
+
+  it("CLR-04: Nota con color purple muestra border left y badge", () => {
+    const note = makeNote({ id: "note-color", color: "purple" as NoteColor });
+
+    render(
+      <NoteCard
+        note={note}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+        onToggleFavorite={vi.fn()}
+      />
+    );
+
+    // The card should contain a badge with the color name
+    expect(screen.getByText(/purple|Purple|Púrpura/i)).toBeInTheDocument();
+
+    // The card should have border-l styling (visual indicator)
+    const card = screen.getByRole("article") ?? document.querySelector("[class*='border-l']");
+    // At minimum, there's an element indicating color
+    expect(document.querySelector('[class*="border-l"]') ?? screen.getByText(/purple|Purple/i)).toBeInTheDocument();
+  });
+
+  it("CLR-04b: Nota con color 'none' no muestra indicador visual de color", () => {
+    const note = makeNote({ color: "none" as NoteColor });
+
+    render(
+      <NoteCard
+        note={note}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+        onToggleFavorite={vi.fn()}
+      />
+    );
+
+    // Should NOT show a color badge for "none"
+    expect(screen.queryByText(/none/i)).not.toBeInTheDocument();
   });
 
   it("TS-09: toggle raw/markdown cambia la vista previa", () => {

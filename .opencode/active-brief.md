@@ -1,33 +1,30 @@
-# Contrato Activo: MarkdownTemplates (Iteración 1/3)
+# Note Colors & Categories — Active Contract
 
-## Features
-1. **Modo Markdown en vista previa de notas**
-   - Instalar `react-markdown` + `remark-gfm`
-   - Crear `MarkdownRenderer` en `src/components/blocks/MarkdownRenderer.tsx` (content, className props)
-   - NoteCard: toggle botón (Eye icon) para alternar raw ↔ markdown preview
-   - NoteEditor: botón "vista previa" que muestra markdown renderizado
+## Ubicación
+`.openspec/specs/2026-06-16__09-06-22_note-colors-categories/contract.json`
 
-2. **Plantillas de notas al crear**
-   - Crear `src/lib/templates.ts` con 4 templates: Reunión 📋, Diario 📔, TODO List ✅, Idea 💡
-   - Crear `TemplateSelector` en `src/components/blocks/TemplateSelector.tsx` con grid de 4 cards
-   - NoteEditor modificado: mostrar TemplateSelector al crear nueva nota
+## Cambios
+- **Type**: Añadir `NoteColor = "indigo" | "orange" | "green" | "red" | "purple" | "gray" | "none"` y campo `color?: NoteColor` en `Note`
+- **NUEVO**: `ColorPicker` (7 círculos de color estilo Linear.app, seleccionado con indigo ring)
+- **NUEVO**: `src/lib/colors.ts` (mapa NOTE_COLORS con label, dot, lightBg, hex)
+- **MOD**: `NoteEditor` — añadir ColorPicker, color state, onSave incluye color
+- **MOD**: `NoteCard` — border-left tint, badge, lightBg según note.color
+- **MOD**: `NotesList` — filtro por color tipo pills horizontal
 
-## Diseño Linear.app
-- Primary: #5e6ad2, accent-hover: #828fff
-- Cards: bg-white dark:bg-white/[0.02], border border-border/50, rounded-[8px]
-- Hover: shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:-translate-y-[2px]
-- Typography: Inter, tracking-tight para headings
+## Diseño
+- **Marca**: Linear.app (indigo #5e6ad2, dark-mode-first, cards translúcidas)
+- **Tokens**: primary #5e6ad2, surface rgbefectos translúcidos, filter-pill estilo Linear
 
-## Tests creados (5 escenarios)
-1. `src/__tests__/MarkdownRenderer.test.tsx` - renderizado correcto de headings/bold/lists
-2. `src/__tests__/MarkdownRenderer.test.tsx` - XSS safety (no raw HTML)
-3. `src/__tests__/TemplateSelector.test.tsx` - 4 templates en grid + blank note
-4. `src/__tests__/NoteEditor.test.tsx` - template pre-fills title/content
-5. `src/__tests__/NoteCard.test.tsx` (TS-09 añadido) - toggle raw/markdown
+## Stack
+Next.js 16 + Shadcn UI + Tailwind v4 + localStorage
 
-## Dependencias nuevas
-- `react-markdown` + `remark-gfm` (instalar en package.json)
-- Shadcn: `tabs` component
+## Tests (6 escenarios)
+1. `ColorPicker.test.tsx` — CLR-01 (renderiza 7 colores), CLR-02 (onChange al clickear)
+2. `NoteEditor.test.tsx` — CLR-03 (guarda con color), CLR-06 (inicializa desde nota existente)
+3. `NoteCard.test.tsx` — CLR-04 (indicador visual purple), CLR-04b (none no muestra)
+4. `NotesList.test.tsx` — CLR-05 (filtra por color), CLR-05b (Todas muestra todo)
 
-## Iconos validados (lucide-react)
-FileCode, Eye, Edit, FileText, ClipboardList, BookOpen, CheckSquare, Lightbulb, Plus, Calendar
+## Hints
+- shadcn componentes ya instalados: button, input, card, textarea, dialog, badge, scroll-area
+- Iconos validados: Circle, Slash, Filter, X
+- Bootstrap: nextjs-shadcn

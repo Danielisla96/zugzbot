@@ -1,7 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { NotesList } from "@/components/blocks/NotesList";
-import type { Note, SortBy } from "@/types";
+import type { Note, NoteColor, SortBy } from "@/types";
 
 // Mock NoteCard to simplify assertions about order
 vi.mock("@/components/blocks/NoteCard", () => ({
@@ -67,6 +67,38 @@ describe("NotesList", () => {
 
     // All pinned should come before any non-pinned
     expect(Math.max(...pinnedIndexes)).toBeLessThan(Math.min(...nonPinnedIndexes));
+  });
+
+  it("CLR-05: Filtra correctamente por color 'green'", () => {
+    const notes = [
+      makeNote("green-1", { color: "green" as NoteColor }),
+      makeNote("indigo-1", { color: "indigo" as NoteColor }),
+      makeNote("no-color", { color: "none" as NoteColor }),
+    ];
+
+    renderNotesList(notes, "newest");
+
+    // Click on the green filter pill/button
+    const greenFilter = screen.getByRole("button", { name: /green/i });
+    fireEvent.click(greenFilter);
+
+    // Only the green note should be visible
+    expect(screen.getByTestId("note-card-green-1")).toBeInTheDocument();
+    expect(screen.queryByTestId("note-card-indigo-1")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("note-card-no-color")).not.toBeInTheDocument();
+  });
+
+  it("CLR-05b: Filtro 'Todas' muestra todas las notas", () => {
+    const notes = [
+      makeNote("note-a", { color: "indigo" as NoteColor }),
+      makeNote("note-b", { color: "green" as NoteColor }),
+    ];
+
+    renderNotesList(notes, "newest");
+
+    // Default filter shows all
+    expect(screen.getByTestId("note-card-note-a")).toBeInTheDocument();
+    expect(screen.getByTestId("note-card-note-b")).toBeInTheDocument();
   });
 
   it("TS-04: Ordenamiento pinned-first con sortBy='favorites-first'", () => {
