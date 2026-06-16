@@ -24,6 +24,8 @@
 - [2026-06-16]: Keyboard shortcuts integration completed in page.tsx: added useKeyboardShortcuts hook wired to handleCreateNew (n key), handleCloseEditor (Escape), handleDelete (Delete key when editor open with active note), and handleSearchFocus (Cmd+F / Ctrl+F). The hook file and tests were already created by spec-writer. All 77 tests pass (20 test files).
 - [2026-06-16]: 2026-06-16: Iteración 3/3 keyboard-shortcuts-quick-actions completada. Implementado hook useKeyboardShortcuts con 4 atajos tipo Linear: 'n' (nueva nota), 'Escape' (cerrar editor), 'Delete' (eliminar nota activa), Cmd+F/Ctrl+F (focus búsqueda). Atajos se omiten si el foco está en input/textarea/contenteditable. Cleanup de listeners en unmount. 6 tests unitarios para el hook pasando. Total tests: 77. Docker healthy en puerto 3000.
 - [2026-06-16]: 2026-06-16: Iteración 3/3 keyboard-shortcuts-quick-actions completada. Hook useKeyboardShortcuts con 4 atajos (n, Escape, Delete, Cmd+F/Ctrl+F). Input focus detection. Cleanup en unmount. 6 tests. Total: 77 tests pasando, Docker healthy.
+- [2026-06-16]: [2026-06-16]: Ciclo SDD completo de 3 iteraciones en autopiloto finalizado. Iter 1: NoteCard rediseñado (Linear design, metadata bar, hashtags). Iter 2: pinned notes (pin toggle, accent bar, stagger animations). Iter 3: keyboard shortcuts (N, Escape, Delete, Ctrl+F). Total: 77 tests, 3 specs, Docker healthy.
+- [2026-06-16]: Ciclo SDD autopiloto 3 iteraciones completado. Iter1: NoteCard metadata+hashtags+Linear design. Iter2: Pinned notes+accent bar+stagger. Iter3: Keyboard shortcuts (N/Escape/Delete/CmdF). Total: 77 tests, 20 archivos. Diseno Linear con primary #5e6ad2.
 
 # Design
 - [2026-06-16]: ## Notion Design System aplicado en App de Notas
