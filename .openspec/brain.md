@@ -40,6 +40,7 @@
 - [2026-06-16]: [2026-06-16]: Iteración 2/2 dashboard-animations completada (LOOP FINALIZADO). Implementado: (1) Animaciones fadeSlideUp en metric cards con delay escalonado (index*50ms); (2) Tooltips CSS en ColorChart (color+count+%) y WeeklyChart (día+fecha+count); (3) DonutChart con conic-gradient dinámico + total en centro + toggle vista donut/barras; (4) Timeline hover interactivo con mini preview (80 chars); (5) Smooth transitions (transition-all duration-200 ease-out + hover:shadow-md hover:-translate-y-[1px]); (6) Carga progresiva de secciones con useState+useEffect (50/350/650ms). Lección: DonutChart suma interna excluye 'none' del total de notas con color para el centro. Tests: 110 totales, todos verdes. Docker build healthy en ~36s.
 - [2026-06-16]: Dashboard animations (iteration 2/2): fadeSlideUp keyframes, conic-gradient DonutChart, CSS tooltips on chart bars, progressive section loading (50/350/650ms), smooth transitions. 110 tests passing. Docker build 36s healthy.
 - [2026-06-16]: 2026-06-16: dashboard-animations con fadeSlideUp, DonutChart, tooltips, carga progresiva completada. 110 tests. LoopMode desactivado.
+- [2026-06-16]: F3_VERIFICATION: CardFilterAnimations spec validado. 114 tests (31 files) pasan. Warnings pre-existentes de lint en DonutChart (unused params), StatsDashboard (unused import) y stats.test (unused vi) — no bloqueantes.
 
 # Design
 - [2026-06-16]: ## Notion Design System aplicado en App de Notas
