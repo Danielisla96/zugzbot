@@ -1,0 +1,13 @@
+{
+  "phase": "F1_CONTRACT",
+  "activeContract": ".openspec/specs/2026-06-15__22-11-33_personal-notes-app/contract.json",
+  "stack": {
+    "core": [],
+    "databases": []
+  },
+  "loopMode": true,
+  "loopTargetIterations": 1,
+  "loopCurrentIteration": 1,
+  "rollbackCount": 0,
+  "updatedAt": "2026-06-16T02:11:33.121Z"
+}
