@@ -1,25 +1,6 @@
-import { z } from "zod"
+import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
-
-type ToolFactory = {
-  <Args extends z.ZodRawShape>(input: {
-    description: string
-    args: Args
-    execute: (args: z.infer<z.ZodObject<Args>>, context: any) => Promise<any>
-  }): {
-    description: string
-    args: Args
-    execute: (args: z.infer<z.ZodObject<Args>>, context: any) => Promise<any>
-  }
-  schema: typeof z
-}
-const tool = (<Args extends z.ZodRawShape>(input: {
-  description: string
-  args: Args
-  execute: (args: z.infer<z.ZodObject<Args>>, context: any) => Promise<any>
-}) => input) as ToolFactory
-tool.schema = z
 
 const getBrainFilePath = (context: any) => {
   const root = context.worktree || context.directory || process.cwd()

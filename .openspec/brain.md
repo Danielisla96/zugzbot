@@ -14,6 +14,7 @@
 - [2026-06-16]: Lint fix: 7 warnings corregidos en undo-delete spec — (1) `deletedNotes` → `_deletedNotes` en page.tsx; (2) `SortBy` removido de import innecesario en notes-list-sort.test.tsx; (3) `vi` removido de import en use-toast.test.ts; (4) `UseToastReturn` interface removida (no referenciada); (5) imports no usados (`render`, `screen`, `userEvent`) removidos de use-toast.test.tsx.
 - [2026-06-16]: Lint fix: 7 warnings corregidos en undo-delete spec - page.tsx deletedNotes prefixed, SortBy import removed, vi import removed, UseToastReturn interface removed, unused render/screen/userEvent imports removed from test files.
 - [2026-06-16]: 2026-06-16: Iteración 2/2 undo-delete-toast completada. Implementado buffer temporal de notas eliminadas (deletedNotes state) con toast "Deshacer" de 5 segundos. Patrón clave: setTimeout para purga automática con useRef<Map<string, setTimeout>> para cleanup. Toast action extendido con interface {label, onClick}. Total tests: 45, todos verdes.
+- [2026-06-16]: 2026-06-16: Sesión SDD completa con 2 iteraciones en autopiloto. Iteración 1 (notes-enhancements): toast notifications (singleton useToast con module-level state), sort controls (4 modos), note stats counter. Iteración 2 (undo-delete-toast): buffer temporal de notas eliminadas con deshacer en toast (5s auto-purga). Total specs: 2. Total tests: 45. Ambos specs desplegados en Docker exitosamente.
 
 # Design
 - [2026-06-16]: ## Notion Design System aplicado en App de Notas

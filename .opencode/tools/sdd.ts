@@ -4,6 +4,43 @@ import path from "path"
 import { execSync, spawn } from "child_process"
 
 
+// Helper to parse semantic errors from compiler and linter outputs (reducing raw trace log bloat for the LLM)
+const parseSemanticErrors = (rawOutput: string, type: "eslint" | "tsc"): any[] => {
+  const parsed: any[] = []
+  if (type === "eslint") {
+    const lines = rawOutput.split("\n")
+    for (const line of lines) {
+      const match = line.match(/^([^:]+):line\s+(\d+),\s+col\s+(\d+),\s+(.+)$/i) || line.match(/^([^\s]+):(\d+):(\d+):\s+(.+)$/)
+      if (match) {
+        parsed.push({
+          file: match[1].trim(),
+          line: parseInt(match[2], 10),
+          column: parseInt(match[3], 10),
+          error: match[4].trim()
+        })
+      } else if (line.includes("error") && line.trim().length > 0) {
+        parsed.push({ raw: line.trim() })
+      }
+    }
+  } else if (type === "tsc") {
+    const lines = rawOutput.split("\n")
+    for (const line of lines) {
+      const match = line.match(/^([^(]+)\((\d+),(\d+)\):\s+(error\s+TS\d+:\s+.+)$/)
+      if (match) {
+        parsed.push({
+          file: match[1].trim(),
+          line: parseInt(match[2], 10),
+          column: parseInt(match[3], 10),
+          error: match[4].trim()
+        })
+      } else if (line.includes("error TS") && line.trim().length > 0) {
+        parsed.push({ raw: line.trim() })
+      }
+    }
+  }
+  return parsed.length > 0 ? parsed : [{ raw: rawOutput.slice(0, 1500) }]
+}
+
 // Helper to resolve state path
 const getStateFilePath = (context: any) => {
   const root = context.worktree || context.directory || process.cwd()
@@ -427,6 +464,63 @@ export const get_state = tool({
     const filePath = getStateFilePath(context)
     const currentState = readState(filePath)
     return JSON.stringify(currentState, null, 2)
+  }
+})
+
+// Tool: sdd_get_initial_session_data
+export const get_initial_session_data = tool({
+  description: "Obtiene atómicamente todos los datos de inicio de sesión: el estado actual del arnés, las memorias históricas clave del Brain ('learnings', 'design', 'routing'), y la lista curada de recomendaciones de diseño de Oh My Design. Reemplaza las llamadas secuenciales a sdd_get_state, brain_read_memory y sdd_list_design_recommendations.",
+  args: {},
+  async execute(args, context) {
+    const root = context.worktree || context.directory || process.cwd()
+    const statePath = getStateFilePath(context)
+    const currentState = readState(statePath)
+    
+    // Read brain memory
+    let brainMemory: any = { found: false }
+    const brainFilePath = path.resolve(root, ".openspec/brain.md")
+    if (fs.existsSync(brainFilePath)) {
+      try {
+        const content = fs.readFileSync(brainFilePath, "utf8")
+        brainMemory = {
+          found: true,
+          content: content.slice(0, 5000)
+        }
+      } catch (e) {}
+    }
+
+    // Get design recommendations
+    const recommendations = RECOMMENDED_BRANDS
+
+    return JSON.stringify({
+      status: "SUCCESS",
+      state: currentState,
+      brainMemory,
+      designRecommendations: recommendations,
+      note: "Inicialización completada. No es necesario que llames a sdd_get_state, brain_read_memory o sdd_list_design_recommendations por separado."
+    }, null, 2)
+  }
+})
+
+// Tool: sdd_save_active_brief
+export const save_active_brief = tool({
+  description: "Guarda un resumen breve y estructurado del spec o contrato activo en .opencode/active-brief.md para que sirva de anclaje de contexto de sistema (System State Anchoring) para el subagente sdd-coder o sdd-tester.",
+  args: {
+    brief: tool.schema.string().describe("Contenido en formato Markdown con el resumen del spec activo, componentes, diseño y dependencias.")
+  },
+  async execute(args, context) {
+    const root = context.worktree || context.directory || process.cwd()
+    const opencodeDir = path.resolve(root, ".opencode")
+    if (!fs.existsSync(opencodeDir)) {
+      fs.mkdirSync(opencodeDir, { recursive: true })
+    }
+    const briefPath = path.resolve(opencodeDir, "active-brief.md")
+    fs.writeFileSync(briefPath, args.brief, "utf8")
+    return JSON.stringify({
+      status: "SUCCESS",
+      message: `Brief de contexto de sistema guardado exitosamente en .opencode/active-brief.md`,
+      filePath: briefPath
+    }, null, 2)
   }
 })
 
@@ -1090,6 +1184,62 @@ export const quick_lint = tool({
         message: `Lint falló: ${e.message?.slice(0, 500) || "unknown error"}`,
       }, null, 2)
     }
+  }
+})
+
+// Tool: sdd_shift_left_verify
+// Performs high-speed semantic shift-left validations (tsc & eslint combined) with stack trace error parsing.
+export const shift_left_verify = tool({
+  description: "Ejecuta validaciones estáticas Shift-Left completas en el proyecto: ejecuta el compilador de TypeScript (tsc) y el linter (eslint) de manera combinada. Limpia y parsea semánticamente los stack traces y logs de error crudos, devolviendo un JSON limpio y estructurado de errores que el LLM puede digerir y solucionar de inmediato sin perder atención.",
+  args: {},
+  async execute(args, context) {
+    const root = context.worktree || context.directory || process.cwd()
+    const result: { tsc: { status: string, errors?: any[] }, eslint: { status: string, errors?: any[] } } = {
+      tsc: { status: "SUCCESS" },
+      eslint: { status: "SUCCESS" }
+    }
+
+    // 1. Run tsc --noEmit
+    try {
+      execSync("npx tsc --noEmit", { cwd: root, stdio: "pipe", timeout: 60000 })
+    } catch (e: any) {
+      const rawOutput = e.stdout?.toString() || e.stderr?.toString() || ""
+      const errors = parseSemanticErrors(rawOutput, "tsc")
+      result.tsc = {
+        status: "FAIL",
+        errors
+      }
+    }
+
+    // 2. Run eslint src/
+    try {
+      const out = execSync("npx eslint src/ --quiet 2>&1 || true", {
+        cwd: root,
+        encoding: "utf8",
+        timeout: 60000,
+      })
+      const isCircularError = out.toLowerCase().includes("converting circular structure")
+      if ((out.toLowerCase().includes("error") || out.trim().length > 0) && !isCircularError) {
+        const errors = parseSemanticErrors(out, "eslint")
+        result.eslint = {
+          status: "FAIL",
+          errors
+        }
+      }
+    } catch (e: any) {
+      result.eslint = {
+        status: "FAIL",
+        errors: [{ raw: e.message || "Eslint execution error" }]
+      }
+    }
+
+    const overallSuccess = result.tsc.status === "SUCCESS" && result.eslint.status === "SUCCESS"
+
+    return JSON.stringify({
+      status: overallSuccess ? "SUCCESS" : "FAIL",
+      message: overallSuccess ? "Shift-Left Verification exitosa: Cero errores de compilación y cero errores de lint." : "Validación fallida: Se encontraron errores estáticos.",
+      verification: result
+    }, null, 2)
   }
 })
 

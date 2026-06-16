@@ -1,13 +1,13 @@
 {
-  "phase": "F0_DETECT",
-  "activeContract": "",
+  "phase": "F1_CONTRACT",
+  "activeContract": ".openspec/specs/2026-06-16__00-10-04_improve-task-cards/contract.json",
   "stack": {
     "core": [],
     "databases": []
   },
-  "loopMode": false,
-  "loopTargetIterations": 2,
-  "loopCurrentIteration": 2,
+  "loopMode": true,
+  "loopTargetIterations": 3,
+  "loopCurrentIteration": 1,
   "rollbackCount": 0,
-  "updatedAt": "2026-06-16T03:47:11.800Z"
+  "updatedAt": "2026-06-16T04:10:04.388Z"
 }

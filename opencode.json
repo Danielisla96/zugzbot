@@ -125,7 +125,7 @@
       }
     },
     "sdd-coder": {
-      "description": "Implementa c\u00f3digo ajust\u00e1ndose estrictamente a los contratos en specs/",
+      "description": "Implementa código ajustándose estrictamente a los contratos en specs/",
       "mode": "subagent",
       "hidden": true,
       "steps": 10,
@@ -133,7 +133,7 @@
       "temperature": 0.35,
       "frequency_penalty": 0.5,
       "presence_penalty": 0.2,
-      "prompt": "{file:./.opencode/agents/sdd-coder.md}",
+      "prompt": "{file:./.opencode/agents/sdd-coder.md}\n\nContexto Activo de la Iteración:\n{file:./.opencode/active-brief.md}",
       "permission": {
         "*": "allow",
         "bash": {
@@ -156,7 +156,7 @@
       }
     },
     "sdd-tester": {
-      "description": "Dise\u00f1a y corre pruebas unitarias, integraci\u00f3n y visuales (Playwright)",
+      "description": "Diseña y corre pruebas unitarias, integración y visuales (Playwright)",
       "mode": "subagent",
       "hidden": true,
       "steps": 15,
@@ -164,7 +164,7 @@
       "temperature": 0.35,
       "frequency_penalty": 0.5,
       "presence_penalty": 0.2,
-      "prompt": "{file:./.opencode/agents/sdd-tester.md}",
+      "prompt": "{file:./.opencode/agents/sdd-tester.md}\n\nContexto Activo de la Iteración:\n{file:./.opencode/active-brief.md}",
       "permission": {
         "*": "allow",
         "bash": {
