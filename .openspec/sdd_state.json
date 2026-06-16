@@ -1,13 +1,13 @@
 {
-  "phase": "F0_DETECT",
-  "activeContract": "",
+  "phase": "F1_CONTRACT",
+  "activeContract": ".openspec/specs/2026-06-15__23-20-45_notes-enhancements/contract.json",
   "stack": {
     "core": [],
     "databases": []
   },
-  "loopMode": false,
-  "loopTargetIterations": 1,
+  "loopMode": true,
+  "loopTargetIterations": 2,
   "loopCurrentIteration": 1,
   "rollbackCount": 0,
-  "updatedAt": "2026-06-16T03:15:18.551Z"
+  "updatedAt": "2026-06-16T03:20:45.163Z"
 }
