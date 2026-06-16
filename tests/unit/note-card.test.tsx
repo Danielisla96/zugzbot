@@ -10,6 +10,14 @@ vi.mock("lucide-react", () => ({
   Trash2: () => <div data-testid="icon-trash" />,
 }));
 
+// Mock next-themes (needed by NoteCard → Card →... but not directly)
+// Ensure Button component doesn't break
+vi.mock("@/components/ui/button", () => ({
+  Button: ({ children, onClick, className, ...props }: any) => (
+    <button onClick={onClick} className={className} {...props}>{children}</button>
+  ),
+}));
+
 const baseNote: Note = {
   id: "note-1",
   title: "Test Note",
@@ -94,5 +102,20 @@ describe("NoteCard Tests (Contract Scenarios)", () => {
     // La nota se ve con favorite=true (el mock es un div, pero en producción
     // la clase CSS cambia). Verificamos que el título se renderiza correctamente.
     expect(screen.getByText("Test Note")).toBeInTheDocument();
+  });
+
+  it("TS-03: NoteCard usa jerarquía tipográfica Vercel (card-title con tracking-tight)", () => {
+    render(
+      <NoteCard
+        note={baseNote}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+        onToggleFavorite={vi.fn()}
+      />,
+    );
+    const title = screen.getByText("Test Note");
+    expect(title.className).toContain("tracking-tight");
+    expect(title.className).toContain("font-semibold");
+    expect(title.className).toContain("line-clamp-2");
   });
 });
