@@ -1,13 +1,13 @@
 {
-  "phase": "F4_DEPLOYMENT",
-  "activeContract": ".openspec/specs/2026-06-16__00-21-55_note-card-pinned-colors/contract.json",
+  "phase": "F0_DETECT",
+  "activeContract": "",
   "stack": {
     "core": [],
     "databases": []
   },
   "loopMode": true,
   "loopTargetIterations": 3,
-  "loopCurrentIteration": 2,
+  "loopCurrentIteration": 3,
   "rollbackCount": 0,
-  "updatedAt": "2026-06-16T04:32:09.984Z"
+  "updatedAt": "2026-06-16T04:34:39.568Z"
 }

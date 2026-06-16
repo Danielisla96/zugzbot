@@ -1,0 +1,51 @@
+{
+  "contractName": "2026-06-16__00-21-55_note-card-pinned-colors",
+  "sessionId": "ses_13156033effevysvxxDGhi7cJX",
+  "startedAt": "2026-06-16T04:21:55.988Z",
+  "closedAt": "2026-06-16T04:34:39.560Z",
+  "durationMs": 763572,
+  "durationMinutes": 12.73,
+  "totals": {
+    "cost": 0.102576,
+    "tokensIn": 429704,
+    "tokensOutput": 59080,
+    "messages": 249
+  },
+  "byAgent": [
+    {
+      "agent": "sdd-coder",
+      "cost": 0.031785,
+      "tokensIn": 124724,
+      "tokensOutput": 18816,
+      "messages": 78
+    },
+    {
+      "agent": "sdd-spec-writer",
+      "cost": 0.025306,
+      "tokensIn": 101006,
+      "tokensOutput": 16536,
+      "messages": 48
+    },
+    {
+      "agent": "sdd-orchestrator",
+      "cost": 0.022184,
+      "tokensIn": 93226,
+      "tokensOutput": 13914,
+      "messages": 57
+    },
+    {
+      "agent": "sdd-tester",
+      "cost": 0.013533,
+      "tokensIn": 63960,
+      "tokensOutput": 5458,
+      "messages": 30
+    },
+    {
+      "agent": "sdd-deployer",
+      "cost": 0.009768,
+      "tokensIn": 46788,
+      "tokensOutput": 4356,
+      "messages": 36
+    }
+  ]
+}

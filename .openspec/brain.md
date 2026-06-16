@@ -18,6 +18,9 @@
 - [2026-06-16]: Iteración 1/3 (improve-task-cards): NoteCard rediseñado con metadata bar (fecha relativa, word/char count, hashtags), Linear design (indigo primary #5e6ad2, cards translúcidas), favorito siempre visible, hover elevado. 66 tests pasan, Docker healthy.
 - [2026-06-16]: Iteracion 1/3 improve-task-cards completada: NoteCard redisenado con metadata bar (fecha relativa, word/char count, hashtags), Linear design, favorito siempre visible, hover elevado. 66 tests pasan, Docker healthy.
 - [2026-06-16]: Nota: Iteracion 1 improve-task-cards completa. NoteCard mejorado con metadata bar, hashtags, Linear design. 66 tests.
+- [2026-06-16]: [2026-06-16]: Iteración 2/3 note-card-pinned-colors completada. Implementado: (1) campo pinned en Note type, (2) pin toggle con icono Pin (lucide) con fill#5e6ad2 y rotación -45deg, (3) pinned-first sorting antes del sortBy activo, (4) accent bar border-l-[3px] border-l-[#5e6ad2] en cards pinned, (5) stagger animations con transitionDelay. Lecciones: (a) Los mocks de lucide-react en tests/unit/ deben incluir TODOS los iconos que usen los componentes que renderizan (no solo Star/Trash), o fallan 4 tests de integración; (b) Los botones en NoteCard tienen aria-labels específicos que los tests deben respetar; (c) 71 tests pasan, Docker healthy.
+- [2026-06-16]: [2026-06-16]: Iteración 2/3 (note-card-pinned-colors) completada. Pinned notes con pin toggle (Pin icon, fill #5e6ad2, rotate), pinned-first sorting, accent bar, stagger animations. 71 tests pasan, Docker healthy. Lección: mocks de lucide-react en tests/unit/ deben incluir todos los iconos que rendericen los componentes.
+- [2026-06-16]: Iteración 2/3 note-card-pinned-colors completada. Pinned notes, pin toggle, pinned-first sorting, accent bar, stagger animations. 71 tests, Docker healthy.
 
 # Design
 - [2026-06-16]: ## Notion Design System aplicado en App de Notas
