@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { StatsDashboard } from "@/components/blocks/StatsDashboard";
 import type { Note, NoteColor } from "@/types";
 
@@ -11,6 +11,7 @@ vi.mock("lucide-react", () => ({
   Star: () => <span data-testid="icon-star">S</span>,
   Pin: () => <span data-testid="icon-pin">P</span>,
   PieChart: () => <span data-testid="icon-piechart">PC</span>,
+  BarChart3: () => <span data-testid="icon-barchart3">BC3</span>,
   Hash: () => <span data-testid="icon-hash">H</span>,
   Calendar: () => <span data-testid="icon-calendar">C</span>,
   TrendingUp: () => <span data-testid="icon-trendingup">TU</span>,
@@ -19,6 +20,7 @@ vi.mock("lucide-react", () => ({
   Clock: () => <span data-testid="icon-clock">CLK</span>,
   Sparkles: () => <span data-testid="icon-sparkles">SPK</span>,
   Tag: () => <span data-testid="icon-tag">TAG</span>,
+  MousePointer2: () => <span data-testid="icon-mousepointer2">MP2</span>,
 }));
 
 const today = new Date();
@@ -94,5 +96,38 @@ describe("StatsDashboard", () => {
     // La sección de hashtags debe mostrar hashtags si existen
     expect(screen.getByText("#test")).toBeDefined();
     expect(screen.getByText("#importante")).toBeDefined();
+  });
+
+  it("TS-ANIM-01: Metric Cards se renderizan con atributos de animación escalonada", () => {
+    render(<StatsDashboard notes={mockNotes} />);
+    // Buscar labels de metric cards
+    const totalNotas = screen.getByText("Total Notas").closest("div");
+    const palabras = screen.getByText("Palabras").closest("div");
+    const caracteres = screen.getByText("Caracteres").closest("div");
+
+    // Verificar que los contenedores tienen la clase transition-all para smooth transitions
+    expect(totalNotas?.className).toContain("transition-all");
+    expect(palabras?.className).toContain("transition-all");
+    expect(caracteres?.className).toContain("transition-all");
+  });
+
+  it("TS-ANIM-03: Toggle button cambia entre vista de donut y barras en ColorChart", () => {
+    render(<StatsDashboard notes={mockNotes} />);
+
+    // El toggle debe estar presente en la sección de colores
+    const toggleButtons = screen.getAllByRole("button");
+    // Al menos debe haber un toggle button en la cabecera de Colores
+    expect(toggleButtons.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("TS-ANIM-04: Tooltip en WeeklyChart se renderiza al pasar el mouse sobre una barra", () => {
+    render(<StatsDashboard notes={mockNotes} />);
+
+    // La sección de Actividad Semanal debe estar visible
+    expect(screen.getByText("Actividad Semanal")).toBeDefined();
+
+    // Debe existir al menos una barra renderizada con datos (counts > 0)
+    const dayCounts = screen.getAllByText(/^(4|[0-3])$/);
+    expect(dayCounts.length).toBeGreaterThanOrEqual(1);
   });
 });

@@ -1,45 +1,38 @@
-# Active Brief: StatsDashboardRedesign (Iteración 1/2)
+# Dashboard Animations — Spec Activo
 
-## Contrato
-`.openspec/specs/2026-06-16__09-40-59_stats-dashboard-redesign/contract.json`
+**Contrato**: `.openspec/specs/2026-06-16__09-50-28_dashboard-animations/contract.json`
 
 ## Resumen
-Rediseño completo del dashboard de estadísticas con diseño Linear premium (translúcido, dark-mode-first, brand indigo #5e6ad2).
+Añadir animaciones de entrada, tooltips interactivos, donut chart alternativo, hover en timeline, smooth transitions y carga progresiva al StatsDashboard existente.
 
-### Cambios en StatsButton.tsx
-- DialogContent: `max-w-[800px]` → `sm:max-w-5xl lg:max-w-6xl max-h-[85vh]`
-- Eliminar ScrollArea externo
-- Añadir DialogDescription: "Resumen de tu actividad"
-- Padding más amplio (p-6 md:p-8)
+## Stack
+- Next.js 16 + Shadcn UI + Tailwind v4 + localStorage + Vitest
+- Diseño: Linear.app (#5e6ad2 indigo, dark-mode-first)
 
-### Cambios en StatsDashboard.tsx (rediseño completo)
-- Grid: `grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4`
-- **8 Metric Cards** (FileText, AlignLeft, Type, Star, Pin, Calendar, TrendingUp, Sparkles) — icono circular tintado + número grande + label + mini progress bar
-- **Color Distribution Chart** (2 cols) — histograma vertical con NOTE_COLORS[color].hex
-- **Weekly Activity Chart** (2 cols) — 7 barras verticales, día actual destacado #5e6ad2
-- **Top Hashtags Cloud** (2 cols) — pills con tamaño proporcional, empty state
-- **Notas Timeline** (1 col) — últimas 5 notas con fecha relativa
+## Componentes involucrados
+- **StatsDashboard** (`@/components/blocks/StatsDashboard.tsx`) — Modificar: añadir animaciones, tooltips, toggle, carga progresiva
+- **DonutChart** (NUEVO: `@/components/blocks/DonutChart.tsx`) — Mini donut con conic-gradient
+- **MetricCard** (inline en StatsDashboard) — fadeSlideUp + smooth transitions
+- **ColorChart/WeeklyChart** (inline en StatsDashboard) — Tooltips en hover + toggle Donut/Bar
+- **HashtagsCloud** (inline en StatsDashboard) — Progressive loading (600-900ms)
+- **Timeline** (inline en StatsDashboard) — Hover interactivo + mini preview
 
-### Cambios en stats.ts
-- Añadir: `notesLast7Days: { date: string; count: number }[]`
-- Añadir: `averageWordsPerNote: number`
-- Añadir: `completionRate: number`
-- Exportar: `extractHashtags`, helpers de fecha
+## Shadcn components necesarios
+- `tooltip` (instalar con: `npx shadcn@latest add tooltip`)
 
-### Diseño
-- **Brand**: Linear.app (dark-mode-first, cards translúcidas)
-- **Primary**: #5e6ad2 | **Accent**: #7170ff | **Bg**: #0f1011 | **Surface**: #191a1b
-- Cards: `rounded-lg border border-border/50 bg-card p-4 md:p-5 hover:shadow-sm`
-- Números: `text-3xl md:text-4xl font-semibold tracking-tight tabular-nums`
-- Labels: `text-xs text-muted-foreground font-medium uppercase tracking-wider`
-- Chart bars: `rounded-full transition-all duration-500 ease-out`
+## Lucide icons usados
+- `PieChart` (validado), `BarChart3` (validado), `MousePointer2` (validado), `BarChartHorizontal` (validado)
 
-### Tests creados
-- `src/__tests__/StatsDashboard.test.tsx` — TS-01 (8 labels visibles) + TS-03 (hashtags render)
-- `src/__tests__/StatsButton.test.tsx` — TS-02 (título + subtítulo del modal)
+## Animaciones
+- `@keyframes fadeSlideUp`: opacity 0→1, translateY(12px)→0
+- Metric cards: 0-300ms (index * 50ms delay)
+- Charts: 300-600ms
+- Hashtags + Timeline: 600-900ms
+- Smooth transitions: `transition-all duration-200 ease-out`
+- Hover: `hover:shadow-md hover:-translate-y-[1px]`
 
-### Shadcn components usados
-- button, card, dialog, badge, scroll-area (ya instalados)
-
-### Lucide icons validados (16)
-BarChart3, FileText, AlignLeft, Type, Star, Pin, Calendar, TrendingUp, PieChart, Palette, Activity, Hash, Tag, Clock, Sparkles, BarChartHorizontal
+## Tests (4 escenarios)
+1. `TS-ANIM-01` → StatsDashboard metric cards tienen animación (añadido a `StatsDashboard.test.tsx`)
+2. `TS-ANIM-02` → DonutChart renderiza conic-gradient correcto (NUEVO `DonutChart.test.tsx`)
+3. `TS-ANIM-03` → Toggle button cambia vista (añadido a `StatsDashboard.test.tsx`)
+4. `TS-ANIM-04` → Tooltip en WeeklyChart aparece en hover (añadido a `StatsDashboard.test.tsx`)

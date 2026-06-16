@@ -1,13 +1,26 @@
 {
   "contractName": "2026-06-16__09-50-28_dashboard-animations",
-  "sessionId": "",
-  "startedAt": "",
-  "lastUpdatedAt": "",
+  "sessionId": "ses_12f4d77f9ffen9VyujiTAyZfIm",
+  "startedAt": "2026-06-16T13:50:28.922Z",
+  "lastUpdatedAt": "2026-06-16T13:52:52.400Z",
   "totals": {
-    "cost": 0,
-    "tokensIn": 0,
-    "tokensOutput": 0,
-    "messages": 0
+    "cost": 0.023549668799999996,
+    "tokensIn": 87134,
+    "tokensOutput": 20326,
+    "messages": 57
   },
-  "byAgent": {}
+  "byAgent": {
+    "sdd-orchestrator": {
+      "cost": 0.0037380447999999997,
+      "tokensIn": 16384,
+      "tokensOutput": 2852,
+      "messages": 9
+    },
+    "sdd-spec-writer": {
+      "cost": 0.019811623999999993,
+      "tokensIn": 70750,
+      "tokensOutput": 17474,
+      "messages": 48
+    }
+  }
 }
