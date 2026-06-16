@@ -12,6 +12,9 @@ vi.mock("lucide-react", () => ({
   FileText: () => <div data-testid="icon-filetext" />,
   Hash: () => <div data-testid="icon-hash" />,
   Tag: () => <div data-testid="icon-tag" />,
+  Pin: () => <div data-testid="icon-pin" />,
+  Eye: () => <div data-testid="icon-eye" />,
+  Edit: () => <div data-testid="icon-edit" />,
 }));
 
 // Mock next-themes (needed by NoteCard → Card →... but not directly)

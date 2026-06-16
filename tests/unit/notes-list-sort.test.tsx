@@ -17,6 +17,9 @@ vi.mock("lucide-react", () => ({
   Clock: () => <div data-testid="icon-clock" />,
   Hash: () => <div data-testid="icon-hash" />,
   Tag: () => <div data-testid="icon-tag" />,
+  Pin: () => <div data-testid="icon-pin" />,
+  Eye: () => <div data-testid="icon-eye" />,
+  Edit: () => <div data-testid="icon-edit" />,
 }));
 
 describe("NotesList Sort (Contract Scenarios TS-04, TS-05)", () => {

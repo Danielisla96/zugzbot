@@ -1,5 +1,6 @@
 "use client";
-import { Pin, Star, Trash2, Clock, FileText, Hash, Tag } from "lucide-react";
+import { useState } from "react";
+import { Pin, Star, Trash2, Clock, FileText, Hash, Tag, Eye, Edit } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Note } from "@/types";
@@ -7,6 +8,7 @@ import { formatRelativeDate } from "@/lib/formatRelativeDate";
 import { extractHashtags } from "@/lib/extractHashtags";
 import { countWords } from "@/lib/countWords";
 import { cn } from "@/lib/utils";
+import { MarkdownRenderer } from "@/components/blocks/MarkdownRenderer";
 
 interface NoteCardProps {
   note: Note;
@@ -18,6 +20,7 @@ interface NoteCardProps {
 }
 
 export function NoteCard({ note, onEdit, onDelete, onToggleFavorite, onTogglePin, style }: NoteCardProps) {
+  const [showMarkdown, setShowMarkdown] = useState(false);
   const hashtags = extractHashtags(note.content);
   const wordCount = countWords(note.content);
   const charCount = note.content.length;
@@ -91,10 +94,16 @@ export function NoteCard({ note, onEdit, onDelete, onToggleFavorite, onTogglePin
 
       {/* Content preview + hashtags */}
       {note.content ? (
-        <div className="mt-2">
-          <p className="text-sm text-muted-foreground line-clamp-3">
-            {note.content}
-          </p>
+        <div className="mt-2" data-raw-toggle>
+          {showMarkdown ? (
+            <div className="prose prose-sm max-w-none dark:prose-invert" data-md-visible>
+              <MarkdownRenderer content={note.content} />
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground line-clamp-3" data-raw-visible>
+              {note.content}
+            </p>
+          )}
           {hashtags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-2">
               {hashtags.map((tag) => (
@@ -113,7 +122,7 @@ export function NoteCard({ note, onEdit, onDelete, onToggleFavorite, onTogglePin
         <p className="text-xs text-muted-foreground italic mt-2">Sin contenido</p>
       )}
 
-      {/* Metadata bar: date, word count, char count */}
+      {/* Metadata bar: date, word count, char count, markdown toggle */}
       <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1">
           <Clock className="size-3.5" />
@@ -129,6 +138,15 @@ export function NoteCard({ note, onEdit, onDelete, onToggleFavorite, onTogglePin
           <Hash className="size-3.5" />
           {charCount}
         </span>
+        <span className="text-muted-foreground/30">·</span>
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowMarkdown(!showMarkdown); }}
+          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          aria-label={showMarkdown ? "Ver texto" : "Vista previa"}
+          data-raw-toggle
+        >
+          {showMarkdown ? <Edit className="size-3.5" /> : <Eye className="size-3.5" />}
+        </button>
       </div>
     </Card>
   );

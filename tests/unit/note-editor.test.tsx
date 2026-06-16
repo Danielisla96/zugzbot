@@ -6,6 +6,10 @@ import { NoteEditor } from "@/components/blocks/NoteEditor";
 // Mock lucide-react (XIcon es usado por DialogContent en dialog.tsx)
 vi.mock("lucide-react", () => ({
   XIcon: () => <div data-testid="icon-x" />,
+  X: () => <div data-testid="icon-x" />,
+  Eye: () => <div data-testid="icon-eye" />,
+  Edit: () => <div data-testid="icon-edit" />,
+  FileText: () => <div data-testid="icon-filetext" />,
 }));
 
 // Mock @/components/ui/dialog para que no dependa de @base-ui/react en test
