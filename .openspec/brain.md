@@ -56,3 +56,4 @@
 
 # Deployment
 - [2026-06-16]: F4 Deployment (Iteración 2/2 Undo Delete): Docker build exitoso con Next.js 16.2.9 en node:20-alpine multi-stage. Contenedor healthy en puerto 3000. Healthcheck con node nativo funciona correctamente. Comando clave: `docker compose up -d --build --force-recreate` para despliegue limpio.
+- [2026-06-16]: F4_DEPLOYMENT StatsDashboard: Despliegue Docker exitoso en iteración 3/3 del autopiloto. Build compilado correctamente con Next.js 16.2.9 (Turbopack), TypeScript pasó en 5.7s, 3 páginas generadas. Container healthy en 18s, HTTP 200 en localhost:3000. Sin warnings ni errores en logs.
