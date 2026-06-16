@@ -13,6 +13,7 @@
 - [2026-06-16]: 2026-06-16: Iteración 1/2 notes-enhancements completada. Añadidas 3 funcionalidades: (1) Toast notifications con singleton useToast hook (CheckCircle2/Info/XCircle icons, auto-dismiss 3s, animación fade+slide); (2) SortControls con 4 modos (newest/oldest/a-z/favorites-first) usando botones pill con iconos; (3) NoteStats badge contador con pluralización y conteo filtrado. Todos los tests (37) pasaron y Docker build/run exitoso.
 - [2026-06-16]: Lint fix: 7 warnings corregidos en undo-delete spec — (1) `deletedNotes` → `_deletedNotes` en page.tsx; (2) `SortBy` removido de import innecesario en notes-list-sort.test.tsx; (3) `vi` removido de import en use-toast.test.ts; (4) `UseToastReturn` interface removida (no referenciada); (5) imports no usados (`render`, `screen`, `userEvent`) removidos de use-toast.test.tsx.
 - [2026-06-16]: Lint fix: 7 warnings corregidos en undo-delete spec - page.tsx deletedNotes prefixed, SortBy import removed, vi import removed, UseToastReturn interface removed, unused render/screen/userEvent imports removed from test files.
+- [2026-06-16]: 2026-06-16: Iteración 2/2 undo-delete-toast completada. Implementado buffer temporal de notas eliminadas (deletedNotes state) con toast "Deshacer" de 5 segundos. Patrón clave: setTimeout para purga automática con useRef<Map<string, setTimeout>> para cleanup. Toast action extendido con interface {label, onClick}. Total tests: 45, todos verdes.
 
 # Design
 - [2026-06-16]: ## Notion Design System aplicado en App de Notas
@@ -30,3 +31,6 @@
 # Errors
 - [2026-06-16]: Tests reveal "Encountered two children with the same key" warning for `test-uuid-xxxx` in home-page.test.tsx. Tests use a static UUID for all mocked notes. In production, `crypto.randomUUID()` generates unique keys. The warning only manifests in test environment; not a production bug. Consider using unique UUIDs per mock note in tests to eliminate the warning.
 - [2026-06-16]: Test duplicate key warning: home-page tests use static test-uuid-xxxx across mock notes, triggering React duplicate key warnings. Not a production bug but should be fixed by using unique UUIDs per mock note.
+
+# Deployment
+- [2026-06-16]: F4 Deployment (Iteración 2/2 Undo Delete): Docker build exitoso con Next.js 16.2.9 en node:20-alpine multi-stage. Contenedor healthy en puerto 3000. Healthcheck con node nativo funciona correctamente. Comando clave: `docker compose up -d --build --force-recreate` para despliegue limpio.

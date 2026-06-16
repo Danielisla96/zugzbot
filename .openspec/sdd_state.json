@@ -1,13 +1,13 @@
 {
-  "phase": "F4_DEPLOYMENT",
-  "activeContract": ".openspec/specs/2026-06-15__23-37-28_undo-delete-toast/contract.json",
+  "phase": "F0_DETECT",
+  "activeContract": "",
   "stack": {
     "core": [],
     "databases": []
   },
-  "loopMode": true,
+  "loopMode": false,
   "loopTargetIterations": 2,
   "loopCurrentIteration": 2,
   "rollbackCount": 0,
-  "updatedAt": "2026-06-16T03:45:21.755Z"
+  "updatedAt": "2026-06-16T03:47:11.800Z"
 }
