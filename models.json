@@ -1,0 +1,8 @@
+{
+  "global": "deepseek/deepseek-v4-flash",
+  "sdd-orchestrator": "",
+  "sdd-spec-writer": "",
+  "sdd-coder": "",
+  "sdd-tester": "",
+  "sdd-deployer": ""
+}

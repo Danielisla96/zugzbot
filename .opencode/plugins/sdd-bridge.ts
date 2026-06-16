@@ -209,6 +209,88 @@ export const SddBridgePlugin: Plugin = async ({ project, client, $, directory, w
     }
   }
 
+  // Helper to synchronize models automatically from models.json
+  const syncModelsFromConfig = () => {
+    try {
+      const modelsPath = path.resolve(projectRoot, "models.json")
+      const altModelsPath = path.resolve(projectRoot, ".opencode/models.json")
+      let selectedModelsPath = ""
+
+      if (fs.existsSync(modelsPath)) {
+        selectedModelsPath = modelsPath
+      } else if (fs.existsSync(altModelsPath)) {
+        selectedModelsPath = altModelsPath
+      } else {
+        return // No config file, do nothing silently
+      }
+
+      const modelsContent = fs.readFileSync(selectedModelsPath, "utf8")
+      const modelsData = JSON.parse(modelsContent)
+      const globalModel = modelsData.global || "deepseek/deepseek-v4-flash"
+
+      // 1. Update opencode.json
+      const opencodeJsonPath = path.resolve(projectRoot, "opencode.json")
+      if (fs.existsSync(opencodeJsonPath)) {
+        const opencodeContent = fs.readFileSync(opencodeJsonPath, "utf8")
+        const opencodeData = JSON.parse(opencodeContent)
+        let updated = false
+
+        if (opencodeData.agent && typeof opencodeData.agent === "object") {
+          for (const agentName of Object.keys(opencodeData.agent)) {
+            const configModel = modelsData[agentName]
+            const targetModel = configModel && configModel.trim() !== "" ? configModel : globalModel
+
+            if (opencodeData.agent[agentName].model !== targetModel) {
+              opencodeData.agent[agentName].model = targetModel
+              updated = true
+            }
+          }
+        }
+
+        if (updated) {
+          fs.writeFileSync(opencodeJsonPath, JSON.stringify(opencodeData, null, 2), "utf8")
+          logPhase("MODEL_SYNC", "Sincronizados modelos en opencode.json desde models.json")
+        }
+      }
+
+      // 2. Update agent markdown files (.opencode/agents/*.md)
+      const agentsDir = path.resolve(projectRoot, ".opencode/agents")
+      if (fs.existsSync(agentsDir)) {
+        const files = fs.readdirSync(agentsDir)
+        for (const file of files) {
+          if (file.endsWith(".md")) {
+            const agentName = file.slice(0, -3)
+            const configModel = modelsData[agentName]
+            const targetModel = configModel && configModel.trim() !== "" ? configModel : globalModel
+            const filepath = path.join(agentsDir, file)
+            const content = fs.readFileSync(filepath, "utf8")
+
+            const frontmatterPattern = /^---$([\s\S]*?)^---$/m
+            const match = frontmatterPattern.exec(content)
+            if (match) {
+              const frontmatter = match[1]
+              if (frontmatter.includes("model:")) {
+                const modelLinePattern = /^model:\s*(.*?)$/m
+                const modelLineMatch = modelLinePattern.exec(frontmatter)
+                if (modelLineMatch && modelLineMatch[1].trim() !== targetModel) {
+                  const newFrontmatter = frontmatter.replace(modelLinePattern, `model: ${targetModel}`)
+                  const newContent = content.replace(frontmatter, newFrontmatter)
+                  fs.writeFileSync(filepath, newContent, "utf8")
+                  logPhase("MODEL_SYNC", `Sincronizado agente ${file} a modelo: ${targetModel}`)
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // Best-effort: don't crash on model sync failures
+    }
+  }
+
+  // Run model sync from models.json automatically on plugin load
+  syncModelsFromConfig()
+
   // Ensure metrics file matches current contract on plugin load
   maybeResetMetrics()
 
@@ -233,7 +315,7 @@ export const SddBridgePlugin: Plugin = async ({ project, client, $, directory, w
       const currentState = readState()
 
       // Enforce: No code edits allowed unless we are in the implementation phase (F2_IMPLEMENTATION)
-      if (isWritingCode && !targetFilePath.includes("tests") && !targetFilePath.includes("specs") && !targetFilePath.includes(".opencode") && !targetFilePath.includes(".openspec") && !targetFilePath.includes("config.ts") && !targetFilePath.includes("config.js")) {
+      if (isWritingCode && !targetFilePath.includes("tests") && !targetFilePath.includes("specs") && !targetFilePath.includes(".opencode") && !targetFilePath.includes(".openspec") && !targetFilePath.includes(".utils") && !targetFilePath.includes("config.ts") && !targetFilePath.includes("config.js")) {
         if (currentState.phase !== "F2_IMPLEMENTATION") {
           throw new Error(
             `[SDD Contract Violation] No se permite escribir o editar código de la aplicación. Fase actual: '${currentState.phase}'. Debe transicionar a 'F2_IMPLEMENTATION' una vez que el contrato esté aprobado.`
