@@ -5,24 +5,6 @@ import json
 import re
 
 # ==============================================================================
-# CONFIGURACIÓN DE MODELOS POR DEFECTO
-# ==============================================================================
-# Modelo global que se aplicará a todos los agentes por defecto.
-# (Se puede cambiar ejecutando: python3 utils/toggle_model.py <nombre_modelo>)
-GLOBAL_MODEL = "deepseek/deepseek-v4-flash"
-
-# Personalización individual por agente.
-# Escribe el nombre exacto del modelo si quieres que un agente use uno distinto.
-# Si el valor está vacío (""), se usará el GLOBAL_MODEL.
-PER_AGENT_MODELS = {
-    "sdd-orchestrator": "",
-    "sdd-spec-writer": "",
-    "sdd-coder": "",
-    "sdd-tester": "",
-    "sdd-deployer": "",
-}
-
-# ==============================================================================
 # LISTA DE MODELOS DISPONIBLES EN OPENCODE
 # ==============================================================================
 AVAILABLE_MODELS = [
@@ -75,7 +57,44 @@ def get_paths():
     project_root = os.path.dirname(script_dir)
     opencode_json = os.path.join(project_root, "opencode.json")
     agents_dir = os.path.join(project_root, ".opencode", "agents")
-    return opencode_json, agents_dir
+    models_json = os.path.join(project_root, "models.json")
+    return opencode_json, agents_dir, models_json
+
+
+def load_models_config():
+    opencode_json, agents_dir, models_json = get_paths()
+    default_config = {
+        "global": "deepseek/deepseek-v4-flash",
+        "sdd-orchestrator": "",
+        "sdd-spec-writer": "",
+        "sdd-coder": "",
+        "sdd-tester": "",
+        "sdd-deployer": ""
+    }
+    
+    if os.path.exists(models_json):
+        try:
+            with open(models_json, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            pass
+            
+    # Guardamos el default si no existe
+    try:
+        with open(models_json, 'w', encoding='utf-8') as f:
+            json.dump(default_config, f, indent=2)
+    except Exception:
+        pass
+    return default_config
+
+
+def save_models_config(config):
+    opencode_json, agents_dir, models_json = get_paths()
+    try:
+        with open(models_json, 'w', encoding='utf-8') as f:
+            json.dump(config, f, indent=2)
+    except Exception as e:
+        print(f"Error guardando models.json: {e}", file=sys.stderr)
 
 
 def search_model(query):
@@ -85,7 +104,7 @@ def search_model(query):
 
 
 def apply_model(agent_models):
-    opencode_json, agents_dir = get_paths()
+    opencode_json, agents_dir, models_json = get_paths()
 
     if not os.path.exists(opencode_json):
         print(f"Error: No se encontró {opencode_json}", file=sys.stderr)
@@ -150,13 +169,17 @@ def print_available_models():
 def main():
     args = sys.argv[1:]
 
+    # Cargar la configuración actual del JSON
+    config = load_models_config()
+
     # Si se pide listar modelos
     if args and args[0] in ("--list", "-l", "list"):
         print_available_models()
         sys.exit(0)
 
     # Determinar el modelo global a usar
-    global_model_selected = GLOBAL_MODEL
+    global_model_selected = config.get("global", "deepseek/deepseek-v4-flash")
+    
     if args:
         query = args[0]
         matches = search_model(query)
@@ -178,14 +201,18 @@ def main():
             print(
                 f"Seleccionando automáticamente la primera: {global_model_selected}\n"
             )
+            
+        # Actualizar el global_model en config y persistir
+        config["global"] = global_model_selected
+        save_models_config(config)
 
     # Construir el mapeo de modelos final para cada agente
     final_agent_models = {}
     print("Mapeo de modelos por agente:")
 
-    for agent_name in PER_AGENT_MODELS.keys():
-        # Si tiene override en el script, usarlo
-        custom_model = PER_AGENT_MODELS[agent_name]
+    agents_list = ["sdd-orchestrator", "sdd-spec-writer", "sdd-coder", "sdd-tester", "sdd-deployer"]
+    for agent_name in agents_list:
+        custom_model = config.get(agent_name, "")
         if custom_model:
             # Validar que el modelo custom existe
             if custom_model not in AVAILABLE_MODELS:
