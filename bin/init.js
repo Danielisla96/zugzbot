@@ -25,7 +25,7 @@ const itemsToCopy = [
   { name: '.opencode', src: join(pkgRoot, '.opencode'), dest: join(targetDir, '.opencode'), type: 'dir' },
   { name: 'opencode.json', src: join(pkgRoot, 'opencode.json'), dest: join(targetDir, 'opencode.json'), type: 'file' },
   { name: 'tui.json', src: join(pkgRoot, 'tui.json'), dest: join(targetDir, 'tui.json'), type: 'file' },
-  { name: 'utils', src: join(pkgRoot, 'utils'), dest: join(targetDir, 'utils'), type: 'dir' }
+  { name: '.utils', src: join(pkgRoot, '.utils'), dest: join(targetDir, '.utils'), type: 'dir' }
 ];
 
 // Helper to filter out node_modules and .git files

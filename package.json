@@ -11,7 +11,7 @@
     ".opencode/",
     "opencode.json",
     "tui.json",
-    "utils/"
+    ".utils/"
   ],
   "engines": {
     "node": ">=16.0.0"
