@@ -3,6 +3,7 @@ import sys
 import os
 import json
 import re
+import curses
 
 # ==============================================================================
 # LISTA DE MODELOS DISPONIBLES EN OPENCODE
@@ -50,6 +51,8 @@ AVAILABLE_MODELS = [
     "minimax-coding-plan/MiniMax-M2.7-highspeed",
     "minimax-coding-plan/MiniMax-M3",
 ]
+
+AGENTS_LIST = ["sdd-orchestrator", "sdd-spec-writer", "sdd-coder", "sdd-tester", "sdd-deployer"]
 
 
 def get_paths():
@@ -166,20 +169,244 @@ def print_available_models():
     print()
 
 
+# ==============================================================================
+# INTERFAZ INTERACTIVA TUI (CURSES)
+# ==============================================================================
+
+def select_model_tui(stdscr, title, current_val, is_global=False):
+    # Habilitar modo keypad para recibir flechas de cursor
+    stdscr.keypad(True)
+    curses.curs_set(0) # Ocultar cursor físico
+    
+    # Colores
+    curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_CYAN) # Seleccionado
+    curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK) # Buscador
+    curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK) # Éxito / Info
+    
+    query = ""
+    selected_idx = 0
+    
+    while True:
+        stdscr.clear()
+        
+        # Obtener lista de modelos y añadir "Heredar del Global" si no es la config global
+        options = []
+        if not is_global:
+            options.append("") # Representa [Heredar del Global]
+            
+        # Filtrar modelos según query
+        filtered_models = [m for m in AVAILABLE_MODELS if query.lower() in m.lower()]
+        options.extend(filtered_models)
+        
+        # Validar límites de selección
+        if selected_idx >= len(options):
+            selected_idx = max(0, len(options) - 1)
+            
+        # Títulos
+        stdscr.addstr(1, 2, f"=== {title} ===", curses.A_BOLD)
+        stdscr.addstr(2, 2, "Escribe caracteres para buscar en tiempo real.", curses.A_DIM)
+        stdscr.addstr(3, 2, "Usa [↑/↓] para navegar y [Enter] para confirmar. [ESC] para volver.", curses.A_DIM)
+        
+        # Caja de búsqueda
+        stdscr.addstr(5, 2, "Buscador: ", curses.A_BOLD)
+        stdscr.addstr(5, 12, f" {query}█ ", curses.color_pair(2) | curses.A_BOLD)
+        stdscr.addstr(6, 2, "-" * 60, curses.A_DIM)
+        
+        # Mostrar opciones con paginación simple de terminal
+        start_row = 8
+        max_rows = curses.LINES - start_row - 2
+        
+        if not options:
+            stdscr.addstr(start_row, 4, "No hay modelos que coincidan con la búsqueda.", curses.color_pair(2))
+        else:
+            # Mostrar solo lo que quepa en la pantalla
+            for i in range(min(len(options), max_rows)):
+                opt = options[i]
+                row = start_row + i
+                
+                # Formatear el label
+                if opt == "":
+                    label = "[ Heredar del Global ]"
+                else:
+                    label = opt
+                    
+                # Indicar si es el activo actual
+                if opt == current_val:
+                    label += "  (activo)"
+                
+                # Resaltar la opción seleccionada
+                if i == selected_idx:
+                    stdscr.attron(curses.color_pair(1))
+                    stdscr.addstr(row, 2, f" > {label:<50} ")
+                    stdscr.attroff(curses.color_pair(1))
+                else:
+                    stdscr.addstr(row, 2, f"   {label:<50}")
+                    
+        stdscr.refresh()
+        
+        # Leer tecla
+        try:
+            key = stdscr.getch()
+        except KeyboardInterrupt:
+            return None
+            
+        if key in (27, curses.KEY_CANCEL): # ESC
+            return None
+        elif key in (10, 13, curses.KEY_ENTER): # Enter
+            if options:
+                return options[selected_idx]
+            return None
+        elif key == curses.KEY_UP:
+            if selected_idx > 0:
+                selected_idx -= 1
+        elif key == curses.KEY_DOWN:
+            if selected_idx < len(options) - 1:
+                selected_idx += 1
+        elif key in (127, 8, curses.KEY_BACKSPACE): # Backspace
+            query = query[:-1]
+            selected_idx = 0
+        elif 32 <= key <= 126: # Carácter imprimible
+            query += chr(key)
+            selected_idx = 0
+
+
+def main_tui(stdscr):
+    # Habilitar keypad
+    stdscr.keypad(True)
+    curses.curs_set(0)
+    
+    # Inicializar pares de colores
+    curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_CYAN) # Selección
+    curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK) # Alertas
+    curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK) # Éxito
+    curses.init_pair(4, curses.COLOR_YELLOW, curses.COLOR_BLACK) # Warnings
+    
+    config = load_models_config()
+    selected_row = 0
+    
+    while True:
+        stdscr.clear()
+        
+        stdscr.addstr(1, 2, "🤖 ZUGZBOT: CONFIGURACIÓN INTERACTIVA DE MODELOS", curses.A_BOLD)
+        stdscr.addstr(2, 2, "Navega con [↑/↓], pulsa [Enter] para editar un agente.", curses.A_DIM)
+        stdscr.addstr(3, 2, "Presiona [G] para Guardar y Aplicar, o [Q]/[ESC] para Salir.", curses.A_DIM)
+        stdscr.addstr(4, 2, "═" * 70)
+        
+        # Construir items del menú interactivo
+        global_val = config.get("global", "deepseek/deepseek-v4-flash")
+        
+        menu_items = [
+            ("global", f"Modelo Global: {global_val}"),
+        ]
+        
+        for agent in AGENTS_LIST:
+            val = config.get(agent, "")
+            label = val if val else f"[Hereda del global: {global_val}]"
+            menu_items.append((agent, f"{agent}: {label}"))
+            
+        # Añadir opciones de acción al menú
+        menu_items.append(("save", "[✓] GUARDAR Y APLICAR CAMBIOS"))
+        menu_items.append(("cancel", "[✗] CANCELAR Y SALIR"))
+        
+        start_row = 6
+        for idx, (key, text) in enumerate(menu_items):
+            row = start_row + idx
+            
+            # Resaltar la opción actual
+            if idx == selected_row:
+                stdscr.attron(curses.color_pair(1))
+                stdscr.addstr(row, 2, f" > {text:<65} ")
+                stdscr.attroff(curses.color_pair(1))
+            else:
+                if key == "save":
+                    stdscr.addstr(row, 2, f"   {text}", curses.color_pair(3) | curses.A_BOLD)
+                elif key == "cancel":
+                    stdscr.addstr(row, 2, f"   {text}", curses.color_pair(2))
+                elif key == "global":
+                    stdscr.addstr(row, 2, f"   {text}", curses.color_pair(3))
+                else:
+                    stdscr.addstr(row, 2, f"   {text}")
+                    
+        stdscr.refresh()
+        
+        # Leer acción del usuario
+        try:
+            key = stdscr.getch()
+        except KeyboardInterrupt:
+            break
+            
+        if key in (ord('q'), ord('Q'), 27): # Q o ESC
+            break
+        elif key in (ord('g'), ord('G')): # G de Guardar
+            apply_and_exit(config)
+            break
+        elif key == curses.KEY_UP:
+            if selected_row > 0:
+                selected_row -= 1
+        elif key == curses.KEY_DOWN:
+            if selected_row < len(menu_items) - 1:
+                selected_row += 1
+        elif key in (10, 13, curses.KEY_ENTER):
+            # Obtener el item seleccionado
+            action_key, _ = menu_items[selected_row]
+            
+            if action_key == "save":
+                apply_and_exit(config)
+                break
+            elif action_key == "cancel":
+                break
+            elif action_key == "global":
+                # Editar el modelo global
+                new_val = select_model_tui(stdscr, "SELECCIONAR MODELO GLOBAL POR DEFECTO", global_val, is_global=True)
+                if new_val is not None:
+                    config["global"] = new_val
+                    save_models_config(config)
+            else:
+                # Editar un agente específico
+                current_agent_val = config.get(action_key, "")
+                new_val = select_model_tui(stdscr, f"SELECCIONAR MODELO PARA {action_key}", current_agent_val, is_global=False)
+                if new_val is not None:
+                    config[action_key] = new_val
+                    save_models_config(config)
+
+
+def apply_and_exit(config):
+    # Guardar la configuración
+    save_models_config(config)
+    
+    # Aplicar el mapeo de modelos final en cascada
+    global_model = config.get("global", "deepseek/deepseek-v4-flash")
+    final_agent_models = {}
+    
+    print("\nMapeo de modelos resultante:")
+    for agent_name in AGENTS_LIST:
+        custom_val = config.get(agent_name, "")
+        final_model = custom_val if custom_val else global_model
+        final_agent_models[agent_name] = final_model
+        origin = "personalizado" if custom_val else "global"
+        print(f"  * {agent_name} -> {final_model} ({origin})")
+        
+    print("\nAplicando cambios...")
+    apply_model(final_agent_models)
+    print("\nModelos configurados exitosamente! 🎉")
+
+
+# ==============================================================================
+# MAIN ENTRY POINT
+# ==============================================================================
+
 def main():
     args = sys.argv[1:]
 
     # Cargar la configuración actual del JSON
     config = load_models_config()
 
-    # Si se pide listar modelos
+    # Si se pide listar modelos por CLI
     if args and args[0] in ("--list", "-l", "list"):
         print_available_models()
         sys.exit(0)
 
-    # Determinar el modelo global a usar
-    global_model_selected = config.get("global", "deepseek/deepseek-v4-flash")
-    
+    # Si se pasan argumentos por parámetro, corre en modo CLI no-interactivo rápido
     if args:
         query = args[0]
         matches = search_model(query)
@@ -204,31 +431,10 @@ def main():
             
         # Actualizar el global_model en config y persistir
         config["global"] = global_model_selected
-        save_models_config(config)
-
-    # Construir el mapeo de modelos final para cada agente
-    final_agent_models = {}
-    print("Mapeo de modelos por agente:")
-
-    agents_list = ["sdd-orchestrator", "sdd-spec-writer", "sdd-coder", "sdd-tester", "sdd-deployer"]
-    for agent_name in agents_list:
-        custom_model = config.get(agent_name, "")
-        if custom_model:
-            # Validar que el modelo custom existe
-            if custom_model not in AVAILABLE_MODELS:
-                print(
-                    f"Advertencia: El modelo personalizado '{custom_model}' para '{agent_name}' no está en la lista oficial.",
-                    file=sys.stderr,
-                )
-            final_agent_models[agent_name] = custom_model
-            print(f"  * {agent_name} -> {custom_model} (personalizado)")
-        else:
-            final_agent_models[agent_name] = global_model_selected
-            print(f"  * {agent_name} -> {global_model_selected} (global)")
-
-    print("\nAplicando cambios...")
-    apply_model(final_agent_models)
-    print("\nModelos configurados exitosamente! 🎉")
+        apply_and_exit(config)
+    else:
+        # Si NO se pasan argumentos, inicia la TUI interactiva
+        curses.wrapper(main_tui)
 
 
 if __name__ == "__main__":
