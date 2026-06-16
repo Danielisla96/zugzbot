@@ -3,6 +3,14 @@ import fs from "fs"
 import path from "path"
 import { execSync, spawn } from "child_process"
 
+// Helper to safely resolve root directory (avoiding OpenCode bug where worktree is '/' in non-git repos)
+const getRoot = (context: any) => {
+  if (context?.directory && context.directory !== "/") return context.directory;
+  if (context?.worktree && context.worktree !== "/") return context.worktree;
+  if (context?.cwd && context.cwd !== "/") return context.cwd;
+  return process.cwd();
+};
+
 
 // Helper to parse semantic errors from compiler and linter outputs (reducing raw trace log bloat for the LLM)
 const parseSemanticErrors = (rawOutput: string, type: "eslint" | "tsc"): any[] => {
@@ -43,7 +51,7 @@ const parseSemanticErrors = (rawOutput: string, type: "eslint" | "tsc"): any[] =
 
 // Helper to resolve state path
 const getStateFilePath = (context: any) => {
-  const root = context.worktree || context.directory || process.cwd()
+  const root = getRoot(context)
   return path.resolve(root, ".openspec/sdd_state.json")
 }
 
@@ -285,7 +293,7 @@ export const set_phase = tool({
     loopCurrentIteration: tool.schema.number().optional().describe("Número de la iteración autónoma actual (empieza en 1)."),
   },
   async execute(args, context) {
-    const root = context.worktree || context.directory || process.cwd()
+    const root = getRoot(context)
     const filePath = getStateFilePath(context)
     const currentState = readState(filePath)
 
@@ -472,7 +480,7 @@ export const get_initial_session_data = tool({
   description: "Obtiene atómicamente todos los datos de inicio de sesión: el estado actual del arnés, las memorias históricas clave del Brain ('learnings', 'design', 'routing'), y la lista curada de recomendaciones de diseño de Oh My Design. Reemplaza las llamadas secuenciales a sdd_get_state, brain_read_memory y sdd_list_design_recommendations.",
   args: {},
   async execute(args, context) {
-    const root = context.worktree || context.directory || process.cwd()
+    const root = getRoot(context)
     const statePath = getStateFilePath(context)
     const currentState = readState(statePath)
     
@@ -509,7 +517,7 @@ export const save_active_brief = tool({
     brief: tool.schema.string().describe("Contenido en formato Markdown con el resumen del spec activo, componentes, diseño y dependencias.")
   },
   async execute(args, context) {
-    const root = context?.worktree || context?.directory || process.cwd()
+    const root = getRoot(context)
     const openspecDir = path.resolve(root, ".openspec")
     if (!fs.existsSync(openspecDir)) {
       fs.mkdirSync(openspecDir, { recursive: true })
@@ -531,7 +539,7 @@ export const create_spec_folder = tool({
     name: tool.schema.string().describe("Nombre del cambio en minúsculas y separado por guiones (ej. sumar-endpoint)")
   },
   async execute(args, context) {
-    const root = context.worktree || context.directory || process.cwd()
+    const root = getRoot(context)
     const specsDir = path.resolve(root, ".openspec/specs")
 
     if (!fs.existsSync(specsDir)) {
@@ -635,7 +643,7 @@ export const start_server = tool({
     cwd: tool.schema.string().optional().describe("Directorio de trabajo para ejecutar el comando")
   },
   async execute(args, context) {
-    const root = context.worktree || context.directory || process.cwd()
+    const root = getRoot(context)
     const targetCwd = args.cwd ? path.resolve(root, args.cwd) : root
     const pidFile = getPidFilePath(root)
 
@@ -693,7 +701,7 @@ export const stop_server = tool({
   description: "Detiene el servidor en segundo plano usando el PID registrado",
   args: {},
   async execute(args, context) {
-    const root = context.worktree || context.directory || process.cwd()
+    const root = getRoot(context)
     const pidFile = getPidFilePath(root)
 
     if (fs.existsSync(pidFile)) {
@@ -738,7 +746,7 @@ export const select_design = tool({
     brandId: tool.schema.string().describe("ID exacto del diseño en oh-my-design (ej: 'linear.app', 'vercel', 'stripe')")
   },
   async execute(args, context) {
-    const root = context.worktree || context.directory || process.cwd()
+    const root = getRoot(context)
     const brandId = args.brandId.trim()
     const sourceDir = path.resolve(root, ".opencode/oh-my-design/design-md", brandId)
     const targetDir = path.resolve(root, ".openspec")
@@ -767,7 +775,7 @@ export const select_design = tool({
 
 // Helper extracted to allow substring-match recursion without `this.execute` typing issues.
 async function selectDesignHelper(brandId: string, context: any) {
-    const root = context.worktree || context.directory || process.cwd()
+    const root = getRoot(context)
     const sourceDir = path.resolve(root, ".opencode/oh-my-design/design-md", brandId)
     const targetDir = path.resolve(root, ".openspec")
 
@@ -907,7 +915,7 @@ export const apply_brand_tokens = tool({
     tokens: tool.schema.string().describe("JSON stringificado con {colors: {...}, typography: {...}, radius: {...}} extraído de contract.json design.tokens"),
   },
   async execute(args, context) {
-    const root = context.worktree || context.directory || process.cwd()
+    const root = getRoot(context)
     const globalsPath = path.resolve(root, "src/app/globals.css")
 
     if (!fs.existsSync(globalsPath)) {
@@ -981,7 +989,7 @@ export const generate_dockerfile = tool({
     port: tool.schema.number().default(3000).describe("Puerto de la aplicación"),
   },
   async execute(args, context) {
-    const root = context.worktree || context.directory || process.cwd()
+    const root = getRoot(context)
 
     if (args.stack === "nextjs") {
       // Detect package manager
@@ -1157,7 +1165,7 @@ export const quick_lint = tool({
   description: "Ejecuta el linter del proyecto (eslint) restringido a src/. Devuelve exit code y warnings. Usado como gate automático antes de transicionar a F3.",
   args: {},
   async execute(args, context) {
-    const root = context.worktree || context.directory || process.cwd()
+    const root = getRoot(context)
 
     // Detect package manager scripts
     const pkgPath = path.resolve(root, "package.json")
@@ -1195,7 +1203,7 @@ export const shift_left_verify = tool({
   description: "Ejecuta validaciones estáticas Shift-Left completas en el proyecto: ejecuta el compilador de TypeScript (tsc) y el linter (eslint) de manera combinada. Limpia y parsea semánticamente los stack traces y logs de error crudos, devolviendo un JSON limpio y estructurado de errores que el LLM puede digerir y solucionar de inmediato sin perder atención.",
   args: {},
   async execute(args, context) {
-    const root = context.worktree || context.directory || process.cwd()
+    const root = getRoot(context)
     const result: { tsc: { status: string, errors?: any[] }, eslint: { status: string, errors?: any[] } } = {
       tsc: { status: "SUCCESS" },
       eslint: { status: "SUCCESS" }
@@ -1346,7 +1354,7 @@ export const bootstrap_status = tool({
   description: "Reporta el estado de bootstrap del proyecto (qué plantilla se usó, cuándo, qué componentes shadcn están instalados, versión de Node y package manager). Si el proyecto no está bootstrapped, retorna NOT_BOOTSTRAPPED. Útil para que el coder verifique antes de empezar a codear.",
   args: {},
   async execute(args, context) {
-    const root = context.worktree || context.directory || process.cwd()
+    const root = getRoot(context)
     const status = readBootstrapStatus(root)
 
     if (!status) {
@@ -1396,7 +1404,7 @@ export const bootstrap_nextjs_shadcn = tool({
     force: tool.schema.boolean().default(false).describe("Si true, sobrescribe archivos existentes. Si false, los salta (mergea package.json)."),
   },
   async execute(args, context) {
-    const root = context.worktree || context.directory || process.cwd()
+    const root = getRoot(context)
     const start = Date.now()
     const templateDir = path.resolve(root, ".opencode/templates/nextjs-shadcn")
 
@@ -1619,7 +1627,7 @@ export const bootstrap_fastapi = tool({
     force: tool.schema.boolean().default(false).describe("Si true, sobrescribe archivos existentes. Si false, los salta."),
   },
   async execute(args, context) {
-    const root = context.worktree || context.directory || process.cwd()
+    const root = getRoot(context)
     const start = Date.now()
     const templateDir = path.resolve(root, ".opencode/templates/fastapi-sdd")
 
@@ -1816,7 +1824,7 @@ export const validate_lucide_icons_batch = tool({
     icons: tool.schema.array(tool.schema.string()).describe("Lista de nombres de iconos a validar (ej: ['Sun', 'Moon', 'Plus'])"),
   },
   async execute(args, context) {
-    const root = context.worktree || context.directory || process.cwd()
+    const root = getRoot(context)
     const results: Record<string, { valid: boolean; source: string }> = {}
     
     // Lista de iconos comunes como fallback
@@ -1887,7 +1895,7 @@ export const generate_tests = tool({
   description: "Autogenera plantillas de pruebas unitarias/integración en tests/unit/ a partir de los escenarios de prueba descritos en el contrato activo de sdd_state.json. No pisa archivos de pruebas existentes.",
   args: {},
   async execute(args, context) {
-    const root = context.worktree || context.directory || process.cwd()
+    const root = getRoot(context)
     const stateFile = path.resolve(root, ".openspec/sdd_state.json")
     if (!fs.existsSync(stateFile)) {
       return JSON.stringify({ success: false, error: "sdd_state.json no existe. Inicia una sesión SDD primero." }, null, 2)
@@ -1977,7 +1985,7 @@ export const save_playwright_artifacts = tool({
     move: tool.schema.boolean().default(false).describe("Si true, mueve los archivos en lugar de copiarlos.")
   },
   async execute(args, context) {
-    const root = context.worktree || context.directory || process.cwd()
+    const root = getRoot(context)
     const stateFile = path.resolve(root, ".openspec/sdd_state.json")
     if (!fs.existsSync(stateFile)) {
       return JSON.stringify({ success: false, error: "sdd_state.json no existe. Inicia una sesión SDD primero." }, null, 2)

@@ -33,7 +33,10 @@ const emptyMetrics = (): SessionMetrics => ({
 })
 
 export const SddBridgePlugin: Plugin = async ({ project, client, $, directory, worktree }) => {
-  const projectRoot = worktree || directory || process.cwd()
+  let projectRoot = process.cwd();
+  if (directory && directory !== "/") projectRoot = directory;
+  else if (worktree && worktree !== "/") projectRoot = worktree;
+
   const stateFilePath = path.resolve(projectRoot, ".openspec/sdd_state.json")
   const metricsFilePath = path.resolve(projectRoot, ".openspec/.sdd_session_metrics.json")
 

@@ -2,8 +2,15 @@ import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
 
+const getRoot = (context: any) => {
+  if (context?.directory && context.directory !== "/") return context.directory;
+  if (context?.worktree && context.worktree !== "/") return context.worktree;
+  if (context?.cwd && context.cwd !== "/") return context.cwd;
+  return process.cwd();
+};
+
 const getBrainFilePath = (context: any) => {
-  const root = context?.worktree || context?.directory || process.cwd()
+  const root = getRoot(context);
   const openspecDir = path.resolve(root, ".openspec")
   if (!fs.existsSync(openspecDir)) {
     fs.mkdirSync(openspecDir, { recursive: true })
