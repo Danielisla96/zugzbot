@@ -13,7 +13,7 @@ Este repositorio ha sido empaquetado como un instalador interactivo global de NP
 Para inyectar el arnés de Zugzbot en cualquier directorio o proyecto de tu computadora, simplemente abre una terminal en la carpeta raíz de tu proyecto de destino y ejecuta:
 
 ```bash
-npx zugzbot
+npx zugzbot@latest
 ```
 
 ¡Eso es todo! El instalador automatizado copiará de forma no destructiva y fusionará los siguientes recursos en tu proyecto:
