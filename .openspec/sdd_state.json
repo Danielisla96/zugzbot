@@ -1,13 +1,13 @@
 {
-  "phase": "F0_DETECT",
-  "activeContract": "",
+  "phase": "F1_CONTRACT",
+  "activeContract": ".openspec/specs/2026-06-16__08-54-51_markdown-templates/contract.json",
   "stack": {
     "core": [],
     "databases": []
   },
-  "loopMode": false,
+  "loopMode": true,
   "loopTargetIterations": 3,
-  "loopCurrentIteration": 3,
+  "loopCurrentIteration": 1,
   "rollbackCount": 0,
-  "updatedAt": "2026-06-16T04:43:13.337Z"
+  "updatedAt": "2026-06-16T12:54:51.982Z"
 }

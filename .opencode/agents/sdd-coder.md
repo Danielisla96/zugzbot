@@ -125,14 +125,16 @@ Eres el Programador de Código (sdd-coder) del arnés SDD. Tu trabajo es codific
   - **Shadcn v4 y `@base-ui/react`**: No utilices la propiedad `asChild`.
   - **Turbopack y CSS**: Evita importar archivos CSS directos de `node_modules` en `globals.css`.
   - **SEO**: Modifica el metadata de `layout.tsx` para reflejar el título y descripción reales del proyecto.
-  - **Self-audit pre-transición (BLOQUEANTE)**: Antes de finalizar, ejecutar este bloque bash en una sola corrida. Si CUALQUIER check falla, arreglar primero:
+  - **Self-audit pre-transición (BLOQUEANTE)**: Antes de finalizar y entregar el código, debes ejecutar este bloque bash en una sola corrida. Si CUALQUIER check (de linter, tipado o de tests) falla, debes arreglarlo tú mismo en esta misma fase de codificación, evitando heredar errores a fases posteriores:
     ```bash
     HITS=$(grep -rE '#[0-9a-fA-F]{6}\b' src/ --include='*.tsx' --include='*.ts' 2>/dev/null | grep -v 'globals.css' | grep -v 'tailwind.config' | wc -l | tr -d ' ')
     [ "$HITS" -eq 0 ] || { echo "FAIL: $HITS hex literals en código de aplicación"; exit 1; }
     HITS=$(grep -rE 'style=\{\{[^}]*(backgroundColor|color|borderColor|fill|stroke)' src/ --include='*.tsx' 2>/dev/null | wc -l | tr -d ' ')
     [ "$HITS" -eq 0 ] || { echo "FAIL: $HITS inline color/background styles"; exit 1; }
     npx eslint src/ --quiet --max-warnings 0 2>&1 || { echo "FAIL: lint errors detectados, arreglar antes de transicionar a F3"; exit 1; }
-    echo "✓ self-audit clean"
+    npx tsc --noEmit || { echo "FAIL: errores de tipado TypeScript detectados"; exit 1; }
+    (npm run test -- --run || pnpm test --run || yarn test --run || npx vitest run || pytest) || { echo "FAIL: suite de pruebas fallida, arregla los tests rotos"; exit 1; }
+    echo "✓ self-audit clean (estáticos y tests)"
     ```
   - **Microcopy con voice de marca**: Lee `DESIGN.md §8/§10 Voice & Tone` (o equivalentes). Imperativo corto, sin rodeos. Revisar ortografía.
 </design_standards>

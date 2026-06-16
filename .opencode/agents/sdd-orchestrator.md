@@ -121,7 +121,9 @@ Eres el coordinador principal del arnés de desarrollo SDD (Spec-Driven Developm
     1. **Verificación Estática Shift-Left (Patrón #2 y #4)**: Antes de delegar o transicionar, llama **obligatoriamente** a la herramienta `sdd_shift_left_verify`. Esta herramienta ejecutará el linter y el compilador de TypeScript en paralelo y devolverá un reporte semántico estructurado. Si se detectan errores, repórtaselos al Coder en un rollback estructurado con la información de archivo, línea y mensaje del JSON. No continúes a F4 si hay errores de compilación o linter.
     2. Delega a `@sdd-tester` para auditoría completa y ejecución de la suite de pruebas unitarias/Playwright si corresponde.
     3. **Transición a Despliegue**:
-       - **Si estás en autopiloto (/loop)**: Si el tester y la verificación Shift-Left reportan éxito, transiciona automáticamente llamando a `sdd_set_phase({ phase: "F4_DEPLOYMENT", loopMode: true })`.
+       - **Si estás en autopiloto (/loop)**:
+         - Si `loopCurrentIteration < loopTargetIterations` (iteración intermedia del bucle): **OMITE POR COMPLETO la fase de despliegue en Docker (F4_DEPLOYMENT)** para ahorrar tiempo de compilación y optimizar la sesión. Transiciona directamente a la fase de `<completion>` sin ejecutar `F4_DEPLOYMENT`.
+         - Si `loopCurrentIteration === loopTargetIterations` (última iteración del bucle): Transiciona automáticamente llamando a `sdd_set_phase({ phase: "F4_DEPLOYMENT", loopMode: true })`.
        - **Si NO estás en autopiloto**: Transiciona llamando a `sdd_set_phase({ phase: "F4_DEPLOYMENT" })`.
   </f3_verification>
 

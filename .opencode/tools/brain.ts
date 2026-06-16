@@ -3,7 +3,7 @@ import fs from "fs"
 import path from "path"
 
 const getBrainFilePath = (context: any) => {
-  const root = context.worktree || context.directory || process.cwd()
+  const root = context?.worktree || context?.directory || process.cwd()
   const openspecDir = path.resolve(root, ".openspec")
   if (!fs.existsSync(openspecDir)) {
     fs.mkdirSync(openspecDir, { recursive: true })
@@ -13,53 +13,54 @@ const getBrainFilePath = (context: any) => {
 
 // Helper to parse brain.md into sections
 const parseBrainFile = (filePath: string) => {
-  if (!fs.existsSync(filePath)) {
-    return { title: "Zugzbot Brain - Memory and Learnings", sections: {} as Record<string, string> }
-  }
-  const content = fs.readFileSync(filePath, "utf8")
-  const sections: Record<string, string> = {}
-  let title = "Zugzbot Brain - Memory and Learnings"
-  let currentHeader = ""
-  let currentLines: string[] = []
+  try {
+    if (!fs.existsSync(filePath)) {
+      return { title: "Zugzbot Brain - Memory and Learnings", sections: {} as Record<string, string> }
+    }
+    const content = fs.readFileSync(filePath, "utf8") || ""
+    const sections: Record<string, string> = {}
+    let title = "Zugzbot Brain - Memory and Learnings"
+    let currentHeader = ""
+    let currentLines: string[] = []
 
-  const lines = content.split(/\r?\n/)
-  
-  // Check if first line is a title
-  let startIndex = 0
-  if (lines.length > 0 && lines[0].startsWith("# ")) {
-    title = lines[0].substring(2).trim()
-    startIndex = 1
-  }
+    const lines = typeof content.split === "function" ? content.split(/\r?\n/) : []
+    
+    // Check if first line is a title
+    let startIndex = 0
+    if (lines.length > 0 && lines[0] && lines[0].startsWith("# ")) {
+      title = lines[0].substring(2).trim()
+      startIndex = 1
+    }
 
-  for (let i = startIndex; i < lines.length; i++) {
-    const line = lines[i]
-    if (line.startsWith("# ")) {
-      if (currentHeader) {
-        sections[currentHeader] = currentLines.join("\n").trim()
-      }
-      currentHeader = line.substring(2).trim().toLowerCase()
-      currentLines = []
-    } else {
-      if (currentHeader) {
-        currentLines.push(line)
-      } else if (line.trim()) {
-        // If there's text before any header, we can treat the first line as title if we haven't already
-        if (line.startsWith("## ") || line.startsWith("### ")) {
-          // ignore or keep
+    for (let i = startIndex; i < lines.length; i++) {
+      const line = lines[i];
+      if (line === undefined || line === null) continue;
+      if (line.startsWith("# ")) {
+        if (currentHeader) {
+          sections[currentHeader] = currentLines.join("\n").trim()
+        }
+        currentHeader = line.substring(2).trim().toLowerCase()
+        currentLines = []
+      } else {
+        if (currentHeader) {
+          currentLines.push(line)
         }
       }
     }
+    if (currentHeader) {
+      sections[currentHeader] = currentLines.join("\n").trim()
+    }
+    return { title, sections }
+  } catch (e) {
+    return { title: "Zugzbot Brain - Memory and Learnings", sections: {} as Record<string, string> }
   }
-  if (currentHeader) {
-    sections[currentHeader] = currentLines.join("\n").trim()
-  }
-  return { title, sections }
 }
 
 // Helper to write sections back to brain.md
 const writeBrainFile = (filePath: string, title: string, sections: Record<string, string>) => {
   let content = `# ${title}\n\n`
   for (const [header, body] of Object.entries(sections)) {
+    if (body === undefined || body === null) continue
     const formattedHeader = header.charAt(0).toUpperCase() + header.slice(1)
     content += `# ${formattedHeader}\n${body}\n\n`
   }
@@ -73,26 +74,35 @@ export const save_memory = tool({
     content: tool.schema.string().describe("El contenido o aprendizaje exacto que se desea guardar. Se recomienda ser conciso y claro.")
   },
   async execute(args, context) {
-    const filePath = getBrainFilePath(context)
-    const { category, content } = args
-    const normalizedCategory = category.trim().toLowerCase()
-    
-    const { title, sections } = parseBrainFile(filePath)
-    
-    const timestamp = new Date().toISOString().split("T")[0]
-    const cleanContent = content.trim()
-    const newEntry = `- [${timestamp}]: ${cleanContent}`
-    
-    const existingBody = sections[normalizedCategory] || ""
-    const updatedBody = existingBody ? `${existingBody}\n${newEntry}` : newEntry
-    sections[normalizedCategory] = updatedBody
-    
-    writeBrainFile(filePath, title, sections)
-    
-    return {
-      success: true,
-      message: `Memoria guardada exitosamente bajo la categoría '${normalizedCategory}' en .openspec/brain.md`,
-      filePath
+    try {
+      const filePath = getBrainFilePath(context)
+      const { category, content } = args
+      const categoryStr = typeof category === "string" ? category : String(category || "learnings")
+      const contentStr = typeof content === "string" ? content : String(content || "")
+      const normalizedCategory = categoryStr.trim().toLowerCase()
+      
+      const { title, sections } = parseBrainFile(filePath)
+      
+      const timestamp = new Date().toISOString().split("T")[0]
+      const cleanContent = contentStr.trim()
+      const newEntry = `- [${timestamp}]: ${cleanContent}`
+      
+      const existingBody = sections[normalizedCategory] || ""
+      const updatedBody = existingBody ? `${existingBody}\n${newEntry}` : newEntry
+      sections[normalizedCategory] = updatedBody
+      
+      writeBrainFile(filePath, title, sections)
+      
+      return {
+        success: true,
+        message: `Memoria guardada exitosamente bajo la categoría '${normalizedCategory}' en .openspec/brain.md`,
+        filePath
+      }
+    } catch (e: any) {
+      return {
+        success: false,
+        message: `Error al guardar memoria: ${e?.message || "error desconocido"}`
+      }
     }
   }
 })
@@ -103,53 +113,63 @@ export const read_memory = tool({
     category: tool.schema.string().optional().describe("La categoría específica a leer (ej: 'design', 'learnings', 'routing', 'errors'). Si no se provee, se listarán las categorías disponibles.")
   },
   async execute(args, context) {
-    const filePath = getBrainFilePath(context)
-    
-    if (!fs.existsSync(filePath)) {
-      return {
-        exists: false,
-        message: "No se ha inicializado el archivo .openspec/brain.md de memoria del proyecto. Usa 'brain_save_memory' para registrar tu primera entrada."
-      }
-    }
-    
-    const { title, sections } = parseBrainFile(filePath)
-    const { category } = args
-    
-    if (category) {
-      const normalizedCategory = category.trim().toLowerCase()
-      const content = sections[normalizedCategory]
+    try {
+      const filePath = getBrainFilePath(context)
       
-      if (content !== undefined) {
+      if (!fs.existsSync(filePath)) {
         return {
-          category: normalizedCategory,
-          found: true,
-          content: content
+          exists: false,
+          message: "No se ha inicializado el archivo .openspec/brain.md de memoria del proyecto. Usa 'brain_save_memory' para registrar tu primera entrada."
+        }
+      }
+      
+      const { title, sections } = parseBrainFile(filePath)
+      const { category } = args
+      
+      if (category) {
+        const categoryStr = typeof category === "string" ? category : String(category || "")
+        const normalizedCategory = categoryStr.trim().toLowerCase()
+        const content = sections[normalizedCategory]
+        
+        if (content !== undefined && content !== null) {
+          return {
+            category: normalizedCategory,
+            found: true,
+            content: content
+          }
+        } else {
+          const available = Object.keys(sections)
+          return {
+            category: normalizedCategory,
+            found: false,
+            message: `No se encontró la categoría '${normalizedCategory}' en el cerebro.`,
+            availableCategories: available
+          }
         }
       } else {
-        const available = Object.keys(sections)
+        const available: Record<string, { preview: string, entriesCount: number }> = {}
+        for (const [key, val] of Object.entries(sections)) {
+          if (val === undefined || val === null) continue
+          const valStr = typeof val === "string" ? val : String(val)
+          const lines = valStr.split("\n").filter(l => l.trim().length > 0)
+          const entriesCount = lines.length
+          const preview = lines.slice(-2).join("\n") // Muestra las últimas 2 entradas como preview
+          available[key] = {
+            entriesCount,
+            preview: preview || "(Sección vacía)"
+          }
+        }
+        
         return {
-          category: normalizedCategory,
-          found: false,
-          message: `No se encontró la categoría '${normalizedCategory}' en el cerebro.`,
+          title,
+          message: "Se listan las categorías de memoria disponibles. Puedes leer una en particular pasando el argumento 'category'.",
           availableCategories: available
         }
       }
-    } else {
-      const available: Record<string, { preview: string, entriesCount: number }> = {}
-      for (const [key, val] of Object.entries(sections)) {
-        const lines = val.split("\n").filter(l => l.trim().length > 0)
-        const entriesCount = lines.length
-        const preview = lines.slice(-2).join("\n") // Muestra las últimas 2 entradas como preview
-        available[key] = {
-          entriesCount,
-          preview: preview || "(Sección vacía)"
-        }
-      }
-      
+    } catch (e: any) {
       return {
-        title,
-        message: "Se listan las categorías de memoria disponibles. Puedes leer una en particular pasando el argumento 'category'.",
-        availableCategories: available
+        exists: false,
+        message: `Error al leer memoria: ${e?.message || "error desconocido"}`
       }
     }
   }
