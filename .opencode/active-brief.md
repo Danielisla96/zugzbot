@@ -1,29 +1,45 @@
-# StatsDashboard - Brief del Coder
+# Active Brief: StatsDashboardRedesign (Iteración 1/2)
 
-## Path del contrato
-`.openspec/specs/2026-06-16__09-21-03_stats-dashboard/contract.json`
+## Contrato
+`.openspec/specs/2026-06-16__09-40-59_stats-dashboard-redesign/contract.json`
 
-## Bootstrap
-- Template: nextjs-shadcn (ya bootstrapped)
-- Shadcn components a instalar: `progress` (el resto ya están: button, card, dialog, badge, scroll-area)
-- Lucide icons (10): BarChart3, FileText, AlignLeft, Type, Star, Pin, PieChart, Hash, Calendar, TrendingUp
+## Resumen
+Rediseño completo del dashboard de estadísticas con diseño Linear premium (translúcido, dark-mode-first, brand indigo #5e6ad2).
 
-## Componentes a crear
-1. **src/lib/stats.ts** — `computeStats(notes): NoteStats` con totalNotes, totalWords (importar countWords de src/lib/countWords.ts), totalChars, favoritedCount, pinnedCount, colorDistribution (Record<NoteColor, number>), topHashtags (top 5 extraídos del content), createdToday, createdThisWeek. Helpers inline isToday/isThisWeek (NO hay date-fns).
-2. **src/components/blocks/StatsDashboard.tsx** — Grid de cards métricas estilo Linear (translúcido rgba(255,255,255,0.02), borde rgba(255,255,255,0.08), números 32px weight 510, etiquetas 13px muted #8a8f98). Layout: 2 cols móvil, 3-4 desktop. Incluye Progress bar para distribución de colores.
-3. **src/components/ui/StatsButton.tsx** — Botón con BarChart3 que abre Dialog de shadcn con StatsDashboard.
+### Cambios en StatsButton.tsx
+- DialogContent: `max-w-[800px]` → `sm:max-w-5xl lg:max-w-6xl max-h-[85vh]`
+- Eliminar ScrollArea externo
+- Añadir DialogDescription: "Resumen de tu actividad"
+- Padding más amplio (p-6 md:p-8)
 
-## Modificaciones existentes
-- **AppLayout** — Añadir prop `notes: Note[]`, insertar `<StatsButton notes={notes} />` en header (entre NoteStats y ThemeToggle). Pasar notes desde HomePage.
+### Cambios en StatsDashboard.tsx (rediseño completo)
+- Grid: `grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4`
+- **8 Metric Cards** (FileText, AlignLeft, Type, Star, Pin, Calendar, TrendingUp, Sparkles) — icono circular tintado + número grande + label + mini progress bar
+- **Color Distribution Chart** (2 cols) — histograma vertical con NOTE_COLORS[color].hex
+- **Weekly Activity Chart** (2 cols) — 7 barras verticales, día actual destacado #5e6ad2
+- **Top Hashtags Cloud** (2 cols) — pills con tamaño proporcional, empty state
+- **Notas Timeline** (1 col) — últimas 5 notas con fecha relativa
 
-## Diseño
-- Linear.app: indigo primary #5e6ad2, fondo canvas #0f1011, surface #191a1b, cards rgba(255,255,255,0.02)
-- Modal/dialog estilo command palette: fondo #191a1b, radius 12px, overlay rgba(0,0,0,0.85)
+### Cambios en stats.ts
+- Añadir: `notesLast7Days: { date: string; count: number }[]`
+- Añadir: `averageWordsPerNote: number`
+- Añadir: `completionRate: number`
+- Exportar: `extractHashtags`, helpers de fecha
 
-## Tests
-- Crear tests: src/lib/stats.test.ts, src/__tests__/StatsDashboard.test.tsx, src/__tests__/StatsButton.test.tsx
-- Primero tests, luego implementación para que pasen
-- Nota: Note type NO tiene campo hashtags — extraer de content via regex
+### Diseño
+- **Brand**: Linear.app (dark-mode-first, cards translúcidas)
+- **Primary**: #5e6ad2 | **Accent**: #7170ff | **Bg**: #0f1011 | **Surface**: #191a1b
+- Cards: `rounded-lg border border-border/50 bg-card p-4 md:p-5 hover:shadow-sm`
+- Números: `text-3xl md:text-4xl font-semibold tracking-tight tabular-nums`
+- Labels: `text-xs text-muted-foreground font-medium uppercase tracking-wider`
+- Chart bars: `rounded-full transition-all duration-500 ease-out`
 
-## PRIMERA ACCIÓN
-`sdd_bootstrap_status` → luego instalar progress shadcn component → luego crear archivos en orden: stats.ts → StatsDashboard.tsx → StatsButton.tsx → modificar AppLayout
+### Tests creados
+- `src/__tests__/StatsDashboard.test.tsx` — TS-01 (8 labels visibles) + TS-03 (hashtags render)
+- `src/__tests__/StatsButton.test.tsx` — TS-02 (título + subtítulo del modal)
+
+### Shadcn components usados
+- button, card, dialog, badge, scroll-area (ya instalados)
+
+### Lucide icons validados (16)
+BarChart3, FileText, AlignLeft, Type, Star, Pin, Calendar, TrendingUp, PieChart, Palette, Activity, Hash, Tag, Clock, Sparkles, BarChartHorizontal
