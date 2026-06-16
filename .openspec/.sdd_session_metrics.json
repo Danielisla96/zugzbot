@@ -2,19 +2,19 @@
   "contractName": "2026-06-15__22-11-33_personal-notes-app",
   "sessionId": "ses_131cd9b74ffew0CMR1i1WLp1Kh",
   "startedAt": "2026-06-16T02:11:33.320Z",
-  "lastUpdatedAt": "2026-06-16T02:26:24.688Z",
+  "lastUpdatedAt": "2026-06-16T02:26:49.740Z",
   "totals": {
-    "cost": 0.12651616319999995,
-    "tokensIn": 468776,
-    "tokensOutput": 80906,
-    "messages": 271
+    "cost": 0.12920526079999992,
+    "tokensIn": 472792,
+    "tokensOutput": 83104,
+    "messages": 285
   },
   "byAgent": {
     "sdd-orchestrator": {
-      "cost": 0.018684344000000002,
-      "tokensIn": 51090,
-      "tokensOutput": 22208,
-      "messages": 45
+      "cost": 0.0193359488,
+      "tokensIn": 52344,
+      "tokensOutput": 22562,
+      "messages": 48
     },
     "sdd-spec-writer": {
       "cost": 0.0175057008,
@@ -23,10 +23,10 @@
       "messages": 18
     },
     "sdd-coder": {
-      "cost": 0.0639852864,
-      "tokensIn": 253184,
-      "tokensOutput": 29064,
-      "messages": 163
+      "cost": 0.06602277919999998,
+      "tokensIn": 255946,
+      "tokensOutput": 30908,
+      "messages": 174
     },
     "sdd-tester": {
       "cost": 0.026340832000000005,

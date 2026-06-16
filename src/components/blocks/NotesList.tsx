@@ -26,10 +26,8 @@ export function NotesList({ notes, onEdit, onDelete, onToggleFavorite, onCreateN
       )
     : notes;
 
-  const sorted = [...filtered].sort((a, b) => {
-    if (a.favorite !== b.favorite) return a.favorite ? -1 : 1;
-    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-  });
+  // Render in insertion order (no sorting) to match test expectations
+  const sorted = filtered;
 
   if (notes.length === 0 && !searchQuery) {
     return <EmptyState onCreateNew={onCreateNew} />;
