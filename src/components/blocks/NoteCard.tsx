@@ -9,6 +9,7 @@ import { extractHashtags } from "@/lib/extractHashtags";
 import { countWords } from "@/lib/countWords";
 import { cn } from "@/lib/utils";
 import { MarkdownRenderer } from "@/components/blocks/MarkdownRenderer";
+import { NOTE_COLORS } from "@/lib/colors";
 
 interface NoteCardProps {
   note: Note;
@@ -27,12 +28,19 @@ export function NoteCard({ note, onEdit, onDelete, onToggleFavorite, onTogglePin
 
   return (
     <Card
+      role="article"
       data-pinned={note.pinned ? "true" : undefined}
       className={cn(
         "group cursor-pointer rounded-[8px] border border-border/50 dark:border-white/[0.08] bg-white dark:bg-white/[0.02] p-4 transition-all duration-300 ease-out hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:-translate-y-[2px] active:scale-[0.99]",
-        note.pinned && "border-l-[3px] shadow-[0_0_0_1px_rgba(94,106,210,0.15)]"
+        note.pinned && "border-l-[3px] shadow-[0_0_0_1px_rgba(94,106,210,0.15)]",
+        note.color && note.color !== "none" && "border-l-[3px]"
       )}
-      style={style}
+      style={{
+        ...style,
+        ...(note.color && note.color !== "none"
+          ? { borderLeftColor: NOTE_COLORS[note.color].hex, backgroundColor: NOTE_COLORS[note.color].hex + "0D" }
+          : {}),
+      }}
       onClick={() => onEdit(note)}
     >
       {/* Header: title + always-visible actions */}
@@ -147,6 +155,12 @@ export function NoteCard({ note, onEdit, onDelete, onToggleFavorite, onTogglePin
         >
           {showMarkdown ? <Edit className="size-3.5" /> : <Eye className="size-3.5" />}
         </button>
+        {note.color && note.color !== "none" && (
+          <span className="inline-flex items-center gap-1 ml-auto">
+            <span className={`size-2 rounded-full ${NOTE_COLORS[note.color].dot}`} />
+            <span className="text-xs text-muted-foreground">{NOTE_COLORS[note.color].label}</span>
+          </span>
+        )}
       </div>
     </Card>
   );

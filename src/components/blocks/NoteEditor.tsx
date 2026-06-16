@@ -16,17 +16,20 @@ import { Note } from "@/types";
 import { TemplateSelector } from "@/components/blocks/TemplateSelector";
 import { MarkdownRenderer } from "@/components/blocks/MarkdownRenderer";
 import type { NoteTemplate } from "@/lib/templates";
+import { NoteColor } from "@/types";
+import { ColorPicker } from "@/components/blocks/ColorPicker";
 
 interface NoteEditorProps {
   note?: Note | null;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (noteData: { id?: string; title: string; content: string }) => void;
+  onSave: (noteData: { id?: string; title: string; content: string; color?: NoteColor }) => void;
 }
 
 export function NoteEditor({ note, isOpen, onClose, onSave }: NoteEditorProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [color, setColor] = useState<NoteColor>("none");
   const [showTemplateSelector, setShowTemplateSelector] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
 
@@ -34,11 +37,13 @@ export function NoteEditor({ note, isOpen, onClose, onSave }: NoteEditorProps) {
     if (note) {
       setTitle(note.title);
       setContent(note.content);
+      setColor(note.color || "none");
       setShowTemplateSelector(false);
       setShowPreview(false);
     } else {
       setTitle("");
       setContent("");
+      setColor("none");
       setShowTemplateSelector(true);
       setShowPreview(false);
     }
@@ -60,6 +65,7 @@ export function NoteEditor({ note, isOpen, onClose, onSave }: NoteEditorProps) {
       id: note?.id,
       title: title.trim(),
       content: content.trim(),
+      color,
     });
     onClose();
   };
@@ -90,6 +96,9 @@ export function NoteEditor({ note, isOpen, onClose, onSave }: NoteEditorProps) {
             className="text-xl font-semibold tracking-tight bg-transparent border-none outline-none w-full"
             autoFocus
           />
+          <div className="py-1">
+            <ColorPicker value={color} onChange={setColor} />
+          </div>
           {showPreview ? (
             <ScrollArea className="h-[200px] w-full rounded-md border p-4" data-preview-active>
               <MarkdownRenderer content={content} />

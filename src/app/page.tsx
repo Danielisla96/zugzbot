@@ -5,7 +5,7 @@ import { NotesList } from "@/components/blocks/NotesList";
 import { NoteEditor } from "@/components/blocks/NoteEditor";
 import { useToast } from "@/hooks/useToast";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import type { Note, SortBy } from "@/types";
+import type { Note, SortBy, NoteColor } from "@/types";
 
 const STORAGE_KEY = "notas-app";
 
@@ -72,12 +72,12 @@ export default function Home() {
   }, []);
 
   const handleSave = useCallback(
-    (data: { id?: string; title: string; content: string }) => {
+    (data: { id?: string; title: string; content: string; color?: NoteColor }) => {
       const now = new Date().toISOString();
       if (data.id) {
         setNotes((prev) =>
           prev.map((n) =>
-            n.id === data.id ? { ...n, title: data.title, content: data.content, updatedAt: now } : n
+            n.id === data.id ? { ...n, title: data.title, content: data.content, color: data.color || n.color || "none", updatedAt: now } : n
           )
         );
       } else {
@@ -87,6 +87,7 @@ export default function Home() {
           content: data.content,
           favorite: false,
           pinned: false,
+          color: data.color || "none",
           createdAt: now,
           updatedAt: now,
         };

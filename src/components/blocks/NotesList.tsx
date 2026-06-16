@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { NoteCard } from "./NoteCard";
 import { EmptyState } from "./EmptyState";
 import { SortControls } from "./SortControls";
-import { Note, SortBy } from "@/types";
+import { Note, SortBy, NoteColor } from "@/types";
+import { NOTE_COLORS } from "@/lib/colors";
 
 interface NotesListProps {
   notes: Note[];
@@ -22,6 +23,7 @@ interface NotesListProps {
 
 export function NotesList({ notes, onEdit, onDelete, onToggleFavorite, onTogglePin, onCreateNew, sortBy, onSortChange, onFilteredCountChange }: NotesListProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [colorFilter, setColorFilter] = useState<NoteColor | null>(null);
 
   const filtered = searchQuery
     ? notes.filter(
@@ -30,6 +32,10 @@ export function NotesList({ notes, onEdit, onDelete, onToggleFavorite, onToggleP
           n.content.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : notes;
+
+  const colorFiltered = colorFilter
+    ? filtered.filter((n) => n.color === colorFilter)
+    : filtered;
 
   const sortFn = (a: Note, b: Note) => {
     switch (sortBy) {
@@ -50,8 +56,8 @@ export function NotesList({ notes, onEdit, onDelete, onToggleFavorite, onToggleP
   };
 
   const sorted = [
-    ...filtered.filter((n) => n.pinned).sort(sortFn),
-    ...filtered.filter((n) => !n.pinned).sort(sortFn),
+    ...colorFiltered.filter((n) => n.pinned).sort(sortFn),
+    ...colorFiltered.filter((n) => !n.pinned).sort(sortFn),
   ];
 
   useEffect(() => {
@@ -77,6 +83,34 @@ export function NotesList({ notes, onEdit, onDelete, onToggleFavorite, onToggleP
         <Button onClick={onCreateNew} className="bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-active)] text-white shrink-0">
           <Plus className="size-4 mr-1" /> Nueva nota
         </Button>
+      </div>
+
+      {/* Color filter */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        <button
+          onClick={() => setColorFilter(null)}
+          className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+            colorFilter === null
+              ? "bg-[#5e6ad2] text-white"
+              : "text-muted-foreground border border-border/50 hover:border-border"
+          }`}
+        >
+          Todas
+        </button>
+        {(["indigo","orange","green","red","purple","gray"] as NoteColor[]).map((c) => (
+          <button
+            key={c}
+            onClick={() => setColorFilter(c)}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+              colorFilter === c
+                ? "bg-[#5e6ad2] text-white"
+                : "text-muted-foreground border border-border/50 hover:border-border"
+            }`}
+          >
+            <span className={`size-2.5 rounded-full ${NOTE_COLORS[c].dot}`} />
+            {NOTE_COLORS[c].label}
+          </button>
+        ))}
       </div>
 
       <SortControls sortBy={sortBy} onSortChange={onSortChange} />

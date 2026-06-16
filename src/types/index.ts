@@ -1,9 +1,12 @@
+export type NoteColor = "indigo" | "orange" | "green" | "red" | "purple" | "gray" | "none";
+
 export interface Note {
   id: string;
   title: string;
   content: string;
   favorite: boolean;
   pinned?: boolean;
+  color?: NoteColor;
   createdAt: string;
   updatedAt: string;
 }

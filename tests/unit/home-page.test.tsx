@@ -26,6 +26,7 @@ vi.mock("lucide-react", () => ({
   Pin: () => <div data-testid="icon-pin" />,
   Eye: () => <div data-testid="icon-eye" />,
   Edit: () => <div data-testid="icon-edit" />,
+  Slash: () => <div data-testid="icon-slash" />,
 }));
 
 // Mock next-themes useTheme hook for ThemeToggle

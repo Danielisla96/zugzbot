@@ -10,6 +10,7 @@ vi.mock("lucide-react", () => ({
   Eye: () => <div data-testid="icon-eye" />,
   Edit: () => <div data-testid="icon-edit" />,
   FileText: () => <div data-testid="icon-filetext" />,
+  Slash: () => <div data-testid="icon-slash" />,
 }));
 
 // Mock @/components/ui/dialog para que no dependa de @base-ui/react en test
@@ -65,6 +66,7 @@ describe("NoteEditor Tests (Contract Scenarios)", () => {
       id: undefined,
       title: "Mi nota",
       content: "Contenido de prueba",
+      color: "none",
     });
 
     // Then: se cierra el editor
