@@ -128,10 +128,10 @@ export default function App() {
   // Estados para la nueva vista /new y agente activo
   const [isNewSessionView, setIsNewSessionView] = useState<boolean>(false)
   const [newSessionTitle, setNewSessionTitle] = useState<string>('')
-  const [newSessionAgent, setNewSessionAgent] = useState<string>('build')
+  const [newSessionAgent, setNewSessionAgent] = useState<string>('sdd-orchestrator')
   const [newSessionModel, setNewSessionModel] = useState<string>('default')
   const [newSessionFirstPrompt, setNewSessionFirstPrompt] = useState<string>('')
-  const [selectedAgent, setSelectedAgent] = useState<string>('build')
+  const [selectedAgent, setSelectedAgent] = useState<string>('sdd-orchestrator')
 
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const [userHasScrolledUp, setUserHasScrolledUp] = useState(false)
@@ -146,12 +146,12 @@ export default function App() {
     }
   }
 
-  // Sincronizar agente de sesión activa
+  // Sincronizar agente de sesión activa al cambiar de sesión
   useEffect(() => {
     if (currentSession) {
-      setSelectedAgent(currentSession.agent || 'build')
+      setSelectedAgent(currentSession.agent || 'sdd-orchestrator')
     }
-  }, [currentSession])
+  }, [currentSession?.id])
 
   // 1. Cargar estado inicial y levantar listeners
   useEffect(() => {
@@ -756,7 +756,7 @@ export default function App() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-[10px] text-[#71717a]">
-                      <span>{root.agent || 'build'}</span>
+                      <span>{root.agent || 'sdd-orchestrator'}</span>
                       <span>{formatModelName(root.model)}</span>
                     </div>
                   </button>
@@ -913,7 +913,7 @@ export default function App() {
                           <div className="space-y-0.5">
                             <div className="flex items-center gap-2">
                               <span className="text-xs font-bold text-white">{agent.name}</span>
-                              {agent.id === 'build' && (
+                              {agent.id === 'sdd-orchestrator' && (
                                 <span className="text-[9px] bg-white/10 text-white/80 font-mono px-1 rounded uppercase tracking-wider">Por defecto</span>
                               )}
                             </div>
