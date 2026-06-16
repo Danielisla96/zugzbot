@@ -167,3 +167,12 @@
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+@layer utilities {
+  .animate-fade-slide-up {
+    animation: fadeSlideUp 0.4s ease-out both;
+  }
+  .animate-fade-slide-up-fast {
+    animation: fadeSlideUp 0.3s ease-out both;
+  }
+}

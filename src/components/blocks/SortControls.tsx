@@ -22,7 +22,7 @@ const options: SortOption[] = [
 
 export function SortControls({ sortBy, onSortChange }: SortControlsProps) {
   return (
-    <div className="flex flex-row gap-1.5">
+    <div className="flex flex-row gap-1.5 animate-fade-slide-up-fast">
       {options.map(({ value, label, Icon }) => {
         const isActive = sortBy === value;
         return (
@@ -31,7 +31,7 @@ export function SortControls({ sortBy, onSortChange }: SortControlsProps) {
             onClick={() => onSortChange(value)}
             className={`
               inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full
-              transition-colors duration-150
+              transition-all duration-200 ease-out hover:scale-105
               ${
                 isActive
                   ? "bg-[#171717] text-white dark:bg-white dark:text-black"

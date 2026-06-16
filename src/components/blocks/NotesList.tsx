@@ -89,7 +89,7 @@ export function NotesList({ notes, onEdit, onDelete, onToggleFavorite, onToggleP
       <div className="flex flex-wrap items-center gap-1.5">
         <button
           onClick={() => setColorFilter(null)}
-          className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+          className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 ease-out animate-fade-slide-up-fast hover:scale-105 ${
             colorFilter === null
               ? "bg-[#5e6ad2] text-white"
               : "text-muted-foreground border border-border/50 hover:border-border"
@@ -97,15 +97,16 @@ export function NotesList({ notes, onEdit, onDelete, onToggleFavorite, onToggleP
         >
           Todas
         </button>
-        {(["indigo","orange","green","red","purple","gray"] as NoteColor[]).map((c) => (
+        {(["indigo","orange","green","red","purple","gray"] as NoteColor[]).map((c, index) => (
           <button
             key={c}
             onClick={() => setColorFilter(c)}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 ease-out animate-fade-slide-up-fast hover:scale-105 ${
               colorFilter === c
                 ? "bg-[#5e6ad2] text-white"
                 : "text-muted-foreground border border-border/50 hover:border-border"
             }`}
+            style={{ animationDelay: `${index * 40}ms` }}
           >
             <span className={`size-2.5 rounded-full ${NOTE_COLORS[c].dot}`} />
             {NOTE_COLORS[c].label}
@@ -129,7 +130,8 @@ export function NotesList({ notes, onEdit, onDelete, onToggleFavorite, onToggleP
               onDelete={onDelete}
               onToggleFavorite={onToggleFavorite}
               onTogglePin={onTogglePin}
-              style={{ transitionDelay: `${index * 50}ms` }}
+              className="animate-fade-slide-up"
+              style={{ animationDelay: `${index * 60}ms` }}
             />
           ))}
         </div>

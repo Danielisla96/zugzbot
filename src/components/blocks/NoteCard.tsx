@@ -18,9 +18,10 @@ interface NoteCardProps {
   onToggleFavorite: (id: string) => void;
   onTogglePin?: (id: string) => void;
   style?: React.CSSProperties;
+  className?: string;
 }
 
-export function NoteCard({ note, onEdit, onDelete, onToggleFavorite, onTogglePin, style }: NoteCardProps) {
+export function NoteCard({ note, onEdit, onDelete, onToggleFavorite, onTogglePin, style, className }: NoteCardProps) {
   const [showMarkdown, setShowMarkdown] = useState(false);
   const hashtags = extractHashtags(note.content);
   const wordCount = countWords(note.content);
@@ -33,7 +34,8 @@ export function NoteCard({ note, onEdit, onDelete, onToggleFavorite, onTogglePin
       className={cn(
         "group cursor-pointer rounded-[8px] border border-border/50 dark:border-white/[0.08] bg-white dark:bg-white/[0.02] p-4 transition-all duration-300 ease-out hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:-translate-y-[2px] active:scale-[0.99]",
         note.pinned && "border-l-[3px] shadow-[0_0_0_1px_rgba(94,106,210,0.15)]",
-        note.color && note.color !== "none" && "border-l-[3px]"
+        note.color && note.color !== "none" && "border-l-[3px]",
+        className
       )}
       style={{
         ...style,
