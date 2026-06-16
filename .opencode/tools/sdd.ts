@@ -267,6 +267,8 @@ export const set_phase = tool({
     spec_name: tool.schema.string().optional().describe("(Solo F1_CONTRACT) Nombre del spec en minúsculas y guiones. Si se pasa junto con phase=F1_CONTRACT, crea la carpeta del spec atómicamente y devuelve la ruta completa."),
     skip_lint_gate: tool.schema.boolean().default(false).describe("(Solo F3_VERIFICATION) Si true, no ejecuta el auto-lint gate."),
     loopMode: tool.schema.boolean().optional().describe("Establece si el modo piloto automático (/loop) está activado para tomar decisiones autónomas de forma acumulativa."),
+    loopTargetIterations: tool.schema.number().optional().describe("Número total de iteraciones autónomas deseadas en el ciclo de mejora continua."),
+    loopCurrentIteration: tool.schema.number().optional().describe("Número de la iteración autónoma actual (empieza en 1)."),
   },
   async execute(args, context) {
     const root = context.worktree || context.directory || process.cwd()
@@ -364,11 +366,15 @@ export const set_phase = tool({
     if (args.coreStack !== undefined) currentState.stack.core = args.coreStack
     if (args.databases !== undefined) currentState.stack.databases = args.databases
     if (args.loopMode !== undefined) currentState.loopMode = args.loopMode
+    if (args.loopTargetIterations !== undefined) currentState.loopTargetIterations = args.loopTargetIterations
+    if (args.loopCurrentIteration !== undefined) currentState.loopCurrentIteration = args.loopCurrentIteration
 
     // If resetting to F0_DETECT, ensure everything is 100% clean
     if (args.phase === "F0_DETECT") {
-      if (args.loopMode === undefined) {
+      if (args.loopMode === undefined && args.loopCurrentIteration === undefined) {
         currentState.loopMode = false
+        currentState.loopTargetIterations = 1
+        currentState.loopCurrentIteration = 1
       }
       // Clean up running servers
       const pidFile = getPidFilePath(root)
