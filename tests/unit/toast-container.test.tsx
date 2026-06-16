@@ -89,9 +89,18 @@ describe("ToastContainer (Contract Scenario TS-03)", () => {
     // When: el usuario hace clic en el botón de cierre
     const closeButton = screen.getByTestId("icon-x").closest("button");
     expect(closeButton).toBeDefined();
-    closeButton!.click();
 
-    // Then: removeToast se llamó inmediatamente
+    act(() => {
+      closeButton!.click();
+    });
+
+    // The click triggers setExiting(true) + setTimeout(150ms) → onRemove
+    // Need to advance timers past the 150ms exit animation
+    act(() => {
+      vi.advanceTimersByTime(160);
+    });
+
+    // Then: onRemove se llamó después de la animación de salida
     expect(onRemove).toHaveBeenCalledWith("toast-manual");
   });
 

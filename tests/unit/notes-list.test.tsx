@@ -10,6 +10,9 @@ vi.mock("lucide-react", () => ({
   Plus: () => <div data-testid="icon-plus" />,
   Star: () => <div data-testid="icon-star" />,
   Trash2: () => <div data-testid="icon-trash" />,
+  ArrowUpDown: () => <div data-testid="icon-arrow-up-down" />,
+  Calendar: () => <div data-testid="icon-calendar" />,
+  ArrowUpAZ: () => <div data-testid="icon-arrow-up-az" />,
 }));
 
 const notes: Note[] = [

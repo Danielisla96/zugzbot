@@ -2,19 +2,19 @@
   "contractName": "2026-06-15__23-20-45_notes-enhancements",
   "sessionId": "ses_1318e6129ffeBwHbsFtyLErJKv",
   "startedAt": "2026-06-16T03:20:45.361Z",
-  "lastUpdatedAt": "2026-06-16T03:31:20.593Z",
+  "lastUpdatedAt": "2026-06-16T03:34:47.168Z",
   "totals": {
-    "cost": 0.09008678559999997,
-    "tokensIn": 313522,
-    "tokensOutput": 67348,
-    "messages": 198
+    "cost": 0.12381612319999996,
+    "tokensIn": 453590,
+    "tokensOutput": 82676,
+    "messages": 259
   },
   "byAgent": {
     "sdd-orchestrator": {
-      "cost": 0.0147831712,
-      "tokensIn": 44964,
-      "tokensOutput": 13730,
-      "messages": 36
+      "cost": 0.0160424768,
+      "tokensIn": 45864,
+      "tokensOutput": 15094,
+      "messages": 42
     },
     "sdd-spec-writer": {
       "cost": 0.03410639679999999,
@@ -27,6 +27,12 @@
       "tokensIn": 142946,
       "tokensOutput": 23412,
       "messages": 108
+    },
+    "sdd-tester": {
+      "cost": 0.032470032,
+      "tokensIn": 139168,
+      "tokensOutput": 13964,
+      "messages": 55
     }
   }
 }

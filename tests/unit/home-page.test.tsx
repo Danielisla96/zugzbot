@@ -13,6 +13,13 @@ vi.mock("lucide-react", () => ({
   Trash2: () => <div data-testid="icon-trash" />,
   FileText: () => <div data-testid="icon-filetext" />,
   XIcon: () => <div data-testid="icon-x" />,
+  CheckCircle2: () => <div data-testid="icon-checkcircle" />,
+  Info: () => <div data-testid="icon-info" />,
+  XCircle: () => <div data-testid="icon-xcircle" />,
+  X: () => <div data-testid="icon-x" />,
+  ArrowUpDown: () => <div data-testid="icon-arrow-up-down" />,
+  Calendar: () => <div data-testid="icon-calendar" />,
+  ArrowUpAZ: () => <div data-testid="icon-arrow-up-az" />,
 }));
 
 // Mock next-themes useTheme hook for ThemeToggle
@@ -157,23 +164,24 @@ describe("HomePage Tests (Contract Scenarios)", () => {
     expect(screen.getByText("Nota 2")).toBeInTheDocument();
 
     // window.confirm ya retorna true (definido en beforeEach)
-    // Eliminar la primera nota
+    // Nota: con sortBy="newest", Nota 2 (updatedAt más reciente) aparece primero.
+    // trashIcons[0] corresponde a la primera NoteCard, que es Nota 2.
     const trashIcons = screen.getAllByTestId("icon-trash");
     await user.click(trashIcons[0].closest("button")!);
 
     // window.confirm debe haberse llamado
     expect(window.confirm).toHaveBeenCalledWith("¿Eliminar esta nota?");
 
-    // La nota debe desaparecer de la lista
+    // La nota eliminada (Nota 2) debe desaparecer de la lista
     await waitFor(() => {
-      expect(screen.queryByText("Nota 1")).not.toBeInTheDocument();
+      expect(screen.queryByText("Nota 2")).not.toBeInTheDocument();
     });
-    expect(screen.getByText("Nota 2")).toBeInTheDocument();
+    expect(screen.getByText("Nota 1")).toBeInTheDocument();
 
     // Verificar que localStorage se actualizó
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
     expect(stored).toHaveLength(1);
-    expect(stored[0].id).toBe("note-2");
+    expect(stored[0].id).toBe("note-1");
   });
 
   it("TS-06d: Toggle de favorito y persistencia", async () => {
@@ -189,9 +197,13 @@ describe("HomePage Tests (Contract Scenarios)", () => {
       expect(screen.getByText("Nota 1")).toBeInTheDocument();
     });
 
-    // Hacer clic en el icono Star de la nota 1 para marcarla como favorita
+    // Nota: SortControls también usa Star icon ("Favoritos" botón).
+    // getAllByTestId("icon-star") devuelve 3 elementos: [SortControls, NoteCard1, NoteCard2]
+    // Navegamos al primer NoteCard (index 1) que es "Nota 2" con newest sort.
+    // El NoteCard de "Nota 1" está en index 2.
     const starIcons = screen.getAllByTestId("icon-star");
-    await user.click(starIcons[0].closest("button")!);
+    // Click en el último Star (Nota 1, que no es favorita aún)
+    await user.click(starIcons[2].closest("button")!);
 
     // Verificar que localStorage se actualizó con favorite=true
     await waitFor(() => {
