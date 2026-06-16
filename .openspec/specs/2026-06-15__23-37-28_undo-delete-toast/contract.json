@@ -1,0 +1,182 @@
+{
+  "$schema": "../../../.opencode/contract-schema.json",
+  "contractName": "UndoDeleteToast",
+  "description": "Implementa buffer de notas eliminadas con toast 'Deshacer' accionable, restauración bajo demanda y eliminación permanente de localStorage tras timeout de 5 segundos.",
+  "category": "frontend",
+  "settings": {
+    "verificationMode": "console",
+    "language": "TypeScript",
+    "testFramework": "Vitest",
+    "darkMode": "class-based (tailwind dark:)",
+    "persistence": "localStorage"
+  },
+  "design": {
+    "brand": "vercel",
+    "reference": ".openspec/design-assets/vercel/DESIGN.md",
+    "tokens": {
+      "source": "oh-my-design_get_design_md(vercel)",
+      "extracted": "2026-06-15",
+      "colors": {
+        "primary": "#171717",
+        "black": "#000000",
+        "canvas": "#ffffff",
+        "muted": "#666666",
+        "border": "#ebebeb",
+        "on-primary": "#ffffff",
+        "link-blue": "#0072f5",
+        "focus-blue": "hsla(212, 100%, 48%, 1)",
+        "badge-bg": "#ebf5ff",
+        "badge-text": "#0068d6"
+      },
+      "typography": {
+        "family": { "sans": "Geist, system-ui, -apple-system, sans-serif", "mono": "Geist Mono, ui-monospace, monospace" },
+        "button": { "size": 14, "weight": 500, "lineHeight": 1.43 }
+      },
+      "spacing": { "xs": 4, "sm": 8, "md": 12, "base": 16, "lg": 24, "xl": 32 },
+      "rounded": { "sm": 4, "md": 6, "lg": 8, "full": 9999 },
+      "shadow": {
+        "ring": "rgba(0,0,0,0.08) 0px 0px 0px 1px",
+        "card": "rgba(0,0,0,0.08) 0px 0px 0px 1px, rgba(0,0,0,0.04) 0px 2px 2px, rgba(0,0,0,0.04) 0px 8px 8px -8px"
+      },
+      "components": {
+        "toast": { "bg": "#171717", "fg": "#ffffff", "radius": 6, "padding": "12px 16px" }
+      }
+    }
+  },
+  "stack": {
+    "core": ["Next.js 16", "Shadcn UI", "Tailwind CSS v4", "TypeScript"],
+    "databases": []
+  },
+  "routes": [
+    {
+      "path": "/",
+      "name": "Home",
+      "description": "Página principal de la app de notas. Contiene CRUD de notas y el nuevo buffer de eliminación con undo.",
+      "layout": "AppLayout (Header + main content + ToastContainer)",
+      "components": ["AppLayout", "NotesList", "NoteEditor", "ToastContainer"],
+      "access": "public"
+    }
+  ],
+  "frontend": {
+    "components": [
+      {
+        "name": "useToast",
+        "path": "@/hooks/useToast",
+        "description": "Hook singleton global para gestionar toasts. EXTENDIDO: interface Toast ahora soporta action?: { label: string; onClick: () => void }",
+        "props": {},
+        "events": ["addToast(message, type, action?)", "removeToast(id)"]
+      },
+      {
+        "name": "ToastContainer",
+        "path": "@/components/blocks/ToastContainer",
+        "description": "Renderiza toasts en la esquina inferior derecha. EXTENDIDO: si toast tiene action, renderiza botón 'Deshacer' con clase text-xs font-medium underline underline-offset-2 hover:text-white/80 al lado del mensaje.",
+        "props": {
+          "toasts": "Toast[] (con action opcional)",
+          "onRemove": "(id: string) => void"
+        },
+        "state": {
+          "exiting": "boolean (animación de salida)"
+        },
+        "events": ["handleDismiss()", "handleActionClick()"]
+      },
+      {
+        "name": "Home",
+        "path": "@/app/page",
+        "description": "Página principal de notas. EXTENDIDO: nuevo estado deletedNotes, handleDelete modificado con buffer, restoreNote, timeoutsRef para cleanup.",
+        "props": {},
+        "state": {
+          "notes": "Note[]",
+          "deletedNotes": "Note[] (NUEVO) — buffer de notas eliminadas",
+          "timeoutsRef": "React.MutableRefObject<Map<string, ReturnType<typeof setTimeout>>> (NUEVO) — timeouts por id de nota",
+          "loaded": "boolean",
+          "sortBy": "SortBy"
+        },
+        "events": [
+          "handleDelete(id) — en lugar de borrar directo, mueve a deletedNotes y programa eliminación permanente",
+          "restoreNote(id) — mueve de deletedNotes a notes, cancela timeout",
+          "handleCreateNew()",
+          "handleEdit(note)",
+          "handleSave(data)",
+          "handleToggleFavorite(id)"
+        ]
+      }
+    ]
+  },
+  "stateFlow": {
+    "owner": "Home (page.tsx)",
+    "lifts_to": null,
+    "props_down": [
+      { "from": "Home", "to": "AppLayout", "prop": "toasts", "type": "data" },
+      { "from": "Home", "to": "AppLayout", "prop": "onRemoveToast", "type": "callback" },
+      { "from": "AppLayout", "to": "ToastContainer", "prop": "toasts", "type": "data" },
+      { "from": "AppLayout", "to": "ToastContainer", "prop": "onRemove", "type": "callback" }
+    ],
+    "forbidden": [
+      "instanciar deletedNotes en un componente hijo de Home",
+      "mutar deletedNotes sin usar setDeletedNotes (inmutable)",
+      "usar context global sin provider"
+    ]
+  },
+  "test_scenarios": [
+    {
+      "id": "TS-01",
+      "name": "addToast con action guarda la acción en el objeto Toast",
+      "type": "unit",
+      "feature_ref": "useToast",
+      "given": "el hook useToast está disponible",
+      "when": "se llama addToast('Nota eliminada', 'info', { label: 'Deshacer', onClick: () => {} })",
+      "then": "el toast retornado incluye la propiedad action con label 'Deshacer' y la función onClick"
+    },
+    {
+      "id": "TS-02",
+      "name": "ToastContainer renderiza botón de acción cuando toast tiene action",
+      "type": "unit",
+      "feature_ref": "ToastContainer",
+      "given": "un toast con action={ label: 'Deshacer', onClick: vi.fn() } está en la lista de toasts",
+      "when": "ToastContainer se renderiza",
+      "then": "se renderiza un botón con texto 'Deshacer' y clase que contiene 'underline' y 'text-xs'"
+    },
+    {
+      "id": "TS-03",
+      "name": "El botón de acción del toast ejecuta onClick al ser clickeado",
+      "type": "unit",
+      "feature_ref": "ToastContainer",
+      "given": "un toast con action={ label: 'Deshacer', onClick: vi.fn() }",
+      "when": "el usuario hace clic en el botón 'Deshacer'",
+      "then": "onClick se ejecuta exactamente 1 vez"
+    },
+    {
+      "id": "TS-04",
+      "name": "Toast sin action no renderiza botón extra y mantiene estructura original",
+      "type": "unit",
+      "feature_ref": "ToastContainer",
+      "given": "un toast sin action en la lista (tipo 'success' o 'destructive')",
+      "when": "ToastContainer se renderiza",
+      "then": "no se renderiza ningún botón adicional, solo el icono, mensaje y botón de cierre X"
+    }
+  ],
+  "external_api_verification": {
+    "verified_at": "2026-06-15T23:37:28.000Z",
+    "components": [
+      {
+        "name": "Button",
+        "library": "shadcn/ui",
+        "version_resolved": "latest",
+        "mcp_source": "shadcn registry",
+        "api_signature": "<Button variant=\"ghost\" size=\"icon\" className=\"...\" onClick={fn}>"
+      },
+      {
+        "name": "X",
+        "library": "lucide-react",
+        "version_resolved": "latest",
+        "mcp_source": "lucide-icons (pre-validated in iteration 1)",
+        "api_signature": "<X className=\"size-3\" />"
+      }
+    ]
+  },
+  "sdd_hints": {
+    "shadcn_components": [],
+    "lucide_icons": [],
+    "bootstrap_template": "nextjs-shadcn"
+  }
+}
