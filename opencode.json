@@ -31,7 +31,7 @@
       "type": "local",
       "command": [
         "node",
-        "./.opencode/oh-my-design/packages/mcp/dist/index.js"
+        "./.opencode/oh-my-design/packages/mcp/dist/index.mjs"
       ],
       "enabled": true,
       "purpose": "MCP oficial de Oh My Design para buscar, consultar y aplicar temas de diseño (Toss, Stripe, Supabase, etc.)."

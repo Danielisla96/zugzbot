@@ -21682,4 +21682,4 @@ main().catch((err) => {
   );
   process.exit(1);
 });
-//# sourceMappingURL=index.js.map
+//# sourceMappingURL=index.mjs.map

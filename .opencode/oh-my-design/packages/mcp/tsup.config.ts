@@ -9,4 +9,9 @@ export default defineConfig({
   banner: { js: '#!/usr/bin/env node' },
   shims: false,
   noExternal: [/.*/],
+  outExtension({ format }) {
+    return {
+      js: '.mjs'
+    };
+  }
 });
