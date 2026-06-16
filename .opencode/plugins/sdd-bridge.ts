@@ -316,15 +316,37 @@ export const SddBridgePlugin: Plugin = async ({ project, client, $, directory, w
     "experimental.session.compacting": async (input, output) => {
       try {
         const state = readState()
-        output.context.push(`
+        const currentIter = state.loopCurrentIteration || 1
+        const targetIter = state.loopTargetIterations || 1
+        
+        if (state.loopMode === true) {
+          // Force selective amnesia to prevent context saturation and LLM loops
+          output.prompt = `
+You are generating a summary continuation prompt for a long-running multi-agent SDD session.
+The user is running in Autopilot Loop Mode (loopMode = true).
+
+Your goal is to perform SELECTIVE AMNESIA:
+- DISCARD all previous intermediate file edits, bash execution logs, temporary errors, and past code discussions.
+- PRESERVE and focus strictly on:
+  1. The active SDD phase: '${state.phase}'
+  2. The active contract path: '${state.activeContract || "None"}'
+  3. The current iteration progress: Iteration ${currentIter} of ${targetIter}.
+  4. The global stack configuration: ${JSON.stringify(state.stack || {})}
+  
+Formulate a highly compressed, structured summary that allows the sdd-orchestrator to immediately resume the next task or next iteration cleanly, without any historical token bloat.
+`
+        } else {
+          output.context.push(`
 ## SDD HARNESS STATE (CRITICAL PERSISTENCE)
 
 Este es el estado del arnés de desarrollo SDD activo en disco. DEBES conservarlo en tu memoria resumida tras la compactación:
 - **Fase Activa de SDD**: '${state.phase}'
 - **Contrato Activo**: '${state.activeContract || "Ninguno"}'
 - **Modo Piloto Automático (/loop)**: ${state.loopMode === true ? "ACTIVO (Debes continuar resolviendo las tareas de forma 100% autónoma sin preguntar al usuario)" : "DESACTIVADO (Interacción estándar)"}
+- **Iteración Actual**: ${currentIter} de ${targetIter}
 - **Tecnologías Detectadas**: ${JSON.stringify(state.stack || {})}
 `)
+        }
       } catch (e) {
         // ignore
       }

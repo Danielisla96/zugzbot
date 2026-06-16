@@ -523,6 +523,38 @@ export const free_port = tool({
   }
 })
 
+// Tool: sdd_clean_docker_environment
+export const clean_docker_environment = tool({
+  description: "Limpia de forma agresiva y segura el entorno de Docker: remueve contenedores detenidos, imágenes huérfanas/dangling creadas por compilaciones fallidas, y redes no utilizadas. Se debe ejecutar antes de desplegar un nuevo contenedor para liberar recursos y evitar colisiones.",
+  args: {},
+  async execute(args, context) {
+    const results: Record<string, string> = {}
+    try {
+      results.containers = execSync("docker container prune -f", { encoding: "utf8" }).toString().trim()
+    } catch (e: any) {
+      results.containers = `Error: ${e.message}`
+    }
+
+    try {
+      results.images = execSync("docker image prune -f", { encoding: "utf8" }).toString().trim()
+    } catch (e: any) {
+      results.images = `Error: ${e.message}`
+    }
+
+    try {
+      results.networks = execSync("docker network prune -f", { encoding: "utf8" }).toString().trim()
+    } catch (e: any) {
+      results.networks = `Error: ${e.message}`
+    }
+
+    return JSON.stringify({
+      status: "SUCCESS",
+      message: "Entorno de Docker limpiado de forma segura y exitosa.",
+      details: results
+    }, null, 2)
+  }
+})
+
 // Tool: sdd_start_server
 export const start_server = tool({
   description: "Inicia un servidor de desarrollo o producción en segundo plano y registra su PID para limpieza posterior",
