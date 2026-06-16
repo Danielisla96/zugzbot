@@ -55,7 +55,14 @@ next-env.d.ts
 .omd/cache/
 .omd/runs/
 .omd/
-.opencode/oh-my-design/
+.opencode/oh-my-design/*
+!.opencode/oh-my-design/design-md/
+!.opencode/oh-my-design/design-md/**
+!.opencode/oh-my-design/packages/
+!.opencode/oh-my-design/packages/mcp/
+!.opencode/oh-my-design/packages/mcp/package.json
+!.opencode/oh-my-design/packages/mcp/dist/
+!.opencode/oh-my-design/packages/mcp/dist/**
 
 .playwright-mcp/
 export_ses_*
