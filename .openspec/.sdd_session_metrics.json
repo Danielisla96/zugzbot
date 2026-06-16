@@ -1,13 +1,26 @@
 {
   "contractName": "2026-06-16__11-02-42_card-filter-animations",
-  "sessionId": "",
-  "startedAt": "",
-  "lastUpdatedAt": "",
+  "sessionId": "ses_12f0c58f5ffeg9m08gqVSnqhB4",
+  "startedAt": "2026-06-16T15:02:43.122Z",
+  "lastUpdatedAt": "2026-06-16T15:04:45.509Z",
   "totals": {
-    "cost": 0,
-    "tokensIn": 0,
-    "tokensOutput": 0,
-    "messages": 0
+    "cost": 0.0217338464,
+    "tokensIn": 101436,
+    "tokensOutput": 14284,
+    "messages": 42
   },
-  "byAgent": {}
+  "byAgent": {
+    "sdd-orchestrator": {
+      "cost": 0.0046283999999999995,
+      "tokensIn": 15772,
+      "tokensOutput": 4138,
+      "messages": 15
+    },
+    "sdd-spec-writer": {
+      "cost": 0.017105446399999998,
+      "tokensIn": 85664,
+      "tokensOutput": 10146,
+      "messages": 27
+    }
+  }
 }
