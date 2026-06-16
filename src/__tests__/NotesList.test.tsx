@@ -15,7 +15,6 @@ vi.mock("@/components/blocks/NoteCard", () => ({
 function makeNote(id: string, overrides: Partial<Note> = {}): Note {
   const now = new Date();
   const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
-  const tenMinAgo = new Date(now.getTime() - 10 * 60 * 1000).toISOString();
   return {
     id,
     title: `Nota ${id}`,

@@ -13,13 +13,14 @@ interface NotesListProps {
   onEdit: (note: Note) => void;
   onDelete: (id: string) => void;
   onToggleFavorite: (id: string) => void;
+  onTogglePin?: (id: string) => void;
   onCreateNew: () => void;
   sortBy: SortBy;
   onSortChange: (sort: SortBy) => void;
   onFilteredCountChange: (count: number) => void;
 }
 
-export function NotesList({ notes, onEdit, onDelete, onToggleFavorite, onCreateNew, sortBy, onSortChange, onFilteredCountChange }: NotesListProps) {
+export function NotesList({ notes, onEdit, onDelete, onToggleFavorite, onTogglePin, onCreateNew, sortBy, onSortChange, onFilteredCountChange }: NotesListProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filtered = searchQuery
@@ -30,7 +31,7 @@ export function NotesList({ notes, onEdit, onDelete, onToggleFavorite, onCreateN
       )
     : notes;
 
-  const sorted = [...filtered].sort((a, b) => {
+  const sortFn = (a: Note, b: Note) => {
     switch (sortBy) {
       case "newest":
         return b.updatedAt.localeCompare(a.updatedAt);
@@ -40,13 +41,18 @@ export function NotesList({ notes, onEdit, onDelete, onToggleFavorite, onCreateN
         return a.title.localeCompare(b.title);
       case "favorites-first":
         if (a.favorite !== b.favorite) {
-          return b.favorite ? 1 : -1;
+          return a.favorite ? -1 : 1;
         }
         return b.updatedAt.localeCompare(a.updatedAt);
       default:
         return 0;
     }
-  });
+  };
+
+  const sorted = [
+    ...filtered.filter((n) => n.pinned).sort(sortFn),
+    ...filtered.filter((n) => !n.pinned).sort(sortFn),
+  ];
 
   useEffect(() => {
     onFilteredCountChange(sorted.length);
@@ -81,13 +87,15 @@ export function NotesList({ notes, onEdit, onDelete, onToggleFavorite, onCreateN
         </div>
       ) : (
         <div className="grid gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {sorted.map((note) => (
+          {sorted.map((note, index) => (
             <NoteCard
               key={note.id}
               note={note}
               onEdit={onEdit}
               onDelete={onDelete}
               onToggleFavorite={onToggleFavorite}
+              onTogglePin={onTogglePin}
+              style={{ transitionDelay: `${index * 50}ms` }}
             />
           ))}
         </div>

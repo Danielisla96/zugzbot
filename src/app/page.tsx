@@ -74,6 +74,7 @@ export default function Home() {
           title: data.title,
           content: data.content,
           favorite: false,
+          pinned: false,
           createdAt: now,
           updatedAt: now,
         };
@@ -114,6 +115,15 @@ export default function Home() {
     deleteTimeoutsRef.current.set(id, timeout);
   }, [notes, addToast, restoreNote]);
 
+  const handleTogglePin = useCallback((id: string) => {
+    setNotes((prev) => {
+      const next = prev.map((n) =>
+        n.id === id ? { ...n, pinned: !n.pinned, updatedAt: new Date().toISOString() } : n
+      );
+      return next;
+    });
+  }, []);
+
   const handleToggleFavorite = useCallback((id: string) => {
     setNotes((prev) => {
       const note = prev.find((n) => n.id === id);
@@ -138,6 +148,7 @@ export default function Home() {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onToggleFavorite={handleToggleFavorite}
+        onTogglePin={handleTogglePin}
         onCreateNew={handleCreateNew}
         sortBy={sortBy}
         onSortChange={setSortBy}

@@ -1,5 +1,5 @@
 "use client";
-import { Star, Trash2, Clock, FileText, Hash, Tag } from "lucide-react";
+import { Pin, Star, Trash2, Clock, FileText, Hash, Tag } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Note } from "@/types";
@@ -13,16 +13,23 @@ interface NoteCardProps {
   onEdit: (note: Note) => void;
   onDelete: (id: string) => void;
   onToggleFavorite: (id: string) => void;
+  onTogglePin?: (id: string) => void;
+  style?: React.CSSProperties;
 }
 
-export function NoteCard({ note, onEdit, onDelete, onToggleFavorite }: NoteCardProps) {
+export function NoteCard({ note, onEdit, onDelete, onToggleFavorite, onTogglePin, style }: NoteCardProps) {
   const hashtags = extractHashtags(note.content);
   const wordCount = countWords(note.content);
   const charCount = note.content.length;
 
   return (
     <Card
-      className="group cursor-pointer rounded-[8px] border border-border/50 dark:border-white/[0.08] bg-white dark:bg-white/[0.02] p-4 transition-all duration-200 ease-out hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:-translate-y-[2px] active:scale-[0.99]"
+      data-pinned={note.pinned ? "true" : undefined}
+      className={cn(
+        "group cursor-pointer rounded-[8px] border border-border/50 dark:border-white/[0.08] bg-white dark:bg-white/[0.02] p-4 transition-all duration-300 ease-out hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:-translate-y-[2px] active:scale-[0.99]",
+        note.pinned && "border-l-[3px] shadow-[0_0_0_1px_rgba(94,106,210,0.15)]"
+      )}
+      style={style}
       onClick={() => onEdit(note)}
     >
       {/* Header: title + always-visible actions */}
@@ -36,8 +43,26 @@ export function NoteCard({ note, onEdit, onDelete, onToggleFavorite }: NoteCardP
           {note.title || "Sin título"}
         </h3>
 
-        {/* Actions: Star (always visible) + Trash */}
+        {/* Actions: Pin + Star + Trash (always visible) */}
         <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+          {onTogglePin && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              aria-label="Fijar nota"
+              onClick={() => onTogglePin(note.id)}
+            >
+              <Pin
+                className={cn(
+                  "size-4 transition-all duration-200 hover:scale-110",
+                  note.pinned
+                    ? "fill-[var(--color-pinned-accent)] text-[var(--color-pinned-accent)] rotate-[-45deg]"
+                    : "text-muted-foreground"
+                )}
+              />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"

@@ -156,3 +156,8 @@
   --radius-lg: 12px;
   --radius-full: 9999px;
 }
+
+/* Feature: pinned notes accent color (Linear.app #5e6ad2) */
+:root {
+  --color-pinned-accent: #5e6ad2;
+}
