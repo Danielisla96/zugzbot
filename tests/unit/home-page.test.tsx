@@ -52,6 +52,9 @@ vi.mock("@/components/ui/dialog", () => ({
   DialogTitle: ({ children }: any) => (
     <div data-testid="dialog-title">{children}</div>
   ),
+  DialogDescription: ({ children }: any) => (
+    <div data-testid="dialog-description">{children}</div>
+  ),
   DialogFooter: ({ children }: any) => (
     <div data-testid="dialog-footer">{children}</div>
   ),

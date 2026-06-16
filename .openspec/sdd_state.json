@@ -1,13 +1,13 @@
 {
-  "phase": "F2_IMPLEMENTATION",
-  "activeContract": ".openspec/specs/2026-06-16__09-40-59_stats-dashboard-redesign/contract.json",
+  "phase": "F0_DETECT",
+  "activeContract": "",
   "stack": {
     "core": [],
     "databases": []
   },
   "loopMode": true,
   "loopTargetIterations": 2,
-  "loopCurrentIteration": 1,
+  "loopCurrentIteration": 2,
   "rollbackCount": 0,
-  "updatedAt": "2026-06-16T13:43:00.021Z"
+  "updatedAt": "2026-06-16T13:50:09.557Z"
 }
