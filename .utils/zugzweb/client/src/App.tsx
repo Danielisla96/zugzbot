@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { marked } from 'marked'
 import {
   Play,
   Square,
@@ -103,7 +104,8 @@ export default function App() {
   const [selectedModel, setSelectedModel] = useState<string>('default')
   const [copiedMessageId, setCopiedMessageId] = useState<string>('')
 
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const chatContainerRef = useRef<HTMLDivElement>(null)
+  const [userHasScrolledUp, setUserHasScrolledUp] = useState(false)
 
   // 1. Cargar estado inicial y levantar listeners
   useEffect(() => {
@@ -140,10 +142,31 @@ export default function App() {
     return () => clearInterval(interval)
   }, [currentSessionId, currentPort, refreshInterval])
 
-  // 3. Scroll automático al recibir nuevos mensajes
+  // 3. Scroll automático inteligente al recibir nuevos mensajes
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (!userHasScrolledUp && chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
+    }
   }, [messages])
+
+  // Manejar el desplazamiento del scroll para desactivar/activar el Smart Scroll Anchoring
+  const handleScroll = () => {
+    if (chatContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current
+      // Si el usuario sube más de 120px desde el fondo, asumimos que subió manualmente
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 120
+      setUserHasScrolledUp(!isAtBottom)
+    }
+  }
+
+  // Parseador de Markdown seguro usando marked
+  const renderMarkdown = (text: string) => {
+    try {
+      return { __html: marked.parse(text, { gfm: true, breaks: true }) }
+    } catch (e) {
+      return { __html: text }
+    }
+  }
 
   // Notificaciones Push del navegador
   const toggleNotifications = async () => {
@@ -352,6 +375,7 @@ export default function App() {
     const input = inputValue.trim()
     setInputValue('')
     setIsProcessing(true)
+    setUserHasScrolledUp(false) // Forzar autoscroll al enviar
 
     // Agregar mensaje local temporal de usuario
     const tempUserMessage: Message = {
@@ -414,6 +438,7 @@ export default function App() {
   const handleQuickCommand = async (commandName: string, args: string = '') => {
     if (!currentSessionId) return
     setIsProcessing(true)
+    setUserHasScrolledUp(false) // Forzar autoscroll al enviar
 
     const fullCommandText = `/${commandName} ${args}`.trim()
     
@@ -796,7 +821,11 @@ export default function App() {
         )}
 
         {/* HISTORIAL DE MENSAJES */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div 
+          ref={chatContainerRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto p-6 space-y-6"
+        >
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-[#71717a] space-y-3">
               <MessageSquare size={36} className="text-[#27272a]" />
@@ -868,9 +897,11 @@ export default function App() {
                         // 1. TEXT PART
                         if (part.type === 'text') {
                           return (
-                            <div key={pIdx} className="text-sm leading-relaxed whitespace-pre-wrap font-sans text-[#e4e4e7]">
-                              {part.text}
-                            </div>
+                            <div 
+                              key={pIdx} 
+                              className="text-sm leading-relaxed prose prose-invert max-w-none text-[#e4e4e7] markdown-content"
+                              dangerouslySetInnerHTML={renderMarkdown(part.text || '')}
+                            />
                           )
                         }
 
@@ -962,7 +993,6 @@ export default function App() {
               )
             })
           )}
-          <div ref={messagesEndRef} />
         </div>
 
         {/* CONSOLA DE ENTRADA, SELECCIÓN DE MODELO Y ENVÍO */}
