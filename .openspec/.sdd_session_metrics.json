@@ -1,13 +1,26 @@
 {
   "contractName": "2026-06-16__00-21-55_note-card-pinned-colors",
-  "sessionId": "",
-  "startedAt": "",
-  "lastUpdatedAt": "",
+  "sessionId": "ses_13156033effevysvxxDGhi7cJX",
+  "startedAt": "2026-06-16T04:21:55.988Z",
+  "lastUpdatedAt": "2026-06-16T04:25:31.535Z",
   "totals": {
-    "cost": 0,
-    "tokensIn": 0,
-    "tokensOutput": 0,
-    "messages": 0
+    "cost": 0.038351420799999994,
+    "tokensIn": 177800,
+    "tokensOutput": 21106,
+    "messages": 63
   },
-  "byAgent": {}
+  "byAgent": {
+    "sdd-orchestrator": {
+      "cost": 0.013045704000000002,
+      "tokensIn": 76794,
+      "tokensOutput": 4570,
+      "messages": 15
+    },
+    "sdd-spec-writer": {
+      "cost": 0.02530571679999999,
+      "tokensIn": 101006,
+      "tokensOutput": 16536,
+      "messages": 48
+    }
+  }
 }

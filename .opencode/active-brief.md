@@ -1,44 +1,43 @@
-# Brief: ImproveNoteCards (Iteración 1/3)
+## Contrato Activo: note-card-pinned-colors
 
-## Path del contrato
-`.openspec/specs/2026-06-16__00-10-04_improve-task-cards/contract.json`
+**Path del contrato**: `.openspec/specs/2026-06-16__00-21-55_note-card-pinned-colors/contract.json`
 
-## Bootstrap
-Ya inicializado (Next.js 16 + Shadcn UI + Tailwind v4). No ejecutar bootstrap.
+### Stack
+- Next.js 16 + Shadcn UI + Tailwind v4 + lucide-react + Vitest
+- **NO ejecutar bootstrap** — proyecto ya inicializado
 
-## Shadcn components a usar
-card (ya instalado), button (ya instalado), badge (ya instalado)
+### Diseño visual
+- Linear.app (tokens ya aplicados en globals.css)
+- Primary: #5e6ad2 para accent bar y pin activo
 
-## Lucide icons
-Star, Trash2, Clock, FileText, Hash, Tag, MessageSquare
+### Cambios a implementar
 
-## Componentes a modificar
+1. **src/types/index.ts**: Añadir `pinned?: boolean` al `interface Note`
+2. **src/app/page.tsx** (HomePage):
+   - Añadir `handleTogglePin(id: string)` que invierte `note.pinned`, actualiza `updatedAt`, persiste a localStorage
+   - Al crear nueva nota (handleSave), incluir `pinned: false`
+   - Pasar `onTogglePin` a `NotesList`
+3. **src/components/blocks/NoteCard.tsx**:
+   - Nuevo prop: `onTogglePin: (id: string) => void`
+   - Añadir botón Pin (lucide `Pin`) junto a Star y Trash
+   - Cuando `note.pinned`: icono Pin con `fill="#5e6ad2"` + `text-[#5e6ad2]` + `rotate-[-45deg]`
+   - Cuando `note.pinned`: Card con `border-l-[3px] border-l-[#5e6ad2]` como barra de acento
+   - Cuando `note.pinned`: `data-pinned="true"` para tests
+   - Stagger: aceptar style prop con transitionDelay
+4. **src/components/blocks/NotesList.tsx**:
+   - Nuevo prop: `onTogglePin: (id: string) => void`
+   - Pasar `onTogglePin` a cada NoteCard
+   - Lógica de sorted: notas pinned (note.pinned === true) SIEMPRE primero, luego sortBy activo
+   - Añadir stagger: `transitionDelay: \`${index * 50}ms\`` a cada NoteCard
 
-### 1. NoteCard (`@/components/blocks/NoteCard`)
-Rediseño completo manteniendo interface exacta:
-- **Header**: Título con tracking-tight + Star favorito SIEMPRE visible (sin group-hover). Título vacío → "Sin título" italic muted.
-- **Content preview**: line-clamp-3 text-sm, detectar #hashtags con regex y renderizar como badges/pills con icono Tag
-- **Metadata bar**: Clock + fecha relativa ("hace 5 min"), FileText + word count, Hash + char count
-- **Hover**: shadow elevado + translateY(-2px), transiciones 200ms ease
-- **Contenido vacío**: "Sin contenido" text-xs muted italic
+### Shadcn components
+- Ya instalados: card, button, input, textarea, dialog, badge, scroll-area
+- NO reinstalar
 
-### 2. NotesList (`@/components/blocks/NotesList`)
-- gap-4 → gap-5 en grid
+### Lucide icons
+- `Pin` (validado) — para botón pin/despin
+- `CheckCircle2` (validado) — para toasts si es necesario
 
-### 3. Utilidades nuevas en `@/lib/`:
-- `formatRelativeDate(isoDate: string): string` — fecha relativa en español (Intl.RelativeTimeFormat)
-- `extractHashtags(content: string): string[]` — extrae #hashtags
-- `countWords(text: string): number` — cuenta palabras
-
-## Diseño visual
-Linear.app (indigo primary #5e6ad2, cards con border rgba(0,0,0,0.08)/rgba(255,255,255,0.08), radius 8px, pills 9999px)
-
-## Tests
-Ya creados en `src/__tests__/NoteCard.test.tsx` (TS-01 a TS-06). Debes crear tests para las 3 utilidades en `src/lib/`.
-
-## PRIMERA ACCIÓN
-1. No ejecutes bootstrap (ya está)
-2. Lee el contrato completo para detalles
-3. Implementa NoteCard.tsx primero, luego utilidades, luego NotesList.tsx
-4. Crea tests para utilidades
-5. Asegúrate de que todos los tests pasen
+### Tests a hacer pasar
+- 5 test scenarios (TS-01 a TS-05) en contract.json
+- Archivos de test ya creados por spec-writer: `src/__tests__/NoteCard.test.tsx`, `src/__tests__/NotesList.test.tsx`, `src/__tests__/HomePage.test.tsx`

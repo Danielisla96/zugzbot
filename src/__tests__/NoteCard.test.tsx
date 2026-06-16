@@ -152,4 +152,48 @@ describe("NoteCard", () => {
     // 9 words → the "9" should appear in the metadata
     expect(screen.getByText("9")).toBeInTheDocument();
   });
+
+  it("TS-07: Pin toggle llama a onTogglePin con el id correcto", () => {
+    const onTogglePin = vi.fn();
+    const note = makeNote({ id: "note-pin-1" });
+
+    render(
+      <NoteCard
+        note={note}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+        onToggleFavorite={vi.fn()}
+        onTogglePin={onTogglePin}
+      />
+    );
+
+    const pinButton = screen.getByRole("button", { name: /fijar nota/i });
+    expect(pinButton).toBeInTheDocument();
+
+    fireEvent.click(pinButton);
+    expect(onTogglePin).toHaveBeenCalledTimes(1);
+    expect(onTogglePin).toHaveBeenCalledWith("note-pin-1");
+  });
+
+  it("TS-08: Nota pinned muestra icono Pin con fill (acento) y rotación", () => {
+    const note = makeNote({ id: "note-pinned-1", pinned: true });
+
+    render(
+      <NoteCard
+        note={note}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+        onToggleFavorite={vi.fn()}
+        onTogglePin={vi.fn()}
+      />
+    );
+
+    const pinButton = screen.getByRole("button", { name: /fijar nota/i });
+    expect(pinButton).toBeInTheDocument();
+
+    // The inner Pin icon should have fill class indicating pinned state
+    const pinIcon = pinButton.querySelector("svg");
+    expect(pinIcon).toBeInTheDocument();
+    expect(pinIcon!.className).toContain("fill");
+  });
 });
