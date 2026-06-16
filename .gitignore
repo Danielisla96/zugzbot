@@ -56,6 +56,7 @@ next-env.d.ts
 .omd/runs/
 .omd/
 .opencode/oh-my-design/*
+!.opencode/oh-my-design/.gitignore
 !.opencode/oh-my-design/design-md/
 !.opencode/oh-my-design/design-md/**
 !.opencode/oh-my-design/packages/

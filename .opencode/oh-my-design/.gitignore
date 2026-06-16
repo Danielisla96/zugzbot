@@ -1,0 +1,72 @@
+node_modules/
+dist/
+.next/
+*.tsbuildinfo
+.DS_Store
+.env
+.env.local
+.factory/
+
+# Generated output files (project root only)
+/DESIGN.md
+/DESIGN.preview.html
+
+# Playwright MCP runtime cache (screenshots, console logs, snapshots)
+.playwright-mcp/
+
+# Internal research notes, brainstorming, strategy docs (not for public repo)
+research/
+
+# Scenario test archive (regenerable; rerun `npm test` to recreate)
+test/scenarios/archive/
+
+# Local experiment runs (regenerable via /omd-lab-* skills, not for public repo)
+.experiments/
+
+# Local experiment scratch — gallery + brand mockups + applepresso journey.
+# Iterative outputs (v1/v2 drafts, build scripts, source crops); not for public repo.
+experiments/
+
+# Per-harness-run artifacts (regenerable; not for public repo)
+.omd/
+
+# npm pack tarball outputs (build artifacts)
+*.tgz
+
+# Self-install test artifacts inside web/ (regenerable via npx)
+web/.claude/
+web/.codex/
+web/.omd/
+web/.husky/
+
+# Self-install artifacts at repo root (canonical sources: skills/, agents/, .claude/).
+# `omd install-skills` writes installed-skill-marked copies here when dogfooding
+# the codex / generic-agent channels locally.
+.codex/
+.agents/skills/omd*/
+
+# Claude scheduled-task lock (per-machine runtime state)
+.claude/scheduled_tasks.lock
+
+# Local convenience symlink: `references` → `web/references` (don't commit;
+# repo canonical path is web/references/)
+/references
+
+# Local screenshot / test artifacts at repo root (regenerable, not for repo)
+/*.png
+/*.jpg
+/refero-sections.json
+
+# Promo video archive — /omd-batch-launch outputs (hyperframes projects + MP4)
+.promo/
+
+# oh-my-design-mcp bundled data (populated by scripts/sync-data.mjs at build time)
+packages/mcp/data/references/
+# packages/mcp/dist/
+
+# AI-generated internal audit/analysis docs (keep local, not for public repo)
+data/audit/
+
+# Explicitly un-ignore the compiled standalone MCP server for distribution
+!packages/mcp/dist/
+!packages/mcp/dist/**
