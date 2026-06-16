@@ -1,6 +1,6 @@
 {
-  "phase": "F0_DETECT",
-  "activeContract": "",
+  "phase": "F1_CONTRACT",
+  "activeContract": ".openspec/specs/2026-06-16__00-35-00_keyboard-shortcuts-quick-actions/contract.json",
   "stack": {
     "core": [],
     "databases": []
@@ -9,5 +9,5 @@
   "loopTargetIterations": 3,
   "loopCurrentIteration": 3,
   "rollbackCount": 0,
-  "updatedAt": "2026-06-16T04:34:39.568Z"
+  "updatedAt": "2026-06-16T04:35:00.628Z"
 }
