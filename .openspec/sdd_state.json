@@ -1,6 +1,6 @@
 {
-  "phase": "F0_DETECT",
-  "activeContract": "",
+  "phase": "F1_CONTRACT",
+  "activeContract": ".openspec/specs/2026-06-16__09-21-03_stats-dashboard/contract.json",
   "stack": {
     "core": [],
     "databases": []
@@ -9,5 +9,5 @@
   "loopTargetIterations": 3,
   "loopCurrentIteration": 3,
   "rollbackCount": 0,
-  "updatedAt": "2026-06-16T13:20:38.911Z"
+  "updatedAt": "2026-06-16T13:21:03.100Z"
 }

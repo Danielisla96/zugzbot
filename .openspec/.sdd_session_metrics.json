@@ -1,20 +1,13 @@
 {
-  "contractName": "",
-  "sessionId": "ses_12f75dad1ffeklWcKbPF7ffezj",
-  "startedAt": "2026-06-16T13:20:03.409Z",
-  "lastUpdatedAt": "2026-06-16T13:20:31.377Z",
+  "contractName": "2026-06-16__09-21-03_stats-dashboard",
+  "sessionId": "",
+  "startedAt": "",
+  "lastUpdatedAt": "",
   "totals": {
-    "cost": 0.0042453824,
-    "tokensIn": 1756,
-    "tokensOutput": 4894,
-    "messages": 17
+    "cost": 0,
+    "tokensIn": 0,
+    "tokensOutput": 0,
+    "messages": 0
   },
-  "byAgent": {
-    "sdd-orchestrator": {
-      "cost": 0.0042453824,
-      "tokensIn": 1756,
-      "tokensOutput": 4894,
-      "messages": 17
-    }
-  }
+  "byAgent": {}
 }
