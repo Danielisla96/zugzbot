@@ -213,7 +213,7 @@ describe("NoteCard", () => {
     expect(screen.getByText(/purple|Purple|Púrpura/i)).toBeInTheDocument();
 
     // The card should have border-l styling (visual indicator)
-    const card = screen.getByRole("article") ?? document.querySelector("[class*='border-l']");
+    const _card = screen.getByRole("article") ?? document.querySelector("[class*='border-l']");
     // At minimum, there's an element indicating color
     expect(document.querySelector('[class*="border-l"]') ?? screen.getByText(/purple|Purple/i)).toBeInTheDocument();
   });

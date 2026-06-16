@@ -3,10 +3,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 describe("useKeyboardShortcuts", () => {
-  let handlers: ReturnType<typeof vi.fn>[];
+  let _handlers: ReturnType<typeof vi.fn>[];
 
   beforeEach(() => {
-    handlers = [];
+    _handlers = [];
   });
 
   afterEach(() => {
