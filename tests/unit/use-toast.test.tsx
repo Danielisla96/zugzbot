@@ -1,23 +1,69 @@
-import { describe, it, expect } from "vitest";
-// import useToast from "@/components/blocks/use-toast";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { renderHook, act } from "@testing-library/react";
+import { useToast } from "@/hooks/useToast";
 
-describe("useToast Tests (Contract Scenarios)", () => {
-  // TS-01: Toast aparece al crear una nota
-  // Given: el hook useToast está inicializado con toasts vacío
-  // When: se llama a addToast('Nota creada correctamente', 'success')
-  // Then: toasts contiene un item con message='Nota creada correctamente', type='success', id no vacío, y createdAt es un número
-  it("TS-01: Toast aparece al crear una nota", async () => {
-    // TODO: Implement actual contract assertions
-    expect(true).toBe(true);
+describe("useToast Tests (Undo Delete Contract Scenarios)", () => {
+  // Clear shared singleton state between tests
+  beforeEach(() => {
+    const { result } = renderHook(() => useToast());
+    act(() => {
+      result.current.toasts.forEach((t) => result.current.removeToast(t.id));
+    });
   });
 
-  // TS-02: Toast se elimina al llamar removeToast
-  // Given: existe un toast con id='toast-1' en el array toasts
-  // When: se llama a removeToast('toast-1')
-  // Then: el array toasts ya no contiene ningún elemento con id='toast-1'
-  it("TS-02: Toast se elimina al llamar removeToast", async () => {
-    // TODO: Implement actual contract assertions
-    expect(true).toBe(true);
+  // TS-01 (Undo Delete): addToast con action guarda la acción en el objeto Toast
+  // Given: el hook useToast está disponible
+  // When: se llama addToast('Nota eliminada', 'info', { label: 'Deshacer', onClick: () => {} })
+  // Then: el toast retornado incluye la propiedad action con label 'Deshacer' y la función onClick
+  it("TS-01: addToast con action guarda la acción en el objeto Toast", () => {
+    const { result } = renderHook(() => useToast());
+    const onClick = vi.fn();
+
+    act(() => {
+      result.current.addToast("Nota eliminada", "info", {
+        label: "Deshacer",
+        onClick,
+      });
+    });
+
+    expect(result.current.toasts).toHaveLength(1);
+    const toast = result.current.toasts[0];
+    expect(toast.message).toBe("Nota eliminada");
+    expect(toast.type).toBe("info");
+    expect(toast.action).toBeDefined();
+    expect(toast.action!.label).toBe("Deshacer");
+    expect(toast.action!.onClick).toBe(onClick);
   });
 
+  // TS-01b: addToast sin action no incluye la propiedad action
+  it("TS-01b: addToast sin action no incluye action", () => {
+    const { result } = renderHook(() => useToast());
+
+    act(() => {
+      result.current.addToast("Nota creada", "success");
+    });
+
+    expect(result.current.toasts).toHaveLength(1);
+    expect(result.current.toasts[0].action).toBeUndefined();
+  });
+
+  // TS-02 (Undo Delete - removeToast consistency): removeToast sigue funcionando con toasts que tienen action
+  it("TS-02: removeToast funciona con toasts que tienen action", () => {
+    const { result } = renderHook(() => useToast());
+
+    act(() => {
+      result.current.addToast("Nota eliminada", "info", {
+        label: "Deshacer",
+        onClick: vi.fn(),
+      });
+    });
+
+    expect(result.current.toasts).toHaveLength(1);
+
+    act(() => {
+      result.current.removeToast(result.current.toasts[0].id);
+    });
+
+    expect(result.current.toasts).toHaveLength(0);
+  });
 });

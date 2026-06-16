@@ -1,8 +1,15 @@
 import { renderHook, act } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useToast } from "@/hooks/useToast";
 
 describe("useToast", () => {
+  // Clear shared singleton state between tests (useToast uses module-level state)
+  beforeEach(() => {
+    const { result } = renderHook(() => useToast());
+    act(() => {
+      result.current.toasts.forEach((t) => result.current.removeToast(t.id));
+    });
+  });
   it("TS-01: addToast con action guarda la acción en el objeto Toast", () => {
     const { result } = renderHook(() => useToast());
     const onClick = vi.fn();

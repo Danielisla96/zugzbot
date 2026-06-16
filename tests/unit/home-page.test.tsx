@@ -149,7 +149,7 @@ describe("HomePage Tests (Contract Scenarios)", () => {
     expect(stored[0].favorite).toBe(false);
   });
 
-  it("TS-06c: Elimina una nota con confirmación y persiste el cambio", async () => {
+  it("TS-06c: Elimina una nota con buffer undo y persiste el cambio", async () => {
     const user = userEvent.setup();
 
     // Pre-poblar con 2 notas
@@ -163,22 +163,24 @@ describe("HomePage Tests (Contract Scenarios)", () => {
     });
     expect(screen.getByText("Nota 2")).toBeInTheDocument();
 
-    // window.confirm ya retorna true (definido en beforeEach)
     // Nota: con sortBy="newest", Nota 2 (updatedAt más reciente) aparece primero.
     // trashIcons[0] corresponde a la primera NoteCard, que es Nota 2.
     const trashIcons = screen.getAllByTestId("icon-trash");
     await user.click(trashIcons[0].closest("button")!);
 
-    // window.confirm debe haberse llamado
-    expect(window.confirm).toHaveBeenCalledWith("¿Eliminar esta nota?");
-
-    // La nota eliminada (Nota 2) debe desaparecer de la lista
+    // La nota eliminada (Nota 2) debe desaparecer de la lista (undo buffer)
     await waitFor(() => {
       expect(screen.queryByText("Nota 2")).not.toBeInTheDocument();
     });
     expect(screen.getByText("Nota 1")).toBeInTheDocument();
 
-    // Verificar que localStorage se actualizó
+    // Debe aparecer el toast "Nota eliminada" con botón "Deshacer"
+    await waitFor(() => {
+      expect(screen.getByText("Nota eliminada")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Deshacer")).toBeInTheDocument();
+
+    // Verificar que localStorage se actualizó (nota movida a buffer)
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
     expect(stored).toHaveLength(1);
     expect(stored[0].id).toBe("note-1");
