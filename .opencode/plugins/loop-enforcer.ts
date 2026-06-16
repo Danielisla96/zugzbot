@@ -295,6 +295,45 @@ export const LoopEnforcerPlugin: Plugin = async ({ project, client, $, directory
           // ignore
         }
       }
+    },
+
+    // 5. Intercept first loop message to extract target iterations mechanically
+    "chat.message": async (input, output) => {
+      try {
+        const text = output.message?.content || ""
+        if (text && typeof text === "string" && text.includes("MODO AUTOPILOTO (/loop) ACTIVADO")) {
+          const match = text.match(/>\s*(\d+)\s+([\s\S]+)$/m)
+          if (match) {
+            const targetNum = parseInt(match[1], 10)
+            if (!isNaN(targetNum) && targetNum > 0 && targetNum <= 5) {
+              // Write target iterations directly to state on disk first
+              const state = readState()
+              state.loopMode = true
+              state.loopTargetIterations = targetNum
+              state.loopCurrentIteration = 1
+              state.rollbackCount = 0
+              writeState(state)
+
+              // Rewrite output.message.content to explicitly instruct the Orchestrator with the parsed value
+              output.message.content = text.replace(
+                />\s*(\d+)\s+([\s\S]+)$/m,
+                `> [SDD AUTOPILOT CONFIRMED: loopTargetIterations=${targetNum}] Petición del usuario: $2`
+              )
+
+              if (client?.tui?.showToast) {
+                await client.tui.showToast({
+                  body: {
+                    message: `⚡ SDD Loop Inicializado: ${targetNum} iteraciones fijadas mecánicamente.`,
+                    variant: "success"
+                  }
+                }).catch(() => {})
+              }
+            }
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
     }
   }
 }
