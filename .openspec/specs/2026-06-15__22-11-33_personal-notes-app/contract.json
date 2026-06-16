@@ -1,0 +1,384 @@
+{
+  "$schema": "../../../.opencode/contract-schema.json",
+  "contractName": "PersonalNotesApp",
+  "description": "Aplicación de notas personales con persistencia en localStorage, búsqueda, favoritos, y theme toggle. Inspirada en el diseño visual de Notion.",
+  "category": "frontend",
+  "settings": {
+    "verificationMode": "console",
+    "language": "TypeScript",
+    "testFramework": "Vitest",
+    "darkMode": "class-based (tailwind dark:)",
+    "persistence": "localStorage"
+  },
+  "design": {
+    "brand": "notion",
+    "reference": ".openspec/design-assets/notion/DESIGN.md",
+    "tokens": {
+      "colors": {
+        "ink": "rgba(0,0,0,0.95)",
+        "canvas": "#ffffff",
+        "primary": "#0075de",
+        "primary-active": "#005bab",
+        "warm-white": "#f6f5f4",
+        "warm-dark": "#31302e",
+        "warm-gray-500": "#615d59",
+        "warm-gray-300": "#a39e98",
+        "border": "#dddddd",
+        "focus": "#097fe8",
+        "badge-bg": "#f2f9ff",
+        "navy": "#213183",
+        "teal": "#2a9d99",
+        "green": "#1aae39",
+        "orange": "#dd5b00",
+        "pink": "#ff64c8"
+      },
+      "typography": {
+        "family": "Inter, -apple-system, sans-serif",
+        "body": { "size": 16, "weight": 400, "lineHeight": 1.5 },
+        "bodyMedium": { "size": 16, "weight": 500, "lineHeight": 1.5 },
+        "cardTitle": { "size": 22, "weight": 700, "lineHeight": 1.27, "tracking": -0.25 },
+        "caption": { "size": 14, "weight": 500, "lineHeight": 1.43 },
+        "badge": { "size": 12, "weight": 600, "lineHeight": 1.33, "tracking": 0.125 },
+        "navButton": { "size": 15, "weight": 600, "lineHeight": 1.33 }
+      },
+      "rounded": { "sm": 4, "md": 12, "lg": 16, "full": 9999 },
+      "shadow": {
+        "card": "rgba(0,0,0,0.04) 0px 4px 18px, rgba(0,0,0,0.027) 0px 2.025px 7.84688px, rgba(0,0,0,0.02) 0px 0.8px 2.925px, rgba(0,0,0,0.01) 0px 0.175px 1.04062px"
+      },
+      "components": {
+        "button-primary": { "bg": "#0075de", "fg": "#ffffff", "radius": 4, "padding": "8px 16px" },
+        "button-secondary": { "bg": "rgba(0,0,0,0.05)", "fg": "#000000", "radius": 4, "padding": "8px 16px" },
+        "badge": { "bg": "#f2f9ff", "fg": "#097fe8", "radius": 9999, "padding": "4px 8px", "font": "12px/600" },
+        "card": { "bg": "#ffffff", "radius": 12, "border": "1px solid rgba(0,0,0,0.1)" },
+        "input": { "bg": "#ffffff", "fg": "#000000", "radius": 4, "padding": "6px", "border": "1px solid #dddddd" }
+      },
+      "motion": {
+        "fast": "150ms",
+        "standard": "220ms",
+        "easeGentle": "cubic-bezier(0.2, 0.4, 0.2, 1)",
+        "easeEnter": "cubic-bezier(0.2, 0.6, 0.25, 1)"
+      }
+    }
+  },
+  "stack": {
+    "core": ["Next.js 16", "React 19", "Shadcn UI", "Tailwind CSS v4", "TypeScript", "localStorage"],
+    "databases": []
+  },
+  "routes": [
+    {
+      "path": "/",
+      "name": "Home",
+      "description": "Página principal de la aplicación de notas. Muestra AppLayout (header con ThemeToggle + título), NotesList con search bar, y NoteEditor en un Dialog para crear/editar notas.",
+      "layout": "AppLayout (Header con título + ThemeToggle) > main con NotesList + NoteEditor (Dialog)",
+      "components": ["AppLayout", "ThemeToggle", "NotesList", "NoteCard", "NoteEditor", "EmptyState"],
+      "access": "public"
+    }
+  ],
+  "frontend": {
+    "interfaces": {
+      "Note": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "UUID v4 generado con crypto.randomUUID()" },
+          "title": { "type": "string", "description": "Título de la nota" },
+          "content": { "type": "string", "description": "Contenido de la nota en texto plano" },
+          "favorite": { "type": "boolean", "default": false },
+          "createdAt": { "type": "string", "description": "ISO timestamp de creación" },
+          "updatedAt": { "type": "string", "description": "ISO timestamp de última modificación" }
+        },
+        "required": ["id", "title", "content", "favorite", "createdAt", "updatedAt"]
+      }
+    },
+    "components": [
+      {
+        "name": "AppLayout",
+        "path": "@/components/layout/AppLayout",
+        "description": "Layout general de la app. Header con el nombre 'NOTAS' en MAYÚSCULAS (NotionInter 15px/600) a la izquierda y ThemeToggle a la derecha. Fondo blanco en modo claro (#ffffff), fondo warm-dark (#31302e) en modo oscuro. Whisper border inferior (1px solid rgba(0,0,0,0.1) en claro, rgba(255,255,255,0.1) en oscuro). Estructura: header fijo + main content.",
+        "props": {
+          "children": "React.ReactNode"
+        },
+        "state": {},
+        "events": []
+      },
+      {
+        "name": "ThemeToggle",
+        "path": "@/components/blocks/ThemeToggle",
+        "description": "Botón toggle para cambiar entre modo claro y oscuro. Usa next-themes useTheme(). Muestra icono Sun (modo oscuro actual → cambiar a claro) o Moon (modo claro actual → cambiar a oscuro). Shadcn Button variant ghost, tamaño icon-only. Efecto hover: scale(1.05) con transition-all duration-150.",
+        "props": {},
+        "state": {
+          "theme": { "type": "string", "description": "Tema actual (light/dark). Gestionado por next-themes ThemeProvider." }
+        },
+        "events": ["onClick → toggleTheme()"]
+      },
+      {
+        "name": "NotesList",
+        "path": "@/components/blocks/NotesList",
+        "description": "Lista de notas con barra de búsqueda superior. Input de búsqueda con icono Search de lucide-react a la izquierda. Grid responsive de NoteCards (1 col en mobile, 2 en tablet, 3 en desktop). Muestra EmptyState cuando el array notes está vacío. Shadcn Input + ScrollArea para el contenedor de la lista.",
+        "props": {
+          "notes": "Note[]",
+          "searchQuery": "string",
+          "onSearchChange": "(query: string) => void",
+          "onEditNote": "(note: Note) => void",
+          "onDeleteNote": "(id: string) => void",
+          "onToggleFavorite": "(id: string) => void"
+        },
+        "state": {},
+        "events": ["onSearchChange", "onEditNote", "onDeleteNote", "onToggleFavorite"]
+      },
+      {
+        "name": "NoteCard",
+        "path": "@/components/blocks/NoteCard",
+        "description": "Card individual de nota con estilo Notion: bg white, rounded-md (12px), whisper border (1px solid rgba(0,0,0,0.1)), multi-layer shadow card. Muestra título (cardTitle 22px/700), preview del contenido (2 líneas truncadas con line-clamp-2), fecha formateada (caption 14px/500, warm-gray-500), y botones de acción. Efectos hover: shadow intensification, scale(1.01). Shadcn Card + Badge + Button variant ghost.",
+        "props": {
+          "note": "Note",
+          "onEdit": "(note: Note) => void",
+          "onDelete": "(id: string) => void",
+          "onToggleFavorite": "(id: string) => void"
+        },
+        "state": {
+          "isDeleting": { "type": "boolean", "default": false, "description": "Estado de confirmación de eliminación" }
+        },
+        "events": ["onEdit → abre NoteEditor en modo edición", "onDelete → muestra confirmación antes de eliminar", "onToggleFavorite → toggle estrella"]
+      },
+      {
+        "name": "NoteEditor",
+        "path": "@/components/blocks/NoteEditor",
+        "description": "Editor/formulario para crear o editar una nota. Se renderiza dentro de un Shadcn Dialog. En modo creación: título vacío + textarea vacío + placeholder 'Escribe tu nota aquí...'. En modo edición: precargado con datos existentes. Input para título (shadcn Input), Textarea para contenido (shadcn Textarea con min-h-[200px]). Botones: 'Guardar' (primary blue #0075de) y 'Cancelar' (secondary ghost). Al guardar se genera UUID y timestamps. Preview de contenido se trunca a 120 chars.",
+        "props": {
+          "note": "Note | null",
+          "isOpen": "boolean",
+          "onSave": "(note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }) => void",
+          "onClose": "() => void"
+        },
+        "state": {
+          "title": { "type": "string", "default": "" },
+          "content": { "type": "string", "default": "" },
+          "isSubmitting": { "type": "boolean", "default": false }
+        },
+        "events": ["onSave → crea/actualiza nota", "onClose → cierra Dialog"]
+      },
+      {
+        "name": "EmptyState",
+        "path": "@/components/blocks/EmptyState",
+        "description": "Estado vacío estilo Notion: sin ilustración, solo texto en warm-gray-500 (#615d59) con icono FileText de lucide-react. Mensaje: 'No hay notas aún.' y texto secundario: 'Crea tu primera nota con el botón +'. Centrado vertical y horizontalmente. Padding generoso (py-16).",
+        "props": {
+          "onCreateNote": "() => void"
+        },
+        "state": {},
+        "events": ["onCreateNote → abre NoteEditor en modo creación"]
+      }
+    ]
+  },
+  "stateFlow": {
+    "owner": "HomePage",
+    "lifts_to": null,
+    "props_down": [
+      { "from": "HomePage", "to": "NotesList", "prop": "notes", "type": "data" },
+      { "from": "HomePage", "to": "NotesList", "prop": "searchQuery", "type": "state" },
+      { "from": "HomePage", "to": "NotesList", "prop": "onSearchChange", "type": "callback" },
+      { "from": "HomePage", "to": "NotesList", "prop": "onEditNote", "type": "callback" },
+      { "from": "HomePage", "to": "NotesList", "prop": "onDeleteNote", "type": "callback" },
+      { "from": "HomePage", "to": "NotesList", "prop": "onToggleFavorite", "type": "callback" },
+      { "from": "HomePage", "to": "NoteCard", "prop": "note", "type": "data" },
+      { "from": "HomePage", "to": "NoteCard", "prop": "onEdit", "type": "callback" },
+      { "from": "HomePage", "to": "NoteCard", "prop": "onDelete", "type": "callback" },
+      { "from": "HomePage", "to": "NoteCard", "prop": "onToggleFavorite", "type": "callback" },
+      { "from": "HomePage", "to": "NoteEditor", "prop": "note", "type": "data" },
+      { "from": "HomePage", "to": "NoteEditor", "prop": "isOpen", "type": "state" },
+      { "from": "HomePage", "to": "NoteEditor", "prop": "onSave", "type": "callback" },
+      { "from": "HomePage", "to": "NoteEditor", "prop": "onClose", "type": "callback" },
+      { "from": "HomePage", "to": "EmptyState", "prop": "onCreateNote", "type": "callback" }
+    ],
+    "forbidden": [
+      "instanciar useState para notas en múltiples componentes",
+      "usar context global sin provider para el estado de notas",
+      "mutar localStorage directamente sin pasar por el hook centralizado",
+      "usar useEffect sin dependencias para cargar datos iniciales"
+    ]
+  },
+  "test_scenarios": [
+    {
+      "id": "TS-01",
+      "name": "Renderiza EmptyState cuando no hay notas",
+      "type": "unit",
+      "feature_ref": "EmptyState",
+      "given": "el array notes está vacío (no hay notas en localStorage)",
+      "when": "se renderiza NotesList con notes=[]",
+      "then": "se muestra el componente EmptyState con el mensaje 'No hay notas aún.' y el icono FileText"
+    },
+    {
+      "id": "TS-02",
+      "name": "Crea una nueva nota y se agrega a la lista",
+      "type": "unit",
+      "feature_ref": "NoteEditor",
+      "given": "el usuario abre el NoteEditor en modo creación con el Dialog",
+      "when": "completa título 'Mi nota' y contenido 'Contenido de prueba' y hace clic en Guardar",
+      "then": "se genera una nota con id UUID, title='Mi nota', content='Contenido de prueba', favorite=false, y timestamps; se agrega al array notes"
+    },
+    {
+      "id": "TS-03",
+      "name": "Elimina una nota con confirmación",
+      "type": "unit",
+      "feature_ref": "NoteCard",
+      "given": "existe una nota con id='note-1' en el array notes",
+      "when": "el usuario hace clic en el botón de eliminar y confirma la acción",
+      "then": "la nota con id='note-1' se elimina del array notes y se actualiza localStorage"
+    },
+    {
+      "id": "TS-04",
+      "name": "Filtra notas por texto de búsqueda",
+      "type": "unit",
+      "feature_ref": "NotesList",
+      "given": "hay 3 notas: 'Compras' (contenido: 'leche'), 'Trabajo' (contenido: 'reunión'), 'Ideas' (contenido: 'proyecto')",
+      "when": "el usuario escribe 'tra' en el input de búsqueda",
+      "then": "solo se muestran las notas cuyo título o contenido contiene 'tra' (debe mostrar 'Trabajo' por título y 'Compras' por contenido 'leche' → no match, solo 'Trabajo')"
+    },
+    {
+      "id": "TS-05",
+      "name": "Toggle de favorito marca/desmarca una nota",
+      "type": "unit",
+      "feature_ref": "NoteCard",
+      "given": "una nota con id='note-1' tiene favorite=false",
+      "when": "el usuario hace clic en el icono Star (favorito)",
+      "then": "la nota cambia a favorite=true, el icono Star se muestra filled (o con clase diferente)"
+    },
+    {
+      "id": "TS-06",
+      "name": "Persiste notas en localStorage entre recargas",
+      "type": "integration",
+      "feature_ref": "HomePage",
+      "given": "el usuario ha creado 2 notas en la sesión actual",
+      "when": "se recarga la página (simular reinicio del estado cargando desde localStorage)",
+      "then": "las 2 notas se recuperan de localStorage y se renderizan en NotesList"
+    }
+  ],
+  "external_api_verification": {
+    "verified_at": "2026-06-16T02:12:05.851Z",
+    "components": [
+      {
+        "name": "button",
+        "library": "shadcn/ui",
+        "version_resolved": "latest",
+        "mcp_source": "shadcn_list_items_in_registries",
+        "api_signature": "Button extends React.ButtonHTMLAttributes, variants: default/destructive/outline/secondary/ghost/link, sizes: default/sm/lg/icon"
+      },
+      {
+        "name": "input",
+        "library": "shadcn/ui",
+        "version_resolved": "latest",
+        "mcp_source": "shadcn_list_items_in_registries",
+        "api_signature": "Input extends React.InputHTMLAttributes"
+      },
+      {
+        "name": "card",
+        "library": "shadcn/ui",
+        "version_resolved": "latest",
+        "mcp_source": "shadcn_list_items_in_registries",
+        "api_signature": "Card + CardHeader + CardTitle + CardDescription + CardContent + CardFooter"
+      },
+      {
+        "name": "textarea",
+        "library": "shadcn/ui",
+        "version_resolved": "latest",
+        "mcp_source": "shadcn_list_items_in_registries",
+        "api_signature": "Textarea extends React.TextareaHTMLAttributes"
+      },
+      {
+        "name": "dialog",
+        "library": "shadcn/ui",
+        "version_resolved": "latest",
+        "mcp_source": "shadcn_list_items_in_registries",
+        "api_signature": "Dialog + DialogTrigger + DialogContent + DialogHeader + DialogTitle + DialogDescription + DialogFooter"
+      },
+      {
+        "name": "badge",
+        "library": "shadcn/ui",
+        "version_resolved": "latest",
+        "mcp_source": "shadcn_list_items_in_registries",
+        "api_signature": "Badge extends React.HTMLAttributes, variants: default/secondary/outline/destructive"
+      },
+      {
+        "name": "scroll-area",
+        "library": "shadcn/ui",
+        "version_resolved": "latest",
+        "mcp_source": "shadcn_list_items_in_registries",
+        "api_signature": "ScrollArea + ScrollBar"
+      },
+      {
+        "name": "Sun",
+        "library": "lucide-react",
+        "version_resolved": "latest",
+        "mcp_source": "sdd_validate_lucide_icons_batch",
+        "api_signature": "Icon component, size/color/strokeWidth props, aria-hidden by default"
+      },
+      {
+        "name": "Moon",
+        "library": "lucide-react",
+        "version_resolved": "latest",
+        "mcp_source": "sdd_validate_lucide_icons_batch",
+        "api_signature": "Icon component, size/color/strokeWidth props"
+      },
+      {
+        "name": "Plus",
+        "library": "lucide-react",
+        "version_resolved": "latest",
+        "mcp_source": "sdd_validate_lucide_icons_batch",
+        "api_signature": "Icon component, size/color/strokeWidth props"
+      },
+      {
+        "name": "Trash2",
+        "library": "lucide-react",
+        "version_resolved": "latest",
+        "mcp_source": "sdd_validate_lucide_icons_batch",
+        "api_signature": "Icon component, size/color/strokeWidth props"
+      },
+      {
+        "name": "Edit3",
+        "library": "lucide-react",
+        "version_resolved": "latest",
+        "mcp_source": "sdd_validate_lucide_icons_batch",
+        "api_signature": "Icon component, size/color/strokeWidth props"
+      },
+      {
+        "name": "Search",
+        "library": "lucide-react",
+        "version_resolved": "latest",
+        "mcp_source": "sdd_validate_lucide_icons_batch",
+        "api_signature": "Icon component, size/color/strokeWidth props"
+      },
+      {
+        "name": "FileText",
+        "library": "lucide-react",
+        "version_resolved": "latest",
+        "mcp_source": "sdd_validate_lucide_icons_batch",
+        "api_signature": "Icon component, size/color/strokeWidth props"
+      },
+      {
+        "name": "Star",
+        "library": "lucide-react",
+        "version_resolved": "latest",
+        "mcp_source": "sdd_validate_lucide_icons_batch",
+        "api_signature": "Icon component, size/color/strokeWidth props"
+      },
+      {
+        "name": "Menu",
+        "library": "lucide-react",
+        "version_resolved": "latest",
+        "mcp_source": "sdd_validate_lucide_icons_batch",
+        "api_signature": "Icon component, size/color/strokeWidth props"
+      },
+      {
+        "name": "Pin",
+        "library": "lucide-react",
+        "version_resolved": "latest",
+        "mcp_source": "sdd_validate_lucide_icons_batch",
+        "api_signature": "Icon component, size/color/strokeWidth props"
+      }
+    ]
+  },
+  "sdd_hints": {
+    "shadcn_components": ["button", "input", "card", "textarea", "dialog", "badge", "scroll-area"],
+    "lucide_icons": ["Sun", "Moon", "Plus", "Trash2", "Edit3", "Search", "FileText", "Star", "Menu", "Pin"],
+    "bootstrap_template": "nextjs-shadcn"
+  }
+}
