@@ -1,18 +1,13 @@
 {
-  "phase": "F4_DEPLOYMENT",
-  "activeContract": ".openspec/specs/2026-06-16__09-06-22_note-colors-categories/contract.json",
+  "phase": "F0_DETECT",
+  "activeContract": "",
   "stack": {
-    "core": [
-      "Next.js 16",
-      "Shadcn UI",
-      "Tailwind CSS v4",
-      "localStorage"
-    ],
+    "core": [],
     "databases": []
   },
   "loopMode": true,
   "loopTargetIterations": 3,
-  "loopCurrentIteration": 2,
+  "loopCurrentIteration": 3,
   "rollbackCount": 0,
-  "updatedAt": "2026-06-16T13:19:48.303Z"
+  "updatedAt": "2026-06-16T13:20:03.192Z"
 }
