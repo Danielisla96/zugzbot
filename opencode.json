@@ -22,8 +22,7 @@
   "lsp": true,
   "instructions": [],
   "plugin": [
-    "opencode-dynamic-context-pruning",
-    "opencode-notificator"
+    "opencode-dynamic-context-pruning"
   ],
   "mcp": {
     "oh-my-design": {

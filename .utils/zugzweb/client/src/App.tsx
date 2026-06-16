@@ -15,7 +15,14 @@ import {
   Bell,
   BellOff,
   MessageSquare,
-  Server
+  Server,
+  Copy,
+  Check,
+  CornerDownRight,
+  Code,
+  Sparkles,
+  Clock,
+  AlertCircle
 } from 'lucide-react'
 
 // Interfaces basadas en la API de Opencode
@@ -23,8 +30,9 @@ interface Session {
   id: string
   title: string | null
   parent_id?: string | null
+  parentID?: string | null // Algunos endpoints de Opencode devuelven camelCase
   agent?: string | null
-  model?: string | null
+  model?: any | null
   cost?: number | null
   tokens_input?: number | null
   tokens_output?: number | null
@@ -47,7 +55,10 @@ interface Message {
     id: string
     session_id: string
     role: 'user' | 'assistant' | 'system'
-    time_created: number
+    time?: {
+      created: number
+    }
+    time_created?: number
   }
   parts: MessagePart[]
 }
@@ -58,6 +69,17 @@ interface OpencodeInstance {
   name: string
   isCurrentProject: boolean
 }
+
+// Lista estática curada de los mejores modelos de Opencode
+const POPULAR_MODELS = [
+  { id: 'default', name: '🤖 Modelo por defecto' },
+  { id: 'deepseek/deepseek-chat', name: '⚡️ DeepSeek v4 (Chat rápido)' },
+  { id: 'deepseek/deepseek-reasoner', name: '💭 DeepSeek R1 (Pensamiento/Razonamiento)' },
+  { id: 'google/gemini-3.5-flash', name: '♊️ Gemini 3.5 Flash' },
+  { id: 'google/gemini-3.1-pro-preview', name: '🧠 Gemini 3.1 Pro (Complejo)' },
+  { id: 'opencode/deepseek-v4-flash-free', name: '🆓 DeepSeek v4 (Flash Gratis)' },
+  { id: 'opencode/nemotron-3-ultra-free', name: '🆓 Nemotron 3 Ultra (Gratis)' }
+]
 
 export default function App() {
   const [sessions, setSessions] = useState<Session[]>([])
@@ -76,6 +98,10 @@ export default function App() {
   const [instances, setInstances] = useState<OpencodeInstance[]>([])
   const [currentPort, setCurrentPort] = useState<number>(4096)
   const [showInstanceDropdown, setShowInstanceDropdown] = useState(false)
+
+  // Opciones de prompt
+  const [selectedModel, setSelectedModel] = useState<string>('default')
+  const [copiedMessageId, setCopiedMessageId] = useState<string>('')
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -144,6 +170,14 @@ export default function App() {
     }
   }
 
+  // Copiar al portapapeles
+  const handleCopyText = (text: string, msgId: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedMessageId(msgId)
+      setTimeout(() => setCopiedMessageId(''), 2000)
+    })
+  }
+
   // APIs del Servidor / Daemon Custom
   const fetchTunnelStatus = async () => {
     try {
@@ -198,7 +232,6 @@ export default function App() {
     }
   }
 
-  // Carga inmediata después de cambiar de puerto
   const fetchSessionsAfterChange = async () => {
     try {
       const res = await fetch('/api/session')
@@ -311,42 +344,105 @@ export default function App() {
     }
   }
 
+  // Manejar el envío de prompts o la ejecución de comandos diagonal
   const handleSendPrompt = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!inputValue.trim() || !currentSessionId) return
 
-    const promptText = inputValue
+    const input = inputValue.trim()
     setInputValue('')
     setIsProcessing(true)
 
-    // Mensaje local temporal de usuario
+    // Agregar mensaje local temporal de usuario
     const tempUserMessage: Message = {
       info: {
         id: `temp-${Date.now()}`,
         session_id: currentSessionId,
         role: 'user',
-        time_created: Date.now()
+        time: { created: Date.now() }
       },
-      parts: [{ type: 'text', text: promptText }]
+      parts: [{ type: 'text', text: input }]
     }
     setMessages(prev => [...prev, tempUserMessage])
 
     try {
-      const res = await fetch(`/api/session/${currentSessionId}/prompt_async`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          parts: [{ type: 'text', text: promptText }]
-        })
-      })
+      if (input.startsWith('/')) {
+        // Ejecución de comandos de Opencode
+        const parts = input.split(' ')
+        const commandName = parts[0].substring(1) // Quitar '/'
+        const args = parts.slice(1).join(' ')
 
-      if (!res.ok) {
-        throw new Error('Error al enviar prompt asíncrono')
+        const res = await fetch(`/api/session/${currentSessionId}/command`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            command: commandName,
+            arguments: args
+          })
+        })
+
+        if (!res.ok) throw new Error('Error al ejecutar comando')
+      } else {
+        // Envío de prompt normal asíncrono
+        const bodyPayload: any = {
+          parts: [{ type: 'text', text: input }]
+        }
+        
+        // Agregar modelo personalizado si se ha seleccionado
+        if (selectedModel && selectedModel !== 'default') {
+          const [providerID, modelID] = selectedModel.split('/')
+          bodyPayload.model = { providerID, modelID }
+        }
+
+        const res = await fetch(`/api/session/${currentSessionId}/prompt_async`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bodyPayload)
+        })
+
+        if (!res.ok) throw new Error('Error al enviar prompt')
       }
       
       setRefreshInterval(1500)
     } catch (e) {
-      setErrorMsg('No se pudo enviar el prompt. Comprueba la conexión.')
+      setErrorMsg('Error al conectar. Comprueba el estado de Opencode.')
+      setIsProcessing(false)
+    }
+  }
+
+  // Activa comandos rápidos desde un botón de un solo clic
+  const handleQuickCommand = async (commandName: string, args: string = '') => {
+    if (!currentSessionId) return
+    setIsProcessing(true)
+
+    const fullCommandText = `/${commandName} ${args}`.trim()
+    
+    // Agregar mensaje temporal local
+    const tempUserMessage: Message = {
+      info: {
+        id: `temp-${Date.now()}`,
+        session_id: currentSessionId,
+        role: 'user',
+        time: { created: Date.now() }
+      },
+      parts: [{ type: 'text', text: fullCommandText }]
+    }
+    setMessages(prev => [...prev, tempUserMessage])
+
+    try {
+      const res = await fetch(`/api/session/${currentSessionId}/command`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          command: commandName,
+          arguments: args
+        })
+      })
+
+      if (!res.ok) throw new Error('Error al ejecutar comando rápido')
+      setRefreshInterval(1500)
+    } catch (e) {
+      setErrorMsg('No se pudo ejecutar el comando rápido.')
       setIsProcessing(false)
     }
   }
@@ -371,13 +467,50 @@ export default function App() {
     setExpandedParts(prev => ({ ...prev, [id]: !prev[id] }))
   }
 
-  // Obtener la instancia de Opencode activa en este momento
+  // Formateador de modelo para evitar colapsos
+  const formatModelName = (model: any): string => {
+    if (!model) return 'default'
+    if (typeof model === 'string') {
+      return model.split('/').pop() || model
+    }
+    if (typeof model === 'object') {
+      if (model.modelID) return model.modelID
+      if (model.id) return model.id
+      return JSON.stringify(model).substring(0, 20)
+    }
+    return 'default'
+  }
+
+  // Formateador robusto de fecha de mensaje
+  const formatMessageTime = (info: any): string => {
+    const rawTime = info?.time?.created || info?.time_created
+    if (!rawTime) return 'En curso...'
+    try {
+      const date = new Date(rawTime)
+      if (isNaN(date.getTime())) {
+        return 'En curso...'
+      }
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    } catch (e) {
+      return 'En curso...'
+    }
+  }
+
+  // Estructura Jerárquica del Árbol de Subagentes
+  // Separar las sesiones en principales (raíz) e hijas (subagentes)
+  const rootSessions = sessions.filter(s => !s.parent_id && !s.parentID)
+  
+  const getSubagentsFor = (parentId: string) => {
+    return sessions.filter(s => s.parent_id === parentId || s.parentID === parentId)
+  }
+
+  // Obtener la instancia activa del Daemon
   const activeInstance = instances.find(inst => inst.port === currentPort)
 
   return (
     <div className="flex h-screen bg-[#09090b] text-[#f4f4f5] overflow-hidden antialiased font-sans select-none">
       
-      {/* SIDEBAR: Lista de Sesiones e Instancias */}
+      {/* SIDEBAR: Lista de Sesiones e Instancias con Árbol de Subagentes */}
       <div className="w-80 bg-[#0c0c0e] border-r border-[#1f1f23] flex flex-col justify-between shrink-0">
         
         {/* Encabezado Principal */}
@@ -397,7 +530,7 @@ export default function App() {
           </button>
         </div>
 
-        {/* SELECTOR DE PROYECTOS / INSTANCIAS (Dropdown) */}
+        {/* SELECTOR DE PROYECTOS / INSTANCIAS */}
         <div className="px-3 pt-3 pb-1 relative">
           <div className="text-[10px] text-[#71717a] uppercase font-bold tracking-wider px-2 mb-1.5 flex items-center gap-1">
             <Server size={10} />
@@ -425,8 +558,8 @@ export default function App() {
                 Proyectos / TUIs Detectados ({instances.length})
               </div>
               {instances.length === 0 ? (
-                <div className="text-[11px] text-[#71717a] p-3 text-center italic">
-                  No se detectaron otras TUIs activas
+                <div className="text-[11px] text-[#71717a] p-3 text-center italic animate-pulse">
+                  No se detectaron otras TUIs activas...
                 </div>
               ) : (
                 instances.map(inst => (
@@ -456,47 +589,84 @@ export default function App() {
         {/* Separador */}
         <div className="px-4 py-1.5 text-[10px] text-[#71717a] uppercase font-bold tracking-wider flex items-center gap-1 select-none">
           <MessageSquare size={10} />
-          <span>Historial de Sesiones</span>
+          <span>Árbol de Sesiones y Subagentes</span>
         </div>
 
-        {/* Lista de Sesiones */}
+        {/* BARRA LATERAL SCROLLABLE: Jerarquía de Sesiones */}
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {sessions.length === 0 ? (
             <div className="text-center py-8 text-xs text-[#71717a] italic">
               No se encontraron sesiones en este puerto
             </div>
           ) : (
-            sessions.map(s => {
-              const isActive = s.id === currentSessionId
+            rootSessions.map(root => {
+              const isRootActive = root.id === currentSessionId
+              const subagents = getSubagentsFor(root.id)
+              const hasSubagents = subagents.length > 0
+
               return (
-                <button
-                  key={s.id}
-                  onClick={() => {
-                    setCurrentSessionId(s.id)
-                    setErrorMsg('')
-                  }}
-                  className={`w-full text-left p-3 rounded-lg flex flex-col gap-1 transition duration-200 cursor-pointer ${
-                    isActive
-                      ? 'bg-[#1c1c1f] border border-[#2e2e33]'
-                      : 'hover:bg-[#121215] border border-transparent'
-                  }`}
-                >
-                  <div className="flex justify-between items-start">
-                    <span className={`font-semibold truncate text-sm ${isActive ? 'text-[#ffffff]' : 'text-[#a1a1aa]'}`}>
-                      {s.title || `Sesión: ${s.id.substring(0, 8)}`}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] text-[#71717a]">
-                    <span>{s.agent || 'build'}</span>
-                    <span>{s.model ? s.model.split('/').pop() : 'default'}</span>
-                  </div>
-                </button>
+                <div key={root.id} className="space-y-1">
+                  {/* Sesión Principal */}
+                  <button
+                    onClick={() => {
+                      setCurrentSessionId(root.id)
+                      setErrorMsg('')
+                    }}
+                    className={`w-full text-left p-3 rounded-lg flex flex-col gap-1 transition duration-200 cursor-pointer ${
+                      isRootActive
+                        ? 'bg-[#1c1c1f] border border-[#2e2e33]'
+                        : 'hover:bg-[#121215] border border-transparent'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <span className={`font-semibold truncate text-sm ${isRootActive ? 'text-white' : 'text-[#a1a1aa]'}`}>
+                        📂 {root.title || `Sesión: ${root.id.substring(0, 8)}`}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-[#71717a]">
+                      <span>{root.agent || 'build'}</span>
+                      <span>{formatModelName(root.model)}</span>
+                    </div>
+                  </button>
+
+                  {/* Subagentes (Hijas) en Árbol */}
+                  {hasSubagents && (
+                    <div className="ml-4 pl-3 border-l border-[#1f1f23] space-y-1 py-1">
+                      {subagents.map(sub => {
+                        const isSubActive = sub.id === currentSessionId
+                        return (
+                          <button
+                            key={sub.id}
+                            onClick={() => {
+                              setCurrentSessionId(sub.id)
+                              setErrorMsg('')
+                            }}
+                            className={`w-full text-left p-2 rounded-md flex flex-col gap-0.5 transition duration-150 cursor-pointer text-xs ${
+                              isSubActive
+                                ? 'bg-[#18181c] border border-[#2e2e33]/50 text-white'
+                                : 'hover:bg-[#0f0f12] text-[#71717a] hover:text-[#a1a1aa]'
+                            }`}
+                          >
+                            <div className="flex items-center gap-1 font-medium truncate">
+                              <CornerDownRight size={11} className="text-[#a1a1aa] shrink-0" />
+                              <span className="truncate">🤖 {sub.title || `Subagente: ${sub.id.substring(0, 6)}`}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-[9px] text-[#52525b] pl-4 font-mono">
+                              <span>{sub.agent || 'subagent'}</span>
+                              <span>{formatModelName(sub.model)}</span>
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
               )
             })
           )}
         </div>
 
-        {/* Notificaciones y Estado del Túnel en el pie */}
+        {/* Notificaciones y Estado del Túnel */}
         <div className="p-4 bg-[#09090b] border-t border-[#1f1f23] space-y-3">
           <button
             onClick={toggleNotifications}
@@ -567,7 +737,8 @@ export default function App() {
           
           <div className="flex items-center gap-2">
             {errorMsg && (
-              <span className="text-xs text-red-400 bg-red-950/40 border border-red-900/50 py-1 px-3 rounded-md animate-pulse">
+              <span className="text-xs text-red-400 bg-red-950/40 border border-red-900/50 py-1 px-3 rounded-md animate-pulse flex items-center gap-1">
+                <AlertCircle size={12} />
                 {errorMsg}
               </span>
             )}
@@ -587,19 +758,62 @@ export default function App() {
           </div>
         </div>
 
-        {/* Contenedor del Historial de Mensajes */}
+        {/* PANEL DE COMANDOS RÁPIDOS SUPERIOR */}
+        {currentSessionId && (
+          <div className="bg-[#0c0c0e]/60 border-b border-[#1f1f23] px-6 py-2 flex items-center gap-2 overflow-x-auto shrink-0 scrollbar-none">
+            <span className="text-[10px] text-[#71717a] font-bold uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1 select-none">
+              <Code size={11} />
+              <span>Comandos Rápidos:</span>
+            </span>
+            <button
+              onClick={() => handleQuickCommand('status')}
+              className="py-1 px-2.5 bg-[#121215] hover:bg-[#1c1c1f] border border-[#1f1f23] text-[11px] text-[#e4e4e7] rounded-md transition cursor-pointer shrink-0 font-medium font-mono"
+            >
+              /status
+            </button>
+            <button
+              onClick={() => handleQuickCommand('undo')}
+              className="py-1 px-2.5 bg-[#121215] hover:bg-[#1c1c1f] border border-[#1f1f23] text-[11px] text-[#e4e4e7] rounded-md transition cursor-pointer shrink-0 font-medium font-mono"
+              title="Deshacer última edición de archivo"
+            >
+              /undo
+            </button>
+            <button
+              onClick={() => handleQuickCommand('reset')}
+              className="py-1 px-2.5 bg-[#121215] hover:bg-[#1c1c1f] border border-[#1f1f23] text-[11px] text-[#e4e4e7] rounded-md transition cursor-pointer shrink-0 font-medium font-mono"
+              title="Reiniciar y limpiar sesión"
+            >
+              /reset
+            </button>
+            <button
+              onClick={() => handleQuickCommand('loop', prompt('Introduce la tarea para el loop autónomo:', '') || '')}
+              className="py-1 px-2.5 bg-[#ffffff] hover:bg-[#e4e4e7] text-[#09090b] text-[11px] font-bold rounded-md transition cursor-pointer shrink-0 flex items-center gap-1"
+            >
+              <Sparkles size={10} />
+              <span>Iniciar Autopiloto (/loop)</span>
+            </button>
+          </div>
+        )}
+
+        {/* HISTORIAL DE MENSAJES */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-[#71717a] space-y-3">
               <MessageSquare size={36} className="text-[#27272a]" />
               <div className="text-center">
                 <p className="text-sm font-medium">No hay mensajes en esta sesión</p>
-                <p className="text-xs mt-0.5">Escribe una instrucción abajo para poner a trabajar al agente.</p>
+                <p className="text-xs mt-0.5">Escribe una instrucción, comando o inicia un loop de desarrollo abajo.</p>
               </div>
             </div>
           ) : (
             messages.map((msg, idx) => {
               const isUser = msg.info.role === 'user'
+              // Consolidar todo el texto de las partes del mensaje para copiar
+              const fullTextMessage = msg.parts
+                .filter(p => p.type === 'text')
+                .map(p => p.text)
+                .join('\n\n')
+
               return (
                 <div
                   key={msg.info.id || idx}
@@ -612,21 +826,43 @@ export default function App() {
                   )}
 
                   <div
-                    className={`rounded-xl px-4 py-3 space-y-3 max-w-[85%] border shadow-sm ${
+                    className={`rounded-xl px-4 py-3 space-y-3 max-w-[85%] border shadow-sm group relative ${
                       isUser
                         ? 'bg-[#18181b] text-[#ffffff] border-[#2e2e33]'
                         : 'bg-[#0c0c0e] text-[#f4f4f5] border-[#1f1f23]'
                     }`}
                   >
-                    <div className="flex items-center gap-2 text-[11px] text-[#71717a] font-medium border-b border-[#1f1f23]/40 pb-1">
-                      <span>{isUser ? 'TÚ' : 'AGENTE'}</span>
-                      <span>•</span>
-                      <span>{new Date(msg.info.time_created).toLocaleTimeString()}</span>
+                    {/* Encabezado del mensaje con fecha corregida */}
+                    <div className="flex items-center justify-between border-b border-[#1f1f23]/40 pb-1 text-[11px] text-[#71717a] font-medium">
+                      <div className="flex items-center gap-2">
+                        <span>{isUser ? 'TÚ' : 'AGENTE'}</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1 font-mono">
+                          <Clock size={10} />
+                          {formatMessageTime(msg.info)}
+                        </span>
+                      </div>
+                      
+                      {/* Botón de copiar resultado en la burbuja */}
+                      {fullTextMessage && (
+                        <button
+                          onClick={() => handleCopyText(fullTextMessage, msg.info.id || String(idx))}
+                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-[#1f1f23] text-[#a1a1aa] hover:text-white rounded transition cursor-pointer absolute right-2 top-2"
+                          title="Copiar texto"
+                        >
+                          {copiedMessageId === (msg.info.id || String(idx)) ? (
+                            <Check size={12} className="text-green-500" />
+                          ) : (
+                            <Copy size={12} />
+                          )}
+                        </button>
+                      )}
                     </div>
 
+                    {/* Partes del mensaje */}
                     <div className="space-y-3">
                       {msg.parts.map((part, pIdx) => {
-                        const partId = `${msg.info.id}-${pIdx}`
+                        const partId = `${msg.info.id || idx}-${pIdx}`
                         const isExpanded = expandedParts[partId]
 
                         // 1. TEXT PART
@@ -677,7 +913,7 @@ export default function App() {
                                   <Settings size={13} className="text-amber-500 animate-spin" style={{ animationDuration: '3s' }} />
                                   <span className="font-semibold text-amber-400">Herramienta: {toolName}</span>
                                   <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
-                                    status === 'success'
+                                    status === 'success' || status === 'completed'
                                       ? 'bg-green-950/20 text-green-400 border-green-900/50'
                                       : 'bg-yellow-950/20 text-yellow-500 border-yellow-900/50'
                                   }`}>
@@ -729,9 +965,34 @@ export default function App() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Consola de Entrada e Instrucciones */}
+        {/* CONSOLA DE ENTRADA, SELECCIÓN DE MODELO Y ENVÍO */}
         <div className="p-4 border-t border-[#1f1f23] bg-[#09090b] shrink-0">
           <form onSubmit={handleSendPrompt} className="max-w-4xl mx-auto space-y-3">
+            
+            {/* Opciones Avanzadas del Prompt: Selector de Modelo */}
+            <div className="flex items-center gap-2 px-1">
+              <span className="text-[10px] text-[#71717a] uppercase font-bold tracking-wider select-none">
+                Modelo Objetivo:
+              </span>
+              <div className="relative">
+                <select
+                  value={selectedModel}
+                  onChange={e => setSelectedModel(e.target.value)}
+                  className="bg-[#121215] border border-[#1f1f23] text-[11px] text-[#e4e4e7] rounded-md py-1 pl-2 pr-6 outline-none hover:border-[#27272a] transition cursor-pointer appearance-none"
+                >
+                  {POPULAR_MODELS.map(m => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-1.5 flex items-center pointer-events-none text-[#71717a]">
+                  <ChevronDown size={11} />
+                </div>
+              </div>
+            </div>
+
+            {/* Input Textarea principal */}
             <div className="relative border border-[#27272a] focus-within:border-[#3f3f46] rounded-xl bg-[#0c0c0e] overflow-hidden shadow-lg transition duration-200">
               <textarea
                 value={inputValue}
@@ -742,7 +1003,11 @@ export default function App() {
                     handleSendPrompt(e)
                   }
                 }}
-                placeholder={`Escribe una instrucción para ${activeInstance?.name || 'Opencode'}... (Shift+Enter para nueva línea)`}
+                placeholder={
+                  inputValue.startsWith('/')
+                    ? "Escribe los argumentos para el comando... (ej. /loop Crear login)"
+                    : `Instrucción para ${activeInstance?.name || 'Opencode'}... (Escribe / para ver comandos, Shift+Enter para nueva línea)`
+                }
                 className="w-full bg-transparent px-4 py-3.5 pr-24 text-sm text-[#f4f4f5] placeholder-[#71717a] outline-none border-none resize-none h-14 max-h-40 min-h-[56px] focus:ring-0"
               />
 
@@ -751,7 +1016,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={handleAbort}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#ef4444] hover:bg-[#dc2626] text-white rounded-lg text-xs font-semibold transition cursor-pointer shadow"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#ef4444] hover:bg-[#dc2626] text-white rounded-lg text-xs font-semibold transition cursor-pointer shadow animate-pulse"
                     title="Abortar ejecución"
                   >
                     <Square size={12} className="fill-current" />
@@ -774,12 +1039,12 @@ export default function App() {
               <div className="flex items-center gap-3">
                 <span className="flex items-center gap-1">
                   <span className={`h-1.5 w-1.5 rounded-full ${isProcessing ? 'bg-amber-500 animate-pulse' : 'bg-green-500'}`}></span>
-                  <span>{isProcessing ? 'Procesando loop autónomo' : 'Listo'}</span>
+                  <span>{isProcessing ? 'Procesando comando/loop' : 'Listo'}</span>
                 </span>
                 <span>•</span>
                 <span>Enlazado al puerto :{currentPort} de Opencode</span>
               </div>
-              <span className="font-mono">v1.0.7-web</span>
+              <span className="font-mono">v1.1.0-web</span>
             </div>
           </form>
         </div>
