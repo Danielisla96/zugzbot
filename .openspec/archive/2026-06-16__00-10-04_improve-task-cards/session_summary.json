@@ -1,0 +1,44 @@
+{
+  "contractName": "2026-06-16__00-10-04_improve-task-cards",
+  "sessionId": "ses_13160e8c1ffek5JADUaXx4VO4j",
+  "startedAt": "2026-06-16T04:10:04.721Z",
+  "closedAt": "2026-06-16T04:21:32.542Z",
+  "durationMs": 687821,
+  "durationMinutes": 11.46,
+  "totals": {
+    "cost": 0.093217,
+    "tokensIn": 347908,
+    "tokensOutput": 57702,
+    "messages": 222
+  },
+  "byAgent": [
+    {
+      "agent": "sdd-coder",
+      "cost": 0.038059,
+      "tokensIn": 142348,
+      "tokensOutput": 19534,
+      "messages": 66
+    },
+    {
+      "agent": "sdd-orchestrator",
+      "cost": 0.02262,
+      "tokensIn": 65654,
+      "tokensOutput": 14308,
+      "messages": 78
+    },
+    {
+      "agent": "sdd-spec-writer",
+      "cost": 0.022226,
+      "tokensIn": 90988,
+      "tokensOutput": 19016,
+      "messages": 36
+    },
+    {
+      "agent": "sdd-deployer",
+      "cost": 0.010311,
+      "tokensIn": 48918,
+      "tokensOutput": 4844,
+      "messages": 42
+    }
+  ]
+}

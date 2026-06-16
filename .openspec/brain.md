@@ -15,6 +15,9 @@
 - [2026-06-16]: Lint fix: 7 warnings corregidos en undo-delete spec - page.tsx deletedNotes prefixed, SortBy import removed, vi import removed, UseToastReturn interface removed, unused render/screen/userEvent imports removed from test files.
 - [2026-06-16]: 2026-06-16: Iteración 2/2 undo-delete-toast completada. Implementado buffer temporal de notas eliminadas (deletedNotes state) con toast "Deshacer" de 5 segundos. Patrón clave: setTimeout para purga automática con useRef<Map<string, setTimeout>> para cleanup. Toast action extendido con interface {label, onClick}. Total tests: 45, todos verdes.
 - [2026-06-16]: 2026-06-16: Sesión SDD completa con 2 iteraciones en autopiloto. Iteración 1 (notes-enhancements): toast notifications (singleton useToast con module-level state), sort controls (4 modos), note stats counter. Iteración 2 (undo-delete-toast): buffer temporal de notas eliminadas con deshacer en toast (5s auto-purga). Total specs: 2. Total tests: 45. Ambos specs desplegados en Docker exitosamente.
+- [2026-06-16]: Iteración 1/3 (improve-task-cards): NoteCard rediseñado con metadata bar (fecha relativa, word/char count, hashtags), Linear design (indigo primary #5e6ad2, cards translúcidas), favorito siempre visible, hover elevado. 66 tests pasan, Docker healthy.
+- [2026-06-16]: Iteracion 1/3 improve-task-cards completada: NoteCard redisenado con metadata bar (fecha relativa, word/char count, hashtags), Linear design, favorito siempre visible, hover elevado. 66 tests pasan, Docker healthy.
+- [2026-06-16]: Nota: Iteracion 1 improve-task-cards completa. NoteCard mejorado con metadata bar, hashtags, Linear design. 66 tests.
 
 # Design
 - [2026-06-16]: ## Notion Design System aplicado en App de Notas
