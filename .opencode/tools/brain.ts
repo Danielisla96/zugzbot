@@ -100,16 +100,16 @@ export const save_memory = tool({
       
       writeBrainFile(filePath, title, sections)
       
-      return {
+      return JSON.stringify({
         success: true,
         message: `Memoria guardada exitosamente bajo la categoría '${normalizedCategory}' en .openspec/brain.md`,
         filePath
-      }
+      }, null, 2)
     } catch (e: any) {
-      return {
+      return JSON.stringify({
         success: false,
         message: `Error al guardar memoria: ${e?.message || "error desconocido"}`
-      }
+      }, null, 2)
     }
   }
 })
@@ -124,10 +124,10 @@ export const read_memory = tool({
       const filePath = getBrainFilePath(context)
       
       if (!fs.existsSync(filePath)) {
-        return {
+        return JSON.stringify({
           exists: false,
           message: "No se ha inicializado el archivo .openspec/brain.md de memoria del proyecto. Usa 'brain_save_memory' para registrar tu primera entrada."
-        }
+        }, null, 2)
       }
       
       const { title, sections } = parseBrainFile(filePath)
@@ -139,19 +139,30 @@ export const read_memory = tool({
         const content = sections[normalizedCategory]
         
         if (content !== undefined && content !== null) {
-          return {
+          const lines = content.split("\n").filter(l => l.trim().length > 0)
+          const limit = 10
+          let isTruncated = false
+          let finalContent = content
+          if (lines.length > limit) {
+            finalContent = lines.slice(-limit).join("\n")
+            isTruncated = true
+          }
+          return JSON.stringify({
             category: normalizedCategory,
             found: true,
-            content: content
-          }
+            content: finalContent,
+            isTruncated,
+            totalEntries: lines.length,
+            limit
+          }, null, 2)
         } else {
           const available = Object.keys(sections)
-          return {
+          return JSON.stringify({
             category: normalizedCategory,
             found: false,
             message: `No se encontró la categoría '${normalizedCategory}' en el cerebro.`,
             availableCategories: available
-          }
+          }, null, 2)
         }
       } else {
         const available: Record<string, { preview: string, entriesCount: number }> = {}
@@ -167,17 +178,17 @@ export const read_memory = tool({
           }
         }
         
-        return {
+        return JSON.stringify({
           title,
           message: "Se listan las categorías de memoria disponibles. Puedes leer una en particular pasando el argumento 'category'.",
           availableCategories: available
-        }
+        }, null, 2)
       }
     } catch (e: any) {
-      return {
+      return JSON.stringify({
         exists: false,
         message: `Error al leer memoria: ${e?.message || "error desconocido"}`
-      }
+      }, null, 2)
     }
   }
 })

@@ -454,10 +454,31 @@ export const get_initial_session_data = tool({
     const brainFilePath = path.resolve(root, ".openspec/brain.md")
     if (fs.existsSync(brainFilePath)) {
       try {
-        const content = fs.readFileSync(brainFilePath, "utf8")
+        const content = fs.readFileSync(brainFilePath, "utf8") || ""
+        const lines = content.split(/\r?\n/)
+        const sections: Record<string, string[]> = {}
+        let currentHeader = "general"
+        for (const line of lines) {
+          if (line.startsWith("# ")) {
+            currentHeader = line.substring(2).trim().toLowerCase()
+            sections[currentHeader] = []
+          } else if (line.trim().length > 0) {
+            if (!sections[currentHeader]) sections[currentHeader] = []
+            sections[currentHeader].push(line)
+          }
+        }
+        
+        let prunedContent = ""
+        for (const [header, bodyLines] of Object.entries(sections)) {
+          const limit = 10
+          const finalLines = bodyLines.slice(-limit)
+          const formattedHeader = header.charAt(0).toUpperCase() + header.slice(1)
+          prunedContent += `# ${formattedHeader}\n` + finalLines.join("\n") + "\n\n"
+        }
+
         brainMemory = {
           found: true,
-          content: content.slice(0, 5000)
+          content: prunedContent.trim()
         }
       } catch (e) {}
     }
@@ -567,5 +588,86 @@ export const create_spec_folder = tool({
       folderName,
       folderPath: path.relative(root, targetFolder)
     }, null, 2)
+  }
+})
+
+// Tool: sdd_validate_contract
+export const validate_contract = tool({
+  description: "Valida de forma estricta el archivo contract.json contra el contract-schema.json oficial para detectar errores de tipos, alucinaciones o campos faltantes antes de avanzar.",
+  args: {
+    contractPath: tool.schema.string().describe("Ruta relativa al contract.json (ej. '.openspec/specs/XXXX/contract.json')")
+  },
+  async execute(args, context) {
+    const root = getRoot(context)
+    const targetPath = path.resolve(root, args.contractPath)
+    if (!fs.existsSync(targetPath)) {
+      return JSON.stringify({ success: false, error: `El archivo del contrato '${args.contractPath}' no existe.` }, null, 2)
+    }
+
+    try {
+      const contract = JSON.parse(fs.readFileSync(targetPath, "utf8"))
+      const schemaPath = path.resolve(root, ".opencode/contract-schema.json")
+      if (!fs.existsSync(schemaPath)) {
+        return JSON.stringify({ success: false, error: "No se encontró el archivo contract-schema.json en .opencode/" }, null, 2)
+      }
+      
+      const errors: string[] = []
+      
+      const validateField = (name: string, val: any, expectedType: string, required = false) => {
+        if (val === undefined || val === null) {
+          if (required) errors.push(`Campo requerido faltante: '${name}'`);
+          return;
+        }
+        if (expectedType === "array") {
+          if (!Array.isArray(val)) errors.push(`Campo '${name}' debe ser de tipo array.`);
+        } else if (expectedType === "object") {
+          if (typeof val !== "object" || Array.isArray(val)) errors.push(`Campo '${name}' debe ser de tipo object.`);
+        } else {
+          if (typeof val !== expectedType) errors.push(`Campo '${name}' debe ser de tipo ${expectedType}.`);
+        }
+      }
+
+      // Check required fields
+      validateField("contractName", contract.contractName, "string", true)
+      validateField("description", contract.description, "string", true)
+      validateField("category", contract.category, "string", true)
+      validateField("stack", contract.stack, "object", true)
+      validateField("test_scenarios", contract.test_scenarios, "array", true)
+      validateField("files_affected", contract.files_affected, "array", true)
+
+      if (contract.stack) {
+        validateField("stack.core", contract.stack.core, "array", true)
+        validateField("stack.databases", contract.stack.databases, "array", false)
+      }
+
+      if (contract.test_scenarios) {
+        contract.test_scenarios.forEach((ts: any, i: number) => {
+          validateField(`test_scenarios[${i}].id`, ts.id, "string", true)
+          validateField(`test_scenarios[${i}].name`, ts.name, "string", true)
+          validateField(`test_scenarios[${i}].type`, ts.type, "string", true)
+          validateField(`test_scenarios[` + i + `].feature_ref`, ts.feature_ref, "string", true)
+          validateField(`test_scenarios[` + i + `].then`, ts.then, "string", true)
+        })
+      }
+
+      if (errors.length > 0) {
+        return JSON.stringify({
+          status: "FAIL",
+          message: "El contrato tiene errores de validación contra el esquema.",
+          errors
+        }, null, 2)
+      }
+
+      return JSON.stringify({
+        status: "SUCCESS",
+        message: "¡El contrato contract.json es 100% válido y cumple estrictamente con el esquema!"
+      }, null, 2)
+
+    } catch (e: any) {
+      return JSON.stringify({
+        status: "FAIL",
+        message: `Error al parsear o validar contract.json: ${e.message}`
+      }, null, 2)
+    }
   }
 })

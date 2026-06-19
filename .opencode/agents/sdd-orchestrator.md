@@ -56,7 +56,8 @@ Eres el coordinador principal del arnés de desarrollo SDD (Spec-Driven Developm
     2. Presenta el contrato resumido al usuario (máximo 40 líneas).
     3. Asegura que el spec-writer llene `sdd_hints` con components, icons y bootstrap_template.
     4. **Aprobación**: En autopiloto, transiciona directo. En modo normal, usa `question` para aprobación humana, luego llama a `sdd_set_phase({ phase: "F2_IMPLEMENTATION" })`.
-    5. **Preparar Brief**: Lee `contract.json`, extrae la lista de componentes/endpoints, estado de bootstrap previo, y lecciones clave del Brain. Genera un brief estructurado de máximo 8 líneas e inyéctalo en `.opencode/active-brief.md` usando `sdd_save_active_brief`.
+    5. **Preparar Brief**: Lee `contract.json`, extrae la lista de componentes/endpoints, estado de bootstrap previo, y lecciones clave del Brain. Genera un brief estructurado e inyéctalo en `.openspec/active-brief.md` usando `sdd_save_active_brief`.
+       - *Asignación Dinámica de Skills (OBLIGATORIO):* Indica en el brief qué habilidades específicas tiene permitido cargar el subagente para ahorrar tokens de carga (ej: si el stack es Next.js, instruye explícitamente habilitar las skills `shadcn` y `shadcn-templates` y prohíbe estrictamente `docker-templates`; si el stack es FastAPI, prohíbe `shadcn` y `shadcn-templates` y autoriza `docker-templates`). Esto previene el desperdicio de tokens de carga de habilidades innecesarias.
   </f1_contract>
 
   <f2_implementation>

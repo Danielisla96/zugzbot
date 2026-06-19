@@ -63,8 +63,30 @@ export const quick_lint = tool({
       }, null, 2)
     }
 
+    let eslintFiles = "src/"
     try {
-      const out = execSync("npx eslint src/ --quiet --max-warnings 0 2>&1 || true", {
+      const stateFile = path.resolve(root, ".openspec/sdd_state.json")
+      if (fs.existsSync(stateFile)) {
+        const state = JSON.parse(fs.readFileSync(stateFile, "utf8"))
+        if (state.activeContract) {
+          const contractPath = path.resolve(root, state.activeContract)
+          if (fs.existsSync(contractPath)) {
+            const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"))
+            if (contract && Array.isArray(contract.files_affected) && contract.files_affected.length > 0) {
+              const existingFiles = contract.files_affected.filter((f: string) => fs.existsSync(path.resolve(root, f)))
+              if (existingFiles.length > 0) {
+                eslintFiles = existingFiles.join(" ")
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    try {
+      const out = execSync(`npx eslint ${eslintFiles} --quiet --max-warnings 0 2>&1 || true`, {
         cwd: root,
         encoding: "utf8",
         timeout: 120_000,
@@ -72,7 +94,7 @@ export const quick_lint = tool({
       const hasErrors = out.toLowerCase().includes("error") || out.trim().length > 0
       return JSON.stringify({
         status: hasErrors ? "FAIL" : "SUCCESS",
-        message: hasErrors ? "Lint encontró errores. Corrígelos antes de transicionar a F3." : "Lint limpio.",
+        message: hasErrors ? `Lint encontró errores en: ${eslintFiles}. Corrígelos antes de transicionar a F3.` : "Lint limpio.",
         output: out.slice(0, 2000),
       }, null, 2)
     } catch (e: any) {
@@ -107,9 +129,31 @@ export const shift_left_verify = tool({
       }
     }
 
-    // 2. Run eslint src/
+    // 2. Run eslint targeting modified files dynamically
+    let eslintFiles = "src/"
     try {
-      const out = execSync("npx eslint src/ --quiet 2>&1 || true", {
+      const stateFile = path.resolve(root, ".openspec/sdd_state.json")
+      if (fs.existsSync(stateFile)) {
+        const state = JSON.parse(fs.readFileSync(stateFile, "utf8"))
+        if (state.activeContract) {
+          const contractPath = path.resolve(root, state.activeContract)
+          if (fs.existsSync(contractPath)) {
+            const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"))
+            if (contract && Array.isArray(contract.files_affected) && contract.files_affected.length > 0) {
+              const existingFiles = contract.files_affected.filter((f: string) => fs.existsSync(path.resolve(root, f)))
+              if (existingFiles.length > 0) {
+                eslintFiles = existingFiles.join(" ")
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    try {
+      const out = execSync(`npx eslint ${eslintFiles} --quiet 2>&1 || true`, {
         cwd: root,
         encoding: "utf8",
         timeout: 60000,

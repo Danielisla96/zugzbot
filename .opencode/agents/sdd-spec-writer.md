@@ -63,3 +63,8 @@ Extrae los tokens canónicos (paleta de colores, escala de bordes, tipografía, 
   2. Los tests deben tener assertions reales basadas en el `given/when/then` del test_scenario — NO generes stubs vacíos.
   3. Carga la skill `sdd-quickstart` para usar la plantilla pre-rellenada y generar el `contract.json` de manera ultra-rápida.
 </design_standards>
+
+<contract_validation_gate>
+**BLOQUEANTE — ejecutar antes de entregar el contrato**: Antes de concluir tu trabajo, debes ejecutar obligatoriamente la herramienta `sdd_validate_contract` pasándole la ruta exacta de tu `contract.json` generado. 
+Si la herramienta de validación de contrato detecta algún error de esquema o tipos, o campos requeridos faltantes (como `files_affected`), tienes la responsabilidad total de editar y corregir el `contract.json` de inmediato en este mismo turno, y volver a correr la validación hasta obtener un resultado exitoso (`status: "SUCCESS"`). No entregues un contrato inválido bajo ninguna circunstancia.
+</contract_validation_gate>
