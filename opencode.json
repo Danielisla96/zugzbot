@@ -5,7 +5,8 @@
       "mode": "subagent",
       "permission": {
         "webfetch": "deny"
-      }
+      },
+      "model": "deepseek/deepseek-v4-flash"
     }
   },
   "permission": {
