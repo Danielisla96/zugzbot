@@ -88,43 +88,6 @@ for (const item of itemsToCopy) {
     console.error(`${red}❌ Error copying ${item.name}: ${error.message}${reset}`);
   }
 }
-// Ensure .openspec directory, active-brief.md and sdd_state.json exist on target with a clean state
-try {
-  const openspecDir = join(targetDir, '.openspec');
-  if (!fs.existsSync(openspecDir)) {
-    fs.mkdirSync(openspecDir, { recursive: true });
-  }
-  
-  const activeBriefPath = join(openspecDir, 'active-brief.md');
-  if (!fs.existsSync(activeBriefPath)) {
-    fs.writeFileSync(
-      activeBriefPath,
-      "# SDD Active Brief\n\nNo hay ninguna sesión activa o el spec actual no ha sido iniciado.\n",
-      "utf8"
-    );
-  }
-
-  const sddStatePath = join(openspecDir, 'sdd_state.json');
-  if (!fs.existsSync(sddStatePath)) {
-    const cleanState = {
-      phase: "F0_DETECT",
-      activeContract: "",
-      stack: {
-        core: [],
-        databases: []
-      },
-      loopMode: false,
-      loopTargetIterations: 1,
-      loopCurrentIteration: 1,
-      rollbackCount: 0,
-      updatedAt: new Date().toISOString()
-    };
-    fs.writeFileSync(sddStatePath, JSON.stringify(cleanState, null, 2), "utf8");
-  }
-} catch (error) {
-  console.error(`${red}❌ Error creating .openspec directory: ${error.message}${reset}`);
-}
-
 // Ensure .openspec/ is ignored in the target's .gitignore to avoid propagating local state
 try {
   const gitignorePath = join(targetDir, '.gitignore');
