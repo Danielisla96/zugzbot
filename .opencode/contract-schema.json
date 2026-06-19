@@ -14,7 +14,7 @@
     },
     "category": {
       "type": "string",
-      "enum": ["backend", "frontend", "fullstack", "database"]
+      "enum": ["backend", "frontend", "fullstack", "database", "script", "tooling"]
     },
     "files_affected": {
       "type": "array",
@@ -222,8 +222,8 @@
         },
         "bootstrap_template": {
           "type": "string",
-          "enum": ["nextjs-shadcn", "fastapi-sdd"],
-          "description": "Plantilla preferida para bootstrap. Si no se especifica, el orchestrator la infiere de stack.core."
+          "enum": ["nextjs-shadcn", "fastapi-sdd", "agnostic-fast"],
+          "description": "Plantilla preferida para bootstrap. nextjs-shadcn para web Next, fastapi-sdd para Python, next-fast o agnostic-fast si es un script ligero de un solo archivo."
         }
       }
     }

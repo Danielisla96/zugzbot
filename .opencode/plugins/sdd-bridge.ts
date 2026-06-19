@@ -311,7 +311,7 @@ export const SddBridgePlugin: Plugin = async ({ project, client, $, directory, w
         return
       }
 
-      const isWritingCode = targetFilePath.endsWith(".ts") || targetFilePath.endsWith(".tsx") || targetFilePath.endsWith(".py")
+      const isWritingCode = /\.(tsx?|py|jsx?|gs|sh|rs|go|rb)$/i.test(targetFilePath)
       const currentState = readState()
 
       // Enforce: No code edits allowed unless we are in the implementation phase (F2_IMPLEMENTATION)

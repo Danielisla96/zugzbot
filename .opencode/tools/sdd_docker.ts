@@ -45,13 +45,44 @@ export const clean_docker_environment = tool({
 
 // Tool: sdd_generate_dockerfile
 export const generate_dockerfile = tool({
-  description: "Genera Dockerfile multi-stage, .dockerignore y docker-compose.yml optimizados a partir del stack del proyecto (nextjs|fastapi). Detecta package manager desde package.json.",
+  description: "Genera Dockerfile multi-stage, .dockerignore y docker-compose.yml optimizados a partir del stack del proyecto (nextjs|fastapi|agnostic). Detecta package manager desde package.json.",
   args: {
-    stack: tool.schema.enum(["nextjs", "fastapi"]).describe("Stack del proyecto"),
+    stack: tool.schema.enum(["nextjs", "fastapi", "agnostic"]).describe("Stack del proyecto"),
     port: tool.schema.number().default(3000).describe("Puerto de la aplicación"),
   },
   async execute(args, context) {
     const root = getRoot(context)
+
+    if (args.stack === "agnostic") {
+      const dockerfileAg = `FROM node:20-alpine
+WORKDIR /app
+COPY . .
+RUN npm install --prefer-offline || true
+CMD ["node", "src/index.js"]
+`
+      const filesWritten: string[] = []
+      let content = dockerfileAg
+      let targetName = "src/index.js"
+      if (fs.existsSync(path.resolve(root, "src/main.py"))) {
+        content = `FROM python:3.11-slim
+WORKDIR /app
+COPY . .
+RUN pip install -r requirements.txt || true
+CMD ["python", "src/main.py"]
+`
+        targetName = "src/main.py"
+      }
+      
+      const fullPath = path.resolve(root, "Dockerfile")
+      fs.writeFileSync(fullPath, content, "utf8")
+      filesWritten.push("Dockerfile")
+      
+      return JSON.stringify({
+        status: "SUCCESS",
+        message: `Docker artifacts generados de forma agnóstica para el script de entrada: ${targetName}`,
+        filesWritten
+      }, null, 2)
+    }
 
     if (args.stack === "nextjs") {
       const specsDir = path.resolve(root, ".openspec/specs")

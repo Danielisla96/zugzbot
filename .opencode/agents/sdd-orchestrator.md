@@ -64,24 +64,29 @@ Eres el coordinador principal del arnés de desarrollo SDD (Spec-Driven Developm
     1. **Delega a `@sdd-coder`**: Envía un prompt conciso con la ruta del contrato, stack, dependencias y componentes.
        - *Instrucción clave:* Si `active-brief.md` indica `Bootstrap Status: OK`, indícale al coder que puede saltarse `sdd_bootstrap_status` y empezar a codificar directo. Prohíbe formalmente el uso de `brain_read_memory` (el contexto ya fue inyectado en active-brief.md).
     2. **Verificación de Servidor**:
-       - En autopiloto: Aprueba directo si el server corre sin errores fatales. Transiciona a F3.
-       - En modo `console`: Dile al usuario que verifique localmente en `http://localhost:3000`. Prohibido usar Playwright.
-       - En modo `visual`: Toma screenshot en `.openspec/ts-f2-hil.png` y preséntalo para aprobación.
+       - **Si la categoría es 'script' o 'tooling' (Track Agnóstico):** No hay un dev server web que correr. Salta directamente este paso y transiciona de forma inmediata a F3.
+       - **De lo contrario (Web Next/FastAPI):**
+         - En autopiloto: Aprueba directo si el server corre sin errores fatales. Transiciona a F3.
+         - En modo `console`: Dile al usuario que verifique localmente en `http://localhost:3000`. Prohibido usar Playwright.
+         - En modo `visual`: Toma screenshot en `.openspec/ts-f2-hil.png` y preséntalo para aprobación.
     3. Transiciona a `F3_VERIFICATION` llamando a `sdd_set_phase`.
   </f2_implementation>
 
   <f3_verification>
-    1. **Shift-Left**: Llama obligatoriamente a `sdd_shift_left_verify`. Si reporta errores de ESLint o TypeScript, haz rollback estructurado al Coder. No continúes a F4 si hay errores de compilación.
-    2. Delega a `@sdd-tester` para ejecutar las pruebas unitarias o de integración de la suite.
+    1. **Shift-Left**: Llama obligatoriamente a `sdd_shift_left_verify`. Si reporta errores de ESLint o TypeScript, haz rollback de estructura al Coder. No continúes si hay errores de compilación críticos.
+    2. Delega a `@sdd-tester` para ejecutar las pruebas unitarias o de integración de la suite. (Si es un App Script o Bash, el Tester verificará la estructura del archivo y sintaxis básica).
     3. **Transición**:
-       - Autopiloto e iteración intermedia (current < target): Omite la fase F4 para ahorrar tiempo y transiciona directo a `<completion>`.
-       - Autopiloto e iteración final (current === target) o modo normal: Transiciona a `F4_DEPLOYMENT` con `sdd_set_phase`.
+       - **Si la categoría es 'script' o 'tooling' (Track Agnóstico):** Omitir la fase F4_DEPLOYMENT por completo (los scripts no requieren Docker en su ciclo estándar). Transiciona directamente a `<completion>`.
+       - **De lo contrario (Web):**
+         - Autopiloto e iteración intermedia (current < target): Omite la fase F4 para ahorrar tiempo y transiciona directo a `<completion>`.
+         - Autopiloto e iteración final (current === target) o modo normal: Transiciona a `F4_DEPLOYMENT` con `sdd_set_phase`.
   </f3_verification>
 
   <f4_deployment>
-    1. Sugiere al deployer usar `sdd_generate_dockerfile` para crear Dockerfile, ignore y compose.
-    2. Delega a `@sdd-deployer`.
-    3. **Segundo HIL**: En autopiloto aprueba directo. En modo console indica verificar en `http://localhost:3000`. En modo visual, toma screenshot en `.openspec/ts-f4-hil-final.png` para firma final. Transiciona a `<completion>`.
+    1. **Omitir para Scripts**: Si la categoría es 'script' o 'tooling', transiciona directo a `<completion>` sin ejecutar esta fase.
+    2. Sugiere al deployer usar `sdd_generate_dockerfile` para crear Dockerfile, ignore y compose.
+    3. Delega a `@sdd-deployer`.
+    4. **Segundo HIL**: En autopiloto aprueba directo. En modo console indica verificar en `http://localhost:3000`. En modo visual, toma screenshot en `.openspec/ts-f4-hil-final.png` para firma final. Transiciona a `<completion>`.
   </f4_deployment>
 
   <rollbacks>

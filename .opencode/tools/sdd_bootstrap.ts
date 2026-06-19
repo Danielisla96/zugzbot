@@ -527,3 +527,99 @@ export const bootstrap_fastapi = tool({
     }, null, 2)
   }
 })
+
+// Tool: sdd_bootstrap_agnostic
+export const bootstrap_agnostic = tool({
+  description: "Inicializa un proyecto de tipo script, tooling o agnóstico de forma idempotente (crea un package.json básico, requirements.txt, o estructura plana de archivos según sea necesario). Evita la sobrecarga de frameworks pesados.",
+  args: {
+    language: tool.schema.enum(["javascript", "python", "bash", "google-apps-script", "plano"]).default("plano").describe("El lenguaje o entorno para inicializar"),
+    install: tool.schema.boolean().default(true).describe("Si true, ejecuta npm init -y o uv init de forma básica si aplica.")
+  },
+  async execute(args, context) {
+    const root = getRoot(context)
+    const start = Date.now()
+    const filesCopied: string[] = []
+    
+    // Create src/ directory as best practice for escalabilidad
+    const srcDir = path.resolve(root, "src")
+    if (!fs.existsSync(srcDir)) {
+      fs.mkdirSync(srcDir, { recursive: true })
+    }
+
+    if (args.language === "javascript") {
+      const pkgPath = path.resolve(root, "package.json")
+      if (!fs.existsSync(pkgPath) && args.install) {
+        try {
+          execSync("npm init -y", { cwd: root, stdio: "ignore" })
+          filesCopied.push("package.json (auto-generated)")
+        } catch (e) {}
+      }
+      const indexJs = path.join(srcDir, "index.js")
+      if (!fs.existsSync(indexJs)) {
+        fs.writeFileSync(indexJs, "// Entry point for Javascript Agnostic Script\nconsole.log('Hello, world!');\n", "utf8")
+        filesCopied.push("src/index.js")
+      }
+    } else if (args.language === "python") {
+      const pyproject = path.resolve(root, "pyproject.toml")
+      const reqTxt = path.resolve(root, "requirements.txt")
+      
+      if (!fs.existsSync(pyproject) && !fs.existsSync(reqTxt) && args.install) {
+        try {
+          execSync("uv init --lib", { cwd: root, stdio: "ignore" })
+          filesCopied.push("pyproject.toml (uv init)")
+        } catch (e) {
+          try {
+            fs.writeFileSync(reqTxt, "# Python requirements\n", "utf8")
+            filesCopied.push("requirements.txt")
+          } catch (err) {}
+        }
+      }
+      const mainPy = path.join(srcDir, "main.py")
+      if (!fs.existsSync(mainPy)) {
+        fs.writeFileSync(mainPy, "#!/usr/bin/env python3\n\ndef main():\n    print('Hello from Agnostic Python Script')\n\nif __name__ == '__main__':\n    main()\n", "utf8")
+        filesCopied.push("src/main.py")
+      }
+    } else if (args.language === "google-apps-script") {
+      const appScriptFile = path.join(srcDir, "codigo.gs")
+      if (!fs.existsSync(appScriptFile)) {
+        fs.writeFileSync(appScriptFile, "function myFunction() {\n  Logger.log('Hello from Google Apps Script');\n}\n", "utf8")
+        filesCopied.push("src/codigo.gs")
+      }
+    } else if (args.language === "bash") {
+      const scriptSh = path.join(srcDir, "script.sh")
+      if (!fs.existsSync(scriptSh)) {
+        fs.writeFileSync(scriptSh, "#!/usr/bin/env bash\nset -euo pipefail\necho 'Hello from Bash script!'\n", "utf8")
+        filesCopied.push("src/script.sh")
+        try { fs.chmodSync(scriptSh, "755") } catch (e) {}
+      }
+    } else {
+      const mainTxt = path.join(srcDir, "README.md")
+      if (!fs.existsSync(mainTxt)) {
+        fs.writeFileSync(mainTxt, "# Agnostic Flat Script Workspace\n\nPlace your files here.\n", "utf8")
+        filesCopied.push("src/README.md")
+      }
+    }
+
+    const bootstrapRecord = {
+      template: "agnostic-fast",
+      version: TEMPLATE_VERSION,
+      lastBootstrappedAt: new Date().toISOString(),
+      packageManager: args.language === "python" ? "uv" : args.language === "javascript" ? "npm" : "none",
+      filesCopied,
+      filesSkipped: [],
+      componentsInstalled: [],
+      installDuration: 0,
+      totalDuration: Date.now() - start
+    }
+    
+    writeBootstrapStatus(root, bootstrapRecord)
+
+    return JSON.stringify({
+      status: "SUCCESS",
+      initialized: true,
+      message: `Bootstrap de proyecto agnóstico (${args.language}) completado exitosamente.`,
+      filesCopied,
+      _bootstrapRecord: bootstrapRecord
+    }, null, 2)
+  }
+})
