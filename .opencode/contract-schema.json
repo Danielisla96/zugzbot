@@ -16,6 +16,11 @@
       "type": "string",
       "enum": ["backend", "frontend", "fullstack", "database"]
     },
+    "files_affected": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Lista de rutas de archivos exactas que serán creadas o modificadas durante F2_IMPLEMENTATION. Permite Zero-Search y linting/pruebas incrementales."
+    },
     "stack": {
       "type": "object",
       "properties": {

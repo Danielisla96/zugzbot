@@ -340,6 +340,15 @@ export const SddBridgePlugin: Plugin = async ({ project, client, $, directory, w
     // After a tool finishes, reset metrics if the contract changed
     "tool.execute.after": async (input) => {
       try {
+        if (input?.tool === "todowrite" && input.args?.todos) {
+          try {
+            const todosPath = path.resolve(projectRoot, ".openspec/active-todos.json")
+            fs.writeFileSync(todosPath, JSON.stringify(input.args.todos, null, 2), "utf8")
+          } catch (e) {
+            // ignore
+          }
+        }
+
         if (input?.tool === "sdd_set_phase") {
           const newState = readState()
           const folderName = getCurrentContractFolder(newState.activeContract || "")
@@ -358,6 +367,74 @@ export const SddBridgePlugin: Plugin = async ({ project, client, $, directory, w
                 variant: "success"
               }
             }).catch(() => {})
+          }
+
+          // Garbage Collector (Auto-Cleanup) on reset to F0_DETECT
+          if (newState.phase === "F0_DETECT") {
+            try {
+              const openspecDir = path.resolve(projectRoot, ".openspec")
+              const cleanScreenshots = (dir: string) => {
+                if (fs.existsSync(dir)) {
+                  const files = fs.readdirSync(dir)
+                  for (const f of files) {
+                    if (f.startsWith("ts-") && f.endsWith(".png")) {
+                      try { fs.unlinkSync(path.join(dir, f)) } catch (e) {}
+                    }
+                  }
+                }
+              }
+              // 1. Clean up transient visual screenshots
+              cleanScreenshots(projectRoot)
+              cleanScreenshots(openspecDir)
+
+              // 2. Clear Playwright tmp cache in .openspec/.playwright/
+              const playwrightTmpDir = path.resolve(openspecDir, ".playwright")
+              if (fs.existsSync(playwrightTmpDir)) {
+                try { fs.rmSync(playwrightTmpDir, { recursive: true, force: true }) } catch (e) {}
+              }
+
+              // 3. Clear transient metrics file
+              const metricsPath = path.resolve(openspecDir, ".sdd_session_metrics.json")
+              if (fs.existsSync(metricsPath)) {
+                try { fs.unlinkSync(metricsPath) } catch (e) {}
+              }
+
+              // 4. Remove active todos list
+              const todosPath = path.resolve(openspecDir, "active-todos.json")
+              if (fs.existsSync(todosPath)) {
+                try { fs.unlinkSync(todosPath) } catch (e) {}
+              }
+
+              // 5. Reset active-brief.md to its default clean slate
+              const activeBriefPath = path.resolve(openspecDir, "active-brief.md")
+              try {
+                fs.writeFileSync(
+                  activeBriefPath,
+                  "# SDD Active Brief\n\nNo hay ninguna sesión activa o el spec actual no ha sido iniciado.\n",
+                  "utf8"
+                )
+              } catch (e) {}
+
+              // Log GC run
+              await client.app.log({
+                body: {
+                  service: "sdd-bridge",
+                  level: "info",
+                  message: `[Garbage Collector] Limpieza de contexto completada. Artefactos temporales purgados.`
+                }
+              }).catch(() => {})
+
+              if (client?.tui?.showToast) {
+                await client.tui.showToast({
+                  body: {
+                    message: `🧹 SDD: Limpieza de contexto temporal completada.`,
+                    variant: "info"
+                  }
+                }).catch(() => {})
+              }
+            } catch (e) {
+              // ignore
+            }
           }
         }
 
@@ -422,6 +499,19 @@ export const SddBridgePlugin: Plugin = async ({ project, client, $, directory, w
         const currentIter = state.loopCurrentIteration || 1
         const targetIter = state.loopTargetIterations || 1
         
+        let todosStr = ""
+        try {
+          const todosPath = path.resolve(projectRoot, ".openspec/active-todos.json")
+          if (fs.existsSync(todosPath)) {
+            const todos = JSON.parse(fs.readFileSync(todosPath, "utf8"))
+            if (Array.isArray(todos) && todos.length > 0) {
+              todosStr = todos.map((t: any) => `- [${t.status.toUpperCase()}] (${t.priority}): ${t.content}`).join("\n")
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+
         if (state.loopMode === true) {
           // Force selective amnesia to prevent context saturation and LLM loops
           output.prompt = `
@@ -435,6 +525,8 @@ Your goal is to perform SELECTIVE AMNESIA:
   2. The active contract path: '${state.activeContract || "None"}'
   3. The current iteration progress: Iteration ${currentIter} of ${targetIter}.
   4. The global stack configuration: ${JSON.stringify(state.stack || {})}
+  5. The active TODO list status:
+${todosStr || "No active todos found."}
   
 Formulate a highly compressed, structured summary that allows the sdd-orchestrator to immediately resume the next task or next iteration cleanly, without any historical token bloat.
 `
@@ -448,6 +540,9 @@ Este es el estado del arnés de desarrollo SDD activo en disco. DEBES conservarl
 - **Modo Piloto Automático (/loop)**: ${state.loopMode === true ? "ACTIVO (Debes continuar resolviendo las tareas de forma 100% autónoma sin preguntar al usuario)" : "DESACTIVADO (Interacción estándar)"}
 - **Iteración Actual**: ${currentIter} de ${targetIter}
 - **Tecnologías Detectadas**: ${JSON.stringify(state.stack || {})}
+
+## LISTA DE TAREAS ACTIVAS (TODOs)
+${todosStr || "No hay tareas activas en este momento."}
 `)
         }
       } catch (e) {

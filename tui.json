@@ -1,6 +1,14 @@
 {
   "$schema": "https://opencode.ai/tui.json",
+  "theme": "tokyonight",
   "plugin": [
     "./.opencode/plugins/plugin_tui.tsx"
-  ]
+  ],
+  "keybinds": {
+    "leader": "ctrl+x",
+    "sidebar_toggle": "b",
+    "theme_list": "t",
+    "session_list": "l",
+    "editor_open": "e"
+  }
 }

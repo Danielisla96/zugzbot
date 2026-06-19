@@ -1,12 +1,15 @@
 ---
-description: Despliega el sistema localmente usando Docker y limpia contenedores existentes
+description: Limpia Docker y realiza el despliegue local del sistema
 mode: subagent
+hidden: true
 model: deepseek/deepseek-v4-flash
 temperature: 0.1
 tools:
   write: true
   edit: true
   bash: true
+permission:
+  "*": "allow"
 ---
 
 <identity>

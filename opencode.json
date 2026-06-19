@@ -1,6 +1,5 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "theme": "tokyonight",
   "permission": {
     "*": "allow",
     "skill": {
@@ -91,113 +90,6 @@
       ],
       "enabled": true,
       "purpose": "Permite buscar, filtrar y obtener ejemplos de uso JSX de más de 1,500 iconos de Lucide React de forma exacta mediante herramientas del MCP."
-    }
-  },
-  "agent": {
-    "sdd-orchestrator": {
-      "description": "Coordinador principal del flujo SDD y del stack cerrado",
-      "mode": "primary",
-      "model": "deepseek/deepseek-v4-flash",
-      "prompt": "{file:./.opencode/rules/sdd-global.md}\n\n{file:./.opencode/agents/sdd-orchestrator.md}",
-      "permission": {
-        "*": "allow",
-        "write": {
-          ".openspec/*": "allow",
-          ".openspec/**": "allow",
-          ".opencode/*": "allow",
-          ".opencode/**": "allow",
-          "*": "deny"
-        },
-        "edit": "deny",
-        "bash": "deny",
-        "task": {
-          "*": "deny",
-          "sdd-*": "allow"
-        }
-      }
-    },
-    "sdd-spec-writer": {
-      "description": "Redacta y valida contratos OpenAPI e interfaces en specs/",
-      "mode": "subagent",
-      "hidden": true,
-      "model": "deepseek/deepseek-v4-flash",
-      "prompt": "{file:./.opencode/rules/sdd-global.md}\n\n{file:./.opencode/agents/sdd-spec-writer.md}",
-      "permission": {
-        "*": "allow",
-        "bash": "deny"
-      }
-    },
-    "sdd-coder": {
-      "description": "Implementa código ajustándose estrictamente a los contratos en specs/",
-      "mode": "subagent",
-      "hidden": true,
-      "steps": 10,
-      "model": "deepseek/deepseek-v4-flash",
-      "temperature": 0.35,
-      "frequency_penalty": 0.5,
-      "presence_penalty": 0.2,
-      "prompt": "{file:./.opencode/rules/sdd-global.md}\n\n{file:./.opencode/agents/sdd-coder.md}",
-      "permission": {
-        "*": "allow",
-        "bash": {
-          "*": "ask",
-          "npm *": "allow",
-          "pnpm *": "allow",
-          "yarn *": "allow",
-          "vitest *": "allow",
-          "npx eslint *": "allow",
-          "eslint *": "allow",
-          "pytest *": "allow",
-          "python3 *": "allow",
-          "python *": "allow",
-          "uv *": "allow",
-          "pip *": "allow",
-          "npx *": "allow",
-          "npx shadcn*": "allow",
-          "cat *": "allow"
-        }
-      }
-    },
-    "sdd-tester": {
-      "description": "Diseña y corre pruebas unitarias, integración y visuales (Playwright)",
-      "mode": "subagent",
-      "hidden": true,
-      "steps": 15,
-      "model": "deepseek/deepseek-v4-flash",
-      "temperature": 0.35,
-      "frequency_penalty": 0.5,
-      "presence_penalty": 0.2,
-      "prompt": "{file:./.opencode/rules/sdd-global.md}\n\n{file:./.opencode/agents/sdd-tester.md}",
-      "permission": {
-        "*": "allow",
-        "bash": {
-          "*": "ask",
-          "npm *": "allow",
-          "pnpm *": "allow",
-          "yarn *": "allow",
-          "vitest *": "allow",
-          "npx eslint *": "allow",
-          "eslint *": "allow",
-          "pytest *": "allow",
-          "python3 *": "allow",
-          "python *": "allow",
-          "uv *": "allow",
-          "pip *": "allow",
-          "npx *": "allow",
-          "npx shadcn*": "allow",
-          "cat *": "allow"
-        }
-      }
-    },
-    "sdd-deployer": {
-      "description": "Limpia Docker y realiza el despliegue local del sistema",
-      "mode": "subagent",
-      "hidden": true,
-      "model": "deepseek/deepseek-v4-flash",
-      "prompt": "{file:./.opencode/agents/sdd-deployer.md}",
-      "permission": {
-        "*": "allow"
-      }
     }
   }
 }
