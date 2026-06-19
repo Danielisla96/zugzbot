@@ -8,11 +8,21 @@
   },
   "files": [
     "bin/",
-    ".opencode/",
-    ".utils/",
     "models.json",
     "opencode.json",
-    "tui.json"
+    "tui.json",
+    ".opencode/agents/",
+    ".opencode/commands/",
+    ".opencode/plugins/",
+    ".opencode/rules/",
+    ".opencode/skills/",
+    ".opencode/templates/",
+    ".opencode/tools/",
+    ".opencode/contract-schema.json",
+    ".opencode/oh-my-design/design-md/",
+    ".opencode/oh-my-design/packages/mcp/dist/",
+    ".utils/export_opencode_session.py",
+    ".utils/toggle_model.py"
   ],
   "engines": {
     "node": ">=16.0.0"
