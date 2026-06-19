@@ -13,31 +13,79 @@ const getRoot = (context: any) => {
 
 // Tool: sdd_clean_docker_environment
 export const clean_docker_environment = tool({
-  description: "Limpia de forma agresiva y segura el entorno de Docker: remueve contenedores detenidos, imágenes huérfanas/dangling creadas por compilaciones fallidas, y redes no utilizadas. Se debe ejecutar antes de desplegar un nuevo contenedor para liberar recursos y evitar colisiones.",
+  description: "Asegura que Docker esté abierto y realiza una limpieza total y agresiva: detiene y elimina TODOS los contenedores (activos o inactivos), remueve TODAS las imágenes, volúmenes y redes para garantizar un lienzo en blanco absoluto antes de desplegar.",
   args: {},
   async execute(args, context) {
     const results: Record<string, string> = {}
-    try {
-      results.containers = execSync("docker container prune -f", { encoding: "utf8" }).toString().trim()
-    } catch (e: any) {
-      results.containers = `Error: ${e.message}`
+    const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+    // 1. Asegurar que Docker daemon esté listo
+    let dockerReady = false
+    for (let i = 0; i < 12; i++) {
+      try {
+        execSync("docker info", { stdio: "ignore", timeout: 3000 })
+        dockerReady = true
+        break
+      } catch (e) {
+        if (i === 0) {
+          try { execSync("open -a Docker", { stdio: "ignore" }) } catch (err) {}
+        }
+        await sleep(5000)
+      }
     }
 
-    try {
-      results.images = execSync("docker image prune -f", { encoding: "utf8" }).toString().trim()
-    } catch (e: any) {
-      results.images = `Error: ${e.message}`
+    if (!dockerReady) {
+      return JSON.stringify({
+        status: "ERROR",
+        message: "No se pudo iniciar o conectar al demonio de Docker. Por favor, asegúrese de que Docker Desktop esté corriendo."
+      }, null, 2)
     }
 
+    // 2. Detener y eliminar todos los contenedores de forma agresiva
+    try {
+      const containerIds = execSync("docker ps -aq", { encoding: "utf8" }).toString().trim()
+      if (containerIds) {
+        const ids = containerIds.split(/\s+/).join(" ")
+        execSync(`docker rm -f ${ids}`, { encoding: "utf8" })
+        results.containers = `Todos los contenedores detenidos y eliminados con éxito: ${ids}`
+      } else {
+        results.containers = "No se encontraron contenedores para eliminar."
+      }
+    } catch (e: any) {
+      results.containers = `Error eliminando contenedores: ${e.message}`
+    }
+
+    // 3. Eliminar todas las imágenes de forma agresiva
+    try {
+      const imageIds = execSync("docker images -aq", { encoding: "utf8" }).toString().trim()
+      if (imageIds) {
+        const ids = imageIds.split(/\s+/).join(" ")
+        execSync(`docker rmi -f ${ids}`, { encoding: "utf8" })
+        results.images = `Todas las imágenes eliminadas con éxito: ${ids}`
+      } else {
+        results.images = "No se encontraron imágenes para eliminar."
+      }
+    } catch (e: any) {
+      results.images = `Error eliminando imágenes: ${e.message}`
+    }
+
+    // 4. Eliminar volúmenes huérfanos
+    try {
+      results.volumes = execSync("docker volume prune -af", { encoding: "utf8" }).toString().trim()
+    } catch (e: any) {
+      results.volumes = `Error podando volúmenes: ${e.message}`
+    }
+
+    // 5. Eliminar redes inactivas
     try {
       results.networks = execSync("docker network prune -f", { encoding: "utf8" }).toString().trim()
     } catch (e: any) {
-      results.networks = `Error: ${e.message}`
+      results.networks = `Error podando redes: ${e.message}`
     }
 
     return JSON.stringify({
       status: "SUCCESS",
-      message: "Entorno de Docker limpiado de forma segura y exitosa.",
+      message: "Lienzo en blanco garantizado: Docker limpio al 100%.",
       details: results
     }, null, 2)
   }

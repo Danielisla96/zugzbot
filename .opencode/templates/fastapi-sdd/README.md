@@ -5,19 +5,19 @@ Backend FastAPI bootstrapped por el arnés SDD.
 ## Quickstart
 
 ```bash
-# Con uv (recomendado)
-uv sync
-uv run uvicorn app.main:app --reload --port 8000
-
-# O con pip
+# Con pip (con o sin venv activo)
 pip install -e ".[dev]"
-uvicorn app.main:app --reload --port 8000
+uvicorn src.main:app --reload --port 8000
+
+# Con uv (si está disponible)
+uv sync
+uv run uvicorn src.main:app --reload --port 8000
 ```
 
 ## Tests
 
 ```bash
-uv run pytest
+python -m pytest
 # o
 pytest
 ```
@@ -25,8 +25,8 @@ pytest
 ## Lint + format
 
 ```bash
-uv run ruff check .
-uv run ruff format .
+ruff check .
+ruff format .
 ```
 
 ## Docker
@@ -40,12 +40,11 @@ curl http://localhost:8000/health
 
 ```
 src/
-├── app/
-│   ├── main.py             # FastAPI app
-│   ├── core/config.py      # Settings (pydantic-settings)
-│   ├── routers/            # Endpoints (vacío por defecto)
-│   └── schemas/            # Pydantic models (vacío por defecto)
-└── tests/                  # Pytest suite
+├── main.py             # FastAPI app
+├── core/config.py      # Settings (pydantic-settings)
+├── routers/            # Endpoints (vacío por defecto)
+├── schemas/            # Pydantic models (vacío por defecto)
+└── tests/              # Pytest suite
 ```
 
 ## Stack
@@ -57,4 +56,4 @@ src/
 - Pytest 8 + pytest-asyncio
 - Ruff 0.8+ (lint + format)
 
-Ver `.opencode/templates/fastapi-sdd/pyproject.toml` para versiones pinneadas.
+Ver `pyproject.toml` para versiones pinneadas.

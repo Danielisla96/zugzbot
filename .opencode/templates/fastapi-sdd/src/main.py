@@ -1,7 +1,7 @@
 """FastAPI application entry point."""
 from fastapi import FastAPI
 
-from app.core.config import settings
+from src.core.config import settings
 
 
 def create_app() -> FastAPI:

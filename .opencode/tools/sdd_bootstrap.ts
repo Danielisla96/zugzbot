@@ -375,7 +375,7 @@ export const bootstrap_fastapi = tool({
     }
 
     const isInitialized =
-      fs.existsSync(path.resolve(root, "src/app/main.py")) &&
+      fs.existsSync(path.resolve(root, "src/main.py")) &&
       fs.existsSync(path.resolve(root, "pyproject.toml"))
 
     if (isInitialized && !args.force) {
@@ -430,12 +430,12 @@ export const bootstrap_fastapi = tool({
       ".dockerignore",
       "docker-compose.yml",
       "README.md",
-      "src/app/__init__.py",
-      "src/app/main.py",
-      "src/app/core/__init__.py",
-      "src/app/core/config.py",
-      "src/app/routers/__init__.py",
-      "src/app/schemas/__init__.py",
+      "src/__init__.py",
+      "src/main.py",
+      "src/core/__init__.py",
+      "src/core/config.py",
+      "src/routers/__init__.py",
+      "src/schemas/__init__.py",
       "src/tests/__init__.py",
       "src/tests/conftest.py",
       "src/tests/test_main.py",
@@ -522,7 +522,7 @@ export const bootstrap_fastapi = tool({
       installDuration,
       extrasInstalled,
       finalPyprojectToml,
-      nextSteps: "Run `uv run uvicorn app.main:app --reload --port 8000` (o `uvicorn ...` con venv activo) para arrancar el dev server.",
+      nextSteps: "Run `uvicorn src.main:app --reload --port 8000` (o `python -m uvicorn src.main:app --reload --port 8000`) para arrancar el dev server.",
       _bootstrapRecord: bootstrapRecord,
     }, null, 2)
   }

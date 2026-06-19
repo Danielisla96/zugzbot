@@ -28,7 +28,9 @@
     }
   },
   "lsp": true,
-  "instructions": [],
+  "instructions": [
+    ".opencode/rules/sdd-global.md"
+  ],
   "plugin": [
     "opencode-dynamic-context-pruning",
     "opencode-notificator"

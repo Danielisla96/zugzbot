@@ -11,7 +11,7 @@ def test_health_endpoint_returns_ok(client: TestClient) -> None:
 
 
 def test_app_metadata() -> None:
-    from app.main import app
+    from src.main import app
 
     assert app.title
     assert app.version

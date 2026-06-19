@@ -12,17 +12,19 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
         const [sessionIds, setSessionIds] = createSignal<string[]>([props.session_id])
 
         const getZugzbotVersion = (): string => {
-          const fallback = "2.0.18"
+          const fallback = "1.0.31"
           try {
+            // 1. Try reading the dynamic version.json written during install
+            const versionJsonPath = path.join(process.cwd(), ".opencode/version.json")
+            if (fs.existsSync(versionJsonPath)) {
+              const data = JSON.parse(fs.readFileSync(versionJsonPath, "utf-8"))
+              if (data && data.version) return data.version
+            }
+            // 2. Fallback to package.json in dev mode
             const localPkgPath = path.join(process.cwd(), "package.json")
             if (fs.existsSync(localPkgPath)) {
               const pkg = JSON.parse(fs.readFileSync(localPkgPath, "utf-8"))
-              if (pkg.name === "zugzbot-sdd") return pkg.version
-            }
-            const depPkgPath = path.join(process.cwd(), "node_modules/zugzbot-sdd/package.json")
-            if (fs.existsSync(depPkgPath)) {
-              const pkg = JSON.parse(fs.readFileSync(depPkgPath, "utf-8"))
-              return pkg.version || fallback
+              if (pkg.name === "zugzbot") return pkg.version
             }
           } catch { }
           return fallback
@@ -137,6 +139,7 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
 
         const getContractName = (filePath: string): string => {
           if (!filePath) return "Ninguno";
+          if (filePath.includes("fast-track")) return "Modo Libre (Fast-Track)";
           const parts = filePath.split("/");
           const folder = parts[parts.length - 2] || "";
           const match = folder.match(/^\d{4}_\d+_(.+)$/);
@@ -553,35 +556,46 @@ const PluginTuiSidebar: TuiPlugin = async (api) => {
                 })()}
 
                 {/* Vertical roadmap list */}
-                <box gap={0} paddingTop={0}>
-                  {PHASE_ORDER.map((phase) => {
-                    const current = sddState()?.phase ?? "F0_DETECT"
-                    const curIdx = PHASE_ORDER.indexOf(current)
-                    const myIdx = PHASE_ORDER.indexOf(phase)
+                {sddState()?.activeContract?.includes("fast-track") ? (
+                  <box gap={0} paddingTop={0}>
+                    <text fg="#5AC8FA" paddingTop={0}>
+                      {"• Modo Libre de Edición"}
+                    </text>
+                    <text fg="#FF7300" paddingTop={0}>
+                      {`• Agente activo: ${SUBAGENT_FOR_PHASE[sddState()?.phase || "F2_IMPLEMENTATION"] || "@coder"}`}
+                    </text>
+                  </box>
+                ) : (
+                  <box gap={0} paddingTop={0}>
+                    {PHASE_ORDER.map((phase) => {
+                      const current = sddState()?.phase ?? "F0_DETECT"
+                      const curIdx = PHASE_ORDER.indexOf(current)
+                      const myIdx = PHASE_ORDER.indexOf(phase)
 
-                    const isActive = current === phase
-                    const isCompleted = curIdx > myIdx
+                      const isActive = current === phase
+                      const isCompleted = curIdx > myIdx
 
-                    let prefix = "[ ]"
-                    let color = api.theme.current.textMuted
-                    if (isCompleted) {
-                      prefix = "[✓]"
-                      color = api.theme.current.success
-                    } else if (isActive) {
-                      prefix = "[O]"
-                      color = "#FF7300"
-                    }
+                      let prefix = "[ ]"
+                      let color = api.theme.current.textMuted
+                      if (isCompleted) {
+                        prefix = "[✓]"
+                        color = api.theme.current.success
+                      } else if (isActive) {
+                        prefix = "[O]"
+                        color = "#FF7300"
+                      }
 
-                    const agentSuffix = isActive ? ` (${SUBAGENT_FOR_PHASE[phase]})` : ""
-                    const lineText = `${prefix} ${PHASE_LABELS[phase]}${agentSuffix}`
+                      const agentSuffix = isActive ? ` (${SUBAGENT_FOR_PHASE[phase]})` : ""
+                      const lineText = `${prefix} ${PHASE_LABELS[phase]}${agentSuffix}`
 
-                    return (
-                      <text fg={color} paddingTop={0}>
-                        {truncate(lineText, 34)}
-                      </text>
-                    )
-                  })}
-                </box>
+                      return (
+                        <text fg={color} paddingTop={0}>
+                          {truncate(lineText, 34)}
+                        </text>
+                      )
+                    })}
+                  </box>
+                )}
 
                 {/* Git branch info */}
                 {(sddState()?.git?.branch && sddState()?.git?.branch !== "—") ? (

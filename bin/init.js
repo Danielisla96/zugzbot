@@ -19,6 +19,18 @@ const bold = '\x1b[1m';
 const pkgRoot = join(__dirname, '..');
 const targetDir = process.cwd();
 
+// Load dynamic version from package.json
+let pkgVersion = '1.0.31';
+try {
+  const pkgJsonPath = join(pkgRoot, 'package.json');
+  if (fs.existsSync(pkgJsonPath)) {
+    const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
+    pkgVersion = pkg.version || pkgVersion;
+  }
+} catch (e) {
+  // ignore
+}
+
 const banner = `
 ${bold}${orange}███████╗██╗   ██╗ ██████╗ ███████╗
 ╚══███╔╝██║   ██║██╔════╝ ╚══███╔╝
@@ -26,7 +38,7 @@ ${bold}${orange}███████╗██╗   ██╗ ██████
  ███╔╝  ██║   ██║██║   ██║ ███╔╝  
 ███████╗╚██████╔╝╚██████╔╝███████╗
 ╚══════╝ ╚═════╝  ╚═════╝ ╚══════╝${reset}
-${bold}${yellow}      Harness Installer v1.0.7${reset}\n`;
+${bold}${yellow}      Harness Installer v${pkgVersion}${reset}\n`;
 
 console.log(banner);
 console.log(`${bold}${cyan}🔍 Detectando entorno de trabajo...${reset}`);
@@ -88,6 +100,19 @@ for (const item of itemsToCopy) {
     console.error(`${red}❌ Error copying ${item.name}: ${error.message}${reset}`);
   }
 }
+
+// Write .opencode/version.json dynamically with the installed package version
+try {
+  const versionJsonPath = join(targetDir, '.opencode/version.json');
+  const targetOpencodeDir = join(targetDir, '.opencode');
+  if (!fs.existsSync(targetOpencodeDir)) {
+    fs.mkdirSync(targetOpencodeDir, { recursive: true });
+  }
+  fs.writeFileSync(versionJsonPath, JSON.stringify({ version: pkgVersion }, null, 2), 'utf8');
+} catch (error) {
+  console.error(`${red}❌ Error writing version metadata: ${error.message}${reset}`);
+}
+
 // Ensure .openspec/ is ignored in the target's .gitignore to avoid propagating local state
 try {
   const gitignorePath = join(targetDir, '.gitignore');
