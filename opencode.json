@@ -1,5 +1,13 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "sdd-spec-writer": {
+      "mode": "subagent",
+      "permission": {
+        "webfetch": "deny"
+      }
+    }
+  },
   "permission": {
     "*": "allow",
     "skill": {

@@ -13,6 +13,12 @@ Esta habilidad proporciona un **flujo de trabajo estructurado en 4 pasos** para 
 
 ## 🚀 El flujo F3 en 4 pasos (Sin exploración ciega)
 
+*NOTA DE LENGUAJE (CRÍTICO):* Si el proyecto es en **Python**, toda la suite de Node.js/Vitest queda excluida. Aplica los pasos de abajo usando herramientas de Python:
+- En el **Paso 1**, lee `requirements.txt` y los archivos en `tests/` y `src/`.
+- En el **Paso 2**, no ejecutes `./generate-tests.sh` ya que es Node. El contrato ya debió tener los tests redactados por el spec-writer, o el coder los generó en F2.
+- En el **Paso 3**, no aplican los mocks de React, Lucide ni `crypto.randomUUID` en JS. Si necesitas mockear en Python, usa `unittest.mock` (como `patch` o `MagicMock`).
+- En el **Paso 4**, ejecuta `ruff check src/` o similar para linting, y `python -m pytest tests/ -v` para ejecutar toda la suite de pruebas de una sola llamada consolidada.
+
 ### Paso 1: Leer solo lo indispensable (Máximo 3 reads)
 1. **Contrato**: Lee únicamente `contract.json` para extraer los `test_scenarios` y el `verificationMode`.
 2. **Setup**: Lee `src/test/setup.ts` o `vitest.config.ts` para confirmar si ya hay polyfills.

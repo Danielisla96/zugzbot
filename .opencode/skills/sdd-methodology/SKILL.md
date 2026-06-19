@@ -83,6 +83,14 @@ Cada fase tiene un **gate explícito** (HIL del usuario) antes de transicionar a
 **NO HAGAS**: Invocar herramientas de Playwright (`playwright_browser_navigate`, `playwright_browser_snapshot`, etc.) si `verificationMode` está configurado en `"console"`. Esto consume tiempo y reasoning innecesarios.
 **HAZ**: En modo `console`, confía en pruebas unitarias/integración (Vitest) y verificaciones directas con curls/logs. No abras navegadores.
 
+### Trampa 11: Orquestador usurpador (Ruptura de Abstracción)
+**NO HAGAS**: Permitir que el Orquestador principal (`sdd-orchestrator`) tome el rol de escribir el código de producción o escribir/ejecutar tests directamente si un subagent (ej. `@sdd-coder`) falla o alcanza el límite de pasos ("Maximum Steps Reached"). Esto ensucia la ventana de contexto principal de la sesión.
+**HAZ**: Re-invoca al mismo subagente usando la herramienta `task`, pasando el `task_id` original del subagente interrumpido e instruyéndole: "Te quedaste sin pasos. Continúa y finaliza los archivos pendientes".
+
+### Trampa 12: Obsesión por alineación de consola (Pixel-Peeping)
+**NO HAGAS**: Gastar múltiples iteraciones o miles de tokens en el razonamiento de `@sdd-coder` tratando de lograr una alineación perfecta de columnas con espacios exactos en salidas CLI o tablas ASCII.
+**HAZ**: Usa funciones estándar de formateo de strings de tu lenguaje (como `ljust()`, `rjust()` o `center()` en Python; o formateadores sencillos en JS/TS) para lograr una presentación razonable de forma inmediata y avanzar directamente a la creación de pruebas.
+
 ---
 
 ## 4. Stack cerrado (NO abrir)

@@ -5,10 +5,9 @@
     "./.opencode/plugins/plugin_tui.tsx"
   ],
   "keybinds": {
-    "leader": "ctrl+x",
-    "sidebar_toggle": "leader,b",
-    "theme_list": "leader,t",
-    "session_list": "leader,l",
-    "editor_open": "leader,e"
+    "sidebar_toggle": "f3",
+    "theme_list": "f4",
+    "session_list": "f5",
+    "editor_open": "f6"
   }
 }

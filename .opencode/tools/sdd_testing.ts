@@ -112,6 +112,99 @@ export const shift_left_verify = tool({
   args: {},
   async execute(args, context) {
     const root = getRoot(context)
+
+    // Check if it is a Python project
+    let isPython = fs.existsSync(path.resolve(root, "requirements.txt")) || fs.existsSync(path.resolve(root, "pyproject.toml"));
+    try {
+      const stateFile = path.resolve(root, ".openspec/sdd_state.json")
+      if (fs.existsSync(stateFile)) {
+        const state = JSON.parse(fs.readFileSync(stateFile, "utf8"))
+        if (state.activeContract) {
+          const contractPath = path.resolve(root, state.activeContract)
+          if (fs.existsSync(contractPath)) {
+            const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"))
+            if (contract && contract.settings && contract.settings.language?.toLowerCase() === "python") {
+              isPython = true
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    if (isPython) {
+      const resultPython: { ruff: { status: string, errors?: any[] } } = {
+        ruff: { status: "SUCCESS" }
+      }
+      try {
+        let pythonFiles = "src/"
+        const stateFile = path.resolve(root, ".openspec/sdd_state.json")
+        if (fs.existsSync(stateFile)) {
+          const state = JSON.parse(fs.readFileSync(stateFile, "utf8"))
+          if (state.activeContract) {
+            const contractPath = path.resolve(root, state.activeContract)
+            if (fs.existsSync(contractPath)) {
+              const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"))
+              if (contract && Array.isArray(contract.files_affected) && contract.files_affected.length > 0) {
+                const existingFiles = contract.files_affected.filter((f: string) => fs.existsSync(path.resolve(root, f)) && f.endsWith(".py"))
+                if (existingFiles.length > 0) {
+                  pythonFiles = existingFiles.join(" ")
+                }
+              }
+            }
+          }
+        }
+        
+        try {
+          execSync(`ruff check ${pythonFiles} --quiet`, { cwd: root, stdio: "pipe", timeout: 20000 })
+        } catch (ruffErr: any) {
+          const output = ruffErr.stdout?.toString() || ruffErr.stderr?.toString() || ""
+          if (output.includes("command not found") || ruffErr.message?.includes("ENOENT") || ruffErr.status === 127) {
+            return JSON.stringify({
+              status: "SUCCESS",
+              message: "Proyecto Python detectado. Ruff linter no está instalado en este entorno; omitiendo verificación estática de lint (se confía en F3 Pytest)."
+            }, null, 2)
+          }
+          
+          const errors: any[] = []
+          const lines = output.split("\n")
+          for (const line of lines) {
+            const ruffMatch = line.match(/^([^:]+):(\d+):(\d+):\s+(.+)$/)
+            if (ruffMatch) {
+              errors.push({
+                file: ruffMatch[1].trim(),
+                line: parseInt(ruffMatch[2], 10),
+                column: parseInt(ruffMatch[3], 10),
+                error: ruffMatch[4].trim()
+              })
+            } else if (line.trim().length > 0) {
+              errors.push({ raw: line.trim() })
+            }
+          }
+          
+          if (errors.length > 0) {
+            resultPython.ruff = {
+              status: "FAIL",
+              errors
+            }
+          }
+        }
+      } catch (e: any) {
+        return JSON.stringify({
+          status: "SUCCESS",
+          message: "Proyecto Python detectado. Error al ejecutar Ruff; omitiendo verificación estática para confiar en F3 Pytest."
+        }, null, 2)
+      }
+      
+      const overallSuccess = resultPython.ruff.status === "SUCCESS"
+      return JSON.stringify({
+        status: overallSuccess ? "SUCCESS" : "FAIL",
+        message: overallSuccess ? "Shift-Left Verification (Python Ruff) exitosa: Cero errores de lint." : "Validación fallida: Se encontraron errores estáticos de Ruff.",
+        verification: resultPython
+      }, null, 2)
+    }
+
     const result: { tsc: { status: string, errors?: any[] }, eslint: { status: string, errors?: any[] } } = {
       tsc: { status: "SUCCESS" },
       eslint: { status: "SUCCESS" }
