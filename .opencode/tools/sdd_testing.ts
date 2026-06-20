@@ -11,6 +11,27 @@ const getRoot = (context: any) => {
   return process.cwd();
 };
 
+// Helper to read the targetDir from sdd_state.json or .sdd_bootstrap.json
+const getTargetDir = (root: string): string => {
+  try {
+    const bootstrapPath = path.resolve(root, ".openspec/.sdd_bootstrap.json")
+    if (fs.existsSync(bootstrapPath)) {
+      const data = JSON.parse(fs.readFileSync(bootstrapPath, "utf8"))
+      if (data && data.targetDir) return data.targetDir
+    }
+  } catch (e) {}
+  
+  try {
+    const statePath = path.resolve(root, ".openspec/sdd_state.json")
+    if (fs.existsSync(statePath)) {
+      const state = JSON.parse(fs.readFileSync(statePath, "utf8"))
+      if (state && state.targetDir) return state.targetDir
+    }
+  } catch (e) {}
+
+  return "."
+}
+
 // Helper to parse semantic errors from compiler and linter outputs (reducing raw trace log bloat for the LLM)
 const parseSemanticErrors = (rawOutput: string, type: "eslint" | "tsc"): any[] => {
   const parsed: any[] = []
@@ -54,13 +75,22 @@ export const quick_lint = tool({
   args: {},
   async execute(args, context) {
     const root = getRoot(context)
+    const targetDir = getTargetDir(root)
+    const targetPath = targetDir === "." ? root : path.resolve(root, targetDir)
 
-    const pkgPath = path.resolve(root, "package.json")
+    const pkgPath = path.resolve(targetPath, "package.json")
     if (!fs.existsSync(pkgPath)) {
       return JSON.stringify({
         status: "ERROR",
         message: "No se encontró package.json. ¿Estás en un proyecto Next.js?",
       }, null, 2)
+    }
+
+    const getRelPath = (fullRel: string) => {
+      if (targetDir !== "." && fullRel.startsWith(targetDir + "/")) {
+        return fullRel.slice(targetDir.length + 1)
+      }
+      return fullRel
     }
 
     let eslintFiles = "src/"
@@ -73,7 +103,9 @@ export const quick_lint = tool({
           if (fs.existsSync(contractPath)) {
             const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"))
             if (contract && Array.isArray(contract.files_affected) && contract.files_affected.length > 0) {
-              const existingFiles = contract.files_affected.filter((f: string) => fs.existsSync(path.resolve(root, f)))
+              const existingFiles = contract.files_affected
+                .filter((f: string) => fs.existsSync(path.resolve(root, f)))
+                .map((f: string) => getRelPath(f))
               if (existingFiles.length > 0) {
                 eslintFiles = existingFiles.join(" ")
               }
@@ -87,7 +119,7 @@ export const quick_lint = tool({
 
     try {
       const out = execSync(`npx eslint ${eslintFiles} --quiet --max-warnings 0 2>&1 || true`, {
-        cwd: root,
+        cwd: targetPath,
         encoding: "utf8",
         timeout: 120_000,
       })
@@ -112,9 +144,11 @@ export const shift_left_verify = tool({
   args: {},
   async execute(args, context) {
     const root = getRoot(context)
+    const targetDir = getTargetDir(root)
+    const targetPath = targetDir === "." ? root : path.resolve(root, targetDir)
 
     // Check if it is a Python project
-    let isPython = fs.existsSync(path.resolve(root, "requirements.txt")) || fs.existsSync(path.resolve(root, "pyproject.toml"));
+    let isPython = fs.existsSync(path.resolve(targetPath, "requirements.txt")) || fs.existsSync(path.resolve(targetPath, "pyproject.toml"));
     try {
       const stateFile = path.resolve(root, ".openspec/sdd_state.json")
       if (fs.existsSync(stateFile)) {
@@ -133,6 +167,13 @@ export const shift_left_verify = tool({
       // ignore
     }
 
+    const getRelPath = (fullRel: string) => {
+      if (targetDir !== "." && fullRel.startsWith(targetDir + "/")) {
+        return fullRel.slice(targetDir.length + 1)
+      }
+      return fullRel
+    }
+
     if (isPython) {
       const resultPython: { ruff: { status: string, errors?: any[] } } = {
         ruff: { status: "SUCCESS" }
@@ -147,7 +188,9 @@ export const shift_left_verify = tool({
             if (fs.existsSync(contractPath)) {
               const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"))
               if (contract && Array.isArray(contract.files_affected) && contract.files_affected.length > 0) {
-                const existingFiles = contract.files_affected.filter((f: string) => fs.existsSync(path.resolve(root, f)) && f.endsWith(".py"))
+                const existingFiles = contract.files_affected
+                  .filter((f: string) => fs.existsSync(path.resolve(root, f)) && f.endsWith(".py"))
+                  .map((f: string) => getRelPath(f))
                 if (existingFiles.length > 0) {
                   pythonFiles = existingFiles.join(" ")
                 }
@@ -157,7 +200,7 @@ export const shift_left_verify = tool({
         }
         
         try {
-          execSync(`ruff check ${pythonFiles} --quiet`, { cwd: root, stdio: "pipe", timeout: 20000 })
+          execSync(`ruff check ${pythonFiles} --quiet`, { cwd: targetPath, stdio: "pipe", timeout: 20000 })
         } catch (ruffErr: any) {
           const output = ruffErr.stdout?.toString() || ruffErr.stderr?.toString() || ""
           if (output.includes("command not found") || ruffErr.message?.includes("ENOENT") || ruffErr.status === 127) {
@@ -212,7 +255,7 @@ export const shift_left_verify = tool({
 
     // 1. Run tsc --noEmit
     try {
-      execSync("npx tsc --noEmit", { cwd: root, stdio: "pipe", timeout: 60000 })
+      execSync("npx tsc --noEmit", { cwd: targetPath, stdio: "pipe", timeout: 60000 })
     } catch (e: any) {
       const rawOutput = e.stdout?.toString() || e.stderr?.toString() || ""
       const errors = parseSemanticErrors(rawOutput, "tsc")
@@ -233,7 +276,9 @@ export const shift_left_verify = tool({
           if (fs.existsSync(contractPath)) {
             const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"))
             if (contract && Array.isArray(contract.files_affected) && contract.files_affected.length > 0) {
-              const existingFiles = contract.files_affected.filter((f: string) => fs.existsSync(path.resolve(root, f)))
+              const existingFiles = contract.files_affected
+                .filter((f: string) => fs.existsSync(path.resolve(root, f)))
+                .map((f: string) => getRelPath(f))
               if (existingFiles.length > 0) {
                 eslintFiles = existingFiles.join(" ")
               }
@@ -247,7 +292,7 @@ export const shift_left_verify = tool({
 
     try {
       const out = execSync(`npx eslint ${eslintFiles} --quiet 2>&1 || true`, {
-        cwd: root,
+        cwd: targetPath,
         encoding: "utf8",
         timeout: 60000,
       })
@@ -278,10 +323,13 @@ export const shift_left_verify = tool({
 
 // Tool: sdd_generate_tests
 export const generate_tests = tool({
-  description: "Autogenera plantillas de pruebas unitarias/integración en tests/unit/ a partir de los escenarios de prueba descritos en el contrato activo de sdd_state.json. No pisa archivos de pruebas existentes.",
+  description: "Autogenera plantillas de pruebas unitarias/integración en el directorio corporativo de pruebas a partir de los escenarios de prueba descritos en el contrato activo de sdd_state.json. No pisa archivos de pruebas existentes.",
   args: {},
   async execute(args, context) {
     const root = getRoot(context)
+    const targetDir = getTargetDir(root)
+    const targetPath = targetDir === "." ? root : path.resolve(root, targetDir)
+
     const stateFile = path.resolve(root, ".openspec/sdd_state.json")
     if (!fs.existsSync(stateFile)) {
       return JSON.stringify({ success: false, error: "sdd_state.json no existe. Inicia una sesión SDD primero." }, null, 2)
@@ -311,48 +359,76 @@ export const generate_tests = tool({
     const created: string[] = []
     const skipped: string[] = []
     
+    const isPythonProject = fs.existsSync(path.resolve(targetPath, "requirements.txt")) || fs.existsSync(path.resolve(targetPath, "pyproject.toml"))
+    const test_dir = isPythonProject 
+      ? path.resolve(targetPath, "tests/unit") 
+      : path.resolve(targetPath, "src/__tests__")
+
+    if (!fs.existsSync(test_dir)) {
+      fs.mkdirSync(test_dir, { recursive: true })
+    }
+
     for (const [feature, scenarios] of Object.entries(grouped_tests)) {
       const clean_feature = feature.replace(/([A-Z])/g, "-$1").toLowerCase().replace(/^-/, "")
       const hasReact = scenarios.some(s => s.type === "unit" || s.type === "visual")
       const ext = hasReact ? "tsx" : "ts"
-      const test_dir = path.resolve(root, "tests", "unit")
-      if (!fs.existsSync(test_dir)) {
-        fs.mkdirSync(test_dir, { recursive: true })
-      }
-      const test_file = path.join(test_dir, `${clean_feature}.test.${ext}`)
+      
+      const filename = isPythonProject 
+        ? `test_${clean_feature}.py` 
+        : `${feature}.test.${ext}`
+      const test_file = path.join(test_dir, filename)
+      const relative_test_path = path.relative(root, test_file)
       
       if (fs.existsSync(test_file)) {
-        skipped.push(`tests/unit/${clean_feature}.test.${ext}`)
+        skipped.push(relative_test_path)
         continue
       }
       
       const lines: string[] = []
-      lines.push('import { describe, it, expect } from "vitest";')
-      if (hasReact) {
-        lines.push('import { render, screen } from "@testing-library/react";')
-        lines.push('import userEvent from "@testing-library/user-event";')
-        lines.push(`// import ${feature} from "@/components/blocks/${clean_feature}";`)
-      }
-      lines.push("")
-      lines.push(`describe("${feature} Tests (Contract Scenarios)", () => {`)
-      
-      for (const s of scenarios) {
-        const tid = s.id || "TS-XX"
-        const name = s.name || "Test case"
-        lines.push(`  // ${tid}: ${name}`)
-        lines.push(`  // Given: ${s.given || ""}`)
-        lines.push(`  // When: ${s.when || ""}`)
-        lines.push(`  // Then: ${s.then || ""}`)
-        lines.push(`  it("${tid}: ${name}", async () => {`)
-        lines.push('    // TODO: Implement actual contract assertions')
-        lines.push('    expect(true).toBe(true);')
-        lines.push('  });')
+      if (isPythonProject) {
+        lines.push("import pytest")
+        lines.push(`from src.main import app # o tu router correspondiente`)
         lines.push("")
+        lines.push(`# tests para ${feature}`)
+        for (const s of scenarios) {
+          const tid = s.id || "TS-XX"
+          const name = s.name || "Test case"
+          const test_func_name = `test_${tid.toLowerCase().replace(/-/g, "_")}_${clean_feature.replace(/-/g, "_")}`
+          lines.push(`def ${test_func_name}():`)
+          lines.push(`    # Given: ${s.given || ""}`)
+          lines.push(`    # When: ${s.when || ""}`)
+          lines.push(`    # Then: ${s.then || ""}`)
+          lines.push("    assert True")
+          lines.push("")
+        }
+      } else {
+        lines.push('import { describe, it, expect } from "vitest";')
+        if (hasReact) {
+          lines.push('import { render, screen } from "@testing-library/react";')
+          lines.push('import userEvent from "@testing-library/user-event";')
+          lines.push(`// import { ${feature} } from "@/components/blocks/${feature}";`)
+        }
+        lines.push("")
+        lines.push(`describe("${feature} Tests (Contract Scenarios)", () => {`)
+        
+        for (const s of scenarios) {
+          const tid = s.id || "TS-XX"
+          const name = s.name || "Test case"
+          lines.push(`  // ${tid}: ${name}`)
+          lines.push(`  // Given: ${s.given || ""}`)
+          lines.push(`  // When: ${s.when || ""}`)
+          lines.push(`  // Then: ${s.then || ""}`)
+          lines.push(`  it("${tid}: ${name}", async () => {`)
+          lines.push('    // TODO: Implement actual contract assertions')
+          lines.push('    expect(true).toBe(true);')
+          lines.push('  });')
+          lines.push("")
+        }
+        lines.push("});")
       }
-      lines.push("});")
       
       fs.writeFileSync(test_file, lines.join("\n").trim() + "\n", "utf8")
-      created.push(`tests/unit/${clean_feature}.test.${ext}`)
+      created.push(relative_test_path)
     }
     
     return JSON.stringify({

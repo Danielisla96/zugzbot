@@ -11,6 +11,27 @@ const getRoot = (context: any) => {
   return process.cwd();
 };
 
+// Helper to read the targetDir from sdd_state.json or .sdd_bootstrap.json
+const getTargetDir = (root: string): string => {
+  try {
+    const bootstrapPath = path.resolve(root, ".openspec/.sdd_bootstrap.json")
+    if (fs.existsSync(bootstrapPath)) {
+      const data = JSON.parse(fs.readFileSync(bootstrapPath, "utf8"))
+      if (data && data.targetDir) return data.targetDir
+    }
+  } catch (e) {}
+  
+  try {
+    const statePath = path.resolve(root, ".openspec/sdd_state.json")
+    if (fs.existsSync(statePath)) {
+      const state = JSON.parse(fs.readFileSync(statePath, "utf8"))
+      if (state && state.targetDir) return state.targetDir
+    }
+  } catch (e) {}
+
+  return "."
+}
+
 // Tool: sdd_clean_docker_environment
 export const clean_docker_environment = tool({
   description: "Asegura que Docker esté abierto y realiza una limpieza total y agresiva: detiene y elimina TODOS los contenedores (activos o inactivos), remueve TODAS las imágenes, volúmenes y redes para garantizar un lienzo en blanco absoluto antes de desplegar.",
@@ -100,6 +121,8 @@ export const generate_dockerfile = tool({
   },
   async execute(args, context) {
     const root = getRoot(context)
+    const targetDir = getTargetDir(root)
+    const targetPath = targetDir === "." ? root : path.resolve(root, targetDir)
 
     if (args.stack === "agnostic") {
       const dockerfileAg = `FROM node:20-alpine
@@ -111,7 +134,7 @@ CMD ["node", "src/index.js"]
       const filesWritten: string[] = []
       let content = dockerfileAg
       let targetName = "src/index.js"
-      if (fs.existsSync(path.resolve(root, "src/main.py"))) {
+      if (fs.existsSync(path.resolve(targetPath, "src/main.py"))) {
         content = `FROM python:3.11-slim
 WORKDIR /app
 COPY . .
@@ -121,9 +144,9 @@ CMD ["python", "src/main.py"]
         targetName = "src/main.py"
       }
       
-      const fullPath = path.resolve(root, "Dockerfile")
+      const fullPath = path.resolve(targetPath, "Dockerfile")
       fs.writeFileSync(fullPath, content, "utf8")
-      filesWritten.push("Dockerfile")
+      filesWritten.push(path.relative(root, fullPath))
       
       return JSON.stringify({
         status: "SUCCESS",
@@ -140,11 +163,11 @@ CMD ["python", "src/main.py"]
       let pm = "npm"
       let installCmd = "npm ci --frozen-lockfile"
       let buildCmd = "npm run build"
-      if (fs.existsSync(path.resolve(root, "pnpm-lock.yaml"))) {
+      if (fs.existsSync(path.resolve(targetPath, "pnpm-lock.yaml"))) {
         pm = "pnpm"
         installCmd = "pnpm install --frozen-lockfile"
         buildCmd = "pnpm build"
-      } else if (fs.existsSync(path.resolve(root, "yarn.lock"))) {
+      } else if (fs.existsSync(path.resolve(targetPath, "yarn.lock"))) {
         pm = "yarn"
         installCmd = "yarn install --frozen-lockfile"
         buildCmd = "yarn build"
@@ -231,7 +254,7 @@ test-results
         [".dockerignore", dockerignore],
         ["docker-compose.yml", compose],
       ] as const) {
-        const fullPath = path.resolve(root, name)
+        const fullPath = path.resolve(targetPath, name)
         fs.writeFileSync(fullPath, content, "utf8")
         filesWritten.push(path.relative(root, fullPath))
       }
@@ -288,7 +311,7 @@ tests/
       [".dockerignore", dockerignorePy],
       ["docker-compose.yml", composePy],
     ] as const) {
-      const fullPath = path.resolve(root, name)
+      const fullPath = path.resolve(targetPath, name)
       fs.writeFileSync(fullPath, content, "utf8")
       filesWritten.push(path.relative(root, fullPath))
     }

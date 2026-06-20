@@ -11,6 +11,27 @@ const getRoot = (context: any) => {
   return process.cwd();
 };
 
+// Helper to read the targetDir from sdd_state.json or .sdd_bootstrap.json
+const getTargetDir = (root: string): string => {
+  try {
+    const bootstrapPath = path.resolve(root, ".openspec/.sdd_bootstrap.json")
+    if (fs.existsSync(bootstrapPath)) {
+      const data = JSON.parse(fs.readFileSync(bootstrapPath, "utf8"))
+      if (data && data.targetDir) return data.targetDir
+    }
+  } catch (e) {}
+  
+  try {
+    const statePath = path.resolve(root, ".openspec/sdd_state.json")
+    if (fs.existsSync(statePath)) {
+      const state = JSON.parse(fs.readFileSync(statePath, "utf8"))
+      if (state && state.targetDir) return state.targetDir
+    }
+  } catch (e) {}
+
+  return "."
+}
+
 // Helper to get PID file path
 const getPidFilePath = (root: string) => {
   return path.resolve(root, ".openspec/dev_server.pid")
@@ -56,7 +77,8 @@ export const start_server = tool({
   },
   async execute(args, context) {
     const root = getRoot(context)
-    const targetCwd = args.cwd ? path.resolve(root, args.cwd) : root
+    const targetDir = getTargetDir(root)
+    const targetCwd = args.cwd ? path.resolve(root, args.cwd) : (targetDir === "." ? root : path.resolve(root, targetDir))
     const pidFile = getPidFilePath(root)
 
     try {
