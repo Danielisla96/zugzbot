@@ -72,14 +72,31 @@ npx shadcn@latest add <component-name>
 
 Al diseñar o codificar páginas con Shadcn UI, sigue estas reglas estrictas:
 
-### 3.1 Componer, no reinventar (MANDATORIO)
-Utiliza las plantillas y bloques existentes de Shadcn como el estándar absoluto de tu interfaz. Queda **estrictamente prohibido** escribir layouts, páginas de autenticación o cuadros de mando desde cero si ya existe un bloque oficial que resuelva el caso de uso. **No estás restringido a ningún subconjunto fijo de componentes**: tienes total libertad para buscar en el catálogo completo de 97+ bloques oficiales y componentes primitivos de Shadcn:
-- **Dashboards**: Utiliza `dashboard-01` o cualquier variante de panel de control interactivo oficial.
-- **Sidebars / Barras de Navegación**: Utiliza `sidebar-01` al `16` para paneles laterales funcionales, colapsables, dinámicos o anidados. No programes componentes de navegación complejos a mano.
-- **Login / Registro**: Utiliza `login-01` al `05` y `signup-01` al `05` para flujos de login y registro de usuarios.
-- **Gráficos y Métricas**: Busca y añade bloques de gráficos oficiales de Recharts (`chart-area-*`, `chart-bar-*`, `chart-pie-*`, `chart-radar-*`) para dar vida a la visualización de datos.
+### 3.1 Componer, no reinventar - Estrategia "Block-First" con Inyección Zero-Touch (MANDATORIO)
+Utiliza las plantillas y bloques existentes de Shadcn como el estándar absoluto de tu interfaz. Queda **estrictamente prohibido** escribir layouts, páginas de autenticación o cuadros de mando desde cero si ya existe un bloque oficial que resuelva el caso de uso.
 
-Busca layouts de dashboards o formularios complejos en el registro mediante el MCP `shadcn` antes de escribir cualquier código personalizado. Una vez agregado el bloque, distribuye y adapta sus elementos con el estado y la lógica de tu aplicación. Te motivamos a explorar todo el ecosistema de bloques pre-creados por Shadcn para armar una UI robusta y moderna.
+Para garantizar interfaces de usuario premium y visualmente idénticas a los demos oficiales de Shadcn, se debe seguir de manera mandatoria la **Metodología de Arquitectura Block-First**:
+
+1. **El Bloque es el Esqueleto Absoluto (Fase A - Inyección Pura y Migración Física)**:
+   - El Coder (F2) **debe** instalar el bloque de Shadcn correspondiente mediante la CLI (`npx shadcn@latest add <block-name>`).
+   - El bloque se descargará en `src/components/blocks/<block-name>/`. El Coder tiene **estrictamente prohibido** importar el `page.tsx` del bloque como un simple componente hijo (ej: `return <BlockPage />` desde la raíz de la app), ya que esto rompe la estructura del router de Next.js, layouts y metadata.
+   - **Acción Obligatoria**: El Coder debe **copiar el contenido íntegro del código** de `src/components/blocks/<block-name>/page.tsx` hacia el `page.tsx` de tu ruta destino (por ejemplo, `src/app/page.tsx` o `src/app/dashboard/page.tsx`).
+   - **Corrección de Imports de forma Manual**: Al mover el código de la ruta de componentes al App Router de Next.js, los imports relativos en ese archivo se romperán. El Coder tiene la obligación de **reescribir todos los imports relativos de componentes e información locales** (ej. `./components/app-sidebar` o `./data.json`) para usar aliases absolutos que apunten a la ubicación física descargada por Shadcn (ej. `@/components/blocks/<block-name>/components/app-sidebar` o `@/components/blocks/<block-name>/data.json`).
+   - **Preservación de Datos Mock/Dummy**: El archivo de datos del bloque (por ejemplo, `data.json` o constantes internas) **debe ser preservado e importado de manera intacta** durante esta Fase A para garantizar que la vista renderice con datos idénticos al demo original en el navegador.
+   - **Meta**: Al terminar la Fase A, la aplicación debe renderizarse de manera *pixel-perfect* (idéntica) al demo oficial de Shadcn en local, sin un solo error de compilación o de imports rotos.
+
+2. **Sustitución de Datos Atómica (Fase B - Conexión de Lógica)**:
+   - Una vez comprobado que el esqueleto visual se muestra perfecto y sin aberraciones de flexbox o alineación, el Coder procederá a sustituir de manera quirúrgica y atómica los datos dummy o locales por la lógica de negocio real (estados de React, fetchings de API del backend).
+   - El Coder **no debe modificar las clases contenedoras estructurales** (`SidebarProvider`, `SidebarInset`, grids de diseño principales, anchos o paddings del bloque) para evitar corrupciones visuales en pantallas grandes o pequeñas.
+
+3. **Prevención de Parpadeos (Flicker) de Sidebar y Providers**:
+   - Si el bloque utiliza providers globales como `<SidebarProvider>`, el Coder debe extraer la barra lateral (`AppSidebar`) y sus providers principales hacia `src/app/layout.tsx` (o un layout del Route Group respectivo) en lugar de dejarlos redundantes en el `page.tsx` de cada ruta, permitiendo un ruteo libre de parpadeos desagradables y garantizando consistencia.
+
+4. **Catálogo de Bloques a Explorar**:
+   - **Dashboards**: Utiliza `dashboard-01` o cualquier variante de panel de control interactivo oficial.
+   - **Sidebars / Barras de Navegación**: Utiliza `sidebar-01` al `16` para paneles laterales funcionales, colapsables, dinámicos o anidados. No programes componentes de navegación complejos a mano.
+   - **Login / Registro**: Utiliza `login-01` al `05` y `signup-01` al `05` para flujos de login y registro de usuarios.
+   - **Gráficos y Métricas**: Busca y añade bloques de gráficos oficiales de Recharts (`chart-area-*`, `chart-bar-*`, `chart-pie-*`, `chart-radar-*`) para dar vida a la visualización de datos.
 
 **REGLA CRÍTICA DE RUTAS DUPLICADAS POR SHADCN CLI**:
 Al agregar un bloque interactivo complejo (como `dashboard-01`), el CLI de Shadcn puede inyectar automáticamente archivos en directorios fijos (como `src/app/dashboard/page.tsx`). El Coder **debe** verificar inmediatamente si existe una colisión con la estructura de rutas establecida por el contrato (`contract.json`) —por ejemplo, si el contrato establece un Route Group `src/app/(dashboard)/page.tsx` que sirve en la raíz `/`—. Si ocurre esto, el Coder tiene la obligación de **borrar, mover o refactorizar de inmediato el archivo inyectado automáticamente** para eliminar la duplicidad de rutas, evitando así bucles infinitos de redirección o errores fatales de compilación del router de Next.js.

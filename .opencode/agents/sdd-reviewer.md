@@ -2,7 +2,7 @@
 description: Realiza una auditoría/revisión de código contra el contrato y el linter
 mode: subagent
 hidden: false
-model: deepseek/deepseek-v4-flash
+model: google/gemini-3.5-flash
 temperature: 0.1
 tools:
   write: false

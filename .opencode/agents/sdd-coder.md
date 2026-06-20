@@ -3,7 +3,7 @@ description: Implementa código ajustándose estrictamente a los contratos en sp
 mode: subagent
 hidden: true
 steps: 10
-model: deepseek/deepseek-v4-flash
+model: google/gemini-3.5-flash
 temperature: 0.35
 frequency_penalty: 0.5
 presence_penalty: 0.2
