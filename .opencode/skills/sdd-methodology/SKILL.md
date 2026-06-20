@@ -91,11 +91,15 @@ Cada fase tiene un **gate explícito** (HIL del usuario) antes de transicionar a
 **NO HAGAS**: Gastar múltiples iteraciones o miles de tokens en el razonamiento de `@sdd-coder` tratando de lograr una alineación perfecta de columnas con espacios exactos en salidas CLI o tablas ASCII.
 **HAZ**: Usa funciones estándar de formateo de strings de tu lenguaje (como `ljust()`, `rjust()` o `center()` en Python; o formateadores sencillos en JS/TS) para lograr una presentación razonable de forma inmediata y avanzar directamente a la creación de pruebas.
 
+### Trampa 13: Omitir la disposición espacial y propuesta de Layout en F1
+**NO HAGAS**: Redactar el contrato en F1 listando únicamente archivos de forma abstracta sin definir o validar la geometría estructural y distribución de la UI (ej. si se requieren Sidebars locales de navegación vs pestañas horizontales planas), asumiendo anchos angostos y estáticos (como `max-w-3xl`) o rompiendo el soporte de modo oscuro con colores absolutos (`bg-white`).
+**HAZ**: El spec-writer debe proponer proactivamente en F1 un bosquejo textual o diagrama ASCII de la interfaz y validar con el usuario un layout responsivo amplio (`max-w-6xl` o superior). Además, el coder debe implementar soporte semántico dinámico de temas de entrada (sin colores duros) y sincronizar colores SVG/gráficos dinámicamente con el tema actual.
+
 ---
 
 ## 4. Stack cerrado (NO abrir)
 
-- **Frontend**: Next.js 16 + React 19 + TypeScript + Tailwind v4 + Shadcn UI v4.11+ (Base UI) + lucide-react + Vitest. **PROHIBIDO**: HeroUI, Chakra, Material-UI, Radix directo sin shadcn.
+- **Frontend**: Next.js 15/16 + React 19 + TypeScript + Tailwind v4 + Shadcn UI v2.1.8 (Radix UI) + lucide-react + Vitest. **PROHIBIDO**: Shadcn v4/Base-UI (por inestabilidad y falta de soporte actual), HeroUI, Chakra, Material-UI.
 - **Backend**: Python 3.11+ + FastAPI + Pydantic v2 + Uvicorn + Pytest + Ruff. **PROHIBIDO**: Django, Flask, sync SQLAlchemy.
 - **Persistencia**: localStorage (frontend-only) o PostgreSQL con pgvector. **PROHIBIDO**: MongoDB (excepto si se justifica), Redis como primary store.
 - **Containerización**: Docker multi-stage con `node:20-alpine` (Next) o `python:3.11-slim` (FastAPI). Usuario no-root. Healthcheck via `node -e` (no wget en alpine).

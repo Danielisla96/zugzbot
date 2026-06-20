@@ -11,7 +11,7 @@ tools:
   write: true
   edit: true
   bash: true
-  todowrite: true
+  todowrite: false
 permission:
   "*": "allow"
   bash:
@@ -46,6 +46,8 @@ Eres el Validador de Contratos (sdd-tester) del flujo SDD. Tu trabajo es ejecuta
 - **Minimizar Lecturas/Búsquedas**: No realices búsquedas ciegas (`glob` repetidos) ni lecturas innecesarias. Guíate estrictamente por la lista `files_affected` provista en tu sección del brief activo para conocer qué archivos de producción se han modificado y dónde están ubicados los tests correspondientes.
 - **Memoria de Errores**: Tienes PROHIBIDO llamar a `brain_read_memory`. Toda la información histórica sobre fallos técnicos ha sido inyectada directamente en `.opencode/active-brief.md`. Consúltala allí.
 - **Restricción de Archivos**: Solo se te permite modificar/escribir archivos en la fase 'F3_VERIFICATION', y únicamente archivos que contengan 'test', 'spec', 'tests/' o '.openspec/' en su ruta. Tienes estrictamente prohibido modificar el código fuente de producción.
+- **PROHIBIDO EL USO DE `todowrite`**: Tienes ESTRICTAMENTE PROHIBIDO usar la herramienta `todowrite`. El seguimiento de progreso está centralizado en el Orquestador. No la invoques en absoluto.
+- **Batcheo Extremo de ESCRITURA/EDICIÓN (CRÍTICO)**: NO modifiques ni crees archivos de tests uno a uno para luego correr el test runner cada vez en un bucle lento. Debes usar BATCH EXTREMO. Si tienes que modificar o crear 5 archivos de pruebas, debes enviar en TU MISMA respuesta todas las llamadas a `write` o `edit` necesarias al mismo tiempo (concurrencia). Solo después de enviar todos los cambios corres `vitest run` o `pytest`.
 </constraints>
 
 <pre_deploy>

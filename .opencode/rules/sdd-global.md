@@ -34,3 +34,23 @@ Si el proyecto o aplicación principal vive en un subdirectorio (ej. `next-app`,
 - **Rutas de Archivos en el Contrato**: El Spec-Writer (F1) **debe** escribir las rutas del campo `files_affected` del contrato con el prefijo del subdirectorio correspondiente (ej. `["next-app/src/app/page.tsx", "next-app/src/components/blocks/Navbar.tsx"]`).
 - **Ejecución de Comandos**: El Coder (F2), Tester (F3) y Deployer (F4) **deben** ejecutar siempre sus comandos de terminal (`npm install`, `npm run lint`, `npx tsc`, `npx vitest`, `docker compose`) utilizando la subcarpeta como directorio de trabajo (`workdir` en las llamadas a herramientas, o moviéndose a ella).
 - **Consistencia de Configuración**: Está estrictamente prohibido esparcir o duplicar archivos de configuración (como `tsconfig.json`, `eslint.config.mjs`, `vitest.config.ts`, `components.json`) en la raíz del espacio de trabajo si hay un subdirectorio activo. Todo debe quedar encapsulado dentro del subdirectorio del proyecto.
+
+## 5. Estándares de Calidad UI/UX Premium, Soporte de Temas y Robustez HTML (OBLIGATORIO)
+Cualquier desarrollo de interfaz de usuario (Dashboards, Landings, Formularios, Componentes) debe cumplir con los siguientes estándares desde su **primera entrega (F2)** sin esperar a iteraciones reactivas:
+- **Soporte Semántico de Temas (Zero Hardcoded Light/Dark colors):**
+  - Está estrictamente PROHIBIDO usar clases de colores absolutos de Tailwind (como `bg-white`, `bg-neutral-50`, `text-neutral-900`, `border-neutral-200`) para componentes estructurales, fondos, textos o bordes.
+  - Se deben mapear obligatoriamente a variables semánticas de Shadcn/Tailwind que soporten modo claro/oscuro dinámico por defecto (ej. `bg-background`, `bg-muted/50`, `bg-accent`, `text-foreground`, `text-muted-foreground`, `border-border`).
+- **Gráficos Dinámicos y Reactivos (SVG/Recharts Theme Sync):**
+  - Cualquier componente de gráficos (como Recharts o visores vectoriales SVG) que use atributos de pintado inline (`stroke`, `fill`, `color`) debe resolver sus colores mediante un custom hook o variables dinámicas que consuman el estado del tema actual (`useTheme` de `next-themes` u homólogo), previniendo que líneas o textos queden invisibles en modo oscuro.
+- **Robustez HTML y Regla de No-Nesting en Triggers:**
+  - Al utilizar componentes contenedores de Radix/Shadcn UI (como `TooltipTrigger`, `DropdownMenuTrigger`, `DialogTrigger`, `SheetTrigger`), está estrictamente PROHIBIDO anidar un elemento interactivo nativo (como `<button>` o `<a>`) directamente dentro de otro trigger que ya renderice un botón por defecto.
+  - Para evitar la hidratación rota y HTML inválido, se debe usar siempre el prop `asChild` en el trigger de Radix o delegar los props correctamente usando las directivas del componente de base.
+- **Pulido y Acabado UX Premium:**
+  - **Tooltips:** Todo botón que contenga únicamente un icono de acción debe estar envuelto en un componente `Tooltip` con su descripción respectiva.
+  - **Skeletons y Empty States:** Las vistas de carga deben contar con animaciones de `Skeleton` fluidas. Las listas o tablas vacías deben presentar un `Empty State` visual y explicativo agradable con iconos y un botón de acción alternativo, nunca una página o cuadro en blanco.
+
+## 6. Mockups Visuales y Validación Temprana de Layout (F0/F1)
+Para optimizar el diseño, evitar cambios de arquitectura estructurales a mitad del desarrollo (como rediseñar pestañas a layouts de sidebar lateral) y garantizar alineación inmediata con las expectativas del usuario:
+- **Propuesta de Layout Visual:** Durante la transición de F0 a F1, el `@sdd-spec-writer` **debe** proponer un mockup textual o diagrama de cajas ASCII detallando la distribución estructural de la pantalla (Layout general, barras laterales sticky, contenedores de contenido responsivos y anchos de pantalla recomendados, ej. `max-w-6xl` vs `w-full`).
+- **Ancho y Densidad Modernos:** Por defecto, los layouts complejos deben evitar contenedores angostos restrictivos como `max-w-3xl` para maximizar el aprovechamiento de pantallas de escritorio modernas mediante rejillas responsivas (`grid grid-cols-1 md:grid-cols-X gap-6`).
+- **Aprobación Temprana:** El orquestador presentará esta propuesta visual al usuario en la fase F1. Una vez aprobada la disposición espacial y la estructura de navegación local (ej: sidebar split vs horizontal tabs), el `@sdd-coder` la ejecutará exactamente como se acordó, previniendo loops redundantes de maquetación en fases tardías.

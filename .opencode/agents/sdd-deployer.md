@@ -8,6 +8,7 @@ tools:
   write: true
   edit: true
   bash: true
+  todowrite: false
 permission:
   "*": "allow"
 ---

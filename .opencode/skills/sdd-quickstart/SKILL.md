@@ -159,6 +159,7 @@ Copia y adapta los IDs y descripciones que apliquen. Borra los que no apliquen.
 - **NO dupliques los tokens de `.openspec/design-assets/<brandId>/DESIGN.md` línea por línea.** Usa el tool `oh-my-design_get_design_md` y pega el bloque `tokens` completo UNA vez.
 - **NO escribas más de 5-6 `test_scenarios`** para modo `console`. Más de eso no acelera la entrega, solo retrasa F2.
 - **NO incluyas escenarios `visual` o `e2e` si `verificationMode` es `console`.** El tester los rechazará.
+- **NO omitas la disposición espacial y propuesta de Layout**: El spec-writer DEBE proponer un bosquejo textual o diagrama ASCII de la disposición espacial de la UI en F1 (ej. layouts con sidebar lateral para configuración o paneles complejos en lugar de simples pestañas tradicionales planas) y acordar anchos de pantalla generosos (`max-w-6xl` o superior, evitando el limitante `max-w-3xl`) con el usuario antes de transicionar a F2. Esto previene reestructuraciones estéticas costosas y asegura entregas de alta gama a la primera.
 
 ---
 

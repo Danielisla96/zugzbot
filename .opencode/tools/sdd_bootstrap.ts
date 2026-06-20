@@ -297,7 +297,7 @@ export const bootstrap_nextjs_shadcn = tool({
     let componentsError: string | null = null
     if (args.components && args.components.length > 0) {
       try {
-        const cmd = `npx shadcn@latest add ${args.components.join(" ")} --yes --overwrite`
+        const cmd = `npx shadcn@2.1.8 add ${args.components.join(" ")} --yes --overwrite`
         execSync(cmd, {
           cwd: targetPath,
           stdio: "ignore",

@@ -9,6 +9,7 @@ tools:
   edit: true
   bash: false
   question: true
+  todowrite: false
 permission:
   "*": "allow"
   bash: "deny"
