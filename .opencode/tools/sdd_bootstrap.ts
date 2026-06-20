@@ -101,7 +101,7 @@ function detectPythonPackageManager(root: string): "uv" | "pip" {
 
 // Tool: sdd_bootstrap_status
 export const bootstrap_status = tool({
-  description: "Reporta el estado de bootstrap del proyecto (qué plantilla se usó, cuándo, qué componentes shadcn están instalados, versión de Node y package manager). Si el proyecto no está bootstrapped, retorna NOT_BOOTSTRAPPED. Útil para que el coder verifique antes de empezar a codear.",
+  description: "Reporta el estado de bootstrap del proyecto.",
   args: {},
   async execute(args, context) {
     const root = getRoot(context)
@@ -143,7 +143,7 @@ export const bootstrap_status = tool({
 
 // Tool: sdd_bootstrap_nextjs_shadcn
 export const bootstrap_nextjs_shadcn = tool({
-  description: "Inicializa un proyecto Next.js 16 + Shadcn UI + Tailwind v4 + Vitest a partir de la plantilla canónica en .opencode/templates/nextjs-shadcn/. Es IDEMPOTENTE: si el proyecto ya está inicializado y no se pasa force=true, no toca nada. Copia archivo-por-archivo (sin pisar los existentes), mergea package.json, y opcionalmente instala dependencias y shadcn components.",
+  description: "Inicializa un proyecto Next.js 16 + Shadcn UI + Tailwind v4 + Vitest.",
   args: {
     targetDir: tool.schema.string().default(".").describe("Subdirectorio donde se inicializará el proyecto Next.js (ej: 'next-app' o '.')."),
     components: tool.schema.array(tool.schema.string()).default([]).describe("Lista de shadcn components a instalar (ej: ['button','input','table']). Vacío = no instalar shadcn components."),
@@ -353,7 +353,7 @@ export const bootstrap_nextjs_shadcn = tool({
 
 // Tool: sdd_bootstrap_fastapi
 export const bootstrap_fastapi = tool({
-  description: "Inicializa un proyecto FastAPI + Pydantic + Uvicorn + Pytest + Ruff a partir de la plantilla canónica en .opencode/templates/fastapi-sdd/. Es IDEMPOTENTE: si el proyecto ya está inicializado y no se pasa force=true, no toca nada. Copia archivo-por-archivo (sin pisar los existentes), opcionalmente instala dependencias con uv (fallback pip).",
+  description: "Inicializa un proyecto FastAPI + Pydantic + Uvicorn + Pytest + Ruff.",
   args: {
     targetDir: tool.schema.string().default(".").describe("Subdirectorio donde se inicializará el proyecto FastAPI (ej: 'backend' o '.')."),
     extras: tool.schema.array(tool.schema.string()).default([]).describe("Lista de paquetes Python adicionales a instalar (ej: ['sqlalchemy','pydantic-settings','pytest-asyncio']). Vacío = no instalar extras extra."),
@@ -543,7 +543,7 @@ export const bootstrap_fastapi = tool({
 
 // Tool: sdd_bootstrap_agnostic
 export const bootstrap_agnostic = tool({
-  description: "Inicializa un proyecto de tipo script, tooling o agnóstico de forma idempotente (crea un package.json básico, requirements.txt, o estructura plana de archivos según sea necesario). Evita la sobrecarga de frameworks pesados.",
+  description: "Inicializa un proyecto de tipo script, tooling o agnóstico de forma idempotente.",
   args: {
     language: tool.schema.enum(["javascript", "python", "bash", "google-apps-script", "plano"]).default("plano").describe("El lenguaje o entorno para inicializar"),
     install: tool.schema.boolean().default(true).describe("Si true, ejecuta npm init -y o uv init de forma básica si aplica.")

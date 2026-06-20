@@ -41,7 +41,7 @@ export const RECOMMENDED_BRANDS: Record<string, { id: string; name: string; cate
 
 // Tool: sdd_select_design
 export const select_design = tool({
-  description: "Copia fielmente el archivo DESIGN.md y sus ejemplos y recursos interactivos asociados desde el catálogo original de oh-my-design a la carpeta .openspec/ del proyecto.",
+  description: "Copia fielmente el archivo DESIGN.md y ejemplos de la marca a .openspec/",
   args: {
     brandId: tool.schema.string().describe("ID exacto del diseño en oh-my-design (ej: 'linear.app', 'vercel', 'stripe')")
   },
@@ -128,7 +128,7 @@ async function selectDesignHelper(brandId: string, context: any) {
 
 // Tool: sdd_list_design_recommendations
 export const list_design_recommendations = tool({
-  description: "Devuelve una lista curada y corta de marcas de diseño recomendadas (con assets HTML+CSS interactivos), filtrada por categoría de uso. Reemplaza 3-4 llamadas a oh-my-design_list_references en F0.",
+  description: "Devuelve una lista curada de marcas de diseño recomendadas.",
   args: {
     use_case: tool.schema.enum(["saas", "fintech", "ecommerce", "consumer", "all"]).default("all").describe("Categoría del proyecto para filtrar marcas relevantes"),
     max_per_category: tool.schema.number().default(3).describe("Máximo de marcas a devolver por categoría"),
@@ -162,7 +162,7 @@ export const list_design_recommendations = tool({
 
 // Tool: sdd_apply_brand_tokens
 export const apply_brand_tokens = tool({
-  description: "Inyecta tokens de diseño de marca (colores, tipografía, radius) en src/app/globals.css preservando las variables shadcn (--color-border, --color-background, etc.). Usar en F2 cuando se necesite aplicar el tema de marca.",
+  description: "Inyecta tokens de diseño de marca en src/app/globals.css.",
   args: {
     tokens: tool.schema.string().describe("JSON stringificado con {colors: {...}, typography: {...}, radius: {...}} extraído de contract.json design.tokens"),
   },
@@ -232,7 +232,7 @@ ${brandVarLines.join("\n")}
 
 // Tool: sdd_validate_lucide_icons_batch
 export const validate_lucide_icons_batch = tool({
-  description: "Valida un lote de nombres de iconos de Lucide React de forma rápida e idempotente. Si node_modules/lucide-react existe, verifica contra los exports reales; de lo contrario, valida contra un listado estático de los iconos más comunes.",
+  description: "Valida un lote de nombres de iconos de Lucide React de forma rápida.",
   args: {
     icons: tool.schema.array(tool.schema.string()).describe("Lista de nombres de iconos a validar (ej: ['Sun', 'Moon', 'Plus'])"),
   },

@@ -41,83 +41,47 @@ Cada fase tiene un **gate explícito** (HIL del usuario) antes de transicionar a
 
 ---
 
-## 3. Trampas conocidas (EVITAR siempre)
+## 3. Trampas del Flujo Maestro (EVITAR siempre)
 
 ### Trampa 1: Listar marcas de diseño una por una
-**NO HAGAS**: 4 llamadas a `oh-my-design_list_references` con `category: "saas"`, "fintech", "ecommerce", "consumer" solo para mostrar opciones.
-**HAZ**: 1 llamada a `sdd_list_design_recommendations({ use_case: "all", max_per_category: 3 })`. Si el usuario quiere "Personalizar", ahí sí usa `oh-my-design_search_by_vibe`.
+**NO HAGAS**: Hacer múltiples llamadas a `oh-my-design_list_references` para mostrar opciones al usuario en F0.
+**HAZ**: Haz una única llamada consolidada a `sdd_list_design_recommendations({ use_case: "all", max_per_category: 3 })`.
 
 ### Trampa 2: Crear la carpeta del spec en 2 steps
-**NO HAGAS**: `sdd_create_spec_folder("mi-spec")` + `sdd_set_phase("F1_CONTRACT", ...)` en 2 calls (race condition de timestamp, observado en sesión 137a).
-**HAZ**: 1 sola call: `sdd_set_phase({ phase: "F1_CONTRACT", spec_name: "mi-spec" })`. Devuelve `activeContract` listo.
+**NO HAGAS**: Llamar a `sdd_create_spec_folder("mi-spec")` y luego a `sdd_set_phase("F1_CONTRACT", ...)` por separado (causa race conditions en el timestamp).
+**HAZ**: Transiciona en un solo paso: `sdd_set_phase({ phase: "F1_CONTRACT", spec_name: "mi-spec" })`.
 
-### Trampa 3: Reescribir `globals.css` desde cero
-**NO HAGAS**: Sobrescribir `src/app/globals.css` quitando las variables shadcn (`--color-border: var(--border)`, etc.) al aplicar tokens de marca. Build falla con `Cannot apply unknown utility class 'border-border'` (observado en sesión 137a).
-**HAZ**: Usar `sdd_apply_brand_tokens` que inyecta en un bloque `@theme inline` aparte, preservando las variables shadcn.
+### Trampa 3: Cargar `next-devtools` MCP en sesión normal
+**NO HAGAS**: Activar `next-devtools` por defecto. Inyecta miles de palabras de instrucciones redundantes al contexto, desperdiciando tokens de razonamiento.
+**HAZ**: Mantenerlo deshabilitado en `opencode.json` y activarlo únicamente bajo demanda si se depura un error muy específico del runtime de Next.js.
 
-### Trampa 4: Cargar `next-devtools` MCP en sesión normal
-**NO HAGAS**: Dejar `next-devtools` habilitado. Su tool `init` inyecta 1000+ palabras de "FORGET ALL PRIOR KNOWLEDGE" (~8K tokens de reasoning desperdiciado — el coder tuvo el mayor consumo de tokens de la sesión 137a por esta razón).
-**HAZ**: Está deshabilitado por defecto en `opencode.json`. Solo activarlo on-demand si un subagente reporta un error específico de Next 16.
+### Trampa 4: Escribir el contrato desde cero en F1
+**NO HAGAS**: Redactar cientos de líneas de `contract.json` de forma manual.
+**HAZ**: Cargar la skill `sdd-quickstart` y rellenar los huecos `{{...}}` de su plantilla preconfigurada.
 
-### Trampa 5: Escribir el contrato desde cero
-**NO HAGAS**: Redactar 600+ líneas de `contract.json` en cada sesión. Riesgo alto de inconsistencia.
-**HAZ**: Cargar la skill `sdd-quickstart` y usar la plantilla pre-rellenada. Solo rellenar `{{...}}`.
+### Trampa 5: Permitir que el Coder escriba los tests en F2
+**NO HAGAS**: Desarrollar la lógica y luego redactar las pruebas (causa bucles redundantes entre Coder y Tester).
+**HAZ**: Que el Spec-Writer declare las aserciones en el contrato en F1. El Coder solo implementa el código de negocio necesario para que pasen.
 
-### Trampa 6: Tests en F2
-**NO HAGAS**: Que el coder escriba los tests después de implementar (loop Coder → Tester → Coder, observado en sesión 137a).
-**HAZ**: Que el spec-writer (en F1) cree los tests con assertions reales basadas en `test_scenarios`. El coder solo implementa el código de producción para hacerlos pasar.
+### Trampa 6: Exceso de actualizaciones de TODOs con `todowrite`
+**NO HAGAS**: Llamar a `todowrite` para actualizar el estado del arnés tras cada pequeño cambio o fase.
+**HAZ**: Inicializar la lista al inicio, marcar `in_progress` al arrancar una fase, y marcar los TODOs completados en bloque al final.
 
-### Trampa 7: 5+ llamadas a `todowrite` durante la sesión
-**NO HAGAS**: Actualizar la lista de TODOs cada vez que cambias de fase (observado 5 veces en sesión 137a).
-**HAZ**: Crear la lista al inicio. Marcar `in_progress` solo cuando arrancas la fase. Marcar `completed` **en bloque** al final.
+### Trampa 7: Cargar skills duplicadas en subagentes
+**NO HAGAS**: Cargar skills generales (como `sdd-methodology`) de manera redundante en subagentes especializados (como `@sdd-deployer` o `@sdd-tester`) que ya la tienen incorporada en su prompt base.
+**HAZ**: Limitar la carga de skills estrictamente a tareas que requieran sus plantillas específicas.
 
-### Trampa 8: `lint: false` en el orquestador
-**NO HAGAS**: Dejar que el tester descubra imports no usados en tests.
-**HAZ**: El self-audit del coder (F2) y el auto-lint gate de `sdd_set_phase("F3_VERIFICATION")` ya lo previenen. El orquestador debe **reportar el `lintWarning`** al usuario antes de delegar al tester.
+### Trampa 8: Invocar Playwright en modo Console
+**NO HAGAS**: Abrir navegadores o tomar snapshots si `verificationMode` es `"console"`.
+**HAZ**: Confiar plenamente en Vitest/Pytest y curls rápidos desde la terminal.
 
-### Trampa 9: Cargar skills duplicadas
-**NO HAGAS**: Cargar skills de forma genérica en subagentes si su contenido ya está integrado en su prompt de identidad (ej. cargar `sdd-methodology` en `@sdd-deployer` o `@sdd-tester`). Esto duplica los tokens de input consumidos.
-**HAZ**: Limitar la carga de skills a los casos proactivos indicados o cuando se requieran plantillas/recursos específicos de la skill (ej. `sdd-quickstart` en `@sdd-spec-writer`).
+### Trampa 9: Orquestador usurpador (Ruptura de Abstracción)
+**NO HAGAS**: Editar código de producción o escribir/ejecutar tests directamente desde el orquestador si un subagente falla o se queda sin pasos.
+**HAZ**: Re-invocar al subagente experto (`sdd-coder` o `sdd-tester`) mediante la herramienta `task` pasándole el `task_id` original para que continúe limpiamente.
 
-### Trampa 10: Playwright en modo Console
-**NO HAGAS**: Invocar herramientas de Playwright (`playwright_browser_navigate`, `playwright_browser_snapshot`, etc.) si `verificationMode` está configurado en `"console"`. Esto consume tiempo y reasoning innecesarios.
-**HAZ**: En modo `console`, confía en pruebas unitarias/integración (Vitest) y verificaciones directas con curls/logs. No abras navegadores.
-
-### Trampa 11: Orquestador usurpador (Ruptura de Abstracción)
-**NO HAGAS**: Permitir que el Orquestador principal (`sdd-orchestrator`) tome el rol de escribir el código de producción o escribir/ejecutar tests directamente si un subagent (ej. `@sdd-coder`) falla o alcanza el límite de pasos ("Maximum Steps Reached"). Esto ensucia la ventana de contexto principal de la sesión.
-**HAZ**: Re-invoca al mismo subagente usando la herramienta `task`, pasando el `task_id` original del subagente interrumpido e instruyéndole: "Te quedaste sin pasos. Continúa y finaliza los archivos pendientes".
-
-### Trampa 12: Obsesión por alineación de consola (Pixel-Peeping)
-**NO HAGAS**: Gastar múltiples iteraciones o miles de tokens en el razonamiento de `@sdd-coder` tratando de lograr una alineación perfecta de columnas con espacios exactos en salidas CLI o tablas ASCII.
-**HAZ**: Usa funciones estándar de formateo de strings de tu lenguaje (como `ljust()`, `rjust()` o `center()` en Python; o formateadores sencillos en JS/TS) para lograr una presentación razonable de forma inmediata y avanzar directamente a la creación de pruebas.
-
-### Trampa 13: Omitir la disposición espacial y propuesta de Layout en F1
-**NO HAGAS**: Redactar el contrato en F1 listando únicamente archivos de forma abstracta sin definir o validar la geometría estructural y distribución de la UI (ej. si se requieren Sidebars locales de navegación vs pestañas horizontales planas), asumiendo anchos angostos y estáticos (como `max-w-3xl`) o rompiendo el soporte de modo oscuro con colores absolutos (`bg-white`).
-**HAZ**: El spec-writer debe proponer proactivamente en F1 un bosquejo textual o diagrama ASCII de la interfaz y validar con el usuario un layout responsivo amplio (`max-w-6xl` o superior). Además, el coder debe implementar soporte semántico dinámico de temas de entrada (sin colores duros) y sincronizar colores SVG/gráficos dinámicamente con el tema actual.
-
-### Trampa 14: Guardar archivos de tests que contienen JSX con extensión `.ts` en vez de `.tsx`
-**NO HAGAS**: Usar la extensión `.ts` para archivos de tests que mockean iconos de lucide o renderizan primitivas de HTML o JSX (esbuild/Vitest fallarán en la compilación con errores como `Expected ">" but found "data"`).
-**HAZ**: Toda suite de pruebas unitarias o de integración que monte componentes o contenga JSX debe grabarse con la extensión `.tsx` obligatoriamente.
-
-### Trampa 15: Selectores de Testing Library ambiguos para campos comunes
-**NO HAGAS**: Usar queries amplias y con insensibilidad a mayúsculas como `screen.getByLabelText(/password/i)` si hay botones como "Show password" con `aria-label` que repiten la palabra clave. Esto lanzará un error de "Found multiple elements".
-**HAZ**: Usa selectores de coincidencia exacta como `screen.getByLabelText(/^Password$/)` o busca mediante `screen.getByPlaceholderText(...)` para aislar de forma unívoca el input deseado.
-
-### Trampa 16: Probar la ausencia de elementos ocultos por CSS con `not.toBeInTheDocument()`
-**NO HAGAS**: Tratar de validar que un menú, etiqueta de barra lateral colapsada o modal ya no es visible utilizando `expect(queryByText("...")).not.toBeInTheDocument()`. Al ocultar layouts mediante clases CSS de ancho cero (`w-0`), opacidad (`opacity-0`) o display (`hidden`), los elementos siguen existiendo físicamente en el DOM de pruebas.
-**HAZ**: Verifica las clases CSS de visibilidad directamente (ej. `expect(sidebarEl.className).toContain("w-16")`) o usa `.not.toBeVisible()` de `@testing-library/jest-dom`.
-
-### Trampa 17: Mocks estáticos para toggles y hooks con estado
-**NO HAGAS**: Mockear hooks que controlan transiciones (como `useTheme` de `next-themes`) con retornos fijos y estáticos, ej. `vi.mock('next-themes', () => ({ useTheme: () => ({ theme: 'light', setTheme: vi.fn() }) }))`. El segundo clic en el toggle intentará pasar de 'light' a 'dark' pero fallará porque el estado simulado sigue en 'light' (llamando a setTheme('dark') por segunda vez).
-**HAZ**: Define variables mutables a nivel de archivo dentro de la suite de mocks y usa getters en la definición del mock para reflejar los cambios en caliente.
-
-### Trampa 18: Fallos en resolución de `@import "shadcn/tailwind.css"` en Tailwind v4 con Next.js 16/Shadcn
-**NO HAGAS**: Importar `@import "shadcn/tailwind.css"` en `globals.css` sin comprobar si el paquete npm `shadcn` está instalado en la máquina, provocando fallos fatales de compilación durante el comando `next build`.
-**HAZ**: El coder siempre debe instalar explícitamente el paquete base ejecutable y estilizado `npm install shadcn` en proyectos Next + Tailwind v4.
-
-### Trampa 19: Bucle infinito y parpadeo de pantalla (Flicker) tras el inicio de sesión
-**NO HAGAS**: Usar redirecciones cruzadas en `useEffect` con `router.push()` tanto en el formulario de login como en la propia página de login, o renderizar spinners por defecto antes de verificar la sesión en el cliente, causando que el router encadene múltiples repeticiones de renderizado y la pantalla parpadee.
-**HAZ**: Usa `router.replace()` para evitar ensuciar el historial. Proporciona siempre una bandera de montaje (`mounted === true`) y retorna `null` para evitar desajustes de hidratación (hydration mismatch). Protege las redirecciones del login mediante una referencia `useRef(false)` para controlar que no se solapen redirecciones de estado concurrentes de React.
+### Trampa 10: Obsesión por alineación exacta en consola (Pixel-Peeping)
+**NO HAGAS**: Consumir iteraciones intentando alinear espacios exactos en salidas CLI o tablas ASCII.
+**HAZ**: Usar funciones estándar de formateo de strings de tu lenguaje (`ljust()`, `rjust()`) y priorizar la lógica de negocio y las pruebas.
 
 ---
 

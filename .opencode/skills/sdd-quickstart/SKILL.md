@@ -160,6 +160,7 @@ Copia y adapta los IDs y descripciones que apliquen. Borra los que no apliquen.
 - **NO escribas más de 5-6 `test_scenarios`** para modo `console`. Más de eso no acelera la entrega, solo retrasa F2.
 - **NO incluyas escenarios `visual` o `e2e` si `verificationMode` es `console`.** El tester los rechazará.
 - **NO omitas la disposición espacial y propuesta de Layout**: El spec-writer DEBE proponer un bosquejo textual o diagrama ASCII de la disposición espacial de la UI en F1 (ej. layouts con sidebar lateral para configuración o paneles complejos en lugar de simples pestañas tradicionales planas) y acordar anchos de pantalla generosos (`max-w-6xl` o superior, evitando el limitante `max-w-3xl`) con el usuario antes de transicionar a F2. Esto previene reestructuraciones estéticas costosas y asegura entregas de alta gama a la primera.
+- **NO omitas la página raíz (`src/app/page.tsx`) en el mapeo de archivos afectados**: El spec-writer DEBE asegurar que `src/app/page.tsx` quede registrado explícitamente y que el contrato aclare si la ruta raíz `/` servirá el contenido principal de la aplicación, o si simplemente ejecutará una redirección limpia (`redirect("/dashboard")`) hacia el panel principal. Esto evita que el Coder conserve el placeholder por defecto de bootstrap y cause inconsistencias visuales o de navegación.
 
 ---
 

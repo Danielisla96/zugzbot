@@ -10,7 +10,7 @@ const getRoot = (context: any) => {
 };
 
 export default tool({
-  description: "Obtiene de forma nativa y unificada el estado del ciclo SDD (.openspec/sdd_state.json) junto con un resumen de las categorías de memoria del cerebro (Brain). Evita llamadas lentas de consola y es multiplataforma.",
+  description: "Obtiene el estado unificado del ciclo SDD y un resumen de las categorías del Brain.",
   args: {},
   async execute(args, context) {
     const root = getRoot(context)

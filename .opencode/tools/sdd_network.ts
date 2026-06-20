@@ -39,7 +39,7 @@ const getPidFilePath = (root: string) => {
 
 // Tool: sdd_free_port
 export const free_port = tool({
-  description: "Busca y termina de manera forzada cualquier proceso que esté escuchando en un puerto específico",
+  description: "Libera un puerto específico de forma forzada.",
   args: {
     port: tool.schema.number().describe("El puerto a liberar (ej. 3000 o 8000)")
   },
@@ -69,7 +69,7 @@ export const free_port = tool({
 
 // Tool: sdd_start_server
 export const start_server = tool({
-  description: "Inicia un servidor de desarrollo o producción en segundo plano y registra su PID para limpieza posterior",
+  description: "Inicia un servidor en segundo plano y registra su PID.",
   args: {
     command: tool.schema.string().describe("Comando para iniciar el servidor (ej. 'yarn dev' o 'npm run dev')"),
     port: tool.schema.number().optional().default(3000).describe("Puerto esperado del servidor (default: 3000)"),
@@ -132,7 +132,7 @@ export const start_server = tool({
 
 // Tool: sdd_stop_server
 export const stop_server = tool({
-  description: "Detiene el servidor en segundo plano usando el PID registrado",
+  description: "Detiene el servidor en segundo plano registrado.",
   args: {},
   async execute(args, context) {
     const root = getRoot(context)

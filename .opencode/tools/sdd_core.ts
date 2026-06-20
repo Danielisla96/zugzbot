@@ -248,7 +248,7 @@ const getPidFilePath = (root: string) => {
 
 // Tool: sdd_set_phase (file sdd_core.ts, export set_phase -> sdd_set_phase)
 export const set_phase = tool({
-  description: "Establece la fase activa del ciclo de desarrollo SDD (F0_DETECT, F1_CONTRACT, F2_IMPLEMENTATION, F3_VERIFICATION, F4_DEPLOYMENT). Si phase=F1_CONTRACT y se pasa spec_name, crea la carpeta del spec atómicamente y devuelve la ruta absoluta. Si phase=F3_VERIFICATION, ejecuta auto-lint (no bloqueante, solo informativo) y aborta si hay errores de lint.",
+  description: "Establece la fase activa del ciclo de desarrollo SDD.",
   args: {
     phase: tool.schema.enum(["F0_DETECT", "F1_CONTRACT", "F2_IMPLEMENTATION", "F3_VERIFICATION", "F4_DEPLOYMENT"]).describe("La fase a establecer"),
     activeContract: tool.schema.string().optional().describe("La ruta o nombre del archivo de contrato JSON activo (.openspec/specs/XXXX_TIMESTAMP_NAME/contract.json)"),
@@ -431,7 +431,7 @@ export const set_phase = tool({
 
 // Tool: sdd_get_state (file sdd_core.ts, export get_state -> sdd_get_state)
 export const get_state = tool({
-  description: "Obtiene el estado de desarrollo actual (fase activa, contrato seleccionado, stack validado)",
+  description: "Obtiene el estado de desarrollo actual.",
   args: {},
   async execute(args, context) {
     const filePath = getStateFilePath(context)
@@ -442,7 +442,7 @@ export const get_state = tool({
 
 // Tool: sdd_get_initial_session_data
 export const get_initial_session_data = tool({
-  description: "Obtiene atómicamente todos los datos de inicio de sesión: el estado actual del arnés, las memorias históricas clave del Brain ('learnings', 'design', 'routing'), y la lista curada de recomendaciones de diseño de Oh My Design. Reemplaza las llamadas secuenciales a sdd_get_state, brain_read_memory y sdd_list_design_recommendations.",
+  description: "Obtiene de forma atómica el estado actual, memorias del Brain y recomendaciones Oh My Design.",
   args: {},
   async execute(args, context) {
     const root = getRoot(context)
@@ -498,7 +498,7 @@ export const get_initial_session_data = tool({
 
 // Tool: sdd_save_active_brief
 export const save_active_brief = tool({
-  description: "Guarda un resumen breve y estructurado del spec o contrato activo en .openspec/active-brief.md para que sirva de anclaje de contexto de sistema (System State Anchoring) para el subagente sdd-coder o sdd-tester.",
+  description: "Guarda un resumen del spec activo en .openspec/active-brief.md como anclaje de contexto.",
   args: {
     brief: tool.schema.string().describe("Contenido en formato Markdown con el resumen del spec activo, componentes, diseño y dependencias.")
   },
@@ -558,7 +558,7 @@ export const save_active_brief = tool({
 
 // Tool: sdd_create_spec_folder (file sdd_core.ts, export create_spec_folder -> sdd_create_spec_folder)
 export const create_spec_folder = tool({
-  description: "Crea una nueva carpeta ordenada para la especificación del cambio (formato: yyyy-mm-dd__hh-mm-ss_nombre)",
+  description: "Crea una nueva carpeta ordenada para la especificación del cambio.",
   args: {
     name: tool.schema.string().describe("Nombre del cambio en minúsculas y separado por guiones (ej. sumar-endpoint)")
   },
@@ -593,7 +593,7 @@ export const create_spec_folder = tool({
 
 // Tool: sdd_validate_contract
 export const validate_contract = tool({
-  description: "Valida de forma estricta el archivo contract.json contra el contract-schema.json oficial para detectar errores de tipos, alucinaciones o campos faltantes antes de avanzar.",
+  description: "Valida contract.json contra el contract-schema.json oficial.",
   args: {
     contractPath: tool.schema.string().describe("Ruta relativa al contract.json (ej. '.openspec/specs/XXXX/contract.json')")
   },

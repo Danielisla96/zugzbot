@@ -75,7 +75,7 @@ const writeBrainFile = (filePath: string, title: string, sections: Record<string
 }
 
 export const save_memory = tool({
-  description: "Guarda un aprendizaje, decisión de diseño, ruta concreta, resolución de error o memoria del proyecto en el archivo .openspec/brain.md. Es acumulativo y añade una marca de tiempo.",
+  description: "Guarda una memoria o aprendizaje clave en .openspec/brain.md de forma acumulativa.",
   args: {
     category: tool.schema.string().describe("Categoría o sección donde clasificar la memoria (ej: 'design', 'learnings', 'routing', 'errors')"),
     content: tool.schema.string().describe("El contenido o aprendizaje exacto que se desea guardar. Se recomienda ser conciso y claro.")
@@ -115,7 +115,7 @@ export const save_memory = tool({
 })
 
 export const read_memory = tool({
-  description: "Recupera la memoria y los aprendizajes del proyecto del archivo .openspec/brain.md. Si se especifica una categoría, solo lee esa sección para optimizar tokens y contexto. Si no se especifica, lista las categorías disponibles.",
+  description: "Recupera la memoria y los aprendizajes del proyecto de .openspec/brain.md.",
   args: {
     category: tool.schema.string().optional().describe("La categoría específica a leer (ej: 'design', 'learnings', 'routing', 'errors'). Si no se provee, se listarán las categorías disponibles.")
   },

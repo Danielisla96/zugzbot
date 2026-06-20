@@ -63,6 +63,13 @@ ENV HOSTNAME="0.0.0.0"
 CMD ["node", "server.js"]
 ```
 
+#### 🛠️ **Manejo de Conflictos de Dependencias y Sincronización de Lockfile**
+En proyectos donde las dependencias cambian con frecuencia por la adición automática de componentes de Shadcn, es muy común que el comando estricto `npm ci --frozen-lockfile` falle dentro de Docker con errores de desincronización de lockfile (ej: `Invalid: lock file's picomatch... does not satisfy`).
+
+Para solucionar esto de manera robusta:
+1. **Solución Local Primaria**: El Coder debe añadir de manera explícita la dependencia par conflictiva en su `package.json` (ej: `"picomatch": "^4.0.4"`) y ejecutar `npm install` localmente para regenerar y sincronizar un `package-lock.json` limpio antes de intentar compilar el contenedor.
+2. **Estrategia Fallback en Dockerfile**: Si la sincronización del lockfile sigue presentando conflictos intermitentes e inestabilidad insalvable, el Deployer tiene autorización para modificar el paso de instalación del Dockerfile de un estricto `npm ci` a un dinámico `npm install --no-audit --no-fund` para permitir que el motor de resolución de Node resuelva las dependencias pares de forma adaptativa.
+
 #### **.dockerignore**
 ```ignore
 node_modules

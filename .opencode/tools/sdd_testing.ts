@@ -71,7 +71,7 @@ const parseSemanticErrors = (rawOutput: string, type: "eslint" | "tsc"): any[] =
 
 // Tool: sdd_quick_lint
 export const quick_lint = tool({
-  description: "Ejecuta el linter del proyecto (eslint) restringido a src/. Devuelve exit code y warnings. Usado como gate automático antes de transicionar a F3.",
+  description: "Ejecuta el linter del proyecto (eslint) restringido a src/.",
   args: {},
   async execute(args, context) {
     const root = getRoot(context)
@@ -140,7 +140,7 @@ export const quick_lint = tool({
 
 // Tool: sdd_shift_left_verify
 export const shift_left_verify = tool({
-  description: "Ejecuta validaciones estáticas Shift-Left completas en el proyecto: ejecuta el compilador de TypeScript (tsc) y el linter (eslint) de manera combinada. Limpia y parsea semánticamente los stack traces y logs de error crudos, devolviendo un JSON limpio y estructurado de errores que el LLM puede digerir y solucionar de inmediato sin perder atención.",
+  description: "Ejecuta validaciones estáticas Shift-Left completas (tsc + eslint) combinadas.",
   args: {},
   async execute(args, context) {
     const root = getRoot(context)
@@ -323,7 +323,7 @@ export const shift_left_verify = tool({
 
 // Tool: sdd_generate_tests
 export const generate_tests = tool({
-  description: "Autogenera plantillas de pruebas unitarias/integración en el directorio corporativo de pruebas a partir de los escenarios de prueba descritos en el contrato activo de sdd_state.json. No pisa archivos de pruebas existentes.",
+  description: "Autogenera plantillas de pruebas a partir de los escenarios del contrato activo.",
   args: {},
   async execute(args, context) {
     const root = getRoot(context)
@@ -442,7 +442,7 @@ export const generate_tests = tool({
 
 // Tool: sdd_save_playwright_artifacts
 export const save_playwright_artifacts = tool({
-  description: "Promueve y archiva los artefactos de captura visual/videos (.openspec/.playwright/) generados por Playwright a la carpeta del spec/contrato activo de forma ordenada, evitando ensuciar la raíz.",
+  description: "Promueve y archiva los artefactos de Playwright a la carpeta del contrato activo.",
   args: {
     callId: tool.schema.string().optional().describe("ID de llamada de Playwright MCP específica. Si no se pasa, toma la última ejecución de forma automática."),
     move: tool.schema.boolean().default(false).describe("Si true, mueve los archivos en lugar de copiarlos.")

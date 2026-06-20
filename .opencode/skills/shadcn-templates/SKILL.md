@@ -81,6 +81,9 @@ Utiliza las plantillas y bloques existentes de Shadcn como el estándar absoluto
 
 Busca layouts de dashboards o formularios complejos en el registro mediante el MCP `shadcn` antes de escribir cualquier código personalizado. Una vez agregado el bloque, distribuye y adapta sus elementos con el estado y la lógica de tu aplicación. Te motivamos a explorar todo el ecosistema de bloques pre-creados por Shadcn para armar una UI robusta y moderna.
 
+**REGLA CRÍTICA DE RUTAS DUPLICADAS POR SHADCN CLI**:
+Al agregar un bloque interactivo complejo (como `dashboard-01`), el CLI de Shadcn puede inyectar automáticamente archivos en directorios fijos (como `src/app/dashboard/page.tsx`). El Coder **debe** verificar inmediatamente si existe una colisión con la estructura de rutas establecida por el contrato (`contract.json`) —por ejemplo, si el contrato establece un Route Group `src/app/(dashboard)/page.tsx` que sirve en la raíz `/`—. Si ocurre esto, el Coder tiene la obligación de **borrar, mover o refactorizar de inmediato el archivo inyectado automáticamente** para eliminar la duplicidad de rutas, evitando así bucles infinitos de redirección o errores fatales de compilación del router de Next.js.
+
 ### 3.2 Form Layouts (FieldGroup + Field)
 Para estructurar campos de formularios, no uses `div`s arbitrarios con clases de espaciado complejas. Usa las composiciones semánticas oficiales de Shadcn:
 ```tsx
@@ -109,25 +112,19 @@ Para estructurar campos de formularios, no uses `div`s arbitrarios con clases de
 ### 3.4 Sin Placeholders en Producción
 Los datos dummy y placeholders deben reemplazarse inmediatamente por estados y hooks reales en el frontend que llamen a las APIs del backend (ej. estados de carga, manejo de errores de llamada, y datos dinámicos).
 
-### 3.5 Estética de Diseño Premium y Layouts (OBLIGATORIO)
-Queda **estrictamente prohibido** generar interfaces visualmente planas, vacías o que parezcan un "mínimo producto viable" básico (por ejemplo, una sola caja minimalista en el centro de un fondo blanco plano con un botón gris). 
-
-El diseño debe ser profesional y generar impacto visual instantáneo. Sigue estas directrices:
-- **Estructura de Layout Completa**: Toda herramienta, calculadora o pantalla debe estar contenida en un layout profesional. Usa barras de navegación superiores (`Header`), paneles laterales colapsables (`Sidebar`), menús de usuario con avatares, y una barra de estado o pie de página.
-- **Grids de KPIs y Métricas**: Añade tarjetas estadísticas en la parte superior de la página para resumir datos clave (ej. número de cálculos realizados, tiempo de respuesta promedio, tasa de éxito) utilizando iconos, números destacados y pequeños indicadores porcentuales.
-- **Gráficos e Historiales**: Si hay tablas o historiales, hazlos interactivos. Usa bordes redondeados (`rounded-xl`), sombras suaves, efectos de hover en las filas y, de ser posible, integra gráficos modernos (ej. utilizando `@/components/ui/chart` o Recharts) para representar tendencias.
-- **Colores Semánticos y Gradientes**: Utiliza gradientes sutiles y la paleta de colores HSL/OKLCH del tema en lugar de colores puros. Asegúrate de que el botón de cambiar tema (Modo Claro/Oscuro) esté visible en la barra de navegación y funcione de manera impecable.
-- **Estados Dinámicos y Micro-animaciones**: Añade pequeños efectos de transición y hover (`transition-all duration-200`) en botones, inputs y tarjetas para que la interfaz se sienta "viva" y responda a las acciones del usuario.
+### 3.5 Reglas de Diseño y Estándares de Calidad (Consolidadas)
+* **Estándar Semántico**: Consulta y aplica estrictamente la **Sección 5 de `.opencode/rules/sdd-global.md`** para la prevención de colores fijos (hardcoded light/dark), sincronización de temas en gráficos Recharts, prevención de solapamientos del sidebar (Sidebar Overlap) y la regla de no anidamiento en triggers de Radix.
+* **Componentes de Calidad**: Toda interfaz debe estar pulida con skeletons de carga fluidos, empty states agradables con iconos ilustrativos, y tooltips descriptivos para cualquier botón basado únicamente en iconos.
 
 ---
 
 ## 4. Flujo de Trabajo en SDD
 
 ### Fase F1 (Spec-Driven Contract)
-El `@sdd-spec-writer` utiliza el MCP `shadcn` (`mcp__shadcn__search_items`, `mcp__shadcn__get_item`) para documentar en el contrato (`contract.json`) qué componentes y bloques se usarán para la UI y verificar sus APIs/propiedades expuestas.
+El `@sdd-spec-writer` utiliza de manera proactiva el MCP `shadcn` (`shadcn_search_items_in_registries`, `shadcn_list_items_in_registries`) para encontrar bloques. **Es obligatorio** usar la herramienta `shadcn_view_items_in_registries` para inspeccionar el contenido completo, la estructura de archivos y las dependencias del bloque seleccionado antes de cerrar el contrato. Esto le permite al Spec-Writer mapear con exactitud los archivos que se generarán en `files_affected` y documentar explícitamente cualquier potencial colisión de ruteo en el `contract.json`.
 
 ### Fase F2 (Implementation)
-El `@sdd-coder` utiliza el template base `nextjs-shadcn` y ejecuta `npx shadcn@latest add` para instalar los componentes requeridos para la interfaz. Implementa las vistas componiendo dichos bloques y vinculando el estado con el backend.
+El `@sdd-coder` utiliza el template base `nextjs-shadcn`. Si el contrato no detalla todos los sub-componentes o el Coder necesita verificar el comportamiento de un bloque antes de acoplarlo con el backend, debe ejecutar `shadcn_get_item_examples_from_registries` para ver ejemplos funcionales del componente real. Tras ejecutar la instalación con `npx shadcn@latest add`, el Coder debe contrastar los archivos inyectados con el mapa del contrato y limpiar de inmediato cualquier archivo redundante (como una página de inicio duplicada) que no coincida con el router oficial.
 
 ### Fase F3 (Verification)
 El `@sdd-tester` ejecuta las pruebas según el modo de verificación especificado en el contrato (`settings.verificationMode`):

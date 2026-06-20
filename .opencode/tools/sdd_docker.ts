@@ -34,7 +34,7 @@ const getTargetDir = (root: string): string => {
 
 // Tool: sdd_clean_docker_environment
 export const clean_docker_environment = tool({
-  description: "Asegura que Docker esté abierto y realiza una limpieza total y agresiva: detiene y elimina TODOS los contenedores (activos o inactivos), remueve TODAS las imágenes, volúmenes y redes para garantizar un lienzo en blanco absoluto antes de desplegar.",
+  description: "Asegura que Docker esté abierto y realiza una limpieza total y agresiva.",
   args: {},
   async execute(args, context) {
     const results: Record<string, string> = {}
@@ -114,7 +114,7 @@ export const clean_docker_environment = tool({
 
 // Tool: sdd_generate_dockerfile
 export const generate_dockerfile = tool({
-  description: "Genera Dockerfile multi-stage, .dockerignore y docker-compose.yml optimizados a partir del stack del proyecto (nextjs|fastapi|agnostic). Detecta package manager desde package.json.",
+  description: "Genera Dockerfile, .dockerignore y docker-compose.yml optimizados para el stack.",
   args: {
     stack: tool.schema.enum(["nextjs", "fastapi", "agnostic"]).describe("Stack del proyecto"),
     port: tool.schema.number().default(3000).describe("Puerto de la aplicación"),
