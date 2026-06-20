@@ -5,14 +5,16 @@ Estas reglas son mandatorias para todos los agentes de la sesión (Orchestrator,
 ## 1. Sistema de Memoria Compartida (Brain)
 El proyecto utiliza un sistema de memoria centralizado en `.openspec/brain.md` gestionado por las herramientas `brain_save_memory` y `brain_read_memory`.
 
-- **Orquestador (F0/F1 y Finalización)**:
-  - Al iniciar, debe invocar `brain_read_memory` para extraer aprendizajes de diseño, ruteo o errores históricos.
-  - Al completar una sesión, debe sintetizar las lecciones valiosas aprendidas y registrarlas mediante `brain_save_memory`.
+- **Orquestador (OBLIGATORIO en cada sesión)**:
+  - **F0**: Invocar `brain_read_memory({ category: "learnings" })` y `brain_read_memory({ category: "errors" })` para extraer errores históricos conocidos y prevenir repetirlos.
+  - **F2 inicio (antes de delegar al coder)**: Invocar `brain_read_memory({ category: "design" })` para inyectar lecciones de diseño previas en el brief.
+  - **F3 inicio (antes de delegar al tester)**: Invocar `brain_read_memory({ category: "errors" })` para inyectar regresiones en el brief.
+  - **Finalización (siempre, sin excepción)**: Sintetizar 1-3 lecciones valiosas de la sesión y registrarlas con `brain_save_memory` en la categoría adecuada (`learnings`, `errors`, `design`, `routing`).
 - **Coder (F2)**:
-  - Antes de empezar a codificar, debe consultar la categoría `design` y `learnings` en el Brain.
+  - Antes de empezar a codificar, debe consultar la categoría `design` y `learnings` en el Brain. El orquestador inyecta estos datos en `.openspec/active-brief.md` antes de delegar.
   - Si soluciona un bug complejo, debe reportarlo registrándolo en la categoría `errors` o `learnings`.
 - **Tester (F3)**:
-  - Debe consultar la categoría `errors` para asegurar que los nuevos casos de prueba cubran regresiones históricas.
+  - Debe consultar la categoría `errors` para asegurar que los nuevos casos de prueba cubran regresiones históricas. El orquestador inyecta estos datos en `.openspec/active-brief.md` antes de delegar.
 
 ## 2. Modo Autopiloto (/loop)
 Cuando el estado del sistema tiene `loopMode === true` (activado mediante el comando `/loop` o llamando a `sdd_set_phase`):
@@ -80,3 +82,4 @@ Para evitar que los subagentes se queden sin pasos (step/token exhaustion) o acu
 - **Regla de Micro-Specs:** Si una funcionalidad requiere implementar múltiples vistas complejas o formularios densos, el Spec-Writer **debe** dividirla obligatoriamente en specs incrementales secuenciales de máximo 3 componentes principales por contrato. No intentes implementar todo un panel de administración en una sola iteración de contrato.
 - **Compilación Atómica:** El Coder **debe** implementar y compilar exitosamente cada archivo de forma individual antes de escribir el siguiente. Está estrictamente prohibido escribir todos los componentes de golpe sin ejecutar validaciones intermedias de TypeScript (`tsc --noEmit`).
 - **Verificación Temprana de Dependencias:** El Coder **debe** comprobar en el primer paso de F2 que dependencias de pruebas críticas como `@testing-library/dom` estén correctamente instaladas en proyectos React 19 para evitar fallos intermitentes de tipado en Vitest.
+- **PROHIBICIÓN ESTRICTA DE `todowrite` en Coder/Tester/Deployer/Spec-Writer:** Estas herramientas **no deben invocar** `todowrite` en ningún momento de su sesión. El seguimiento de fases está centralizado en el Orquestador. Inyectar TODOs en subagentes satura su contexto y agota pasos de LLM innecesariamente. El Orquestador solo debe usar `todowrite` **2 veces máximo por sesión**: una al inicio (lista de fases) y otra al final (marcar todas completadas).

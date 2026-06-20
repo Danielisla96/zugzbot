@@ -150,6 +150,59 @@ Copia y adapta los IDs y descripciones que apliquen. Borra los que no apliquen.
 
 ---
 
+## 2.5. Plantilla MÍNIMA viable (Fast-Track Dashboard)
+
+Para un dashboard o panel estándar, usa esta plantilla **reducida** de **~80 líneas** en lugar de la completa. Omite `external_api_verification`, `database` y detalles innecesarios.
+
+```json
+{
+  "$schema": "../../../.opencode/contract-schema.json",
+  "contractName": "{{NOMBRE_PASCAL}}",
+  "description": "{{UNA_LINEA}}",
+  "category": "frontend",
+  "settings": {
+    "verificationMode": "console",
+    "language": "TypeScript",
+    "testFramework": "Vitest"
+  },
+  "stack": {
+    "core": ["Next.js 16", "Shadcn UI", "Tailwind CSS v4"],
+    "databases": []
+  },
+  "files_affected": [
+    "src/app/page.tsx",
+    "src/app/layout.tsx",
+    "{{ARCHIVOS_RELEVANTES}}"
+  ],
+  "frontend": {
+    "components": [
+      { "name": "{{COMP_1}}", "path": "@/components/blocks/{{COMP_1_KEBAB}}" },
+      { "name": "{{COMP_2}}", "path": "@/components/blocks/{{COMP_2_KEBAB}}" }
+    ]
+  },
+  "test_scenarios": [
+    {
+      "id": "TS-01",
+      "name": "{{NOMBRE_TEST}}",
+      "type": "unit",
+      "feature_ref": "{{COMP_1}}",
+      "given": "{{GIVEN}}",
+      "when": "{{WHEN}}",
+      "then": "{{THEN_OBSERVABLE}}"
+    }
+  ],
+  "sdd_hints": {
+    "bootstrap_template": "nextjs-shadcn",
+    "fast_track": true,
+    "blocks_to_install": ["@shadcn/dashboard-01"]
+  }
+}
+```
+
+**Tiempo objetivo F1 con Fast-Track**: 30-45 segundos.
+
+---
+
 ## 3. Anti-patrones a evitar en el contrato
 
 - **Inconsistencia de nombres de componentes (CRÍTICO)**: Los nombres declarados en `frontend.components[].name` del contrato son **un compromiso inmutable**. El spec-writer DEBE usar exactamente estos mismos nombres al crear las pruebas unitarias/integración, y el coder DEBE usarlos para crear los componentes de producción. **PROHIBIDO renombrar o cambiar de PascalCase a kebab-case en archivos de test**. Si el contrato dice `CalculatorPanel`, el archivo de test se llamará `CalculatorPanel.test.tsx` y no se debe cambiar a `CalculatorPage.test.tsx` (esto causó fallas de compilación con imports rotos en la sesión 1374).

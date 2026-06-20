@@ -1,9 +1,15 @@
 ---
 name: sdd-methodology
-description: Guía rápida del flujo SDD (Spec-Driven Development) con atajos y trampas conocidas. Cargar al inicio de CUALQUIER sesión SDD. Esta skill reemplaza la guía genérica anterior y contiene los patrones optimizados descubiertos tras analizar la sesión 137a (Sumadora Nike).
+description: Guía DETALLADA del flujo SDD con trampas conocidas. SOLO para subagentes (spec-writer, coder, tester, deployer). El orquestador debe cargar `sdd-foundation-overview` en su lugar.
 license: MIT
 compatibility: opencode
 ---
+
+## A quién está dirigida esta habilidad
+
+Esta skill es la versión **detallada y profunda** del flujo SDD. Está optimizada para subagentes que necesitan el contexto completo de las 5 fases, las trampas conocidas y los atajos avanzados.
+
+**El orquestador NO debe cargar esta skill.** Carga `sdd-foundation-overview` (~50 líneas) en su lugar.
 
 ## Qué hace esta habilidad
 

@@ -409,6 +409,28 @@ export const set_phase = tool({
       } catch (e) {
         // ignore
       }
+
+      // Clean up stale screenshots from previous sessions (.openspec/ts-*.png)
+      try {
+        const openspecDir = path.resolve(root, ".openspec")
+        if (fs.existsSync(openspecDir)) {
+          const entries = fs.readdirSync(openspecDir)
+          let cleanedCount = 0
+          for (const entry of entries) {
+            if (/^ts-.*\.(png|jpe?g|webp)$/i.test(entry)) {
+              try {
+                fs.unlinkSync(path.join(openspecDir, entry))
+                cleanedCount++
+              } catch (e) { /* ignore individual file errors */ }
+            }
+          }
+          if (cleanedCount > 0) {
+            ;(currentState as any).cleanedScreenshots = cleanedCount
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
     }
 
     writeState(filePath, currentState)
@@ -448,7 +470,30 @@ export const get_initial_session_data = tool({
     const root = getRoot(context)
     const statePath = getStateFilePath(context)
     const currentState = readState(statePath)
-    
+
+    // Limpieza silenciosa de carpetas/screenshots transitorios al iniciar F0
+    let cleanedCount = 0
+    try {
+      const playwrightTmpDir = path.resolve(root, ".openspec/.playwright")
+      if (fs.existsSync(playwrightTmpDir)) {
+        fs.rmSync(playwrightTmpDir, { recursive: true, force: true })
+        cleanedCount++
+      }
+      const openspecDir = path.resolve(root, ".openspec")
+      if (fs.existsSync(openspecDir)) {
+        for (const entry of fs.readdirSync(openspecDir)) {
+          if (/^ts-.*\.(png|jpe?g|webp)$/i.test(entry)) {
+            try {
+              fs.unlinkSync(path.join(openspecDir, entry))
+              cleanedCount++
+            } catch (e) { /* ignore */ }
+          }
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
     // Read brain memory
     let brainMemory: any = { found: false }
     const brainFilePath = path.resolve(root, ".openspec/brain.md")
@@ -467,7 +512,7 @@ export const get_initial_session_data = tool({
             sections[currentHeader].push(line)
           }
         }
-        
+
         let prunedContent = ""
         for (const [header, bodyLines] of Object.entries(sections)) {
           const limit = 10
@@ -486,13 +531,18 @@ export const get_initial_session_data = tool({
     // Get design recommendations
     const recommendations = RECOMMENDED_BRANDS
 
-    return JSON.stringify({
+    const response: any = {
       status: "SUCCESS",
       state: currentState,
       brainMemory,
       designRecommendations: recommendations,
       note: "Inicialización completada. No es necesario que llames a sdd_get_state, brain_read_memory o sdd_list_design_recommendations por separado."
-    }, null, 2)
+    }
+    if (cleanedCount > 0) {
+      response.cleanedArtifacts = cleanedCount
+      response.note += ` Se limpiaron ${cleanedCount} artefactos transitorios (.playwright, screenshots).`
+    }
+    return JSON.stringify(response, null, 2)
   }
 })
 
@@ -511,6 +561,7 @@ export const save_active_brief = tool({
 
     // Attempt to read the active contract path from sdd_state.json and extract files_affected
     let filesAffected: string[] = []
+    let contract: any = null
     try {
       const statePath = path.resolve(openspecDir, "sdd_state.json")
       if (fs.existsSync(statePath)) {
@@ -518,7 +569,7 @@ export const save_active_brief = tool({
         if (state.activeContract) {
           const contractPath = path.resolve(root, state.activeContract)
           if (fs.existsSync(contractPath)) {
-            const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"))
+            contract = JSON.parse(fs.readFileSync(contractPath, "utf8"))
             if (contract && Array.isArray(contract.files_affected)) {
               filesAffected = contract.files_affected
             }
@@ -536,14 +587,90 @@ export const save_active_brief = tool({
       enrichedBrief += `\n\n## [CRITICAL] POLÍTICA DE ZERO-SEARCH Y PRUEBAS INCREMENTALES\n`
       enrichedBrief += `La lista de archivos exactos creados o modificados en este contrato es:\n`
       enrichedBrief += filesAffected.map(f => `- \`${f}\``).join("\n") + "\n\n"
-      
+
       enrichedBrief += `### CODER_CONTEXT (F2)\n`
       enrichedBrief += `- Debes editar, crear y leer EXCLUSIVAMENTE estos archivos de producción: ${filesAffected.map(f => `\`${f}\``).join(", ")}.\n`
-      enrichedBrief += `- PROHIBIDO utilizar glob o grep de manera exploratoria ciega.\n\n`
-      
+      enrichedBrief += `- PROHIBIDO utilizar glob o grep de manera exploratoria ciega.\n`
+      enrichedBrief += `- **Batch extremo**: escribe/edita TODOS los archivos en una sola respuesta antes de validar.\n\n`
+
       enrichedBrief += `### TESTER_CONTEXT (F3)\n`
-      enrichedBrief += `- Debes correr pruebas enfocándote SOLO en tests que verifiquen estos archivos.\n`
+      enrichedBrief += `- Archivos de test asociados: src/__tests__/<feature_ref>.test.tsx\n`
       enrichedBrief += `- Ejecuta el linter de forma dirigida: \`npx eslint ${filesAffected.join(" ")}\`.\n`
+      enrichedBrief += `- **NO explores** el código: todo lo que necesitas ya está inyectado en este brief.\n`
+    }
+
+    // Inyectar automáticamente Brain learnings + errors (regresiones)
+    try {
+      const brainPath = path.resolve(openspecDir, "brain.md")
+      if (fs.existsSync(brainPath)) {
+        const brainContent = fs.readFileSync(brainPath, "utf8") || ""
+        const sections: Record<string, string[]> = {}
+        let currentHeader = "general"
+        for (const line of brainContent.split(/\r?\n/)) {
+          if (line.startsWith("# ")) {
+            currentHeader = line.substring(2).trim().toLowerCase()
+            sections[currentHeader] = []
+          } else if (line.trim().length > 0) {
+            if (!sections[currentHeader]) sections[currentHeader] = []
+            sections[currentHeader].push(line)
+          }
+        }
+        const last = (cat: string, n: number) =>
+          (sections[cat] || []).slice(-n).join("\n")
+
+        const learnings = last("learnings", 5)
+        const errors = last("errors", 5)
+        const design = last("design", 3)
+
+        if (learnings || errors || design) {
+          enrichedBrief += `\n\n## [AUTO-INJECTED] Brain Memory (lecciones de sesiones previas)\n`
+          if (design) {
+            enrichedBrief += `\n### Design (aplicar en estilo):\n${design}\n`
+          }
+          if (learnings) {
+            enrichedBrief += `\n### Learnings (patrones validados):\n${learnings}\n`
+          }
+          if (errors) {
+            enrichedBrief += `\n### Errors / Regresiones (evitar repetir):\n${errors}\n`
+          }
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    // Inyectar mockPatterns estándar si el stack es Next.js con React
+    try {
+      const isNext = contract?.stack?.core?.some((c: string) => /next\.?js/i.test(c))
+      if (isNext) {
+        enrichedBrief += `\n\n## [AUTO-INJECTED] Mock Patterns (Vitest + Testing Library)\n`
+        enrichedBrief += `\`\`\`typescript\n`
+        enrichedBrief += `// Mock dinámico de lucide-react (cualquier icono)\n`
+        enrichedBrief += `vi.mock("lucide-react", () => new Proxy({}, {\n`
+        enrichedBrief += `  get: (_t, prop) => {\n`
+        enrichedBrief += `    const Icon = (props: any) => null;\n`
+        enrichedBrief += `    Icon.displayName = String(prop);\n`
+        enrichedBrief += `    return Icon;\n`
+        enrichedBrief += `  },\n`
+        enrichedBrief += `}));\n\n`
+        enrichedBrief += `// Mock reactivo de next-themes para ThemeToggle\n`
+        enrichedBrief += `let theme = "light";\n`
+        enrichedBrief += `vi.mock("next-themes", () => ({\n`
+        enrichedBrief += `  useTheme: () => ({\n`
+        enrichedBrief += `    get theme() { return theme; },\n`
+        enrichedBrief += `    setTheme: (t: string) => { theme = t; },\n`
+        enrichedBrief += `    get resolvedTheme() { return theme; },\n`
+        enrichedBrief += `  }),\n`
+        enrichedBrief += `}));\n\n`
+        enrichedBrief += `// Mock de next/navigation\n`
+        enrichedBrief += `vi.mock("next/navigation", () => ({\n`
+        enrichedBrief += `  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),\n`
+        enrichedBrief += `  usePathname: () => "/",\n`
+        enrichedBrief += `}));\n`
+        enrichedBrief += `\`\`\`\n`
+      }
+    } catch (e) {
+      // ignore
     }
 
     const briefPath = path.resolve(openspecDir, "active-brief.md")
@@ -551,7 +678,12 @@ export const save_active_brief = tool({
     return JSON.stringify({
       status: "SUCCESS",
       message: `Brief de contexto de sistema guardado exitosamente en .openspec/active-brief.md`,
-      filePath: briefPath
+      filePath: briefPath,
+      injectedSections: {
+        brainMemory: enrichedBrief.includes("Brain Memory"),
+        mockPatterns: enrichedBrief.includes("Mock Patterns"),
+        filesAffected: filesAffected.length
+      }
     }, null, 2)
   }
 })

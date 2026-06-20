@@ -402,26 +402,78 @@ export const generate_tests = tool({
           lines.push("")
         }
       } else {
-        lines.push('import { describe, it, expect } from "vitest";')
+        const componentImport = `@/components/blocks/${feature}`
+        lines.push('import { describe, it, expect, vi, beforeEach } from "vitest";')
+        
         if (hasReact) {
-          lines.push('import { render, screen } from "@testing-library/react";')
+          lines.push('import { render, screen, cleanup } from "@testing-library/react";')
           lines.push('import userEvent from "@testing-library/user-event";')
-          lines.push(`// import { ${feature} } from "@/components/blocks/${feature}";`)
+          lines.push('')
+          lines.push('// Mock lucide-react con Proxy (cualquier icono se mockea automáticamente)')
+          lines.push('vi.mock("lucide-react", () => new Proxy({}, {')
+          lines.push('  get: (_t, prop) => {')
+          lines.push('    const Icon = (props: any) => null;')
+          lines.push('    Icon.displayName = String(prop);')
+          lines.push('    return Icon;')
+          lines.push('  },')
+          lines.push('}));')
+          lines.push('')
+          lines.push(`import { ${feature} } from "${componentImport}";`)
         }
         lines.push("")
         lines.push(`describe("${feature} Tests (Contract Scenarios)", () => {`)
+        if (hasReact) {
+          lines.push('  afterEach(() => cleanup());')
+          lines.push('')
+        }
         
         for (const s of scenarios) {
           const tid = s.id || "TS-XX"
           const name = s.name || "Test case"
+          const isIntegration = s.type === "integration"
+          const thenText = (s.then || "").toLowerCase()
+          
           lines.push(`  // ${tid}: ${name}`)
           lines.push(`  // Given: ${s.given || ""}`)
           lines.push(`  // When: ${s.when || ""}`)
           lines.push(`  // Then: ${s.then || ""}`)
-          lines.push(`  it("${tid}: ${name}", async () => {`)
-          lines.push('    // TODO: Implement actual contract assertions')
-          lines.push('    expect(true).toBe(true);')
-          lines.push('  });')
+          
+          if (isIntegration && thenText.includes("dark")) {
+            lines.push(`  it("${tid}: ${name}", async () => {`)
+            lines.push(`    // Mock reactivo de next-themes para toggle de tema`)
+            lines.push(`    let theme = "light";`)
+            lines.push(`    vi.mock("next-themes", () => ({`)
+            lines.push(`      useTheme: () => ({ get theme() { return theme; }, setTheme: (t: string) => { theme = t; }, get resolvedTheme() { return theme; } }),`)
+            lines.push(`    }));`)
+            lines.push(`    document.documentElement.classList.add("light");`)
+            lines.push(`    render(<${feature} />);`)
+            lines.push(`    const button = screen.getByRole("button");`)
+            lines.push(`    await userEvent.click(button);`)
+            lines.push(`    expect(document.documentElement.classList.contains("dark")).toBe(true);`)
+            lines.push(`  });`)
+          } else if (thenText.includes("kpi") || thenText.includes("tarjeta") || thenText.includes("valor")) {
+            lines.push(`  it("${tid}: ${name}", () => {`)
+            lines.push(`    render(<${feature} />);`)
+            lines.push(`    expect(screen.getByText(/revenue/i)).toBeInTheDocument();`)
+            lines.push(`    expect(screen.getByText(/\\$/)).toBeInTheDocument();`)
+            lines.push(`  });`)
+          } else if (thenText.includes("sidebar") || thenText.includes("navega")) {
+            lines.push(`  it("${tid}: ${name}", () => {`)
+            lines.push(`    render(<${feature} />);`)
+            lines.push(`    expect(screen.getByText(/dashboard/i)).toBeInTheDocument();`)
+            lines.push(`    expect(screen.getByText(/analytics/i)).toBeInTheDocument();`)
+            lines.push(`  });`)
+          } else if (thenText.includes("svg") || thenText.includes("chart") || thenText.includes("recharts") || thenText.includes("gráfico") || thenText.includes("grafico")) {
+            lines.push(`  it("${tid}: ${name}", () => {`)
+            lines.push(`    const { container } = render(<${feature} />);`)
+            lines.push(`    expect(container.querySelector("svg")).toBeTruthy();`)
+            lines.push(`  });`)
+          } else {
+            lines.push(`  it("${tid}: ${name}", () => {`)
+            lines.push(`    render(<${feature} />);`)
+            lines.push(`    expect(screen.getByText(/${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').slice(0, 30)}/i)).toBeTruthy();`)
+            lines.push(`  });`)
+          }
           lines.push("")
         }
         lines.push("});")

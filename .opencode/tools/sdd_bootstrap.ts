@@ -132,11 +132,14 @@ const DEFAULT_PACKAGE_JSON = {
     "postcss": "^8.4.49",
     "eslint": "^9.16.0",
     "eslint-config-next": "^15.1.0",
+    "typescript-eslint": "^8.18.0",
     "vitest": "^2.1.8",
     "@vitejs/plugin-react": "^4.3.4",
-    "jsdom": "^25.0.1",
+    "happy-dom": "^15.11.7",
     "@testing-library/react": "^16.1.0",
-    "@testing-library/dom": "^10.4.0"
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/user-event": "^14.5.2"
   }
 }
 

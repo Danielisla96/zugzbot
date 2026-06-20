@@ -180,7 +180,7 @@
     },
     "external_api_verification": {
       "type": "object",
-      "description": "Resultados de la verificación de APIs externas (HeroUI, Next.js, etc.) realizada por el spec-writer con MCPs. Hace explícito qué se validó en F1.",
+      "description": "OPCIONAL. Solo incluir cuando se valida una API no trivial con un MCP externo (ej: API de HeroUI con props compuestos). NO duplicar props de lucide-react, recharts o shadcn — esas ya están documentadas en sus skills. Para un dashboard típico, omitir este campo completo.",
       "properties": {
         "verified_at": {
           "type": "string",
@@ -224,6 +224,15 @@
           "type": "string",
           "enum": ["nextjs-shadcn", "fastapi-sdd", "agnostic-fast"],
           "description": "Plantilla preferida para bootstrap. nextjs-shadcn para web Next, fastapi-sdd para Python, next-fast o agnostic-fast si es un script ligero de un solo archivo."
+        },
+        "blocks_to_install": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Bloques shadcn pre-hechos para instalar (ej: ['@shadcn/dashboard-01']). El coder los instala con npx shadcn@latest add."
+        },
+        "fast_track": {
+          "type": "boolean",
+          "description": "Si true, indica que el spec es fast-track y debe usar bloques pre-hechos en lugar de diseñar desde cero."
         }
       }
     }
