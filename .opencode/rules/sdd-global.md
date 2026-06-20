@@ -49,8 +49,19 @@ Cualquier desarrollo de interfaz de usuario (Dashboards, Landings, Formularios, 
   - **Tooltips:** Todo botón que contenga únicamente un icono de acción debe estar envuelto en un componente `Tooltip` con su descripción respectiva.
   - **Skeletons y Empty States:** Las vistas de carga deben contar con animaciones de `Skeleton` fluidas. Las listas o tablas vacías deben presentar un `Empty State` visual y explicativo agradable con iconos y un botón de acción alternativo, nunca una página o cuadro en blanco.
 
-## 6. Mockups Visuales y Validación Temprana de Layout (F0/F1)
+## 6. Estándar de Robustez en Autenticación, Ruteo y SSR (Next.js)
+Para evitar bucles de redirección ("redirect loops") y pantallas parpadeantes (flickers/blinking) tras iniciar sesión:
+- **Evitar Race Conditions en Redirecciones:** En el formulario de login, usa siempre `router.replace("/")` en lugar de `push` tras un login exitoso para evitar empujar estados duplicados al historial.
+- **Evitar useEffects Cruzados Activos:** Si usas un guard de redirección en `LoginPage` o similar para usuarios ya autenticados, utiliza un `useRef(false)` para controlar que la redirección asíncrona solo se dispare una vez y no se encadene con re-renderizados concurrentes de React.
+- **Evitar Flash de Carga SSR en Layouts:** Para layouts o guards protegidos, nunca asumas estados por defecto que pinten elementos cargando (spinners) durante el servidor. Comprueba si el componente está montado (`mounted === true`) antes de evaluar la sesión en el cliente y renderizar el contenido. Retorna `null` antes de montar para evitar desajustes de hidratación (hydration mismatch).
+
+## 7. Mockups Visuales y Validación Temprana de Layout (F0/F1)
 Para optimizar el diseño, evitar cambios de arquitectura estructurales a mitad del desarrollo (como rediseñar pestañas a layouts de sidebar lateral) y garantizar alineación inmediata con las expectativas del usuario:
 - **Propuesta de Layout Visual:** Durante la transición de F0 a F1, el `@sdd-spec-writer` **debe** proponer un mockup textual o diagrama de cajas ASCII detallando la distribución estructural de la pantalla (Layout general, barras laterales sticky, contenedores de contenido responsivos y anchos de pantalla recomendados, ej. `max-w-6xl` vs `w-full`).
 - **Ancho y Densidad Modernos:** Por defecto, los layouts complejos deben evitar contenedores angostos restrictivos como `max-w-3xl` para maximizar el aprovechamiento de pantallas de escritorio modernas mediante rejillas responsivas (`grid grid-cols-1 md:grid-cols-X gap-6`).
 - **Aprobación Temprana:** El orquestador presentará esta propuesta visual al usuario en la fase F1. Una vez aprobada la disposición espacial y la estructura de navegación local (ej: sidebar split vs horizontal tabs), el `@sdd-coder` la ejecutará exactamente como se acordó, previniendo loops redundantes de maquetación en fases tardías.
+
+## 8. Abstracción y Prohibición de Parchar Código en F3/Orquestador
+Para mantener la limpieza y disciplina en la ventana de contexto de la sesión:
+- **Orquestador No-Coder:** El orquestador principal (`sdd-orchestrator`) tiene estrictamente prohibido usar herramientas de edición (`edit` o `write`) para modificar código de producción o archivos de test.
+- **Rollback Disciplinado:** Si en la fase `F3_VERIFICATION` el linter o los tests reportan errores, el orquestador **debe** transicionar el estado a `F2_IMPLEMENTATION` mediante `sdd_core_set_phase` y re-invocar al subagente experto (`sdd-coder`) para que realice la corrección cleanly. No se permiten parches rápidos a mitad de fase de test.

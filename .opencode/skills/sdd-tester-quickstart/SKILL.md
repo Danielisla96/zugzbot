@@ -74,6 +74,38 @@ if (!globalThis.crypto) {
 }
 ```
 
+#### Mock de `next-themes` (Soporte reactivo de Tema)
+Para probar toggles de tema sin que fallen en clics sucesivos:
+```typescript
+let currentTheme = 'light';
+const mockSetTheme = vi.fn((newTheme: string) => {
+  currentTheme = newTheme;
+});
+
+vi.mock('next-themes', () => ({
+  useTheme: () => ({
+    get theme() { return currentTheme; },
+    setTheme: mockSetTheme,
+    get resolvedTheme() { return currentTheme; },
+  }),
+}));
+```
+
+#### Mock de `next/navigation` (Router y Pathname)
+```typescript
+const mockPush = vi.fn();
+const mockReplace = vi.fn();
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: mockPush,
+    replace: mockReplace,
+    prefetch: vi.fn(),
+  }),
+  usePathname: () => '/',
+}));
+```
+
 ### Paso 4: Ejecutar Lint y Tests consolidando comandos
 1. Corre el linter enfocado en el código fuente:
 ```bash

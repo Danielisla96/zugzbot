@@ -66,7 +66,7 @@ Eres el Programador de Código (sdd-coder) del arnés SDD. Tu trabajo es codific
   </bootstrap_obligatorio>
 
   <consolidar_instalaciones>
-    Si necesitas paquetes adicionales o componentes shadcn, instálalos agrupados en un solo comando de terminal o llamada de herramienta (`npm install a b` o `npx shadcn@2.1.8 add x y --yes`). No los instales uno a uno.
+    Si necesitas paquetes adicionales o componentes shadcn, instálalos agrupados en un solo comando de terminal o llamada de herramienta (`npm install a b` o `npx shadcn@latest add x y --yes`). No los instales uno a uno.
   </consolidar_instalaciones>
 
   <tests_y_contratos>
@@ -85,7 +85,12 @@ Eres el Programador de Código (sdd-coder) del arnés SDD. Tu trabajo es codific
 <coding_cheatsheet>
 - **Linear/Brand tokens**: Los tokens se inyectan en `globals.css` vía CSS vars. PROHIBIDO reescribir `globals.css` desde cero o usar colores Hex manuales en componentes. Usa variables como `var(--color-brand-primary)`.
 - **Estado**: Declara estados centralizados con `useState` en el componente padre (`owner` o `AppLayout`) y pásalos como props. Evita declarar estados compartidos en hijos.
-- **Instalación de Shadcn Segura**: La herramienta de shadcn a utilizar en F2 es ESTRICTAMENTE `npx shadcn@2.1.8 add <componentes>`. TIENES PROHIBIDO USAR `@latest` (ej. `npx shadcn@latest add`). Usar `@latest` rompe la aplicación instalando dependencias en pre-release de base-ui. Usa siempre `npx shadcn@2.1.8`.
+- **Instalación de Shadcn Segura**: La herramienta de shadcn a utilizar en F2 es `npx shadcn@latest add <componentes>` (o simplemente `npx shadcn add`). Utiliza siempre la última versión final estable de Shadcn para garantizar la compatibilidad con Tailwind v4 y permitir la descarga de bloques complejos de la comunidad y del registro oficial (como dashboards, sidebars y formularios modernos) sin errores 404.
+- **Next.js & Tailwind v4 Style Resolution**: En Tailwind v4, si `globals.css` importa `@import "shadcn/tailwind.css";`, debes asegurarte de instalar el paquete ejecutable `shadcn` ejecutando `npm install shadcn` o el compilador fallará.
+- **Next.js Auth Redirects robustas (Evitar bucles/parpadeo)**:
+  - Usa siempre `router.replace("/")` en lugar de `push` para redirecciones de login.
+  - Para evitar efectos concurrentes o solapados en Strict Mode, usa un `useRef(false)` en redirecciones asíncronas para dispararlas solo una vez.
+  - En layouts protegidos por SSR, para evitar que parpadeen spinners o modales antes de hidratar la sesión en cliente, declara un estado `mounted` (`useEffect` asignando `setMounted(true)`) y retorna `null` si `!mounted`.
 - **Iconos**: Importa desde `lucide-react`. Usa `data-icon="inline-start"` para espaciados automáticos.
 </coding_cheatsheet>
 

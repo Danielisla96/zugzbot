@@ -95,11 +95,35 @@ Cada fase tiene un **gate explícito** (HIL del usuario) antes de transicionar a
 **NO HAGAS**: Redactar el contrato en F1 listando únicamente archivos de forma abstracta sin definir o validar la geometría estructural y distribución de la UI (ej. si se requieren Sidebars locales de navegación vs pestañas horizontales planas), asumiendo anchos angostos y estáticos (como `max-w-3xl`) o rompiendo el soporte de modo oscuro con colores absolutos (`bg-white`).
 **HAZ**: El spec-writer debe proponer proactivamente en F1 un bosquejo textual o diagrama ASCII de la interfaz y validar con el usuario un layout responsivo amplio (`max-w-6xl` o superior). Además, el coder debe implementar soporte semántico dinámico de temas de entrada (sin colores duros) y sincronizar colores SVG/gráficos dinámicamente con el tema actual.
 
+### Trampa 14: Guardar archivos de tests que contienen JSX con extensión `.ts` en vez de `.tsx`
+**NO HAGAS**: Usar la extensión `.ts` para archivos de tests que mockean iconos de lucide o renderizan primitivas de HTML o JSX (esbuild/Vitest fallarán en la compilación con errores como `Expected ">" but found "data"`).
+**HAZ**: Toda suite de pruebas unitarias o de integración que monte componentes o contenga JSX debe grabarse con la extensión `.tsx` obligatoriamente.
+
+### Trampa 15: Selectores de Testing Library ambiguos para campos comunes
+**NO HAGAS**: Usar queries amplias y con insensibilidad a mayúsculas como `screen.getByLabelText(/password/i)` si hay botones como "Show password" con `aria-label` que repiten la palabra clave. Esto lanzará un error de "Found multiple elements".
+**HAZ**: Usa selectores de coincidencia exacta como `screen.getByLabelText(/^Password$/)` o busca mediante `screen.getByPlaceholderText(...)` para aislar de forma unívoca el input deseado.
+
+### Trampa 16: Probar la ausencia de elementos ocultos por CSS con `not.toBeInTheDocument()`
+**NO HAGAS**: Tratar de validar que un menú, etiqueta de barra lateral colapsada o modal ya no es visible utilizando `expect(queryByText("...")).not.toBeInTheDocument()`. Al ocultar layouts mediante clases CSS de ancho cero (`w-0`), opacidad (`opacity-0`) o display (`hidden`), los elementos siguen existiendo físicamente en el DOM de pruebas.
+**HAZ**: Verifica las clases CSS de visibilidad directamente (ej. `expect(sidebarEl.className).toContain("w-16")`) o usa `.not.toBeVisible()` de `@testing-library/jest-dom`.
+
+### Trampa 17: Mocks estáticos para toggles y hooks con estado
+**NO HAGAS**: Mockear hooks que controlan transiciones (como `useTheme` de `next-themes`) con retornos fijos y estáticos, ej. `vi.mock('next-themes', () => ({ useTheme: () => ({ theme: 'light', setTheme: vi.fn() }) }))`. El segundo clic en el toggle intentará pasar de 'light' a 'dark' pero fallará porque el estado simulado sigue en 'light' (llamando a setTheme('dark') por segunda vez).
+**HAZ**: Define variables mutables a nivel de archivo dentro de la suite de mocks y usa getters en la definición del mock para reflejar los cambios en caliente.
+
+### Trampa 18: Fallos en resolución de `@import "shadcn/tailwind.css"` en Tailwind v4 con Next.js 16/Shadcn
+**NO HAGAS**: Importar `@import "shadcn/tailwind.css"` en `globals.css` sin comprobar si el paquete npm `shadcn` está instalado en la máquina, provocando fallos fatales de compilación durante el comando `next build`.
+**HAZ**: El coder siempre debe instalar explícitamente el paquete base ejecutable y estilizado `npm install shadcn` en proyectos Next + Tailwind v4.
+
+### Trampa 19: Bucle infinito y parpadeo de pantalla (Flicker) tras el inicio de sesión
+**NO HAGAS**: Usar redirecciones cruzadas en `useEffect` con `router.push()` tanto en el formulario de login como en la propia página de login, o renderizar spinners por defecto antes de verificar la sesión en el cliente, causando que el router encadene múltiples repeticiones de renderizado y la pantalla parpadee.
+**HAZ**: Usa `router.replace()` para evitar ensuciar el historial. Proporciona siempre una bandera de montaje (`mounted === true`) y retorna `null` para evitar desajustes de hidratación (hydration mismatch). Protege las redirecciones del login mediante una referencia `useRef(false)` para controlar que no se solapen redirecciones de estado concurrentes de React.
+
 ---
 
 ## 4. Stack cerrado (NO abrir)
 
-- **Frontend**: Next.js 15/16 + React 19 + TypeScript + Tailwind v4 + Shadcn UI v2.1.8 (Radix UI) + lucide-react + Vitest. **PROHIBIDO**: Shadcn v4/Base-UI (por inestabilidad y falta de soporte actual), HeroUI, Chakra, Material-UI.
+- **Frontend**: Next.js 15/16 + React 19 + TypeScript + Tailwind v4 + Shadcn UI @latest (Radix UI) + lucide-react + Vitest. **PROHIBIDO**: Shadcn v4/Base-UI (por inestabilidad y falta de soporte actual), HeroUI, Chakra, Material-UI.
 - **Backend**: Python 3.11+ + FastAPI + Pydantic v2 + Uvicorn + Pytest + Ruff. **PROHIBIDO**: Django, Flask, sync SQLAlchemy.
 - **Persistencia**: localStorage (frontend-only) o PostgreSQL con pgvector. **PROHIBIDO**: MongoDB (excepto si se justifica), Redis como primary store.
 - **Containerización**: Docker multi-stage con `node:20-alpine` (Next) o `python:3.11-slim` (FastAPI). Usuario no-root. Healthcheck via `node -e` (no wget en alpine).

@@ -66,11 +66,12 @@ Para garantizar consistencia y escalabilidad en todos los proyectos, la estructu
    className={cn("base-classes", condition && "extra", className)}
    ```
 5. **Iconos**: usar `lucide-react` (`import { Icon } from "lucide-react"`).
-6. **Block/Template installation**: usar el MCP `shadcn` para browse/search/install:
-   - Dashboards → `mcp__shadcn__get_item` con `@shadcn/dashboard-01`
+6. **Block/Template installation**: usar el MCP `shadcn` para browse/search/install. **NOTA CRÍTICA: NO existe ninguna restricción de lista fija**. Tienes libertad absoluta y la obligación proactiva de buscar e instalar CUALQUIER componente primitivo o bloque del catálogo oficial de Shadcn UI que se adapte al caso de uso de la aplicación (entre los 97+ bloques disponibles como dashboards, sidebars colapsables, login, charts, etc.):
+   - Dashboards → `@shadcn/dashboard-01`
    - Landings → `@shadcn/landing-hero`, `@shadcn/pricing`, etc.
-   - Auth flows → `@shadcn/login-01`, `@shadcn/signup-01`
+   - Auth flows → `@shadcn/login-01` al `05`, `@shadcn/signup-01` al `05`
    - Forms complejos → `@shadcn/settings`, `@shadcn/data-table`
+   - Sidebars → `@shadcn/sidebar-01` al `16`
 7. **Shadcn v4 (Base UI)**: En Shadcn UI v4.11.0+, la biblioteca primitiva es `@base-ui/react` (no Radix UI). La propiedad `asChild` **no existe**. Para evitar HTML inválido y problemas de SEO/accesibilidad, no anides interactives (`<Button><Link>`). Aplica las clases de estilo del botón directamente sobre el elemento `<Link>` de Next.js.
 8. **Compatibilidad Turbopack + CSS**: Turbopack no resuelve directivas `@import` para archivos CSS de `node_modules` (ej. `@import "tw-animate-css"` o `@import "shadcn/tailwind.css"`). En Tailwind CSS v4, define las variables y estilos inline en `globals.css` en lugar de importar desde `node_modules`.
 9. **Despliegue y Next Config**: Todo proyecto de Next.js debe estar configurado para Docker standalone en `next.config.ts`:
