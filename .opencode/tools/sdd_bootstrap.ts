@@ -145,12 +145,15 @@ export const bootstrap_status = tool({
 export const bootstrap_nextjs_shadcn = tool({
   description: "Inicializa un proyecto Next.js 16 + Shadcn UI + Tailwind v4 + Vitest a partir de la plantilla canónica en .opencode/templates/nextjs-shadcn/. Es IDEMPOTENTE: si el proyecto ya está inicializado y no se pasa force=true, no toca nada. Copia archivo-por-archivo (sin pisar los existentes), mergea package.json, y opcionalmente instala dependencias y shadcn components.",
   args: {
+    targetDir: tool.schema.string().default(".").describe("Subdirectorio donde se inicializará el proyecto Next.js (ej: 'next-app' o '.')."),
     components: tool.schema.array(tool.schema.string()).default([]).describe("Lista de shadcn components a instalar (ej: ['button','input','table']). Vacío = no instalar shadcn components."),
     install: tool.schema.boolean().default(true).describe("Si true, ejecuta npm/pnpm/yarn install después de copiar. Si false, solo copia archivos."),
     force: tool.schema.boolean().default(false).describe("Si true, sobrescribe archivos existentes. Si false, los salta (mergea package.json)."),
   },
   async execute(args, context) {
     const root = getRoot(context)
+    const targetDir = args.targetDir || "."
+    const targetPath = targetDir === "." ? root : path.resolve(root, targetDir)
     const start = Date.now()
     const templateDir = path.resolve(root, ".opencode/templates/nextjs-shadcn")
 
@@ -172,9 +175,9 @@ export const bootstrap_nextjs_shadcn = tool({
     }
 
     const isInitialized =
-      fs.existsSync(path.resolve(root, "src/app/page.tsx")) &&
-      fs.existsSync(path.resolve(root, "package.json")) &&
-      fs.existsSync(path.resolve(root, "src/lib/utils.ts"))
+      fs.existsSync(path.resolve(targetPath, "src/app/page.tsx")) &&
+      fs.existsSync(path.resolve(targetPath, "package.json")) &&
+      fs.existsSync(path.resolve(targetPath, "src/lib/utils.ts"))
 
     if (isInitialized && !args.force) {
       return JSON.stringify({
@@ -189,7 +192,7 @@ export const bootstrap_nextjs_shadcn = tool({
     const filesSkipped: string[] = []
     const copyFileSafe = (rel: string) => {
       const src = path.join(templateDir, rel)
-      const dst = path.resolve(root, rel)
+      const dst = path.resolve(targetPath, rel)
       if (!fs.existsSync(src)) return
       const dstExists = fs.existsSync(dst)
       if (dstExists && !args.force) {
@@ -201,7 +204,7 @@ export const bootstrap_nextjs_shadcn = tool({
       filesCopied.push(rel)
     }
 
-    const userPkgPath = path.resolve(root, "package.json")
+    const userPkgPath = path.resolve(targetPath, "package.json")
     let mergedPkg: any = null
     if (fs.existsSync(userPkgPath) && !args.force) {
       try {
@@ -223,7 +226,7 @@ export const bootstrap_nextjs_shadcn = tool({
       copyFileSafe("package.json")
     }
 
-    const userNextConfig = path.resolve(root, "next.config.ts")
+    const userNextConfig = path.resolve(targetPath, "next.config.ts")
     if (fs.existsSync(userNextConfig) && !args.force) {
       try {
         const content = fs.readFileSync(userNextConfig, "utf8")
@@ -255,17 +258,20 @@ export const bootstrap_nextjs_shadcn = tool({
       "src/app/globals.css",
       "src/lib/utils.ts",
       "src/components/theme-provider.tsx",
+      "src/components/ui/.gitkeep",
+      "src/components/blocks/.gitkeep",
+      "src/components/layout/.gitkeep",
       "src/test/setup.ts",
       "public/.gitkeep",
     ]
     for (const f of standardFiles) copyFileSafe(f)
 
-    const pm = detectPackageManager(root)
+    const pm = detectPackageManager(targetPath)
 
     let installDuration = 0
     let installSkipped = false
     let installError: string | null = null
-    const hasNodeModules = fs.existsSync(path.resolve(root, "node_modules"))
+    const hasNodeModules = fs.existsSync(path.resolve(targetPath, "node_modules"))
     if (args.install && (args.force || !hasNodeModules)) {
       const installStart = Date.now()
       const installCmd = pm === "pnpm"
@@ -275,7 +281,7 @@ export const bootstrap_nextjs_shadcn = tool({
           : "npm install --prefer-offline"
       try {
         execSync(installCmd, {
-          cwd: root,
+          cwd: targetPath,
           stdio: "ignore",
           timeout: 300_000,
         })
@@ -293,7 +299,7 @@ export const bootstrap_nextjs_shadcn = tool({
       try {
         const cmd = `npx shadcn@latest add ${args.components.join(" ")} --yes --overwrite`
         execSync(cmd, {
-          cwd: root,
+          cwd: targetPath,
           stdio: "ignore",
           timeout: 180_000,
         })
@@ -314,6 +320,7 @@ export const bootstrap_nextjs_shadcn = tool({
       componentsInstalled,
       installDuration,
       totalDuration: Date.now() - start,
+      targetDir,
     }
     writeBootstrapStatus(root, bootstrapRecord)
 
@@ -348,12 +355,15 @@ export const bootstrap_nextjs_shadcn = tool({
 export const bootstrap_fastapi = tool({
   description: "Inicializa un proyecto FastAPI + Pydantic + Uvicorn + Pytest + Ruff a partir de la plantilla canónica en .opencode/templates/fastapi-sdd/. Es IDEMPOTENTE: si el proyecto ya está inicializado y no se pasa force=true, no toca nada. Copia archivo-por-archivo (sin pisar los existentes), opcionalmente instala dependencias con uv (fallback pip).",
   args: {
+    targetDir: tool.schema.string().default(".").describe("Subdirectorio donde se inicializará el proyecto FastAPI (ej: 'backend' o '.')."),
     extras: tool.schema.array(tool.schema.string()).default([]).describe("Lista de paquetes Python adicionales a instalar (ej: ['sqlalchemy','pydantic-settings','pytest-asyncio']). Vacío = no instalar extras extra."),
     install: tool.schema.boolean().default(true).describe("Si true, ejecuta uv sync (o pip install -e '.[dev]') después de copiar. Si false, solo copia archivos."),
     force: tool.schema.boolean().default(false).describe("Si true, sobrescribe archivos existentes. Si false, los salta."),
   },
   async execute(args, context) {
     const root = getRoot(context)
+    const targetDir = args.targetDir || "."
+    const targetPath = targetDir === "." ? root : path.resolve(root, targetDir)
     const start = Date.now()
     const templateDir = path.resolve(root, ".opencode/templates/fastapi-sdd")
 
@@ -375,8 +385,8 @@ export const bootstrap_fastapi = tool({
     }
 
     const isInitialized =
-      fs.existsSync(path.resolve(root, "src/main.py")) &&
-      fs.existsSync(path.resolve(root, "pyproject.toml"))
+      fs.existsSync(path.resolve(targetPath, "src/main.py")) &&
+      fs.existsSync(path.resolve(targetPath, "pyproject.toml"))
 
     if (isInitialized && !args.force) {
       return JSON.stringify({
@@ -391,7 +401,7 @@ export const bootstrap_fastapi = tool({
     const filesSkipped: string[] = []
     const copyFileSafe = (rel: string) => {
       const src = path.join(templateDir, rel)
-      const dst = path.resolve(root, rel)
+      const dst = path.resolve(targetPath, rel)
       if (!fs.existsSync(src)) return
       const dstExists = fs.existsSync(dst)
       if (dstExists && !args.force) {
@@ -403,7 +413,7 @@ export const bootstrap_fastapi = tool({
       filesCopied.push(rel)
     }
 
-    const userPyprojectPath = path.resolve(root, "pyproject.toml")
+    const userPyprojectPath = path.resolve(targetPath, "pyproject.toml")
     let mergedPyproject: string | null = null
     if (fs.existsSync(userPyprojectPath) && !args.force) {
       try {
@@ -443,13 +453,13 @@ export const bootstrap_fastapi = tool({
     ]
     for (const f of standardFiles) copyFileSafe(f)
 
-    const pm = detectPythonPackageManager(root)
+    const pm = detectPythonPackageManager(targetPath)
 
     let installDuration = 0
     let installSkipped = false
     let installError: string | null = null
-    const hasVenv = fs.existsSync(path.resolve(root, ".venv"))
-    const hasInstalled = fs.existsSync(path.resolve(root, "uv.lock")) || hasVenv
+    const hasVenv = fs.existsSync(path.resolve(targetPath, ".venv"))
+    const hasInstalled = fs.existsSync(path.resolve(targetPath, "uv.lock")) || hasVenv
     if (args.install && (args.force || !hasInstalled)) {
       const installStart = Date.now()
       const installCmd = pm === "uv"
@@ -457,7 +467,7 @@ export const bootstrap_fastapi = tool({
         : "pip install -e '.[dev]'"
       try {
         execSync(installCmd, {
-          cwd: root,
+          cwd: targetPath,
           stdio: "ignore",
           timeout: 300_000,
         })
@@ -466,7 +476,9 @@ export const bootstrap_fastapi = tool({
         installError = e.message?.slice(0, 500) || "unknown error"
       }
     } else if (hasInstalled && !args.force) {
-      installSkipped = true
+      try {
+        installSkipped = true
+      } catch (e) {}
     }
 
     const extrasInstalled: string[] = []
@@ -477,7 +489,7 @@ export const bootstrap_fastapi = tool({
         : `pip install ${args.extras.join(" ")}`
       try {
         execSync(extrasCmd, {
-          cwd: root,
+          cwd: targetPath,
           stdio: "ignore",
           timeout: 180_000,
         })
@@ -498,6 +510,7 @@ export const bootstrap_fastapi = tool({
       extrasInstalled,
       installDuration,
       totalDuration: Date.now() - start,
+      targetDir,
     }
     writeBootstrapStatus(root, bootstrapRecord)
 

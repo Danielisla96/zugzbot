@@ -72,8 +72,14 @@ npx shadcn@latest add <component-name>
 
 Al diseñar o codificar páginas con Shadcn UI, sigue estas reglas estrictas:
 
-### 3.1 Componer, no reinventar
-Utiliza las plantillas y bloques existentes de Shadcn (como `dashboard-01`, `settings-form`, `login-01`) como punto de partida. Busca layouts de dashboards o formularios complejos en el registro mediante el MCP `shadcn` antes de escribir código personalizado.
+### 3.1 Componer, no reinventar (MANDATORIO)
+Utiliza las plantillas y bloques existentes de Shadcn como el estándar absoluto de tu interfaz. Queda **estrictamente prohibido** escribir layouts, páginas de autenticación o cuadros de mando desde cero si ya existe un bloque oficial que resuelva el caso de uso:
+- **Dashboards**: Utiliza `dashboard-01` como base para cualquier panel de control interactivo.
+- **Sidebars / Barras de Navegación**: Utiliza `sidebar-01` al `16` para paneles laterales funcionales, colapsables, dinámicos o anidados. No programes componentes de navegación complejos a mano.
+- **Login / Registro**: Utiliza `login-01` al `05` y `signup-01` al `05` para flujos de login y registro de usuarios.
+- **Gráficos y Métricas**: Busca y añade bloques de gráficos oficiales de Recharts (`chart-area-*`, `chart-bar-*`, `chart-pie-*`, `chart-radar-*`) para dar vida a la visualización de datos.
+
+Busca layouts de dashboards o formularios complejos en el registro mediante el MCP `shadcn` antes de escribir cualquier código personalizado. Una vez agregado el bloque, distribuye y adapta sus elementos con el estado y la lógica de tu aplicación.
 
 ### 3.2 Form Layouts (FieldGroup + Field)
 Para estructurar campos de formularios, no uses `div`s arbitrarios con clases de espaciado complejas. Usa las composiciones semánticas oficiales de Shadcn:
