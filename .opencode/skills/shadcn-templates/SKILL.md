@@ -77,12 +77,11 @@ Utiliza las plantillas y bloques existentes de Shadcn como el estándar absoluto
 
 Para garantizar interfaces de usuario premium y visualmente idénticas a los demos oficiales de Shadcn, se debe seguir de manera mandatoria la **Metodología de Arquitectura Block-First**:
 
-1. **El Bloque es el Esqueleto Absoluto (Fase A - Inyección Pura y Migración Física)**:
+1. **El Bloque es el Esqueleto Absoluto (Fase A - Inyección Pura y Preservación de Estructura)**:
    - El Coder (F2) **debe** instalar el bloque de Shadcn correspondiente mediante la CLI (`npx shadcn@latest add <block-name>`).
-   - El bloque se descargará en `src/components/blocks/<block-name>/`. El Coder tiene **estrictamente prohibido** importar el `page.tsx` del bloque como un simple componente hijo (ej: `return <BlockPage />` desde la raíz de la app), ya que esto rompe la estructura del router de Next.js, layouts y metadata.
-   - **Acción Obligatoria**: El Coder debe **copiar el contenido íntegro del código** de `src/components/blocks/<block-name>/page.tsx` hacia el `page.tsx` de tu ruta destino (por ejemplo, `src/app/page.tsx` o `src/app/dashboard/page.tsx`).
-   - **Corrección de Imports de forma Manual**: Al mover el código de la ruta de componentes al App Router de Next.js, los imports relativos en ese archivo se romperán. El Coder tiene la obligación de **reescribir todos los imports relativos de componentes e información locales** (ej. `./components/app-sidebar` o `./data.json`) para usar aliases absolutos que apunten a la ubicación física descargada por Shadcn (ej. `@/components/blocks/<block-name>/components/app-sidebar` o `@/components/blocks/<block-name>/data.json`).
-   - **Preservación de Datos Mock/Dummy**: El archivo de datos del bloque (por ejemplo, `data.json` o constantes internas) **debe ser preservado e importado de manera intacta** durante esta Fase A para garantizar que la vista renderice con datos idénticos al demo original en el navegador.
+   - La CLI de Shadcn colocará automáticamente la página del bloque (ej: `src/app/dashboard/page.tsx`) y los componentes y datos asociados en las ubicaciones de producción correctas de tu proyecto.
+   - **Acción Obligatoria / Prohibición de Migración**: Queda **estrictamente prohibido** mover los archivos del bloque a carpetas artificiales (como `src/components/blocks/...`) o reescribir manualmente sus imports si la CLI ya los ha ubicado en sus posiciones funcionales definitivas. Esto evita errores sutiles de compilación, rotura de imports y degradación de los estilos de modo oscuro en gráficos de Recharts.
+   - **Preservación de Datos Mock/Dummy**: El archivo de datos del bloque (por ejemplo, `data.json` o constantes locales) **debe ser preservado e importado de manera intacta en su ruta nativa** durante esta Fase A para garantizar que la vista renderice con datos idénticos al demo original en el navegador.
    - **Meta**: Al terminar la Fase A, la aplicación debe renderizarse de manera *pixel-perfect* (idéntica) al demo oficial de Shadcn en local, sin un solo error de compilación o de imports rotos.
 
 2. **Sustitución de Datos Atómica (Fase B - Conexión de Lógica)**:
