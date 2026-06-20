@@ -99,6 +99,59 @@ function detectPythonPackageManager(root: string): "uv" | "pip" {
   }
 }
 
+const DEFAULT_PACKAGE_JSON = {
+  "name": "nextjs-shadcn-sdd",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "lucide-react": "^0.468.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.5.5",
+    "class-variance-authority": "^0.7.1",
+    "recharts": "^2.15.0",
+    "next-themes": "^0.4.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "@types/node": "^20.17.9",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.2",
+    "tailwindcss": "^4.0.0-alpha.30",
+    "@tailwindcss/postcss": "^4.0.0-alpha.30",
+    "postcss": "^8.4.49",
+    "eslint": "^9.16.0",
+    "eslint-config-next": "^15.1.0",
+    "vitest": "^2.1.8",
+    "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "^25.0.1",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/dom": "^10.4.0"
+  }
+}
+
+const getTemplatePackageJson = (templateDir: string): any => {
+  const tmplPkgPath = path.join(templateDir, "package.json")
+  if (fs.existsSync(tmplPkgPath)) {
+    try {
+      return JSON.parse(fs.readFileSync(tmplPkgPath, "utf8"))
+    } catch {
+      // ignore
+    }
+  }
+  return DEFAULT_PACKAGE_JSON
+}
+
 // Tool: sdd_bootstrap_status
 export const bootstrap_status = tool({
   description: "Reporta el estado de bootstrap del proyecto.",
@@ -140,6 +193,8 @@ export const bootstrap_status = tool({
     }, null, 2)
   }
 })
+
+export const status = bootstrap_status
 
 // Tool: sdd_bootstrap_nextjs_shadcn
 export const bootstrap_nextjs_shadcn = tool({
@@ -206,10 +261,11 @@ export const bootstrap_nextjs_shadcn = tool({
 
     const userPkgPath = path.resolve(targetPath, "package.json")
     let mergedPkg: any = null
+    const tmplPkg = getTemplatePackageJson(templateDir)
+
     if (fs.existsSync(userPkgPath) && !args.force) {
       try {
         const userPkg = JSON.parse(fs.readFileSync(userPkgPath, "utf8"))
-        const tmplPkg = JSON.parse(fs.readFileSync(path.join(templateDir, "package.json"), "utf8"))
         for (const key of ["dependencies", "devDependencies", "peerDependencies"]) {
           if (tmplPkg[key]) {
             userPkg[key] = { ...tmplPkg[key], ...(userPkg[key] || {}) }
@@ -220,10 +276,12 @@ export const bootstrap_nextjs_shadcn = tool({
         fs.writeFileSync(userPkgPath, JSON.stringify(userPkg, null, 2), "utf8")
         filesCopied.push("package.json (merged)")
       } catch (e) {
-        copyFileSafe("package.json")
+        fs.writeFileSync(userPkgPath, JSON.stringify(tmplPkg, null, 2), "utf8")
+        filesCopied.push("package.json")
       }
     } else {
-      copyFileSafe("package.json")
+      fs.writeFileSync(userPkgPath, JSON.stringify(tmplPkg, null, 2), "utf8")
+      filesCopied.push("package.json")
     }
 
     const userNextConfig = path.resolve(targetPath, "next.config.ts")
@@ -265,6 +323,28 @@ export const bootstrap_nextjs_shadcn = tool({
       "public/.gitkeep",
     ]
     for (const f of standardFiles) copyFileSafe(f)
+
+    if (targetDir !== ".") {
+      const configFiles = [
+        "tsconfig.json",
+        "vitest.config.ts",
+        "components.json",
+        "next.config.ts",
+        "eslint.config.mjs",
+        "postcss.config.mjs",
+      ]
+      for (const file of configFiles) {
+        const rootFile = path.resolve(root, file)
+        if (fs.existsSync(rootFile)) {
+          try {
+            fs.unlinkSync(rootFile)
+            filesCopied.push(`${file} (cleaned from root)`)
+          } catch {
+            // ignore
+          }
+        }
+      }
+    }
 
     const pm = detectPackageManager(targetPath)
 

@@ -3,7 +3,7 @@ description: Diseña y corre pruebas unitarias, integración y visuales (Playwri
 mode: subagent
 hidden: true
 steps: 15
-model: google/gemini-3.5-flash
+model: deepseek/deepseek-v4-flash
 temperature: 0.35
 frequency_penalty: 0.5
 presence_penalty: 0.2

@@ -74,3 +74,9 @@ Para optimizar el diseño, evitar cambios de arquitectura estructurales a mitad 
 Para mantener la limpieza y disciplina en la ventana de contexto de la sesión:
 - **Orquestador No-Coder:** El orquestador principal (`sdd-orchestrator`) tiene estrictamente prohibido usar herramientas de edición (`edit` o `write`) para modificar código de producción o archivos de test.
 - **Rollback Disciplinado:** Si en la fase `F3_VERIFICATION` el linter o los tests reportan errores, el orquestador **debe** transicionar el estado a `F2_IMPLEMENTATION` mediante `sdd_core_set_phase` y re-invocar al subagente experto (`sdd-coder`) para que realice la corrección cleanly. No se permiten parches rápidos a mitad de fase de test.
+
+## 9. Segmentación de Specs y Compilación Atómica (Evitar Coder-Exhaustion)
+Para evitar que los subagentes se queden sin pasos (step/token exhaustion) o acumulen errores difíciles de depurar al final de la sesión:
+- **Regla de Micro-Specs:** Si una funcionalidad requiere implementar múltiples vistas complejas o formularios densos, el Spec-Writer **debe** dividirla obligatoriamente en specs incrementales secuenciales de máximo 3 componentes principales por contrato. No intentes implementar todo un panel de administración en una sola iteración de contrato.
+- **Compilación Atómica:** El Coder **debe** implementar y compilar exitosamente cada archivo de forma individual antes de escribir el siguiente. Está estrictamente prohibido escribir todos los componentes de golpe sin ejecutar validaciones intermedias de TypeScript (`tsc --noEmit`).
+- **Verificación Temprana de Dependencias:** El Coder **debe** comprobar en el primer paso de F2 que dependencias de pruebas críticas como `@testing-library/dom` estén correctamente instaladas en proyectos React 19 para evitar fallos intermitentes de tipado en Vitest.

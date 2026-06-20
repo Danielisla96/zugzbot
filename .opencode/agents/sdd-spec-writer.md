@@ -2,7 +2,7 @@
 description: Redacta y valida contratos OpenAPI e interfaces en specs/
 mode: subagent
 hidden: true
-model: google/gemini-3.5-flash
+model: deepseek/deepseek-v4-flash
 temperature: 0.1
 tools:
   write: true

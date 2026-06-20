@@ -6,7 +6,7 @@
       "permission": {
         "webfetch": "deny"
       },
-      "model": "google/gemini-3.5-flash"
+      "model": "deepseek/deepseek-v4-flash"
     }
   },
   "permission": {
@@ -43,7 +43,7 @@
         "./.opencode/oh-my-design/packages/mcp/dist/index.mjs"
       ],
       "enabled": true,
-      "purpose": "Busca, consulta y aplica temas de dise\u00f1o (Toss, Stripe, Supabase, etc.)."
+      "purpose": "Busca, consulta y aplica temas de diseño (Toss, Stripe, Supabase, etc.)."
     },
     "shadcn": {
       "type": "local",
@@ -76,7 +76,7 @@
         "--isolated"
       ],
       "enabled": true,
-      "purpose": "Ejecuta pruebas de regresi\u00f3n visual y capturas de pantalla de Playwright."
+      "purpose": "Ejecuta pruebas de regresión visual y capturas de pantalla de Playwright."
     },
     "next-devtools": {
       "type": "local",
