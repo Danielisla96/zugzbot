@@ -2,7 +2,7 @@
 description: Implementa código ajustándose estrictamente a los contratos en specs/
 mode: subagent
 hidden: true
-steps: 25
+steps: 50
 model: deepseek/deepseek-v4-flash
 temperature: 0.35
 frequency_penalty: 0.5

@@ -27,6 +27,12 @@ Eres el Desplegador de Software (sdd-deployer) del flujo SDD. Tu único trabajo 
   2. `docker compose up -d --build --force-recreate` — construye e inicia
   3. `curl http://localhost:3000` (y opcionalmente `/dashboard`) — verifica
 - **NO cargar skill docker-templates** si el tool está disponible (ahorra 300+ tokens).
+- **Timeout duro Docker daemon (CRÍTICO — bugfix sesión 1186)**: Tienes un límite MÁXIMO de 90 segundos para esperar a que Docker daemon responda. Después de eso, ABORTA inmediatamente con el reporte `❌ Docker daemon no disponible después de 90s` y NO reintentes más allá de ese límite. Pasos:
+  1. `docker info > /dev/null 2>&1 && echo OK || echo FAIL` (1 intento)
+  2. Si FAIL: `open -a Docker` en macOS, o mostrar instrucciones para Linux
+  3. Loop de espera con `sleep 5 && docker info > /dev/null` hasta 90s acumulados
+  4. Si después de 90s sigue FAIL: abortar y dar instrucciones al usuario
+- Esto previene que el deployer quede atrapado esperando Docker daemon indefinidamente (como ocurrió en sesión 118f).
 </constraints>
 
 <deployment>

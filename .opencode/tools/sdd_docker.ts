@@ -161,15 +161,20 @@ CMD ["python", "src/main.py"]
       
       const p = "npm"
       let pm = "npm"
-      let installCmd = "npm ci --frozen-lockfile"
+      // v3.0 — Usar `npm install` adaptativo en vez de `npm ci --frozen-lockfile`.
+      // Razón: el bootstrap del harness a menudo agrega packages (shadcn, tailwindcss v4,
+      // etc.) que desincronizan el lockfile con package.json, causando `npm ci`
+      // a fallar con "lock file does not satisfy". `npm install --no-audit --no-fund`
+      // resuelve adaptativamente sin sacrificar la velocidad.
+      let installCmd = "npm install --no-audit --no-fund"
       let buildCmd = "npm run build"
       if (fs.existsSync(path.resolve(targetPath, "pnpm-lock.yaml"))) {
         pm = "pnpm"
-        installCmd = "pnpm install --frozen-lockfile"
+        installCmd = "pnpm install --no-frozen-lockfile"
         buildCmd = "pnpm build"
       } else if (fs.existsSync(path.resolve(targetPath, "yarn.lock"))) {
         pm = "yarn"
-        installCmd = "yarn install --frozen-lockfile"
+        installCmd = "yarn install"
         buildCmd = "yarn build"
       }
 
