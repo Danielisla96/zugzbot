@@ -100,6 +100,16 @@ Para garantizar interfaces de usuario premium y visualmente idénticas a los dem
 **REGLA CRÍTICA DE RUTAS DUPLICADAS POR SHADCN CLI**:
 Al agregar un bloque interactivo complejo (como `dashboard-01`), el CLI de Shadcn puede inyectar automáticamente archivos en directorios fijos (como `src/app/dashboard/page.tsx`). El Coder **debe** verificar inmediatamente si existe una colisión con la estructura de rutas establecida por el contrato (`contract.json`) —por ejemplo, si el contrato establece un Route Group `src/app/(dashboard)/page.tsx` que sirve en la raíz `/`—. Si ocurre esto, el Coder tiene la obligación de **borrar, mover o refactorizar de inmediato el archivo inyectado automáticamente** para eliminar la duplicidad de rutas, evitando así bucles infinitos de redirección o errores fatales de compilación del router de Next.js.
 
+**REGLA CRÍTICA DE COMPATIBILIDAD TAILWIND V4 + SHADCN UI (Sidebar Overlap Fix)**:
+Al instalar componentes que usan `sidebar` (como `dashboard-01`, `sidebar-01` a `sidebar-16`, o el componente `sidebar` individual), la CLI de Shadcn inyecta código con sintaxis de variables CSS arbitrarias propias de Tailwind v3 (`w-[--sidebar-width]`, `w-[--sidebar-width-icon]`, `max-w-[--skeleton-width]`) que **rompen en Tailwind v4** generando CSS inválido (`width: --sidebar-width;` sin `var()`). Esto hace que el espaciador invisible del sidebar colapse a 0px, provocando que el contenido principal se solape bajo el sidebar fijo.
+
+**Acción obligatoria inmediata tras instalar**: El Coder debe parchear `src/components/ui/sidebar.tsx` en el mismo paso de instalación transformando:
+- `w-[--sidebar-width]` → `w-[var(--sidebar-width)]`
+- `w-[--sidebar-width-icon]` → `w-[var(--sidebar-width-icon)]`
+- `max-w-[--skeleton-width]` → `max-w-[var(--skeleton-width)]`
+
+Sin este fix, el dashboard renderizará con el sidebar tapando el contenido. Verificar con `npx tsc --noEmit` y comprobación visual tras la instalación.
+
 ### 3.2 Form Layouts (FieldGroup + Field)
 Para estructurar campos de formularios, no uses `div`s arbitrarios con clases de espaciado complejas. Usa las composiciones semánticas oficiales de Shadcn:
 ```tsx
@@ -142,8 +152,33 @@ El `@sdd-spec-writer` utiliza de manera proactiva el MCP `shadcn` (`shadcn_searc
 ### Fase F2 (Implementation)
 El `@sdd-coder` utiliza el template base `nextjs-shadcn`. Si el contrato no detalla todos los sub-componentes o el Coder necesita verificar el comportamiento de un bloque antes de acoplarlo con el backend, debe ejecutar `shadcn_get_item_examples_from_registries` para ver ejemplos funcionales del componente real. Tras ejecutar la instalación con `npx shadcn@latest add`, el Coder debe contrastar los archivos inyectados con el mapa del contrato y limpiar de inmediato cualquier archivo redundante (como una página de inicio duplicada) que no coincida con el router oficial.
 
-### Fase F3 (Verification)
-El `@sdd-tester` ejecuta las pruebas según el modo de verificación especificado en el contrato (`settings.verificationMode`):
-- Si es `"console"`, verifica la compilación correcta y la ausencia de errores de consola/hidratación en el navegador.
-- Si es `"visual"`, ejecuta tests de regresión visual de Playwright tomando capturas de pantalla para comprobar la responsividad del layout.
+## 5. Catálogo Externo Oficial: Shadcn UI Blocks (Akash)
+
+Además del catálogo nativo de Shadcn UI, dispones de acceso autónomo a más de 200 bloques de alta calidad del repositorio **Shadcn UI Blocks (por Akash)**. Si necesitas un layout, sección o componente complejo (ej. hero, footer, pricing, login, dashboard), **debes** explorar este catálogo y proponerlo.
+
+### 5.1 Flujo de Descubrimiento (Fase F1 - Spec-Writer)
+Si el usuario solicita una interfaz genérica o tú detectas que un bloque complejo ahorraría tiempo, consulta la lista maestra de bloques en tiempo real:
+- **Comando a usar:** Ejecuta la herramienta `webfetch` apuntando a la API de GitHub:
+  `webfetch("https://api.github.com/repos/akash3444/shadcn-ui-blocks/contents/public/r/radix")`
+- **Análisis de resultados:** El JSON devuelto listará todos los bloques (`hero-01.json`, `footer-05.json`, `pricing-02.json`, etc.). Filtra mentalmente los que coincidan con la necesidad.
+
+### 5.2 Selección de Bloques
+Cuando existan múltiples opciones para un mismo tipo de bloque (ej. 10 footers distintos):
+- **Modo Asistido (Por defecto):** Utiliza la herramienta `question` o lista en el chat las opciones disponibles, proporcionando la URL visual del catálogo (`https://www.shadcnui-blocks.com/blocks/categories/[categoria]`) para que el usuario pueda verlos y elegir. *Ejemplo: "He encontrado 5 tipos de Footers, puedes verlos aquí. ¿Cuál prefieres (footer-01 a footer-05)?"*.
+- **Modo Autopiloto (`/loop`):** Si estás actuando de forma 100% autónoma sin interacción del usuario, lee el código fuente de 2 o 3 opciones al azar utilizando `webfetch("https://raw.githubusercontent.com/akash3444/shadcn-ui-blocks/main/public/r/radix/[bloque].json")` para analizar qué código encaja mejor con la petición (ej. si pide newsletter, busca uno con `<Input>`) y elígelo autónomamente.
+
+### 5.3 Inyección e Instalación (Contrato y Coder)
+- **Spec-Writer (F1):** En el `contract.json`, dentro de `frontend.components`, anota el bloque utilizando la URL remota directa:
+  ```json
+  "frontend": {
+    "components": [
+      "https://shadcnui-blocks.com/r/radix/footer-04.json"
+    ]
+  }
+  ```
+- **Coder (F2):** Para instalar estos bloques externos, utiliza la capacidad nativa de la CLI v3 de Shadcn. Ejecuta directamente el comando apuntando a la URL:
+  ```bash
+  npx shadcn@latest add https://shadcnui-blocks.com/r/radix/footer-04.json
+  ```
+  La CLI se encargará automáticamente de descargar el código y resolver dependencias internas (ej. instalar `separator` o `button` si el bloque lo requiere). No es necesario configurar nada en el `components.json`.
 
