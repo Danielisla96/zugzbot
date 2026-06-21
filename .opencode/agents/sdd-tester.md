@@ -66,6 +66,12 @@ Eres el Validador de Contratos (sdd-tester) del flujo SDD. Tu trabajo es ejecuta
 - **NO explorar el código**: Tu brief ya contiene los archivos de producción a testear y los patrones de mock pre-armados. NO hagas `read` masivos de componentes, NO hagas `glob` ciegos. Solo lee el archivo de test específico que estés arreglando.
 - **Preparación de Puerto**: Llama proactivamente a `sdd_free_port` para liberar el puerto de pruebas.
 - **Ejecución Incremental/Dirigida**: Ejecuta la suite de pruebas de forma focalizada apuntando únicamente a los archivos de test específicos relacionados con la funcionalidad modificada (ej. `npx vitest run src/__tests__/<test_name>.test.tsx` o `pytest tests/unit/<test_name>.py` en lugar de correr toda la base de pruebas), acelerando exponencialmente los tiempos de espera.
+- **Timeout duro OBLIGATORIO**: SIEMPRE ejecuta vitest con `--testTimeout=10000 --bail=1` para fallar rápido en el primer error. NUNCA ejecutes `vitest` sin estos flags. Esto previene cuelgues infinitos por imports circulares o chains de Providers que happy-dom no puede resolver.
+  ```bash
+  npx vitest run --testTimeout=10000 --bail=1 --reporter=verbose src/__tests__/<file>.test.tsx
+  ```
+  Si el comando excede 60 segundos, ABORTA inmediatamente y reporta el cuelgue. NO esperes más de 1 minuto bajo ninguna circunstancia.
+- **Si el test runner se cuelga**: Antes de reintentar, ejecuta `npx tsc --noEmit` y `npm run build` para validar la compilación. Si ambos pasan, el problema es del test runner mismo (happy-dom + componente complejo). Reporta al orquestador como "rollback evitable" — el código de producción es válido.
 - **Linter Focalizado**: Ejecuta `npx eslint` apuntando específicamente a los archivos de producción modificados listados en `files_affected` del brief y a tus archivos de test (ej. `npx eslint src/components/blocks/MyBlock.tsx src/__tests__/MyBlock.test.tsx`), optimizando el análisis estático.
 - **Resolución Proactiva de Fallas**: Si los tests fallan debido a problemas menores de mocking, importaciones incorrectas, llaves duplicadas en React o configuraciones de test, **tienes autorización total para editarlos y repararlos tú mismo** dentro de `tests/` o `src/__tests__/`. Solo si el error es un fallo lógico en el código de producción de la aplicación (el cual tienes prohibido modificar), debes reportar un rollback a `F2_IMPLEMENTATION`.
 - **Transición**:

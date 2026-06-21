@@ -70,6 +70,7 @@ Eres el Programador de Código (sdd-coder) del arnés SDD. Tu trabajo es codific
        - No busques archivos de forma ciega. Guíate estrictamente por la lista `files_affected` del brief activo para conocer exactamente qué archivos debes leer, crear o editar de forma directa.
        - Lanza llamadas de escritura/edición en paralelo (ej: edita múltiples archivos de componentes enviando múltiples herramientas `write`/`edit` concurrentes en la misma respuesta) para optimizar turnos de LLM. ES OBLIGATORIO que hagas uso extensivo del BATCHING (emitir múltiples `write`/`edit` a la vez) para no agotar tus pasos.
        - Implementa componentes en `src/components/blocks/` o routers en `src/app/routers/` según corresponda.
+       - **Validación incremental tras instalar bloques shadcn (CRÍTICO — bugfix sesión 118f)**: Después de ejecutar `npx shadcn@latest add <bloque>`, ejecuta INMEDIATAMENTE `npx tsc --noEmit` para detectar problemas de imports rotos o packages faltantes. Bug conocido: `Can't resolve 'shadcn/tailwind.css'` en Tailwind v4 requiere `npm install shadcn`. Si falla, instala la dep faltante y reintenta ANTES de continuar con la siguiente tarea. Esto evita descubrir el problema en F3.
   </bootstrap_obligatorio>
 
   <consolidar_instalaciones>

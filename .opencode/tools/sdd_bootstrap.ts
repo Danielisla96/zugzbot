@@ -139,7 +139,8 @@ const DEFAULT_PACKAGE_JSON = {
     "@testing-library/react": "^16.1.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/user-event": "^14.5.2"
+    "@testing-library/user-event": "^14.5.2",
+    "shadcn": "^4.11.0"
   }
 }
 

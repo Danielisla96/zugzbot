@@ -203,6 +203,30 @@ Para un dashboard o panel estándar, usa esta plantilla **reducida** de **~80 l�
 
 ---
 
+## 2.6. Estrategia de Testing (CRÍTICO — bugfix sesión 118f)
+
+**El error más común en modo `console`**: hacer `render(<Component />)` sobre componentes que dependen de Context (SidebarProvider, ThemeProvider, etc.) **cuelga happy-dom indefinidamente**. Esto causa timeouts de 120-300s en el tester.
+
+### Reglas:
+- **Smoke tests por defecto (modo `console`)**: Solo verificar que el módulo se importa sin error, que `typeof Component === "function"`, y que las firmas del contrato se cumplen. NO usar `render()` salvo necesidad estricta.
+- **Render real solo si**: el test scenario es `integration` Y la interacción es crítica (ej: ThemeToggle toggle). En ese caso, envolver con todos los Providers necesarios en el mismo archivo `.test.tsx`.
+- **PROHIBIDO en `console`**: renderizar páginas server component completas, Sidebar sin `<SidebarProvider>`, Charts sin `<ResponsiveContainer>`.
+
+### Plantilla de test_scenario segura:
+```json
+{
+  "id": "TS-01",
+  "name": "Componente se monta sin errores",
+  "type": "unit",
+  "feature_ref": "MiComponente",
+  "given": "el módulo existe",
+  "when": "se importa",
+  "then": "se exporta una función válida sin errores de compilación"
+}
+```
+
+---
+
 ## 3. Anti-patrones a evitar en el contrato
 
 - **Inconsistencia de nombres de componentes (CRÍTICO)**: Los nombres declarados en `frontend.components[].name` del contrato son **un compromiso inmutable**. El spec-writer DEBE usar exactamente estos mismos nombres al crear las pruebas unitarias/integración, y el coder DEBE usarlos para crear los componentes de producción. **PROHIBIDO renombrar o cambiar de PascalCase a kebab-case en archivos de test**. Si el contrato dice `CalculatorPanel`, el archivo de test se llamará `CalculatorPanel.test.tsx` y no se debe cambiar a `CalculatorPage.test.tsx` (esto causó fallas de compilación con imports rotos en la sesión 1374).
