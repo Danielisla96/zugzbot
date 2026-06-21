@@ -156,16 +156,31 @@ El `@sdd-coder` utiliza el template base `nextjs-shadcn`. Si el contrato no deta
 
 Además del catálogo nativo de Shadcn UI, dispones de acceso autónomo a más de 200 bloques de alta calidad del repositorio **Shadcn UI Blocks (por Akash)**. Si el usuario solicita una interfaz relacionada con landings, marketing, autenticación, footers o dashboards, **TIENES LA OBLIGACIÓN** de explorar este catálogo ANTES de proponer crear componentes desde cero.
 
+### 5.0 Herramientas MCP Nativas del Arnés (PREFERENTE — bugfix sesión 1176)
+
+**PROHIBIDO** usar `webfetch` directo a la API de GitHub para descubrir bloques. El arnés expone herramientas MCP dedicadas que **cachean el índice localmente** con TTL de 7 días, evitando redescubrimiento y latencia:
+
+- `sdd_akash_catalog_list_blocks({ category?, query?, registry?, limit?, force_refresh? })`
+  - Devuelve el listado completo del catálogo (shadcn-ui-blocks + basecn) filtrado por categoría o substring.
+  - `registry`: `"shadcn"` (Radix), `"basecn"` (Base UI) o `"both"` (default).
+  - `force_refresh: true` re-descarga aunque el cache sea fresco.
+- `sdd_akash_catalog_get_block({ name, registry?, force_refresh? })`
+  - Devuelve el código fuente, archivos y dependencias de un bloque específico.
+  - Incluye `install_command` listo: `npx shadcn@latest add https://shadcnui-blocks.com/r/radix/<name>.json --yes`.
+- `sdd_akash_catalog_warm_index({ registry? })`
+  - Pre-calienta el caché para evitar la latencia del primer `list_blocks`. Llamar al bootstrap del proyecto.
+
+Cache local en `.openspec/cache/` (`.gitignore` lo excluye automáticamente). Si el caché tiene más de 7 días, se re-descarga silenciosamente en el próximo `list_blocks`.
+
 ### 5.1 Flujo de Descubrimiento (Fase F1 - Spec-Writer)
-Si el usuario solicita una interfaz (ej: "necesito un hero", "haz un footer"), no asumas que debes programarlo a mano. Primero consulta la lista maestra de bloques en tiempo real:
-- **Comando a usar:** Ejecuta la herramienta `webfetch` apuntando a la API de GitHub:
-  `webfetch("https://api.github.com/repos/akash3444/shadcn-ui-blocks/contents/public/r/radix")`
-- **Análisis de resultados:** El JSON devuelto listará todos los bloques (`hero-01.json`, `footer-05.json`, `pricing-02.json`, etc.). Selecciona mentalmente los que coincidan con la necesidad.
+Si el usuario solicita una interfaz (ej: "necesito un hero", "haz un footer"), **llama primero a `sdd_akash_catalog_list_blocks`**:
+- **Asistido:** `sdd_akash_catalog_list_blocks({ category: "hero", limit: 5 })` → muestra las 5 mejores opciones con su `preview_url` (`https://shadcnui-blocks.com/blocks/<name>`).
+- **Autopiloto:** `sdd_akash_catalog_get_block({ name: "hero-06" })` sobre 2-3 candidatos y elige el que mejor encaje.
 
 ### 5.2 Selección de Bloques (Interactiva o Autónoma)
 Cuando existan múltiples opciones para un mismo tipo de bloque (ej. 10 footers distintos):
 - **Modo Asistido (Por defecto):** Utiliza la herramienta `question` para preguntarle al usuario o dile explícitamente en el chat: *"Tengo acceso a la galería de Shadcn UI Blocks. He encontrado X opciones de [categoria]. ¿Quieres que revise algunas en particular o te dejo el enlace visual (`https://www.shadcnui-blocks.com/blocks/categories/[categoria]`) para que elijas la que más te guste?"*.
-- **Modo Autopiloto (`/loop`):** Si estás actuando de forma 100% autónoma, lee el código fuente de 2 o 3 opciones al azar utilizando `webfetch("https://raw.githubusercontent.com/akash3444/shadcn-ui-blocks/main/public/r/radix/[bloque].json")` para analizar qué código encaja mejor con la petición y elígelo autónomamente sin preguntar.
+- **Modo Autopiloto (`/loop`):** Si estás actuando de forma 100% autónoma, lee el código fuente de 2 o 3 opciones con `sdd_akash_catalog_get_block` y elígelo autónomamente sin preguntar.
 
 ### 5.3 Inyección e Instalación (Contrato y Coder)
 - **Spec-Writer (F1):** En el `contract.json`, dentro de `frontend.components`, anota el bloque utilizando la URL remota directa:
@@ -176,11 +191,19 @@ Cuando existan múltiples opciones para un mismo tipo de bloque (ej. 10 footers 
     ]
   }
   ```
-- **Coder (F2):** Para instalar estos bloques externos, utiliza la capacidad nativa de la CLI v3 de Shadcn. Ejecuta directamente el comando apuntando a la URL:
+- **Coder (F2):** Para instalar estos bloques externos, **obtén el `install_command` listo** vía `sdd_akash_catalog_get_block({ name })` (campo `install_command` del resultado) y ejecútalo. La CLI v3 de Shadcn se encarga automáticamente de descargar el código y resolver dependencias internas:
   ```bash
-  npx shadcn@latest add https://shadcnui-blocks.com/r/radix/footer-04.json
+  npx shadcn@latest add https://shadcnui-blocks.com/r/radix/footer-04.json --yes
   ```
-  La CLI se encargará automáticamente de descargar el código y resolver dependencias internas.
+
+### 5.4 Validación Post-Instalación (BLOQUEANTE — bugfix sesión 1176)
+Tras instalar cualquier bloque Akash (`npx shadcn add [URL]`), ejecuta INMEDIATAMENTE:
+1. `npx tsc --noEmit` para detectar imports rotos o packages faltantes.
+2. Verifica que todos los archivos declarados en el JSON del bloque fueron creados (compara con el campo `source_files` devuelto por `sdd_akash_catalog_get_block`).
+3. Si faltan archivos, reintenta la instalación con `--overwrite`.
+4. Solo entonces reporta éxito al orquestador.
+
+**Bug conocido**: `Can't resolve 'shadcn/tailwind.css'` en Tailwind v4 requiere `npm install shadcn` antes de continuar.
 
 ---
 

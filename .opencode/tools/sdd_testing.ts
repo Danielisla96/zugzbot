@@ -248,9 +248,14 @@ export const shift_left_verify = tool({
       }, null, 2)
     }
 
-    const result: { tsc: { status: string, errors?: any[] }, eslint: { status: string, errors?: any[] } } = {
+    const result: {
+      tsc: { status: string, errors?: any[] }
+      eslint: { status: string, errors?: any[] }
+      lintCharts: { status: string, violations?: any[], summary?: string }
+    } = {
       tsc: { status: "SUCCESS" },
-      eslint: { status: "SUCCESS" }
+      eslint: { status: "SUCCESS" },
+      lintCharts: { status: "SUCCESS" }
     }
 
     // 1. Run tsc --noEmit
@@ -262,6 +267,59 @@ export const shift_left_verify = tool({
       result.tsc = {
         status: "FAIL",
         errors
+      }
+    }
+
+    // 1.5 Run lint-charts (bugfix sesion 1176: detectar hsl(var(--chart-N)) en
+    // chartConfig que es CSS invalido cuando --chart-N esta definido en OKLCH).
+    // BLOQUEANTE: cualquier violacion hace fallar shift-left.
+    try {
+      const linterScript = path.resolve(root, ".opencode/scripts/lint-charts.js")
+      if (fs.existsSync(linterScript)) {
+        const lintOut = execSync(`node "${linterScript}" --json`, {
+          cwd: targetPath,
+          encoding: "utf8",
+          timeout: 30000
+        })
+        try {
+          const parsed = JSON.parse(lintOut)
+          if (parsed.status === "FAIL") {
+            result.lintCharts = {
+              status: "FAIL",
+              violations: parsed.violations || [],
+              summary: parsed.summary || "violaciones detectadas"
+            }
+          } else {
+            result.lintCharts = {
+              status: "SUCCESS",
+              summary: parsed.summary || "ok"
+            }
+          }
+        } catch (parseErr) {
+          result.lintCharts = {
+            status: "WARN",
+            summary: "no se pudo parsear salida del linter: " + lintOut.slice(0, 200)
+          }
+        }
+      }
+    } catch (e: any) {
+      // execSync lanza si exit code != 0 (linter encontro violaciones)
+      const rawOutput = e.stdout?.toString() || e.stderr?.toString() || ""
+      try {
+        const parsed = JSON.parse(rawOutput)
+        if (parsed.status === "FAIL") {
+          result.lintCharts = {
+            status: "FAIL",
+            violations: parsed.violations || [],
+            summary: parsed.summary || "violaciones detectadas"
+          }
+        }
+      } catch (parseErr) {
+        result.lintCharts = {
+          status: "FAIL",
+          violations: [{ raw: rawOutput.slice(0, 1000) }],
+          summary: "linter ejecuto con codigo no-cero y salida no parseable"
+        }
       }
     }
 
@@ -311,13 +369,80 @@ export const shift_left_verify = tool({
       }
     }
 
-    const overallSuccess = result.tsc.status === "SUCCESS" && result.eslint.status === "SUCCESS"
+    const overallSuccess =
+      result.tsc.status === "SUCCESS" &&
+      result.eslint.status === "SUCCESS" &&
+      result.lintCharts.status === "SUCCESS"
 
     return JSON.stringify({
       status: overallSuccess ? "SUCCESS" : "FAIL",
-      message: overallSuccess ? "Shift-Left Verification exitosa: Cero errores de compilación y cero errores de lint." : "Validación fallida: Se encontraron errores estáticos.",
+      message: overallSuccess
+        ? "Shift-Left Verification exitosa: Cero errores de compilación, lint y lint-charts."
+        : "Validación fallida: Se encontraron errores estáticos.",
       verification: result
     }, null, 2)
+  }
+})
+
+// Tool: sdd_lint_charts
+//
+// Linter BLOQUEANTE independiente para invocación directa (debugging o
+// pre-commit). Detecta uso incorrecto de `hsl(var(--chart-N))` cuando
+// `--chart-N` esta definido en OKLCH en globals.css (sesion 1176).
+export const lint_charts = tool({
+  description:
+    "Ejecuta el linter BLOQUEANTE de chartConfigs Recharts. Detecta " +
+    "'hsl(var(--chart-N))' y patrones similares que producen CSS invalido " +
+    "cuando --chart-N esta definido en OKLCH. Usar desde F3 antes de " +
+    "transicionar a F4 o como pre-commit hook.",
+  args: {
+    json: tool.schema
+      .boolean()
+      .optional()
+      .default(false)
+      .describe("Si true, devuelve la salida en formato JSON estructurado."),
+    paths: tool.schema
+      .array(tool.schema.string())
+      .optional()
+      .describe("Paths adicionales a escanear (default: src/ y app/).")
+  },
+  async execute(args, context) {
+    const root = getRoot(context)
+    const linterScript = path.resolve(root, ".opencode/scripts/lint-charts.js")
+    if (!fs.existsSync(linterScript)) {
+      return JSON.stringify({
+        status: "ERROR",
+        message: `Linter no encontrado en ${linterScript}. Verifica que .opencode/scripts/lint-charts.js existe.`
+      }, null, 2)
+    }
+
+    const targetDir = getTargetDir(root)
+    const targetPath = targetDir === "." ? root : path.resolve(root, targetDir)
+
+    const extraArgs: string[] = []
+    if (args.json) extraArgs.push("--json")
+    if (args.paths && args.paths.length > 0) extraArgs.push(...args.paths)
+
+    try {
+      const out = execSync(`node "${linterScript}" ${extraArgs.join(" ")}`, {
+        cwd: targetPath,
+        encoding: "utf8",
+        timeout: 30000
+      })
+      return JSON.stringify({
+        status: "PASS",
+        message: out.trim() || "lint-charts PASS",
+        raw_output: out
+      }, null, 2)
+    } catch (e: any) {
+      const out = e.stdout?.toString() || e.stderr?.toString() || ""
+      return JSON.stringify({
+        status: "FAIL",
+        message: "lint-charts detecto violaciones.",
+        raw_output: out,
+        exit_code: e.status
+      }, null, 2)
+    }
   }
 })
 

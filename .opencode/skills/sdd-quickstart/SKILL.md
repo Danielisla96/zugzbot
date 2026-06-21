@@ -148,6 +148,41 @@ Copia y adapta los IDs y descripciones que apliquen. Borra los que no apliquen.
 - `AUTH-02`: Login con credenciales inválidas muestra error genérico.
 - `AUTH-03`: Logout limpia el token y redirige a `/login`.
 
+### Charts / Recharts (CRÍTICO — bugfix sesión 1176)
+
+Cuando el contrato declare un chart de Recharts (`chart-area-*`, `chart-bar-*`, `chart-pie-*`, etc.) o cualquier componente que lea `var(--chart-*)`, **debes incluir al menos UNO de los siguientes test_scenarios para forzar la validación de tema dark/light en F3**:
+
+```json
+{
+  "id": "TS-CHART-01",
+  "name": "Chart visible con contraste WCAG AA en modo oscuro",
+  "type": "visual",
+  "feature_ref": "ChartAreaInteractive",
+  "given": "el dashboard se renderiza en modo oscuro",
+  "when": "el area chart muestra las series desktop y mobile",
+  "then": "las líneas y rellenos tienen contraste >= 4.5:1 con el fondo de la card",
+  "selector": "[data-testid='chart-area-interactive']",
+  "assertion": "color-contrast-pass AND not-invisible"
+}
+```
+
+```json
+{
+  "id": "TS-CHART-02",
+  "name": "ChartConfig usa variables CSS válidas (no hsl+oklch mix)",
+  "type": "unit",
+  "feature_ref": "ChartAreaInteractive",
+  "given": "el componente importa su chartConfig",
+  "when": "el linter `node .opencode/scripts/lint-charts.js` escanea el archivo",
+  "then": "ninguna entrada usa 'hsl(var(--chart-N))'; todas usan 'var(--color-chart-N)' directamente",
+  "assertion": "lint-charts --json status == PASS"
+}
+```
+
+**Por qué importan**: en sesión 1176, el coder dejó `color: "hsl(var(--chart-1))"` que es CSS inválido porque `--chart-1` se define en OKLCH. El usuario tuvo que reportar el bug manualmente. Estos test_scenarios **activan el linter BLOQUEANTE** `sdd_testing_lint_charts` durante shift-left y fuerzan al tester a validar contraste visual con Playwright.
+
+Si el chart es solo decorativo (no necesita tema oscuro), puedes omitir `TS-CHART-01`. Pero `TS-CHART-02` debería incluirse **siempre** que el chart use tokens `--chart-*`.
+
 ---
 
 ## 2.5. Plantilla MÍNIMA viable (Fast-Track Dashboard)

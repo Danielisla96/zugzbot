@@ -18,6 +18,7 @@
     ".opencode/skills/",
     ".opencode/templates/",
     ".opencode/tools/",
+    ".opencode/scripts/",
     ".opencode/contract-schema.json",
     ".opencode/oh-my-design/design-md/",
     ".opencode/oh-my-design/packages/mcp/dist/",
