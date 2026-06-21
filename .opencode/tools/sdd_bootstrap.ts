@@ -328,6 +328,27 @@ export const bootstrap_nextjs_shadcn = tool({
     ]
     for (const f of standardFiles) copyFileSafe(f)
 
+    // Post-copy: garantizar que components.json del target tenga los registries
+    // externos preconfigurados (idempotente: si ya existen, no los duplica).
+    const targetComponentsJson = path.resolve(targetPath, "components.json")
+    if (fs.existsSync(targetComponentsJson)) {
+      try {
+        const cfg = JSON.parse(fs.readFileSync(targetComponentsJson, "utf8"))
+        if (!cfg.registries) cfg.registries = {}
+        if (!cfg.registries["@react-bits"]) {
+          cfg.registries["@react-bits"] = "https://reactbits.dev/r/{name}.json"
+          fs.writeFileSync(
+            targetComponentsJson,
+            JSON.stringify(cfg, null, 2),
+            "utf8"
+          )
+          filesCopied.push("components.json (registries.@react-bits inyectado)")
+        }
+      } catch (e) {
+        // best-effort: si falla el parse, no bloqueamos el bootstrap
+      }
+    }
+
     if (targetDir !== ".") {
       const configFiles = [
         "tsconfig.json",

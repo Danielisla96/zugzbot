@@ -152,58 +152,119 @@ El `@sdd-spec-writer` utiliza de manera proactiva el MCP `shadcn` (`shadcn_searc
 ### Fase F2 (Implementation)
 El `@sdd-coder` utiliza el template base `nextjs-shadcn`. Si el contrato no detalla todos los sub-componentes o el Coder necesita verificar el comportamiento de un bloque antes de acoplarlo con el backend, debe ejecutar `shadcn_get_item_examples_from_registries` para ver ejemplos funcionales del componente real. Tras ejecutar la instalación con `npx shadcn@latest add`, el Coder debe contrastar los archivos inyectados con el mapa del contrato y limpiar de inmediato cualquier archivo redundante (como una página de inicio duplicada) que no coincida con el router oficial.
 
-## 5. Catálogo Externo Oficial: Shadcn UI Blocks (Akash)
+## 5. Catálogo Unificado de Bloques Externos (`sdd_catalog`)
 
-Además del catálogo nativo de Shadcn UI, dispones de acceso autónomo a más de 200 bloques de alta calidad del repositorio **Shadcn UI Blocks (por Akash)**. Si el usuario solicita una interfaz relacionada con landings, marketing, autenticación, footers o dashboards, **TIENES LA OBLIGACIÓN** de explorar este catálogo ANTES de proponer crear componentes desde cero.
+Además del catálogo nativo de Shadcn UI, el arnés expone un catálogo unificado de **3 registries** externos (todos con catálogo JSON oficial y discoverable programáticamente). Si el usuario pide cualquier interfaz (hero, footer, dashboard, login, AI chat, animated background, etc.), **TIENES LA OBLIGACIÓN** de explorar este catálogo ANTES de inventar desde cero.
 
-### 5.0 Herramientas MCP Nativas del Arnés (PREFERENTE — bugfix sesión 1176)
+### 5.0 Registries Soportados (todos discoverables)
 
-**PROHIBIDO** usar `webfetch` directo a la API de GitHub para descubrir bloques. El arnés expone herramientas MCP dedicadas que **cachean el índice localmente** con TTL de 7 días, evitando redescubrimiento y latencia:
+| Registry | Fuente de catálogo | Contenido | TTL | Notas |
+|---|---|---|---|---|
+| `shadcn` | akash3444/shadcn-ui-blocks (GitHub Contents API) | ~540 bloques Radix | 7d | **Default** para marketing/landing/auth/dashboards |
+| `basecn` | akash3444/basecn (GitHub Contents API) | ~60 bloques fork Base UI | 7d | Alternativa si el proyecto usa Base UI |
+| `reactbits` | reactbits.dev/r/registry.json (JSON oficial shadcn) | 134 bases × 4 variantes = 536 items | 1d | Primitivas animadas (backgrounds, text, cards, cursors, etc.) |
 
-- `sdd_akash_catalog_list_blocks({ category?, query?, registry?, limit?, force_refresh? })`
-  - Devuelve el listado completo del catálogo (shadcn-ui-blocks + basecn) filtrado por categoría o substring.
-  - `registry`: `"shadcn"` (Radix), `"basecn"` (Base UI) o `"both"` (default).
-  - `force_refresh: true` re-descarga aunque el cache sea fresco.
-- `sdd_akash_catalog_get_block({ name, registry?, force_refresh? })`
-  - Devuelve el código fuente, archivos y dependencias de un bloque específico.
-  - Incluye `install_command` listo: `npx shadcn@latest add https://shadcnui-blocks.com/r/radix/<name>.json --yes`.
-- `sdd_akash_catalog_warm_index({ registry? })`
-  - Pre-calienta el caché para evitar la latencia del primer `list_blocks`. Llamar al bootstrap del proyecto.
+> **Criterio de inclusion**: solo se soportan registries con catálogo JSON oficialmente discoverable. 21st.dev fue removido porque su catálogo es JS-rendered y requiere scraping para descubrir items nuevos — eso rompe el principio de "siempre saber qué hay disponible antes de elegir".
 
-Cache local en `.openspec/cache/` (`.gitignore` lo excluye automáticamente). Si el caché tiene más de 7 días, se re-descarga silenciosamente en el próximo `list_blocks`.
+### 5.1 Herramientas MCP Nativas del Arnés (PREFERENTE — `sdd_catalog_*`)
 
-### 5.1 Flujo de Descubrimiento (Fase F1 - Spec-Writer)
-Si el usuario solicita una interfaz (ej: "necesito un hero", "haz un footer"), **llama primero a `sdd_akash_catalog_list_blocks`**:
-- **Asistido:** `sdd_akash_catalog_list_blocks({ category: "hero", limit: 5 })` → muestra las 5 mejores opciones con su `preview_url` (`https://shadcnui-blocks.com/blocks/<name>`).
-- **Autopiloto:** `sdd_akash_catalog_get_block({ name: "hero-06" })` sobre 2-3 candidatos y elige el que mejor encaje.
+**PROHIBIDO** usar `webfetch` directo a GitHub o reactbits.dev para descubrir bloques. El arnés expone 3 tools MCP dedicadas que cachean en `.openspec/cache/` y evitan redescubrimiento:
 
-### 5.2 Selección de Bloques (Interactiva o Autónoma)
-Cuando existan múltiples opciones para un mismo tipo de bloque (ej. 10 footers distintos):
-- **Modo Asistido (Por defecto):** Utiliza la herramienta `question` para preguntarle al usuario o dile explícitamente en el chat: *"Tengo acceso a la galería de Shadcn UI Blocks. He encontrado X opciones de [categoria]. ¿Quieres que revise algunas en particular o te dejo el enlace visual (`https://www.shadcnui-blocks.com/blocks/categories/[categoria]`) para que elijas la que más te guste?"*.
-- **Modo Autopiloto (`/loop`):** Si estás actuando de forma 100% autónoma, lee el código fuente de 2 o 3 opciones con `sdd_akash_catalog_get_block` y elígelo autónomamente sin preguntar.
+- `sdd_catalog_list_blocks({ category?, query?, registry?, limit?, force_refresh? })`
+  - `registry`: `"shadcn"` | `"basecn"` | `"reactbits"` | `"all"` (default).
+  - Filtra por categoria exacta (`hero`, `pricing`, `backgrounds`, `text`, `cards`, `navigation`, ...) o substring libre (sobre `name`, `description`, `tags`).
+  - Para `reactbits`: devuelve las **134 bases** (cada una con `variants[]` y `default_variant`), NO las 536 variantes. Esto evita duplicados y permite ver opciones de un vistazo.
+- `sdd_catalog_get_block({ name, registry?, variant?, force_refresh? })`
+  - Formatos de `name`:
+    - shadcn/basecn: `"hero-06"`, `"sidebar-07"`
+    - reactbits: `"Dither"` (auto-resuelve a `Dither-TS-TW` por default) **o** `"Dither-JS-CSS"` (variante canónica completa)
+    - URL directa: `"https://reactbits.dev/r/Dither-TS-TW.json"` o `"https://shadcnui-blocks.com/r/radix/hero-06.json"`
+    - Namespace shadcn: `"@acme/button"`
+  - Para reactbits, parámetro opcional `variant`: `"JS-CSS" | "JS-TW" | "TS-CSS" | "TS-TW"` (default `"TS-TW"`). Aplicar solo cuando pasas el nombre base sin sufijo de variante.
+  - `registry` autodetecta por el formato; pasalo explícito solo si necesitas forzar.
+  - Devuelve `source_files[]`, `dependencies[]`, `preview_url`, `install_command` listo y metadatos `base_name` + `variant` (para reactbits).
+- `sdd_catalog_warm_index({ registry? })`
+  - Pre-calienta caches. Llamar al bootstrap (F0) o inicio de F1.
 
-### 5.3 Inyección e Instalación (Contrato y Coder)
-- **Spec-Writer (F1):** En el `contract.json`, dentro de `frontend.components`, anota el bloque utilizando la URL remota directa:
+### 5.2 Flujo de Descubrimiento (Fase F1 - Spec-Writer)
+
+Cuando el usuario pide una UI, sigue este orden de prioridad:
+
+1. **Primero** `sdd_catalog_list_blocks({ registry: "all", category: "<categoria>", limit: 10 })` — devuelve candidatos de los 3 registries simultáneamente.
+2. **Si el usuario pide animaciones/shaders/efectos visuales cinematograficos**, prioriza `registry: "reactbits"` (es donde estan las primitivas animadas reales: `Dither`, `Aurora`, `GlareHover`, `Magnet`, `StaggeredMenu`, `FloatingDock`, etc.).
+3. **Si el usuario pide paginas de marketing completas** (landing, pricing, features), prioriza `registry: "shadcn"` (bloques Radix mas completos con texto, CTAs, imagenes placeholder).
+4. **Si el usuario ya dio una URL** (`https://reactbits.dev/...` o `https://shadcnui-blocks.com/...`), ve directo a `sdd_catalog_get_block` con esa URL.
+5. **Presenta opciones con `preview_url`** para que el usuario vea cada una antes de elegir:
+   - **Asistido (HIL):** muestra `preview_url` (que el usuario puede abrir en navegador) + `install_command` para los 2-3 mejores candidatos y deja que elija. Si el usuario dice "ese", ejecuta el `install_command`.
+   - **Autopiloto (`/loop`):** inspecciona 2-3 candidatos con `sdd_catalog_get_block`, analiza dependencias y compat con el stack del contrato, elige autonomamente.
+
+### 5.3 Seleccion de Bloques (Interactiva o Autonoma)
+
+Cuando hay multiples opciones para una categoria (ej. 10 heroes):
+- **Modo Asistido (default):** pregunta al usuario con `question` o en chat: *"Tengo X opciones de [categoria]. ¿Quieres revisar alguna? Puedo darte el `preview_url` (ej. `https://shadcnui-blocks.com/blocks/hero-06` o `https://reactbits.dev/Dither`) para que elijas."*
+- **Modo Autopiloto:** lee el codigo de 2-3 opciones con `sdd_catalog_get_block` y elige sin preguntar.
+
+### 5.4 Inyeccion e Instalacion (Spec-Writer + Coder)
+
+- **Spec-Writer (F1):** En el `contract.json`, dentro de `frontend.components`, anota el bloque usando **el `install_url` o el `name` canonico** que devolvio `sdd_catalog_get_block`:
   ```json
   "frontend": {
     "components": [
-      "https://shadcnui-blocks.com/r/radix/footer-04.json"
+      { "name": "hero-06", "registry": "shadcn", "source": "akash3444/shadcn-ui-blocks" },
+      { "name": "Dither", "registry": "reactbits", "variant": "TS-TW", "source": "reactbits.dev/Dither" }
     ]
   }
   ```
-- **Coder (F2):** Para instalar estos bloques externos, **obtén el `install_command` listo** vía `sdd_akash_catalog_get_block({ name })` (campo `install_command` del resultado) y ejecútalo. La CLI v3 de Shadcn se encarga automáticamente de descargar el código y resolver dependencias internas:
+- **Coder (F2):** Para instalar, usa el `install_command` literal que devuelve `sdd_catalog_get_block` (campo `block.install_command`). Ejemplos reales:
   ```bash
-  npx shadcn@latest add https://shadcnui-blocks.com/r/radix/footer-04.json --yes
+  # Akash Radix (shadcn CLI nativo)
+  npx shadcn@latest add https://shadcnui-blocks.com/r/radix/hero-06.json --yes
+  # Basecn
+  npx shadcn@latest add https://basecn.dev/r/footer-04.json --yes
+  # reactbits (variante TS-TW explicita)
+  npx shadcn@latest add https://reactbits.dev/r/Dither-TS-TW.json --yes
   ```
+  La CLI v3 de Shadcn negocia `Accept: application/json` automaticamente, descarga el codigo y resuelve las `registryDependencies`.
 
-### 5.4 Validación Post-Instalación (BLOQUEANTE — bugfix sesión 1176)
-Tras instalar cualquier bloque Akash (`npx shadcn add [URL]`), ejecuta INMEDIATAMENTE:
+### 5.5 Validacion Post-Instalacion (BLOQUEANTE)
+
+Tras instalar cualquier bloque externo, ejecuta INMEDIATAMENTE:
 1. `npx tsc --noEmit` para detectar imports rotos o packages faltantes.
-2. Verifica que todos los archivos declarados en el JSON del bloque fueron creados (compara con el campo `source_files` devuelto por `sdd_akash_catalog_get_block`).
-3. Si faltan archivos, reintenta la instalación con `--overwrite`.
-4. Solo entonces reporta éxito al orquestador.
+2. Verifica que todos los archivos declarados en `source_files[]` (devuelto por `sdd_catalog_get_block`) fueron creados fisicamente.
+3. Si faltan archivos, reintenta con `--overwrite`.
+4. **Para bloques reactbits con dependencias pesadas** (`gsap`, `three`, `@react-three/fiber`, `motion`): confirma que el `package.json` del proyecto las incluye; si no, `npm install <deps>` antes de continuar. Revisa el campo `dependencies[]` del JSON retornado por `sdd_catalog_get_block`.
+5. **Solo entonces** reporta exito al orquestador.
 
 **Bug conocido**: `Can't resolve 'shadcn/tailwind.css'` en Tailwind v4 requiere `npm install shadcn` antes de continuar.
+
+### 5.6 reactbits.dev - Detalles de Variantes
+
+reactbits.dev es el registry mas "vivo" del catalogo unificado. Cada componente base se publica en **4 variantes** con sufijo `-<Lang>-<Style>`:
+
+| Sufijo | Lenguaje | Styling |
+|---|---|---|
+| `JS-CSS` | JavaScript | CSS plano (.css) |
+| `JS-TW` | JavaScript | Tailwind v4 (.tw) |
+| `TS-CSS` | TypeScript | CSS plano |
+| `TS-TW` | TypeScript | Tailwind v4 |
+
+- **Default del arnés**: `TS-TW` (TypeScript + Tailwind v4, alineado al stack Next.js 16 + Shadcn + Tailwind v4 del harness).
+- **Para usar otra variante**: `sdd_catalog_get_block({ name: "Dither", variant: "JS-CSS", registry: "reactbits" })`.
+- **El preview_url es siempre por base**: `https://reactbits.dev/Dither` (muestra el demo vivo con animación real, ideal para que el usuario vea cómo se ve antes de instalar).
+- **Las dependencias son reales**: `gsap@^3.13.0`, `three`, `@react-three/fiber@^9.3.0`, `postprocessing`, `motion`. **Third-party trust obligatorio**: validar compat con el stack target antes de instalar.
+- **Mapa curado de categorias** (dentro de `sdd_catalog.ts`, constante `REACTBITS_POPULAR_BY_CATEGORY`): las ~85 bases más populares organizadas en `backgrounds`, `text`, `cards`, `navigation`, `buttons`, `animations`, `cursors`, `misc`. Las bases fuera del mapa caen en `misc` pero son buscables por `query`.
+
+### 5.7 Preview UX — Cómo se ve antes de instalar
+
+**Todos los items del catálogo unificado exponen `preview_url`** que el orchestrator debe presentar al usuario en modo HIL para que vea la animación/componente real antes de decidir:
+
+| Registry | Preview URL | Tipo de preview |
+|---|---|---|
+| shadcn | `https://shadcnui-blocks.com/blocks/<name>` | iframe del demo oficial |
+| basecn | `https://basecn.dev/blocks/<name>` | iframe del demo oficial |
+| reactbits | `https://reactbits.dev/<BaseName>` | demo vivo con animacion real + codigo a la derecha |
+
+Cuando el orchestrator presente opciones al usuario, **siempre incluir el `preview_url`** en el chat. Para reactbits en particular, el demo es animado y se ve inmediatamente cómo se mueve la UI en el navegador del usuario — esto cierra el ciclo "imaginar como se ve → ver real → decidir instalar" sin hacer conjeturas.
 
 ---
 
