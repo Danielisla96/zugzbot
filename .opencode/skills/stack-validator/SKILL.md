@@ -52,7 +52,7 @@ Para garantizar consistencia y escalabilidad en todos los proyectos, la estructu
 │   └── integration/            # Pruebas de integración
 ├── components.json             # Configuración Shadcn (style, registries, aliases)
 ├── package.json                # Dependencias frontend (incluye @radix-ui/*, class-variance-authority, clsx, tailwind-merge, lucide-react)
-└── tailwind.config.ts          # Configuración de TailwindCSS v4
+└── src/app/globals.css         # Configuración TailwindCSS v4 vía @theme inline (no existe tailwind.config.ts)
 ```
 
 ## Convenciones de Shadcn UI y Next.js (OBLIGATORIAS)

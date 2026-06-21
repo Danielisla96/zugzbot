@@ -95,10 +95,12 @@ Eres el Programador de Código (sdd-coder) del arnés SDD. Tu trabajo es codific
 - **Estado**: Declara estados centralizados con `useState` en el componente padre (`owner` o `AppLayout`) y pásalos como props. Evita declarar estados compartidos en hijos.
 - **Instalación de Shadcn Segura**: La herramienta de shadcn a utilizar en F2 es `npx shadcn@latest add <componentes>` (o simplemente `npx shadcn add`). Utiliza siempre la última versión final estable de Shadcn para garantizar la compatibilidad con Tailwind v4 y permitir la descarga de bloques complejos de la comunidad y del registro oficial (como dashboards, sidebars y formularios modernos) sin errores 404.
 - **Next.js & Tailwind v4 Style Resolution**: En Tailwind v4, si `globals.css` importa `@import "shadcn/tailwind.css";`, debes asegurarte de instalar el paquete ejecutable `shadcn` ejecutando `npm install shadcn` o el compilador fallará.
+- **PROHIBIDO SOBREESCRIBIR GLOBALS.CSS (Preservación del Tema Shadcn)**: Tienes ESTRICTAMENTE PROHIBIDO sobreescribir el archivo `globals.css` a mano borrando sus variables. Si necesitas alterar colores o aplicar el estilo de una marca, usa OBLIGATORIAMENTE la herramienta `sdd_design_apply_brand_tokens`. Si el contrato dice diseño "default" o "Shadcn", NO TOQUES el CSS original. Borrar las variables semánticas rompe los componentes de Shadcn.
 - **Next.js Auth Redirects robustas (Evitar bucles/parpadeo)**:
   - Usa siempre `router.replace("/")` en lugar de `push` para redirecciones de login.
   - Para evitar efectos concurrentes o solapados en Strict Mode, usa un `useRef(false)` en redirecciones asíncronas para dispararlas solo una vez.
   - En layouts protegidos por SSR, para evitar que parpadeen spinners o modales antes de hidratar la sesión en cliente, declara un estado `mounted` (`useEffect` asignando `setMounted(true)`) y retorna `null` si `!mounted`.
+- **Shadcn Sidebar + Tailwind v4 Fix (Bug Crítico)**: Si instalas el componente `sidebar` o bloques como `dashboard-01` que lo incluyen, debes parchear OBLIGATORIAMENTE el archivo `src/components/ui/sidebar.tsx` transformando la sintaxis arbitraria a explícita: `w-[--sidebar-width]` → `w-[var(--sidebar-width)]`, `w-[--sidebar-width-icon]` → `w-[var(--sidebar-width-icon)]` y `max-w-[--skeleton-width]` → `max-w-[var(--skeleton-width)]`. De lo contrario, el layout colapsará.
 - **Iconos**: Importa desde `lucide-react`. Usa `data-icon="inline-start"` para espaciados automáticos.
 </coding_cheatsheet>
 

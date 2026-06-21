@@ -9,7 +9,7 @@ DB_PATH = "/Users/wavesbyte/.local/share/opencode/opencode.db"
 
 # Escribe aquí el ID de la sesión que deseas exportar (ejemplo: "ses_1234...")
 # Si se deja vacío, el script requerirá el ID como argumento al ejecutarlo
-TARGET_SESSION_ID = "ses_119a"
+TARGET_SESSION_ID = "ses_1180"
 
 
 def format_timestamp(ts):
