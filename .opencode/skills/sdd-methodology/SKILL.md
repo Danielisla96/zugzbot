@@ -35,23 +35,24 @@ Cada fase tiene un **gate explícito** (HIL del usuario) antes de transicionar a
 
 | Atajo | Cuándo | Ahorro |
 |---|---|---|
-| `sdd_list_design_recommendations({ use_case: "all" })` | F0 | 4 llamadas a `oh-my-design_list_references` → 1 |
 | `sdd_set_phase({ phase: "F1_CONTRACT", spec_name: "..." })` | F0→F1 | Crea la carpeta del spec atómicamente, sin race de timestamp |
-| `sdd_select_design({ brandId: "nike" })` | F0 | Copia DESIGN.md al path canónico `.openspec/design-assets/<brandId>/` |
 | `brain_read_memory({ category: ... })` | F0-F4 | Consulta el cerebro del proyecto para recuperar aprendizajes y evitar errores históricos |
 | `brain_save_memory({ category: ... })` | F2, F4 | Guarda aprendizajes, errores técnicos resueltos y decisiones de diseño en el cerebro |
 | Skill `sdd-quickstart` | F1 | Plantilla de `contract.json` pre-rellenada + test_scenarios recurrentes |
-| `sdd_apply_brand_tokens({ tokens: ... })` | F2 | Inyecta tokens de marca en `globals.css` sin romper variables shadcn |
+| `sdd_lucide_validate_lucide_icons_batch({ icons: [...] })` | F1 | Valida lote completo de iconos Lucide en 1 call (vs 1 por icono) |
+| `sdd_catalog_list_blocks({ registry: "all" })` | F1 | Lista candidatos de shadcn/basecn/reactbits en 1 call |
 | `sdd_generate_dockerfile({ stack: "nextjs", port: 3000 })` | F4 | Genera Dockerfile + .dockerignore + docker-compose.yml en 1 call |
 | `_sessions.jsonl` | Histórico | 1 línea por contrato (vs 18K+ líneas de MD export) |
+
+> **Diseño**: el arnés ya no inyecta marcas externas. El default es `shadcn-zinc` nativo del template `nextjs-shadcn`. Si el usuario quiere tokens custom, lo hace explícito en F2 con edición manual de `globals.css`.
 
 ---
 
 ## 3. Trampas del Flujo Maestro (EVITAR siempre)
 
-### Trampa 1: Listar marcas de diseño una por una
-**NO HAGAS**: Hacer múltiples llamadas a `oh-my-design_list_references` para mostrar opciones al usuario en F0.
-**HAZ**: Haz una única llamada consolidada a `sdd_list_design_recommendations({ use_case: "all", max_per_category: 3 })`.
+### Trampa 1: Preguntar marca de diseño al usuario en F0
+**NO HAGAS**: Preguntar al usuario "¿qué marca/diseño quieres?" o asumir tokens custom por defecto.
+**HAZ**: Asumir `shadcn-zinc` nativo. El template `nextjs-shadcn/src/app/globals.css` ya viene con todas las variables semánticas para tema claro/oscuro. El usuario puede pedir custom en F2 si quiere.
 
 ### Trampa 2: Crear la carpeta del spec en 2 steps
 **NO HAGAS**: Llamar a `sdd_create_spec_folder("mi-spec")` y luego a `sdd_set_phase("F1_CONTRACT", ...)` por separado (causa race conditions en el timestamp).
@@ -111,10 +112,7 @@ Cada fase tiene un **gate explícito** (HIL del usuario) antes de transicionar a
 │   ├── archive/                  # Contratos completados
 │   │   ├── _sessions.jsonl       # 1 línea por contrato (histórico compacto)
 │   │   └── <archived_specs>/
-│   ├── design-assets/<brandId>/  # ÚNICA ruta canónica de DESIGN.md
-│   │   ├── DESIGN.md
-│   │   ├── preview.html
-│   │   └── preview-dark.html
+│   ├── DESIGN.md                 # Resumen del spec activo (actualizado por sdd_save_active_brief)
 │   ├── .playwright/              # (transient, se borra en F0_DETECT)
 │   ├── sdd_state.json
 │   └── .sdd_session_metrics.json

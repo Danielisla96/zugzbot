@@ -1,14 +1,6 @@
 # Ignore PDFs in documentation
 **/*.pdf
 
-# Ignore Oh My Design development source code and web application
-.opencode/oh-my-design/web/
-.opencode/oh-my-design/node_modules/
-.opencode/oh-my-design/.git/
-.opencode/oh-my-design/.github/
-.opencode/oh-my-design/.husky/
-.opencode/oh-my-design/packages/mcp/node_modules/
-
 # Ignore local openspec check files and temporary outputs
 .openspec/
 export_ses_1220_Stats_de_Pokémon_con_Python_puro/

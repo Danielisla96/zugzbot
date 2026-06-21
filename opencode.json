@@ -20,7 +20,6 @@
   "permission": {
     "*": "allow",
     "skill": {
-      "omd-*": "allow",
       "stack-validator": "allow",
       "sdd-foundation-overview": "allow",
       "sdd-methodology": "allow",
@@ -45,15 +44,6 @@
     "opencode-notificator"
   ],
   "mcp": {
-    "oh-my-design": {
-      "type": "local",
-      "command": [
-        "node",
-        "./.opencode/oh-my-design/packages/mcp/dist/index.mjs"
-      ],
-      "enabled": true,
-      "purpose": "Busca, consulta y aplica temas de diseño (Toss, Stripe, Supabase, etc.)."
-    },
     "shadcn": {
       "type": "local",
       "command": [

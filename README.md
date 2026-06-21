@@ -63,8 +63,6 @@ El desarrollo se ejecuta secuencialmente a través de cinco fases estrictas, con
 
 El arnés inyecta y habilita automáticamente varios servidores MCP avanzados en tu espacio de trabajo para dar soporte contextual al bot:
 
-*   📚 **`oh-my-design` (MCP de Diseño Offline)**:
-    Servidor oficial que empaqueta **246 marcas de diseño icónicas** (Toss, Stripe, Supabase, Linear, etc.). Permite buscar especificaciones estéticas (`DESIGN.md`), paletas de colores exactas, tipografía y plantillas HTML interactivas de previsualización 100% offline (sin llamadas a APIs ni coste de tokens).
 *   🎨 **`shadcn` (MCP de Interfaz de Usuario)**:
     Permite explorar, buscar e instalar de forma instantánea componentes del registro oficial de Shadcn UI (botones, inputs, cards, dashboards completos) directamente desde la terminal.
 *   🔍 **`context7` (MCP de Consultas de Documentación)**:
@@ -161,11 +159,7 @@ Si deseas realizar modificaciones en este instalador o probar el código localme
 Para publicar una nueva versión de Zugzbot en el registro público de NPM:
 
 1.  Incrementa la versión en el `package.json` de la raíz (ej. `1.0.1`).
-2.  Compila el servidor standalone de `oh-my-design` (si modificaste código TypeScript del MCP) ejecutando en la carpeta `.opencode/oh-my-design/packages/mcp`:
-    ```bash
-    npm run build
-    ```
-3.  Inicia sesión y publica desde la raíz de tu proyecto:
+2.  Inicia sesión y publica desde la raíz de tu proyecto:
     ```bash
     npm login
     npm publish --access public

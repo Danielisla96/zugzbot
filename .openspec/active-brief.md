@@ -1,3 +1,23 @@
-# SDD Active Brief
+# test
+phase: F1
 
-No hay ninguna sesión activa o el spec actual no ha sido iniciado.
+## [AUTO-INJECTED] Brain Memory (lecciones de sesiones previas)
+
+### Design (aplicar en estilo):
+- [2026-06-21]: Skill `shadcn-templates` (`.opencode/skills/shadcn-templates/SKILL.md`) reescrita en seccion 5: ahora documenta los 3 registries (shadcn/basecn/reactbits) como tabla comparativa, incluye flujos de descubrimiento asistido/autopiloto, snippets de install reales para cada registry, validacion post-instalacion (tsc + verificar source_files[]) y bugs conocidos. Se mantiene "Block-First Architecture" con soporte explicito para "third-party trust" (reactbits.dev con deps pesadas gsap/three/fiber).
+- [2026-06-21]: Preview UX: todos los items del catalogo unificado exponen `preview_url`. Para reactbits el demo es animado vivo (`https://reactbits.dev/<BaseName>`) y se ve inmediatamente como se mueve la UI en el navegador del usuario. Esto cierra el ciclo "imaginar como se ve → ver real → decidir instalar" sin hacer conjeturas. El orchestrator en modo HIL SIEMPRE debe incluir el `preview_url` en sus respuestas.
+- [2026-06-21]: v1.4.0 - Diseño por defecto = `shadcn-zinc`. El harness ya no inyecta marcas externas. Razones: simplicidad, bundle 21MB menor, 0 divergencia con upstream, zero pregunta extra en F0. Si el usuario pide custom tokens en el contrato (`design.tokens`), el Coder los agrega al final de `globals.css` en un nuevo bloque `@theme inline` sin tocar las vars semanticas de Shadcn. El MCP `lucide-icons` sigue activo para validar iconos.
+
+### Learnings (patrones validados):
+- [2026-06-20]: [2026-06-20]: Se han resuelto permanentemente los 5 cuellos de botella detectados en la sesión exportada 1197 del Dashboard Admin:
+1. Alias de Herramienta: Se añadió el alias 'status' para 'bootstrap_status' en 'sdd_bootstrap.ts' para evitar errores por nombres erróneos del modelo.
+2. Corrección del Bootstrap: Se implementó un fallback dinámico 'DEFAULT_PACKAGE_JSON' en 'sdd_bootstrap.ts' para inyectar automáticamente el archivo package.json (que npm excluye al empaquetar templates anidados) con soporte nativo de React 19 / Next.js 15+ y la dependencia '@testing-library/dom' para prevenir errores de compilación de Vitest.
+3. Limpieza de Contaminación de Configuración: Se añadió una limpieza automática de configuraciones duplicadas en la raíz del espacio de trabajo cuando 'targetDir !== \".\"'.
+4. Reglas de Micro-Specs y Compilación Atómica: Se incrustaron directivas estrictas en 'sdd-global.md' para forzar specs segmentados (máx 3 componentes) y validaciones de compilación individuales (atómicas), reduciendo a cero el riesgo de Coder step-exhaustion.
+
+### Errors / Regresiones (evitar repetir):
+- [2026-06-21]: Bugfix critico en `sdd_catalog_get_block` (ahora corregido): las constantes `AKASH_INSTALL(name)` y `BASECN_INSTALL(name)` ya concatenan `.json` internamente, por lo que pasar `name+'.json'` producia URLs tipo `https://shadcnui-blocks.com/r/radix/hero-01.json.json`. Leccion: al definir helpers de URL que terminan en extension, NO pasar el sufijo `.json` desde el caller; el helper es responsable del sufijo completo.
+- [2026-06-21]: Bugfix basecn repo path (corregido): el repo `akash3444/basecn` movio los JSONs de `/public/r/basecn/` a `/public/r/` (sin subdirectorio). Tambien `https://basecn.dev/r/basecn/<name>.json` → `https://basecn.dev/r/<name>.json`. Actualizado `BASECN_API`, `BASECN_RAW` y `BASECN_INSTALL` en `sdd_catalog.ts`. Si vuelve a fallar, ejecutar `curl https://api.github.com/repos/akash3444/basecn/contents/public/r` para verificar la estructura actual.
+- [2026-06-21]: Para tests locales de tools `.opencode/tools/*.ts`, `bun <file>.mjs` funciona mejor que `npx tsx -e` porque el plugin `@opencode-ai/plugin` solo expone `import` en `package.json` (sin `require`), y tsx intenta resolver como CJS por defecto. Bun respeta el campo `type: "module"` y resuelve ESM correctamente.
+- [2026-06-21]: 21st.dev fue removido del catalogo unificado por falta de catalog API discoverable. Leccion de diseno: antes de integrar un registry externo, verificar que (a) expone catalogo JSON o GitHub API para listar items, (b) items usan naming scheme compatible con shadcn CLI (`{name}` o `author/{name}`). Si no cumple ambos, el harness pierde su valor de "siempre saber que hay disponible".
+- [2026-06-21]: oh-my-design fue removido del harness en v1.4.0 por las mismas razones que 21st.dev + costo de bundle (-21 MB) + complejidad cognitiva. Razones: (a) el "cumplimiento con una marca" era opt-in pero introducia friccion (pregunta extra en F0, archivo DESIGN.md de 200+ lineas en contexto, posible divergencia con upstream), (b) el 95% de proyectos Next.js 16 + Shadcn + Tailwind v4 se ven bien con `shadcn-zinc` nativo, (c) si el usuario quiere custom tokens, lo dice explicito y se inyectan al final de `globals.css` sin tocar las vars originales. La tool `sdd_design_validate_lucide_icons_batch` se migro a un archivo independiente `sdd_lucide.ts` porque no dependecia de oh-my-design.

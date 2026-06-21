@@ -24,18 +24,17 @@ F4 → deployer genera Dockerfile + build + verify
 - **Stack**: Next.js 16 + Shadcn UI + Tailwind v4 (frontend), FastAPI + Pydantic (backend)
 - **Verificación**: `console` (5x más rápido que `visual`)
 - **Persistencia**: localStorage (mock frontend), SQLite (backend simple)
-- **Diseño**: primer recomendado por Oh My Design para la categoría del usuario
+- **Diseño**: `shadcn-zinc` nativo (default; sin marcas externas)
 
 ## Atajos críticos
 
 | Atajo | Ahorro |
 |---|---|
-| `sdd_list_design_recommendations({ use_case: "all" })` en F0 | 4 calls → 1 |
 | `sdd_set_phase({ phase: "F1_CONTRACT", spec_name: "..." })` atómico | Crea carpeta sin race |
-| `sdd_select_design({ brandId: "..." })` | Copia DESIGN.md |
 | `brain_read_memory({ category: ... })` en F0 y F3 inicio | Previene errores históricos |
 | Skill `sdd-quickstart` en F1 | Plantilla pre-rellenada (~1 min vs 3+ min) |
-| `sdd_apply_brand_tokens({ tokens: ... })` en F2 | Inyecta tokens sin romper shadcn |
+| `sdd_catalog_list_blocks({ registry: "all" })` en F1 | Lista shadcn/basecn/reactbits en 1 call |
+| `sdd_lucide_validate_lucide_icons_batch({ icons: [...] })` en F1 | Valida lote de iconos en 1 call |
 | `sdd_generate_dockerfile({ stack: "nextjs", port: 3000 })` en F4 | Genera 3 archivos en 1 call |
 
 ## Reglas duras

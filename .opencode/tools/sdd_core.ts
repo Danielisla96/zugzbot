@@ -2,7 +2,6 @@ import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
 import { execSync } from "child_process"
-import { RECOMMENDED_BRANDS } from "./sdd_design"
 
 // Helper to safely resolve root directory (avoiding OpenCode bug where worktree is '/' in non-git repos)
 const getRoot = (context: any) => {
@@ -528,15 +527,18 @@ export const get_initial_session_data = tool({
       } catch (e) {}
     }
 
-    // Get design recommendations
-    const recommendations = RECOMMENDED_BRANDS
-
+    // Diseño por defecto: zinc nativo de Shadcn. El harness ya no inyecta
+    // marcas externas (oh-my-design removido en v1.4.0); si el usuario quiere
+    // custom tokens, lo hace explicitamente en F2 via edicion manual de globals.css.
     const response: any = {
       status: "SUCCESS",
       state: currentState,
       brainMemory,
-      designRecommendations: recommendations,
-      note: "Inicialización completada. No es necesario que llames a sdd_get_state, brain_read_memory o sdd_list_design_recommendations por separado."
+      design: {
+        default: "shadcn-zinc",
+        note: "Diseño por defecto = shadcn zinc nativo. Sin marcas externas."
+      },
+      note: "Inicialización completada. No es necesario que llames a sdd_get_state o brain_read_memory por separado."
     }
     if (cleanedCount > 0) {
       response.cleanedArtifacts = cleanedCount

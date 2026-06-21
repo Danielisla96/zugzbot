@@ -452,7 +452,7 @@ export const SddBridgePlugin: Plugin = async ({ project, client, $, directory, w
         }
         // Live-refresh the canonical _sessions.jsonl so future sessions
         // can read compact history (1 line per contract) instead of full MD exports.
-        if (input?.tool === "sdd_set_phase" || input?.tool === "sdd_select_design" || input?.tool === "sdd_create_spec_folder") {
+        if (input?.tool === "sdd_set_phase" || input?.tool === "sdd_create_spec_folder") {
           try {
             const metrics = readMetrics()
             const state = readState()

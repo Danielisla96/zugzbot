@@ -231,7 +231,6 @@ export const LoopEnforcerPlugin: Plugin = async ({ project, client, $, directory
           const isAllowedSpecWriterFile =
             targetFilePath.includes(".openspec/specs/") ||
             targetFilePath.includes(".openspec/DESIGN.md") ||
-            targetFilePath.includes(".openspec/design-assets/") ||
             targetFilePath.endsWith("contract-schema.json")
 
           if (!isAllowedSpecWriterFile) {

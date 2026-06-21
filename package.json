@@ -1,6 +1,6 @@
 {
   "name": "zugzbot",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Fácil instalador del arnés SDD de Zugzbot para proyectos OpenCode",
   "type": "module",
   "bin": {
@@ -20,8 +20,6 @@
     ".opencode/tools/",
     ".opencode/scripts/",
     ".opencode/contract-schema.json",
-    ".opencode/oh-my-design/design-md/",
-    ".opencode/oh-my-design/packages/mcp/dist/",
     ".utils/export_opencode_session.py",
     ".utils/toggle_model.py"
   ],

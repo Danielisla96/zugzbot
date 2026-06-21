@@ -39,8 +39,7 @@ const IGNORE_DIRS = new Set([
   "coverage",
   ".openspec/cache",
   ".openspec/__tests__",
-  ".opencode/templates",
-  ".opencode/oh-my-design"
+  ".opencode/templates"
 ])
 
 // Patrones prohibidos: cualquier chartConfig que envuelva una variable CSS
