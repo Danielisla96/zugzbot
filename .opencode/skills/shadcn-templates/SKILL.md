@@ -154,18 +154,18 @@ El `@sdd-coder` utiliza el template base `nextjs-shadcn`. Si el contrato no deta
 
 ## 5. Catálogo Externo Oficial: Shadcn UI Blocks (Akash)
 
-Además del catálogo nativo de Shadcn UI, dispones de acceso autónomo a más de 200 bloques de alta calidad del repositorio **Shadcn UI Blocks (por Akash)**. Si necesitas un layout, sección o componente complejo (ej. hero, footer, pricing, login, dashboard), **debes** explorar este catálogo y proponerlo.
+Además del catálogo nativo de Shadcn UI, dispones de acceso autónomo a más de 200 bloques de alta calidad del repositorio **Shadcn UI Blocks (por Akash)**. Si el usuario solicita una interfaz relacionada con landings, marketing, autenticación, footers o dashboards, **TIENES LA OBLIGACIÓN** de explorar este catálogo ANTES de proponer crear componentes desde cero.
 
 ### 5.1 Flujo de Descubrimiento (Fase F1 - Spec-Writer)
-Si el usuario solicita una interfaz genérica o tú detectas que un bloque complejo ahorraría tiempo, consulta la lista maestra de bloques en tiempo real:
+Si el usuario solicita una interfaz (ej: "necesito un hero", "haz un footer"), no asumas que debes programarlo a mano. Primero consulta la lista maestra de bloques en tiempo real:
 - **Comando a usar:** Ejecuta la herramienta `webfetch` apuntando a la API de GitHub:
   `webfetch("https://api.github.com/repos/akash3444/shadcn-ui-blocks/contents/public/r/radix")`
-- **Análisis de resultados:** El JSON devuelto listará todos los bloques (`hero-01.json`, `footer-05.json`, `pricing-02.json`, etc.). Filtra mentalmente los que coincidan con la necesidad.
+- **Análisis de resultados:** El JSON devuelto listará todos los bloques (`hero-01.json`, `footer-05.json`, `pricing-02.json`, etc.). Selecciona mentalmente los que coincidan con la necesidad.
 
-### 5.2 Selección de Bloques
+### 5.2 Selección de Bloques (Interactiva o Autónoma)
 Cuando existan múltiples opciones para un mismo tipo de bloque (ej. 10 footers distintos):
-- **Modo Asistido (Por defecto):** Utiliza la herramienta `question` o lista en el chat las opciones disponibles, proporcionando la URL visual del catálogo (`https://www.shadcnui-blocks.com/blocks/categories/[categoria]`) para que el usuario pueda verlos y elegir. *Ejemplo: "He encontrado 5 tipos de Footers, puedes verlos aquí. ¿Cuál prefieres (footer-01 a footer-05)?"*.
-- **Modo Autopiloto (`/loop`):** Si estás actuando de forma 100% autónoma sin interacción del usuario, lee el código fuente de 2 o 3 opciones al azar utilizando `webfetch("https://raw.githubusercontent.com/akash3444/shadcn-ui-blocks/main/public/r/radix/[bloque].json")` para analizar qué código encaja mejor con la petición (ej. si pide newsletter, busca uno con `<Input>`) y elígelo autónomamente.
+- **Modo Asistido (Por defecto):** Utiliza la herramienta `question` para preguntarle al usuario o dile explícitamente en el chat: *"Tengo acceso a la galería de Shadcn UI Blocks. He encontrado X opciones de [categoria]. ¿Quieres que revise algunas en particular o te dejo el enlace visual (`https://www.shadcnui-blocks.com/blocks/categories/[categoria]`) para que elijas la que más te guste?"*.
+- **Modo Autopiloto (`/loop`):** Si estás actuando de forma 100% autónoma, lee el código fuente de 2 o 3 opciones al azar utilizando `webfetch("https://raw.githubusercontent.com/akash3444/shadcn-ui-blocks/main/public/r/radix/[bloque].json")` para analizar qué código encaja mejor con la petición y elígelo autónomamente sin preguntar.
 
 ### 5.3 Inyección e Instalación (Contrato y Coder)
 - **Spec-Writer (F1):** En el `contract.json`, dentro de `frontend.components`, anota el bloque utilizando la URL remota directa:
@@ -180,5 +180,16 @@ Cuando existan múltiples opciones para un mismo tipo de bloque (ej. 10 footers 
   ```bash
   npx shadcn@latest add https://shadcnui-blocks.com/r/radix/footer-04.json
   ```
-  La CLI se encargará automáticamente de descargar el código y resolver dependencias internas (ej. instalar `separator` o `button` si el bloque lo requiere). No es necesario configurar nada en el `components.json`.
+  La CLI se encargará automáticamente de descargar el código y resolver dependencias internas.
+
+---
+
+## 6. Patrones Avanzados de Layout CSS
+
+### 6.1 Patrón de Fullscreen Layouts y Centrado (CRÍTICO)
+Cuando necesites crear un Hero, Landing, o Splash screen que deba ocupar el 100% de la pantalla visible y tener su contenido perfectamente centrado, evita mezclar clases CSS que peleen entre sí. Sigue **estrictamente** este patrón:
+- **Contenedor Padre**: Usa `min-h-[100dvh] flex flex-col`.
+- **Contenedor Interno (Wrapper)**: Usa `flex-1 flex items-center justify-center w-full`.
+- **Contenido Central**: Usa `mx-auto max-w-[ancho-deseado] flex flex-col items-center text-center`.
+- **PROHIBICIÓN ESTRICTA DE `w-full` EN FLEX HIJOS**: Si el contenedor padre usa `flex` con `items-center` para centrar, **NO** le pongas `w-full` al hijo interno si quieres que no se "pegue" a la izquierda en pantallas ultra anchas. El `w-full` forzará al elemento a ocupar el 100% del contenedor padre flex y anulará el centrado horizontal. Usa siempre `mx-auto` explícitamente en el elemento hijo para garantizar que quede centrado dentro de su propia columna.
 
