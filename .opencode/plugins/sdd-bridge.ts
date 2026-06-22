@@ -436,6 +436,12 @@ export const SddBridgePlugin: Plugin = async ({ project, client, $, directory, w
                 try { fs.rmSync(playwrightTmpDir, { recursive: true, force: true }) } catch (e) {}
               }
 
+              // 2.5 Clear ZCS raw_context cache
+              const rawContextDir = path.resolve(openspecDir, ".raw_context")
+              if (fs.existsSync(rawContextDir)) {
+                try { fs.rmSync(rawContextDir, { recursive: true, force: true }) } catch (e) {}
+              }
+
               // 3. Clear transient metrics file
               const metricsPath = path.resolve(openspecDir, ".sdd_session_metrics.json")
               if (fs.existsSync(metricsPath)) {

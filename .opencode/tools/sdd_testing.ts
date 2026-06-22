@@ -2,6 +2,7 @@ import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
 import { execSync } from "child_process"
+import { compressTestLogs, ccrCompress } from "./sdd_compress.ts"
 
 // Helper to safely resolve root directory (avoiding OpenCode bug where worktree is '/' in non-git repos)
 const getRoot = (context: any) => {
@@ -669,3 +670,62 @@ export const save_playwright_artifacts = tool({
     }
   }
 })
+
+// Tool: sdd_run_tests
+export const run_tests = tool({
+  description: "Ejecuta las pruebas unitarias y de integración del proyecto (Vitest o pytest), comprimiendo la salida para ahorrar tokens.",
+  args: {
+    file: tool.schema.string().optional().describe("La ruta específica del archivo de test a ejecutar (relativa al root). Si no se pasa, corre todos los tests."),
+    timeout: tool.schema.number().optional().default(10000).describe("Timeout en milisegundos para la ejecución de cada test (solo aplicable a Vitest). Default: 10000.")
+  },
+  async execute(args, context) {
+    const root = getRoot(context)
+    const targetDir = getTargetDir(root)
+    const targetPath = targetDir === "." ? root : path.resolve(root, targetDir)
+
+    // Detectar si es un proyecto Python
+    const isPython = fs.existsSync(path.resolve(targetPath, "requirements.txt")) || fs.existsSync(path.resolve(targetPath, "pyproject.toml"))
+
+    // Obtener ruta del archivo relativa al directorio de destino si aplica
+    let testPathArg = ""
+    if (args.file) {
+      const fullPath = path.resolve(root, args.file)
+      testPathArg = path.relative(targetPath, fullPath)
+    }
+
+    let cmd = ""
+    if (isPython) {
+      cmd = `pytest ${testPathArg || "tests/"}`
+    } else {
+      const testTimeout = args.timeout ?? 10000
+      cmd = `npx vitest run --testTimeout=${testTimeout} --bail=1 --reporter=verbose ${testPathArg}`
+    }
+
+    try {
+      const out = execSync(cmd, {
+        cwd: targetPath,
+        encoding: "utf8",
+        timeout: 120_000, // timeout global del proceso de 2 minutos
+        stdio: "pipe"
+      })
+      
+      const compressed = compressTestLogs(out)
+      
+      return JSON.stringify({
+        status: "SUCCESS",
+        message: "Las pruebas se ejecutaron y pasaron exitosamente.",
+        output: compressed.length > 1500 ? ccrCompress(out, "Test Success Output", context) : compressed
+      }, null, 2)
+    } catch (e: any) {
+      const rawOutput = e.stdout?.toString() || e.stderr?.toString() || e.message || ""
+      const compressed = compressTestLogs(rawOutput)
+      
+      return JSON.stringify({
+        status: "FAIL",
+        message: "La ejecución de pruebas falló. Corrige los errores mostrados abajo.",
+        output: compressed.length > 1500 ? ccrCompress(rawOutput, "Test Failure Output", context) : compressed
+      }, null, 2)
+    }
+  }
+})
+

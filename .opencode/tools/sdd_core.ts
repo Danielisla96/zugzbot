@@ -2,6 +2,7 @@ import { tool } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
 import { execSync } from "child_process"
+import { ccrCompress } from "./sdd_compress.ts"
 
 // Helper to safely resolve root directory (avoiding OpenCode bug where worktree is '/' in non-git repos)
 const getRoot = (context: any) => {
@@ -362,6 +363,15 @@ export const set_phase = tool({
         currentState.loopTargetIterations = 1
         currentState.loopCurrentIteration = 1
       }
+      // Clean up raw_context files (ZCS)
+      try {
+        const rawContextDir = path.resolve(root, ".openspec/.raw_context")
+        if (fs.existsSync(rawContextDir)) {
+          fs.rmSync(rawContextDir, { recursive: true, force: true })
+        }
+      } catch (e) {
+        // ignore
+      }
       // Clean up running servers
       const pidFile = getPidFilePath(root)
       if (fs.existsSync(pidFile)) {
@@ -624,16 +634,17 @@ export const save_active_brief = tool({
         const errors = last("errors", 5)
         const design = last("design", 3)
 
-        if (learnings || errors || design) {
+        let brainMemoryStr = ""
+        if (design) brainMemoryStr += `\n### Design (aplicar en estilo):\n${design}\n`
+        if (learnings) brainMemoryStr += `\n### Learnings (patrones validados):\n${learnings}\n`
+        if (errors) brainMemoryStr += `\n### Errors / Regresiones (evitar repetir):\n${errors}\n`
+
+        if (brainMemoryStr) {
           enrichedBrief += `\n\n## [AUTO-INJECTED] Brain Memory (lecciones de sesiones previas)\n`
-          if (design) {
-            enrichedBrief += `\n### Design (aplicar en estilo):\n${design}\n`
-          }
-          if (learnings) {
-            enrichedBrief += `\n### Learnings (patrones validados):\n${learnings}\n`
-          }
-          if (errors) {
-            enrichedBrief += `\n### Errors / Regresiones (evitar repetir):\n${errors}\n`
+          if (brainMemoryStr.length > 1500) {
+            enrichedBrief += ccrCompress(brainMemoryStr, "Brain Memory", context) + "\n"
+          } else {
+            enrichedBrief += brainMemoryStr
           }
         }
       }
@@ -645,31 +656,35 @@ export const save_active_brief = tool({
     try {
       const isNext = contract?.stack?.core?.some((c: string) => /next\.?js/i.test(c))
       if (isNext) {
+        let mockPatterns = `// Mock dinámico de lucide-react (cualquier icono)\n`
+        mockPatterns += `vi.mock("lucide-react", () => new Proxy({}, {\n`
+        mockPatterns += `  get: (_t, prop) => {\n`
+        mockPatterns += `    const Icon = (props: any) => null;\n`
+        mockPatterns += `    Icon.displayName = String(prop);\n`
+        mockPatterns += `    return Icon;\n`
+        mockPatterns += `  },\n`
+        mockPatterns += `}));\n\n`
+        mockPatterns += `// Mock reactivo de next-themes para ThemeToggle\n`
+        mockPatterns += `let theme = "light";\n`
+        mockPatterns += `vi.mock("next-themes", () => ({\n`
+        mockPatterns += `  useTheme: () => ({\n`
+        mockPatterns += `    get theme() { return theme; },\n`
+        mockPatterns += `    setTheme: (t: string) => { theme = t; },\n`
+        mockPatterns += `    get resolvedTheme() { return theme; },\n`
+        mockPatterns += `  }),\n`
+        mockPatterns += `}));\n\n`
+        mockPatterns += `// Mock de next/navigation\n`
+        mockPatterns += `vi.mock("next/navigation", () => ({\n`
+        mockPatterns += `  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),\n`
+        mockPatterns += `  usePathname: () => "/",\n`
+        mockPatterns += `}));\n`
+
         enrichedBrief += `\n\n## [AUTO-INJECTED] Mock Patterns (Vitest + Testing Library)\n`
-        enrichedBrief += `\`\`\`typescript\n`
-        enrichedBrief += `// Mock dinámico de lucide-react (cualquier icono)\n`
-        enrichedBrief += `vi.mock("lucide-react", () => new Proxy({}, {\n`
-        enrichedBrief += `  get: (_t, prop) => {\n`
-        enrichedBrief += `    const Icon = (props: any) => null;\n`
-        enrichedBrief += `    Icon.displayName = String(prop);\n`
-        enrichedBrief += `    return Icon;\n`
-        enrichedBrief += `  },\n`
-        enrichedBrief += `}));\n\n`
-        enrichedBrief += `// Mock reactivo de next-themes para ThemeToggle\n`
-        enrichedBrief += `let theme = "light";\n`
-        enrichedBrief += `vi.mock("next-themes", () => ({\n`
-        enrichedBrief += `  useTheme: () => ({\n`
-        enrichedBrief += `    get theme() { return theme; },\n`
-        enrichedBrief += `    setTheme: (t: string) => { theme = t; },\n`
-        enrichedBrief += `    get resolvedTheme() { return theme; },\n`
-        enrichedBrief += `  }),\n`
-        enrichedBrief += `}));\n\n`
-        enrichedBrief += `// Mock de next/navigation\n`
-        enrichedBrief += `vi.mock("next/navigation", () => ({\n`
-        enrichedBrief += `  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),\n`
-        enrichedBrief += `  usePathname: () => "/",\n`
-        enrichedBrief += `}));\n`
-        enrichedBrief += `\`\`\`\n`
+        if (mockPatterns.length > 1000) {
+          enrichedBrief += ccrCompress(mockPatterns, "Mock Patterns", context) + "\n"
+        } else {
+          enrichedBrief += `\`\`\`typescript\n${mockPatterns}\`\`\`\n`
+        }
       }
     } catch (e) {
       // ignore
