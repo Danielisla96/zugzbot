@@ -1,6 +1,7 @@
 import { type Plugin } from "@opencode-ai/plugin"
 import fs from "fs"
 import path from "path"
+import { write_changelog } from "../tools/sdd_changelog.ts"
 
 type AgentMetrics = {
   cost: number
@@ -373,6 +374,48 @@ export const SddBridgePlugin: Plugin = async ({ project, client, $, directory, w
           if (newState.phase === "F0_DETECT") {
             try {
               const openspecDir = path.resolve(projectRoot, ".openspec")
+
+              // 0. Changelog capture (BEFORE GC clears metrics) - records the cycle
+              try {
+                const lastMetrics = readMetrics()
+                if (lastMetrics && (lastMetrics.totals?.cost > 0 || lastMetrics.totals?.messages > 0)) {
+                  const derivedCommand = lastMetrics.contractName || "sdd-cycle"
+                  await write_changelog
+                    .execute(
+                      {
+                        command: derivedCommand,
+                        prompt:
+                          "(prompt no capturado automaticamente por el bridge - edita el changelog para anadirlo si lo necesitas)",
+                      },
+                      {
+                        sessionID: "",
+                        messageID: "",
+                        agent: "sdd-bridge",
+                        directory: projectRoot,
+                        worktree: projectRoot,
+                        abort: new AbortController().signal,
+                        metadata: () => {},
+                        ask: async () => {},
+                      } as any
+                    )
+                    .catch(() => {})
+
+                  // Notify via toast
+                  if (client?.tui?.showToast) {
+                    await client.tui
+                      .showToast({
+                        body: {
+                          message: `📝 Changelog capturado en .openspec/changelog/ (costo: $${(lastMetrics.totals?.cost || 0).toFixed(4)})`,
+                          variant: "info",
+                        },
+                      })
+                      .catch(() => {})
+                  }
+                }
+              } catch (e) {
+                // best-effort: never let changelog failure block GC
+              }
+
               const cleanScreenshots = (dir: string) => {
                 if (fs.existsSync(dir)) {
                   const files = fs.readdirSync(dir)
