@@ -154,54 +154,58 @@ El `@sdd-coder` utiliza el template base `nextjs-shadcn`. Si el contrato no deta
 
 ## 5. Catálogo Unificado de Bloques Externos (`sdd_catalog`)
 
-Además del catálogo nativo de Shadcn UI, el arnés expone un catálogo unificado de **3 registries** externos (todos con catálogo JSON oficial y discoverable programáticamente). Si el usuario pide cualquier interfaz (hero, footer, dashboard, login, AI chat, animated background, etc.), **TIENES LA OBLIGACIÓN** de explorar este catálogo ANTES de inventar desde cero.
+Además del catálogo nativo de Shadcn UI, el arnés expone un catálogo unificado de **4 registries** externos (todos con catálogo JSON oficial y discoverable programáticamente). Si el usuario pide cualquier interfaz (hero, footer, dashboard, login, AI chat, animated background, stats, form, table, etc.), **TIENES LA OBLIGACIÓN** de explorar este catálogo ANTES de inventar desde cero.
 
 ### 5.0 Registries Soportados (todos discoverables)
 
 | Registry | Fuente de catálogo | Contenido | TTL | Notas |
 |---|---|---|---|---|
-| `shadcn` | akash3444/shadcn-ui-blocks (GitHub Contents API) | ~540 bloques Radix | 7d | **Default** para marketing/landing/auth/dashboards |
+| `shadcn` | akash3444/shadcn-ui-blocks (GitHub Contents API) | ~540 bloques Radix | 7d | **Default** para marketing/landing/hero/pricing/features/faq/testimonials/footer/cta/navbar/logo-cloud/bento/marquee |
 | `basecn` | akash3444/basecn (GitHub Contents API) | ~60 bloques fork Base UI | 7d | Alternativa si el proyecto usa Base UI |
 | `reactbits` | reactbits.dev/r/registry.json (JSON oficial shadcn) | 134 bases × 4 variantes = 536 items | 1d | Primitivas animadas (backgrounds, text, cards, cursors, etc.) |
+| `blocks-so` | ephraimduncan/blocks (GitHub Contents API sobre `/content/components/`) | 60+ bloques Radix con `categories[]` explícito en cada JSON | 7d | **Default** para `stats` (15), `login` (9), `form-layout` (5), `file-upload` (6), `tables` (5), `dialogs` (12), `sidebar` (6), `command-menu` (3), `ai` (5), `onboarding` (7), `grid-list` (3). MIT, Ephraim Duncan. |
 
 > **Criterio de inclusion**: solo se soportan registries con catálogo JSON oficialmente discoverable. 21st.dev fue removido porque su catálogo es JS-rendered y requiere scraping para descubrir items nuevos — eso rompe el principio de "siempre saber qué hay disponible antes de elegir".
 
 ### 5.1 Herramientas MCP Nativas del Arnés (PREFERENTE — `sdd_catalog_*`)
 
-**PROHIBIDO** usar `webfetch` directo a GitHub o reactbits.dev para descubrir bloques. El arnés expone 3 tools MCP dedicadas que cachean en `.openspec/cache/` y evitan redescubrimiento:
+**PROHIBIDO** usar `webfetch` directo a GitHub, reactbits.dev o blocks.so para descubrir bloques. El arnés expone 3 tools MCP dedicadas que cachean en `.openspec/cache/` y evitan redescubrimiento:
 
 - `sdd_catalog_list_blocks({ category?, query?, registry?, limit?, force_refresh? })`
-  - `registry`: `"shadcn"` | `"basecn"` | `"reactbits"` | `"all"` (default).
-  - Filtra por categoria exacta (`hero`, `pricing`, `backgrounds`, `text`, `cards`, `navigation`, ...) o substring libre (sobre `name`, `description`, `tags`).
+  - `registry`: `"shadcn"` | `"basecn"` | `"reactbits"` | `"blocks-so"` | `"all"` (default).
+  - Filtra por categoria exacta (`hero`, `pricing`, `backgrounds`, `text`, `cards`, `navigation`, `stats`, `login`, `form-layout`, ...) o substring libre (sobre `name`, `description`, `tags`).
   - Para `reactbits`: devuelve las **134 bases** (cada una con `variants[]` y `default_variant`), NO las 536 variantes. Esto evita duplicados y permite ver opciones de un vistazo.
+  - Para `blocks-so`: devuelve los **60+ bloques Radix** distribuidos en 11 categorías oficiales. La categoría se infiere del path del directorio GitHub (`content/components/<category>/`), no del nombre del archivo.
 - `sdd_catalog_get_block({ name, registry?, variant?, force_refresh? })`
   - Formatos de `name`:
     - shadcn/basecn: `"hero-06"`, `"sidebar-07"`
+    - blocks-so: `"stats-01"`, `"login-03"`, `"form-layout-02"`, `"ai-01"`, etc.
     - reactbits: `"Dither"` (auto-resuelve a `Dither-TS-TW` por default) **o** `"Dither-JS-CSS"` (variante canónica completa)
-    - URL directa: `"https://reactbits.dev/r/Dither-TS-TW.json"` o `"https://shadcnui-blocks.com/r/radix/hero-06.json"`
-    - Namespace shadcn: `"@acme/button"`
+    - URL directa: `"https://reactbits.dev/r/Dither-TS-TW.json"`, `"https://blocks.so/r/stats-01.json"` o `"https://shadcnui-blocks.com/r/radix/hero-06.json"`
+    - Namespace shadcn: `"@acme/button"` o `"@blocks-so/stats-01"` (auto-routing a blocks-so)
   - Para reactbits, parámetro opcional `variant`: `"JS-CSS" | "JS-TW" | "TS-CSS" | "TS-TW"` (default `"TS-TW"`). Aplicar solo cuando pasas el nombre base sin sufijo de variante.
   - `registry` autodetecta por el formato; pasalo explícito solo si necesitas forzar.
   - Devuelve `source_files[]`, `dependencies[]`, `preview_url`, `install_command` listo y metadatos `base_name` + `variant` (para reactbits).
 - `sdd_catalog_warm_index({ registry? })`
-  - Pre-calienta caches. Llamar al bootstrap (F0) o inicio de F1.
+  - Pre-calienta caches. Llamar al bootstrap (F0) o inicio de F1. Para `blocks-so` consume ~12 GitHub API calls (1 para categorias + 11 para listar archivos) — TTL 7d minimiza esto.
 
 ### 5.2 Flujo de Descubrimiento (Fase F1 - Spec-Writer)
 
 Cuando el usuario pide una UI, sigue este orden de prioridad:
 
-1. **Primero** `sdd_catalog_list_blocks({ registry: "all", category: "<categoria>", limit: 10 })` — devuelve candidatos de los 3 registries simultáneamente.
-2. **Si el usuario pide animaciones/shaders/efectos visuales cinematograficos**, prioriza `registry: "reactbits"` (es donde estan las primitivas animadas reales: `Dither`, `Aurora`, `GlareHover`, `Magnet`, `StaggeredMenu`, `FloatingDock`, etc.).
-3. **Si el usuario pide paginas de marketing completas** (landing, pricing, features), prioriza `registry: "shadcn"` (bloques Radix mas completos con texto, CTAs, imagenes placeholder).
-4. **Si el usuario ya dio una URL** (`https://reactbits.dev/...` o `https://shadcnui-blocks.com/...`), ve directo a `sdd_catalog_get_block` con esa URL.
-5. **Presenta opciones con `preview_url`** para que el usuario vea cada una antes de elegir:
+1. **Primero** `sdd_catalog_list_blocks({ registry: "all", category: "<categoria>", limit: 10 })` — devuelve candidatos de los 4 registries simultáneamente.
+2. **Si la keyword cae en las 11 categorías de blocks-so** (stats, login, signup, form-layout, file-upload, tables, dialogs, sidebar, command-menu, ai, onboarding, grid-list), prioriza `registry: "blocks-so"`. Es la fuente más actualizada y curada para esos casos de uso. Ejemplo: si el usuario pide *"un formulario de registro"*, el Spec-Writer debe ir directo a `sdd_catalog_list_blocks({registry: "blocks-so", category: "form-layout", limit: 5})` y mostrar las 5 variantes (`form-layout-01` a `form-layout-05`).
+3. **Si el usuario pide animaciones/shaders/efectos visuales cinematograficos**, prioriza `registry: "reactbits"` (es donde estan las primitivas animadas reales: `Dither`, `Aurora`, `GlareHover`, `Magnet`, `StaggeredMenu`, `FloatingDock`, etc.).
+4. **Si el usuario pide paginas de marketing completas** (landing, pricing, features, hero), prioriza `registry: "shadcn"` (bloques Radix mas completos con texto, CTAs, imagenes placeholder).
+5. **Si el usuario ya dio una URL** (`https://reactbits.dev/...`, `https://blocks.so/...` o `https://shadcnui-blocks.com/...`), ve directo a `sdd_catalog_get_block` con esa URL.
+6. **Presenta opciones con `preview_url`** para que el usuario vea cada una antes de elegir:
    - **Asistido (HIL):** muestra `preview_url` (que el usuario puede abrir en navegador) + `install_command` para los 2-3 mejores candidatos y deja que elija. Si el usuario dice "ese", ejecuta el `install_command`.
    - **Autopiloto (`/loop`):** inspecciona 2-3 candidatos con `sdd_catalog_get_block`, analiza dependencias y compat con el stack del contrato, elige autonomamente.
 
 ### 5.3 Seleccion de Bloques (Interactiva o Autonoma)
 
 Cuando hay multiples opciones para una categoria (ej. 10 heroes):
-- **Modo Asistido (default):** pregunta al usuario con `question` o en chat: *"Tengo X opciones de [categoria]. ¿Quieres revisar alguna? Puedo darte el `preview_url` (ej. `https://shadcnui-blocks.com/blocks/hero-06` o `https://reactbits.dev/Dither`) para que elijas."*
+- **Modo Asistido (default):** pregunta al usuario con `question` o en chat: *"Tengo X opciones de [categoria]. ¿Quieres revisar alguna? Puedo darte el `preview_url` (ej. `https://shadcnui-blocks.com/blocks/hero-06`, `https://blocks.so/stats/stats-04` o `https://reactbits.dev/Dither`) para que elijas."*
 - **Modo Autopiloto:** lee el codigo de 2-3 opciones con `sdd_catalog_get_block` y elige sin preguntar.
 
 ### 5.4 Inyeccion e Instalacion (Spec-Writer + Coder)
@@ -211,6 +215,7 @@ Cuando hay multiples opciones para una categoria (ej. 10 heroes):
   "frontend": {
     "components": [
       { "name": "hero-06", "registry": "shadcn", "source": "akash3444/shadcn-ui-blocks" },
+      { "name": "stats-01", "registry": "blocks-so", "source": "ephraimduncan/blocks" },
       { "name": "Dither", "registry": "reactbits", "variant": "TS-TW", "source": "reactbits.dev/Dither" }
     ]
   }
@@ -223,6 +228,10 @@ Cuando hay multiples opciones para una categoria (ej. 10 heroes):
   npx shadcn@latest add https://basecn.dev/r/footer-04.json --yes
   # reactbits (variante TS-TW explicita)
   npx shadcn@latest add https://reactbits.dev/r/Dither-TS-TW.json --yes
+  # blocks-so (ephraimduncan/blocks)
+  npx shadcn@latest add https://blocks.so/r/stats-01.json --yes
+  # blocks-so via namespace (requiere declararlo en components.json)
+  npx shadcn@latest add @blocks-so/stats-01 --yes
   ```
   La CLI v3 de Shadcn negocia `Accept: application/json` automaticamente, descarga el codigo y resuelve las `registryDependencies`.
 
@@ -263,8 +272,55 @@ reactbits.dev es el registry mas "vivo" del catalogo unificado. Cada componente 
 | shadcn | `https://shadcnui-blocks.com/blocks/<name>` | iframe del demo oficial |
 | basecn | `https://basecn.dev/blocks/<name>` | iframe del demo oficial |
 | reactbits | `https://reactbits.dev/<BaseName>` | demo vivo con animacion real + codigo a la derecha |
+| blocks-so | `https://blocks.so/<category>/<name>` | demo vivo con el bloque real renderizado (sin animaciones) |
 
-Cuando el orchestrator presente opciones al usuario, **siempre incluir el `preview_url`** en el chat. Para reactbits en particular, el demo es animado y se ve inmediatamente cómo se mueve la UI en el navegador del usuario — esto cierra el ciclo "imaginar como se ve → ver real → decidir instalar" sin hacer conjeturas.
+Cuando el orchestrator presente opciones al usuario, **siempre incluir el `preview_url`** en el chat. Para reactbits y blocks-so el demo es interactivo y se ve inmediatamente cómo se ve en el navegador del usuario — esto cierra el ciclo "imaginar como se ve → ver real → decidir instalar" sin hacer conjeturas.
+
+### 5.8 blocks.so (ephraimduncan/blocks) - Detalles
+
+blocks.so es el registry más curado para interfaces funcionales: **60+ bloques Radix prod-ready** con `categories[]` explícito en cada JSON. La diferencia clave frente a akash es que cada bloque de blocks.so **incluye un `categories[]` array** dentro del JSON, lo que elimina la ambigüedad de la heurística por nombre de archivo.
+
+**Estructura del repo**:
+```
+ephraimduncan/blocks/
+  content/
+    components/
+      ai/              ai-01.tsx ... ai-05.tsx          (5 bloques)
+      command-menu/    command-menu-01.tsx ...          (3 bloques)
+      dialogs/         dialog-01.tsx ... dialog-12.tsx  (12 bloques)
+      file-upload/     file-upload-01.tsx ...            (6 bloques)
+      form-layout/     form-layout-01.tsx ...            (5 bloques)
+      grid-list/       grid-list-01.tsx ...              (3 bloques)
+      login/           login-01.tsx ... login-09.tsx    (9 bloques)
+      onboarding/      onboarding-01.tsx ...             (7 bloques)
+      sidebar/         sidebar-01.tsx ... sidebar-06.tsx (6 bloques)
+      stats/           stats-01.tsx ... stats-15.tsx     (15 bloques)
+      tables/          tables-01.tsx ... tables-05.tsx   (5 bloques)
+```
+
+**Campos clave del JSON de cada bloque**:
+- `name`: canonical (ej: `"stats-01"`)
+- `type`: `"registry:block"` (estándar shadcn)
+- `title`: `"Stats with Trending"`
+- `description`: `"A stats with trending block."`
+- `author`: `"ephraim duncan <https://ephraimduncan.com>"`
+- `registryDependencies`: ej: `["card"]` — el coder debe pre-instalar via `sdd_bootstrap` antes del `npx shadcn add`.
+- `dependencies`: ej: `[]` — paquetes npm necesarios (rara vez hay, son 100% Radix).
+- `files[]`: cada item tiene `path` (origen en el repo), `type` (`"registry:component"`) y `target` (ruta destino en el proyecto, ej: `"components/stats-01.tsx"`).
+- `categories[]`: ej: `["stats"]` — usado para filtrado.
+
+**Patrones de uso en el contrato**:
+```json
+{
+  "frontend": {
+    "components": [
+      { "name": "stats-01", "registry": "blocks-so", "source": "ephraimduncan/blocks" }
+    ]
+  }
+}
+```
+
+**Cuidado con `field` y `FieldGroup`**: algunos bloques de `form-layout` y `onboarding` usan el primitivo `field` (Field, FieldLabel, FieldDescription) que no viene por defecto en `npx shadcn add`. Si `sdd_catalog_get_block` lista `field` en `registryDependencies[]`, el coder debe correr `npx shadcn@latest add field` antes de instalar el bloque.
 
 ---
 

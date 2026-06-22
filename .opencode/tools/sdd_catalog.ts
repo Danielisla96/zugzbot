@@ -20,17 +20,27 @@ import path from "path"
 //                 TS-CSS / TS-TW) = 536 items. Fuente: /r/registry.json
 //                 oficial shadcn-compatible. Default variant para el stack
 //                 Next.js 16 + Tailwind v4 es TS-TW. TTL 1d.
+//   - blocks-so:  https://blocks.so (ephraimduncan/blocks)
+//                 60+ bloques Radix prod-ready organizados en 11 categorias
+//                 (stats, login, form-layout, file-upload, tables, dialogs,
+//                 command-menu, sidebar, onboarding, ai, grid-list). Cada
+//                 bloque incluye `categories[]` explicito en el JSON.
+//                 Fuente: GitHub Contents API sobre /content/components.
+//                 Default para forms/stats/tables/file-upload/dialogs/login/
+//                 command-menu/onboarding/ai/grid-list. TTL 7d.
 //
 // Cache local:
 //   - .openspec/cache/shadcn-index.json
 //   - .openspec/cache/basecn-index.json
 //   - .openspec/cache/reactbits-index.json
+//   - .openspec/cache/blocks-so-index.json
 //   - .openspec/cache/blocks/<registry>/[<author>/]<name>.json
 //
 // Registries configurables via env:
 //   - SDD_CATALOG_TTL_DAYS_AKASH      (default 7)
 //   - SDD_CATALOG_TTL_DAYS_BASECN     (default 7)
 //   - SDD_CATALOG_TTL_DAYS_REACTBITS  (default 1)
+//   - SDD_CATALOG_TTL_DAYS_BLOCKSSO   (default 7)
 //
 // Tools exportadas (prefijo opencode = "sdd_catalog_<export>"):
 //   - list_blocks    Lista componentes/bloques por registry, categoria, query.
@@ -42,6 +52,8 @@ import path from "path"
 //   - reactbits:      "Dither" (base, resuelve a Dither-TS-TW por default)
 //                     "Dither-JS-CSS" (variante canonica completa)
 //                     "https://reactbits.dev/r/Dither-TS-TW.json" (URL directa)
+//   - blocks-so:      "stats-01", "login-03", "form-layout-02", etc.
+//                     "https://blocks.so/r/stats-01.json" (URL directa)
 // ============================================================================
 
 // ---------------------------------------------------------------------------
@@ -136,6 +148,36 @@ const REACTBITS_CATEGORY_BY_BASE: Map<string, string> = (() => {
 })()
 
 // ---------------------------------------------------------------------------
+// blocks.so (ephraimduncan/blocks)
+// ---------------------------------------------------------------------------
+// Repo: ephraimduncan/blocks
+// Public registry URL: https://blocks.so/r/<name>.json
+// Categorias oficiales (11): ai, command-menu, dialogs, file-upload,
+//   form-layout, grid-list, login, onboarding, sidebar, stats, tables.
+// Fuente de descubrimiento: GitHub Contents API sobre /content/components.
+// Cada bloque es un .tsx bajo content/components/<category>/; el nombre
+// canonico es `<category>-<NN>` (ej: stats-01, login-03, form-layout-02).
+// Cada JSON de bloque incluye `categories[]` explicito y `target` para
+// inyeccion Zero-Touch en el proyecto Next.js destino.
+const BLOCKSSO_REPO = "ephraimduncan/blocks"
+const BLOCKSSO_CATEGORIES_API =
+  `https://api.github.com/repos/${BLOCKSSO_REPO}/contents/content/components`
+const BLOCKSSO_CATEGORY_FILES_API = (category: string) =>
+  `https://api.github.com/repos/${BLOCKSSO_REPO}/contents/content/components/${category}`
+const BLOCKSSO_RAW = (name: string) =>
+  `https://raw.githubusercontent.com/${BLOCKSSO_REPO}/main/content/components/${name}.json`
+const BLOCKSSO_INSTALL = (name: string) => `https://blocks.so/r/${name}.json`
+const BLOCKSSO_PREVIEW = (category: string, name: string) =>
+  `https://blocks.so/${category}/${name}`
+const BLOCKSSO_TTL_DAYS = Number(process.env.SDD_CATALOG_TTL_DAYS_BLOCKSSO || 7)
+
+// Categorias oficiales de blocks.so (orden estable para la UI).
+const BLOCKSSO_CATEGORIES = [
+  "ai", "command-menu", "dialogs", "file-upload", "form-layout",
+  "grid-list", "login", "onboarding", "sidebar", "stats", "tables"
+] as const
+
+// ---------------------------------------------------------------------------
 // Categorias (heuristica por nombre de archivo para Akash/Basecn)
 // ---------------------------------------------------------------------------
 const CATEGORY_PREFIXES = [
@@ -156,7 +198,7 @@ const CATEGORY_PREFIXES = [
 // Helpers
 // ============================================================================
 
-type RegistryName = "shadcn" | "basecn" | "reactbits"
+type RegistryName = "shadcn" | "basecn" | "reactbits" | "blocks-so"
 
 const getRoot = (context: any): string => {
   if (context?.directory && context.directory !== "/") return context.directory
@@ -506,6 +548,208 @@ const resolveReactbitsSlug = (
 }
 
 // ---------------------------------------------------------------------------
+// blocks.so index builder
+// ---------------------------------------------------------------------------
+//
+// Estrategia de descubrimiento en 2 niveles (idempotente, TTL 7d):
+//   1. Listar subdirectorios bajo /content/components/ (las 11 categorias).
+//   2. Para cada categoria, listar archivos .tsx y derivar name canonico.
+//
+// Output: IndexEntry[] con category real (de la carpeta GitHub), install_url
+// apuntando a https://blocks.so/r/<name>.json y preview_url al demo vivo.
+//
+// Para no saturar la GitHub API (rate limit 60/h sin token), cacheamos el
+// indice completo durante 7d. Cualquier update en el repo se reflejara
+// solo tras `force_refresh: true` o expiracion del TTL.
+
+type GitHubContentEntry = {
+  name: string
+  path: string
+  size: number
+  sha: string
+  type: "dir" | "file"
+}
+
+const fetchGithubContents = async (
+  apiUrl: string,
+  repoLabel: string
+): Promise<GitHubContentEntry[]> => {
+  const res = await fetch(apiUrl, {
+    headers: {
+      "User-Agent": "zugzbot-sdd-catalog/1.0",
+      Accept: "application/vnd.github+json"
+    }
+  })
+  if (!res.ok) {
+    if (res.status === 403) {
+      throw new Error(
+        `GitHub API rate limit hit consultando ${repoLabel}. ` +
+          `Espera 1h o usa force_refresh=false con cache existente.`
+      )
+    }
+    if (res.status === 404) {
+      throw new Error(
+        `Repositorio ${repoLabel} no encontrado o ruta cambiada. ` +
+          `Verifica que ${apiUrl} siga vigente.`
+      )
+    }
+    throw new Error(`GitHub API ${res.status} ${res.statusText} consultando ${repoLabel}`)
+  }
+  return (await res.json()) as GitHubContentEntry[]
+}
+
+const buildBlocksSoIndex = async (
+  root: string,
+  forceRefresh: boolean
+): Promise<{ index: Index; refreshed: boolean; error?: string }> => {
+  const indexPath = getIndexPath(root, "blocks-so")
+  const ttl = ttlMs(BLOCKSSO_TTL_DAYS)
+
+  const cached = readJson<Index>(indexPath)
+  if (!forceRefresh && !isCacheStale(cached, ttl)) {
+    return { index: cached!, refreshed: false }
+  }
+
+  try {
+    const entries: IndexEntry[] = []
+
+    // Paso 1: listar las 11 categorias oficiales.
+    // Si la API falla 404 (ej: rama renombrada) usamos la lista hardcodeada
+    // como fallback para no romper el resto del catalogo.
+    let categories = [...BLOCKSSO_CATEGORIES] as readonly string[]
+    try {
+      const catEntries = await fetchGithubContents(
+        BLOCKSSO_CATEGORIES_API,
+        BLOCKSSO_REPO
+      )
+      const live = catEntries
+        .filter((e) => e.type === "dir")
+        .map((e) => e.name)
+        .filter((n) => !n.startsWith("_") && !n.startsWith("."))
+      if (live.length > 0) categories = live
+    } catch (e) {
+      if (!cached) throw e
+    }
+
+    // Paso 2: por cada categoria, enumerar .tsx (formato plano) O
+    // subdirectorios (formato multi-file, usado por sidebar) y derivar
+    // el name canonico. Estructuras mixtas soportadas:
+    //   - ai/             ai-01.tsx ... ai-05.tsx
+    //   - command-menu/   command-menu-01.tsx ... -03.tsx
+    //   - dialogs/        dialog-01.tsx ... -12.tsx  (prefijo singular)
+    //   - login/          login-01.tsx ... -09.tsx
+    //   - onboarding/     onboarding-01.tsx ... -07.tsx
+    //   - stats/          stats-01.tsx ... -15.tsx
+    //   - tables/         table-01.tsx ... -05.tsx  (prefijo singular)
+    //   - form-layout/    form-layout-01.tsx ... -05.tsx
+    //   - grid-list/      grid-list-01.tsx ... -03.tsx
+    //   - file-upload/    file-upload-01.tsx ... -06.tsx
+    //                     (+ file-upload-01/ subdir durante transicion)
+    //   - sidebar/        sidebar-01/ ... sidebar-06/  (SUBDIRS multi-file)
+    //
+    // Si un mismo name aparece como .tsx Y como subdir (transicion en el
+    // repo fuente), preferimos el subdir (multi-file) y descartamos el .tsx
+    // huerfano. Esto evita entradas duplicadas en el indice.
+    const seenNames = new Set<string>()
+    const dedupEntries: IndexEntry[] = []
+
+    for (const cat of categories) {
+      let items: GitHubContentEntry[]
+      try {
+        items = await fetchGithubContents(
+          BLOCKSSO_CATEGORY_FILES_API(cat),
+          BLOCKSSO_REPO
+        )
+      } catch (e) {
+        // Si falla una categoria puntual, seguimos con las demas para no
+        // abortar el indice completo. Logueamos via error[] abajo.
+        continue
+      }
+      for (const it of items) {
+        // Ignorar archivos no-componente (index.ts, .DS_Store, etc.)
+        if (it.name.startsWith("index.")) continue
+        if (it.name.startsWith("_")) continue
+        if (it.name.startsWith(".")) continue
+
+        // Caso A: archivo .tsx plano. name = file sin extension.
+        if (it.type === "file" && it.name.endsWith(".tsx")) {
+          const name = it.name.replace(/\.tsx$/, "")
+          if (!name) continue
+          if (seenNames.has(name)) continue  // dedup
+          seenNames.add(name)
+          dedupEntries.push({
+            name,
+            filename: it.name,
+            category: cat,
+            registry: "blocks-so",
+            author: "ephraimduncan",
+            description: `blocks.so ${cat} block (${name})`,
+            tags: [cat, "shadcn-registry", "blocks-so"],
+            install_url: BLOCKSSO_INSTALL(name),
+            preview_url: BLOCKSSO_PREVIEW(cat, name),
+            source: "github"
+          })
+          continue
+        }
+
+        // Caso B: subdirectorio (multi-file block, ej. sidebar-XX/).
+        // El nombre del subdir ES el canonical name del bloque.
+        // Sobrescribe cualquier .tsx huerfano con el mismo name.
+        if (it.type === "dir") {
+          const name = it.name
+          if (!name) continue
+          // Si ya vimos un .tsx con este name, lo removemos para
+          // reemplazarlo por la version multi-file (mas completa).
+          const existingIdx = dedupEntries.findIndex(
+            (e) => e.name === name && e.category === cat
+          )
+          if (existingIdx >= 0) dedupEntries.splice(existingIdx, 1)
+          seenNames.add(name)
+          dedupEntries.push({
+            name,
+            filename: `${name}/`,
+            category: cat,
+            registry: "blocks-so",
+            author: "ephraimduncan",
+            description: `blocks.so ${cat} block (${name}, multi-file)`,
+            tags: [cat, "shadcn-registry", "blocks-so", "multi-file"],
+            install_url: BLOCKSSO_INSTALL(name),
+            preview_url: BLOCKSSO_PREVIEW(cat, name),
+            source: "github"
+          })
+          continue
+        }
+      }
+    }
+
+    dedupEntries.sort((a, b) => {
+      if (a.category !== b.category) return a.category.localeCompare(b.category)
+      return a.name.localeCompare(b.name)
+    })
+    entries.push(...dedupEntries)
+
+    const index: Index = {
+      cached_at: new Date().toISOString(),
+      ttl_days: BLOCKSSO_TTL_DAYS,
+      source: `${BLOCKSSO_REPO} (${BLOCKSSO_CATEGORIES_API})`,
+      total: entries.length,
+      entries
+    }
+    writeJson(indexPath, index)
+    return { index, refreshed: true }
+  } catch (e) {
+    if (cached) {
+      return {
+        index: cached,
+        refreshed: false,
+        error: `Refresh fallo (${(e as Error).message}); usando cache de ${cached.cached_at}`
+      }
+    }
+    throw e
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Fetchers compartidos
 // ---------------------------------------------------------------------------
 
@@ -550,6 +794,8 @@ const normalizeBlock = (parsed: any, registry: RegistryName, name: string) => {
     installUrl = REACTBITS_INSTALL(name)
   } else if (registry === "basecn") {
     installUrl = BASECN_INSTALL(name)
+  } else if (registry === "blocks-so") {
+    installUrl = BLOCKSSO_INSTALL(name)
   } else {
     installUrl = AKASH_INSTALL(name)
   }
@@ -591,16 +837,22 @@ type ListResult = {
   hints?: string[]
 }
 
-const REGISTRIES_ALL: RegistryName[] = ["shadcn", "basecn", "reactbits"]
+const REGISTRIES_ALL: RegistryName[] = ["shadcn", "basecn", "reactbits", "blocks-so"]
+
+
+
 
 export const list_blocks = tool({
   description:
     "Lista bloques/componentes del catalogo unificado sdd_catalog. " +
-    "Soporta 3 registries con catalogo JSON oficial: 'shadcn' (akash3444/shadcn-ui-blocks, " +
-    "Radix), 'basecn' (akash3444/basecn, fork Base UI) y 'reactbits' (reactbits.dev, " +
-    "primitivas animadas; para cada base se exponen sus 4 variantes JS-CSS/JS-TW/TS-CSS/TS-TW). " +
-    "Cachea en .openspec/cache/ con TTL por registry (7d shadcn/basecn, 1d reactbits). " +
-    "Filtra por categoria (hero, footer, pricing, backgrounds, text, cards, etc) " +
+    "Soporta 4 registries con catalogo JSON oficial: 'shadcn' (akash3444/shadcn-ui-blocks, " +
+    "Radix), 'basecn' (akash3444/basecn, fork Base UI), 'reactbits' (reactbits.dev, " +
+    "primitivas animadas; para cada base se exponen sus 4 variantes JS-CSS/JS-TW/TS-CSS/TS-TW) " +
+    "y 'blocks-so' (ephraimduncan/blocks, 60+ bloques Radix prod-ready con categories[] explicito; " +
+    "default para stats, login, form-layout, file-upload, tables, dialogs, sidebar, " +
+    "command-menu, ai, onboarding, grid-list). " +
+    "Cachea en .openspec/cache/ con TTL por registry (7d shadcn/basecn/blocks-so, 1d reactbits). " +
+    "Filtra por categoria (hero, footer, pricing, backgrounds, text, cards, stats, login, etc) " +
     "y por query libre (substring sobre name/description/tags).",
   args: {
     category: tool.schema
@@ -615,10 +867,10 @@ export const list_blocks = tool({
       .optional()
       .describe("Busqueda libre por substring sobre name/filename/description. Opcional."),
     registry: tool.schema
-      .enum(["shadcn", "basecn", "reactbits", "all"])
+      .enum(["shadcn", "basecn", "reactbits", "blocks-so", "all"])
       .optional()
       .default("all")
-      .describe("Que catalogos consultar. 'all' = shadcn+basecn+reactbits."),
+      .describe("Que catalogos consultar. 'all' = shadcn+basecn+reactbits+blocks-so."),
     limit: tool.schema
       .number()
       .optional()
@@ -660,6 +912,24 @@ export const list_blocks = tool({
               "(`variants[]`) y `install_url` apunta a la variante por default " +
               "TS-TW (TypeScript + Tailwind v4). Para otra variante, pasa " +
               "`variant='JS-CSS'` a `sdd_catalog_get_block`."
+          )
+        } else if (reg === "blocks-so") {
+          const { index, refreshed, error } = await buildBlocksSoIndex(
+            root,
+            args.force_refresh || false
+          )
+          cachedAt[reg] = index.cached_at
+          if (refreshed) {
+            // ok
+          }
+          if (error) errors.push(`[${reg}] ${error}`)
+          allEntries.push(...index.entries)
+          hints.push(
+            "[blocks-so] ephraimduncan/blocks (https://blocks.so). " +
+              "Default para sus 11 categorias: stats, login, form-layout, " +
+              "file-upload, tables, dialogs, sidebar, command-menu, ai, " +
+              "onboarding, grid-list. Install: `npx shadcn@latest add " +
+              "https://blocks.so/r/<name>.json --yes`."
           )
         } else {
           const { index, refreshed, error } = await buildOrLoadIndex(
@@ -758,9 +1028,12 @@ export const get_block = tool({
     "especifico del catalogo unificado. " +
     "Para shadcn/basecn: `name='hero-06'`. " +
     "Para reactbits: `name='Dither'` (resuelve a Dither-TS-TW por default) o " +
-    "`name='Dither-JS-CSS'` (variante canonica completa). Tambien acepta URL " +
-    "directa `name='https://reactbits.dev/r/Dither-TS-TW.json'` y namespace shadcn " +
-    "`name='@acme/button'`. Cachea en .openspec/cache/blocks/<registry>/<name>.json. " +
+    "`name='Dither-JS-CSS'` (variante canonica completa). " +
+    "Para blocks-so: `name='stats-01'`. " +
+    "Tambien acepta URL directa `name='https://reactbits.dev/r/Dither-TS-TW.json'` " +
+    "o `name='https://blocks.so/r/stats-01.json'`, y namespace shadcn " +
+    "`name='@acme/button'` (incluido `@blocks-so/stats-01`). " +
+    "Cachea en .openspec/cache/blocks/<registry>/<name>.json. " +
     "Devuelve `install_command` listo para ejecutar con `npx shadcn@latest add`.",
   args: {
     name: tool.schema
@@ -768,12 +1041,13 @@ export const get_block = tool({
       .describe(
         "Identificador del bloque. Formatos aceptados:\n" +
           "  - shadcn/basecn: 'hero-06', 'sidebar-07'\n" +
+          "  - blocks-so: 'stats-01', 'login-03', 'form-layout-02'\n" +
           "  - reactbits: 'Dither' (default TS-TW) o 'Dither-JS-CSS' (canonica)\n" +
-          "  - URL directa: 'https://reactbits.dev/r/Dither-TS-TW.json'\n" +
-          "  - Namespace shadcn: '@acme/button'"
+          "  - URL directa: 'https://reactbits.dev/r/Dither-TS-TW.json' o 'https://blocks.so/r/stats-01.json'\n" +
+          "  - Namespace shadcn: '@acme/button' o '@blocks-so/stats-01'"
       ),
     registry: tool.schema
-      .enum(["auto", "shadcn", "basecn", "reactbits"])
+      .enum(["auto", "shadcn", "basecn", "reactbits", "blocks-so"])
       .optional()
       .default("auto")
       .describe(
@@ -823,6 +1097,18 @@ export const get_block = tool({
         baseName = resolved.baseName
         variant = resolved.variant
         directUrl = url
+      } else if (url.includes("blocks.so/r/")) {
+        const m = url.match(/\/r\/([a-zA-Z0-9_.-]+)\.json/)
+        if (!m) {
+          return JSON.stringify({
+            status: "ERROR",
+            message: `URL blocks.so invalida: ${url}. Esperado patron /r/<name>.json.`,
+            block: null
+          }, null, 2)
+        }
+        registry = "blocks-so"
+        canonicalName = m[1]
+        directUrl = url
       } else {
         // URL generica shadcn: tratarla como shadcn (1 sola parte)
         const m = url.match(/\/([a-zA-Z0-9_.-]+)\.json/)
@@ -838,7 +1124,8 @@ export const get_block = tool({
         directUrl = url
       }
     } else if (rawName.startsWith("@")) {
-      // Namespace shadcn @acme/item
+      // Namespace shadcn @<author>/<item>. Detectamos @blocks-so y lo
+      // redirigimos al registry blocks-so (canonicalName sin prefijo).
       const m = rawName.match(/^@([a-zA-Z0-9_.-]+)\/(.+)$/)
       if (!m) {
         return JSON.stringify({
@@ -847,8 +1134,13 @@ export const get_block = tool({
           block: null
         }, null, 2)
       }
-      registry = "shadcn"
-      canonicalName = `${m[1]}/${m[2]}`
+      if (m[1] === "blocks-so" || m[1] === "blocks_so") {
+        registry = "blocks-so"
+        canonicalName = m[2]
+      } else {
+        registry = "shadcn"
+        canonicalName = `${m[1]}/${m[2]}`
+      }
     } else {
       // Auto-detectar: si contiene '-JS-' o '-TS-' seguido de CSS/TW, es reactbits canonica.
       // Si el registry forzado es reactbits, resolver siempre.
@@ -865,6 +1157,9 @@ export const get_block = tool({
         variant = resolved.variant
       } else if (requestedReg === "basecn") {
         registry = "basecn"
+        canonicalName = rawName
+      } else if (requestedReg === "blocks-so") {
+        registry = "blocks-so"
         canonicalName = rawName
       } else {
         registry = "shadcn"
@@ -897,6 +1192,19 @@ export const get_block = tool({
       installCommand = `npx shadcn@latest add ${installUrl} --yes`
       category = inferCategory(canonicalName)
       notes = "Bloque Base UI (fork). Verifica que tu proyecto tenga Base UI instalado."
+    } else if (registry === "blocks-so") {
+      // blocks.so: el JSON crudo vive en /content/components/<category>/<name>.tsx
+      // pero el contrato del arnes siempre expone el `name` canonico
+      // (ej: "stats-01"), NO el path del repo. La URL raw debe apuntar al
+      // archivo .tsx fuente para que `content` contenga el codigo completo.
+      rawUrl = directUrl || BLOCKSSO_RAW(canonicalName)
+      cachePath = path.resolve(getBlocksDir(root, "blocks-so"), `${canonicalName}.json`)
+      installUrl = BLOCKSSO_INSTALL(canonicalName)
+      const resolvedCategory = inferCategory(canonicalName)
+      previewUrl = BLOCKSSO_PREVIEW(resolvedCategory, canonicalName)
+      installCommand = `npx shadcn@latest add ${installUrl} --yes`
+      category = resolvedCategory
+      notes = "Bloque blocks.so (ephraimduncan/blocks). Formato shadcn registry estandar (registry:block). Compatible con stack nextjs-shadcn."
     } else {
       rawUrl = AKASH_RAW(canonicalName)
       cachePath = path.resolve(getBlocksDir(root, "shadcn"), `${canonicalName}.json`)
@@ -989,10 +1297,10 @@ export const warm_index = tool({
     "Pre-calienta (descarga) los indices de los registries soportados " +
     "para evitar la latencia del primer list_blocks/get_block. " +
     "Idempotente: si el cache existe y es fresco, no re-descarga. " +
-    "TTL por registry: shadcn/basecn 7d, reactbits 1d.",
+    "TTL por registry: shadcn/basecn/blocks-so 7d, reactbits 1d.",
   args: {
     registry: tool.schema
-      .enum(["shadcn", "basecn", "reactbits", "all"])
+      .enum(["shadcn", "basecn", "reactbits", "blocks-so", "all"])
       .optional()
       .default("all")
       .describe("Que catalogos pre-calentar.")
@@ -1014,6 +1322,13 @@ export const warm_index = tool({
           warmed.push(
             refreshed
               ? `${reg} (re-descargado, ${index.total} bases)`
+              : `${reg} (cache fresco de ${index.cached_at})`
+          )
+        } else if (reg === "blocks-so") {
+          const { index, refreshed } = await buildBlocksSoIndex(root, false)
+          warmed.push(
+            refreshed
+              ? `${reg} (re-descargado, ${index.total} bloques)`
               : `${reg} (cache fresco de ${index.cached_at})`
           )
         } else {
