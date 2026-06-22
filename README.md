@@ -18,7 +18,7 @@ npx zugzbot@latest
 
 ¡Eso es todo! El instalador automatizado copiará de forma no destructiva y fusionará los siguientes recursos en tu proyecto:
 
-*   📁 **`.opencode/`** — El núcleo del sistema: agentes, comandos, skills y herramientas personalizadas (incluyendo el catálogo offline de **Oh My Design** con 246 marcas).
+*   📁 **`.opencode/`** — El núcleo del sistema: agentes, comandos, skills y herramientas personalizadas (incluyendo el catálogo unificado de **Shadcn UI** con 4 registries: `shadcn`, `basecn`, `reactbits` y `blocks-so`).
 *   ⚙️ **`opencode.json`** — La configuración maestra de seguridad, variables de entorno, plugins y servidores MCP de tu bot.
 *   🖥️ **`tui.json`** — Configuración personalizada para la interfaz interactiva de terminal (TUI).
 
@@ -164,6 +164,30 @@ Para publicar una nueva versión de Zugzbot en el registro público de NPM:
     npm login
     npm publish --access public
     ```
+
+---
+
+## 📝 Tracking Granular de Cambios y Costos (v1.6.0+)
+
+Desde la versión **1.6.0**, cada vez que el arnés cierra un ciclo (transición a `F0_DETECT`), el plugin `sdd-bridge` captura automáticamente un **changelog markdown estructurado** en `.openspec/changelog/<command>-<timestamp>.md` con:
+
+- Prompt literal del usuario
+- Costo exacto, tokens entrada/salida y duración
+- Breakdown por agente (`plan`, `build`, `sdd-coder`, etc.)
+- Diff completo (archivos tocados, líneas +/-) capturado vía `git diff`
+
+El comando **`/cost`** (incluido desde 1.6.0) muestra en cualquier momento:
+- Sesión activa con totales en vivo
+- Últimos 10 changelogs del proyecto
+- Top 5 specs más caros desde el historial agregado
+
+**Tres piezas clave del sistema:**
+
+| Archivo | Rol |
+|---|---|
+| `.opencode/tools/sdd_diff_capture.ts` | Tool MCP que ejecuta `git diff --numstat` + `--name-status` + `ls-files --others` |
+| `.opencode/tools/sdd_changelog.ts` | Tool MCP que escribe `.openspec/changelog/<command>-<ts>.md` + actualiza `INDEX.md` |
+| `.opencode/commands/cost.md` | Comando `/cost` con 3 secciones (sesión, changelogs, histórico) |
 
 ---
 
