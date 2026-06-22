@@ -40,14 +40,14 @@ F4 → deployer genera Dockerfile + build + verify
 ## Reglas duras
 
 1. **Coordinación pura**: el orquestador NO escribe/edita código. Solo delega vía `task`.
-2. **Una pregunta por sesión**: solo Console vs Visual en F0. Todo lo demás por default.
+2. **Hasta 5 preguntas SECUENCIALES en F0 (HIL)**: Propósito → Track (Fast/SDD) → Stack (con recomendaciones priorizadas) → Diseño (con `preview_url` del catálogo unificado) → Verificación (Console/Visual). Cada paso es 1 llamada separada a `question` (PROHIBIDO arrays múltiples — causa errores JSON). `/loop` y Fast-Track Dashboard bypasean TODAS las preguntas y asumen defaults. El usuario puede escribir `default`/`skip`/`recomienda` en cualquier paso para aceptar el default y continuar.
 3. **Fast-Track Dashboard**: si el usuario pide dashboard/admin/panel → usar `@shadcn/dashboard-01` directamente sin preguntar más.
 4. **Brain obligatorio**: save 1-3 lecciones al cerrar cada sesión, read learnings+errors en F0.
 5. **Tests con assertions reales**: nunca stubs con `expect(true).toBe(true)`.
 
 ## Métricas objetivo de una sesión
 
-- F0: 1 ronda de `question` con 1 sola decisión
+- F0 HIL: hasta 5 rondas de `question` (Propósito → Track → Stack → Diseño → Verificación); 0 rondas si `/loop` o Fast-Track Dashboard
 - F1: contract.json 80-120 líneas, 3-5 test_scenarios
 - F2: self-audit limpio en 1 intento
 - F3: lint + tests verdes en 1 intento

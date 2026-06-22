@@ -1,6 +1,6 @@
 {
   "name": "zugzbot",
-  "version": "1.7.0",
+  "version": "1.8.0",
 
   "description": "Fácil instalador del arnés SDD de Zugzbot para proyectos OpenCode",
   "type": "module",

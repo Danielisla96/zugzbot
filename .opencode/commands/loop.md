@@ -10,6 +10,7 @@ Estás ejecutando el ciclo SDD en modo **Autopiloto Autónomo** para resolver la
 > $ARGUMENTS
 
 ## Instrucciones de Autopiloto Obligatorias:
+0. **Bypass total del wizard F0**: este modo bypasea las 5 preguntas secuenciales de F0 (Propósito → Track → Stack → Diseño → Verificación) y salta directo a F1 asumiendo todos los defaults recomendados. El `loop-enforcer` plugin bloquea mecánicamente cualquier intento de usar `question` en este modo.
 1. Activa inmediatamente el modo piloto en el estado llamando a `sdd_set_phase` pasándole `phase: "F1_CONTRACT"`, un `spec_name` descriptivo en kebab-case, `loopMode: true`, `loopTargetIterations: N` (si el usuario ingresó un número en su comando, ej: `/loop 3` o `iteraciones=3`; por defecto 1), y `loopCurrentIteration: 1`.
 2. Tienes estrictamente prohibido usar la herramienta `question` para pedir confirmaciones de diseño, stack o contratos.
 3. Elige los valores recomendados por defecto de forma autónoma (Next.js 16, Console mode, diseño `shadcn-zinc` nativo del template).
